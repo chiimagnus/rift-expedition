@@ -35,7 +35,7 @@ note = ""
 
 [[tasks]]
 id = "P1-T5"
-title = "可达域计算服务（Dijkstra，输入为地形 id 网格）"
+title = "可达域计算服务（Dijkstra）"
 status = "pending"
 plan = "plan-p1.md#p1-t5"
 commit = ""
@@ -51,7 +51,7 @@ note = ""
 
 [[tasks]]
 id = "P1-T7"
-title = "运行时战斗状态模型 BattleState/UnitInstance（本次审计新增）"
+title = "运行时战斗状态模型 BattleState/UnitInstance"
 status = "pending"
 plan = "plan-p1.md#p1-t7"
 commit = ""
