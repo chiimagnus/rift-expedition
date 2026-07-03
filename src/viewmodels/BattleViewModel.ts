@@ -3,6 +3,7 @@ import type { BattleState, Cell, CombatForecast, UnitInstance } from "../models/
 import { attackableEnemiesFrom, runEnemyTurn } from "../services/ai";
 import { findUnit, updateOutcome, unitAt } from "../services/chapter";
 import { canAttackAtDistance, forecastCombat, resolveCombat } from "../services/combat";
+import { remainingWeaponUses, weaponForgeLevel } from "../services/equipment";
 import { cellKey, distance, moveUnit, reachableCells, terrainAt } from "../services/movement";
 import { activateSkill, activeSkills } from "../services/skills";
 
@@ -52,7 +53,7 @@ export class BattleViewModel {
       return undefined;
     }
     const weapon = getWeapon(unit.weaponId);
-    if (!canAttackAtDistance(weapon, distance(unit.pos, target.pos))) {
+    if (remainingWeaponUses(unit) <= 0 || !canAttackAtDistance(weapon, distance(unit.pos, target.pos))) {
       return undefined;
     }
     return forecastCombat(this.state, unit.id, target.id);
@@ -96,6 +97,10 @@ export class BattleViewModel {
       return;
     }
     const weapon = getWeapon(attacker.weaponId);
+    if (remainingWeaponUses(attacker) <= 0) {
+      this.state.log.unshift(`${weapon.name} 已损坏。`);
+      return;
+    }
     if (!canAttackAtDistance(weapon, distance(attacker.pos, target.pos))) {
       this.state.log.unshift("射程不符。");
       return;
@@ -189,8 +194,10 @@ export class BattleViewModel {
     const unitDef = getUnitDef(unit.defId);
     const classDef = getClass(unitDef.classId);
     const weapon = getWeapon(unit.weaponId);
+    const uses = remainingWeaponUses(unit);
+    const forge = weaponForgeLevel(unit);
     const statuses = unit.statuses.map((status) => `${status.id}:${status.turns}`).join(" ");
-    return `${unitDef.name} Lv.${unit.level} E${unit.exp}\n${classDef.name} HP ${unit.hp}/${unit.stats.hp}  ${weapon.name}\n力${unit.stats.str} 魔${unit.stats.mag} 技${unit.stats.skill} 速${unit.stats.spd}\n防${unit.stats.def} 魔防${unit.stats.res} 移${unit.stats.move}${statuses ? `\n${statuses}` : ""}`;
+    return `${unitDef.name} Lv.${unit.level} E${unit.exp}\n${classDef.name} HP ${unit.hp}/${unit.stats.hp}  ${weapon.name}${forge ? `+${forge}` : ""} ${uses}/${weapon.durability}\n力${unit.stats.str} 魔${unit.stats.mag} 技${unit.stats.skill} 速${unit.stats.spd}\n防${unit.stats.def} 魔防${unit.stats.res} 移${unit.stats.move}${statuses ? `\n${statuses}` : ""}`;
   }
 
   objectiveText(): string {

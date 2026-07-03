@@ -2,6 +2,7 @@ import { getWeapon } from "../data";
 import type { AiAction, BattleState, Cell, UnitInstance } from "../models/types";
 import { findUnit, livingUnits, unitAt, updateOutcome } from "./chapter";
 import { canAttackAtDistance, forecastCombat, resolveCombat } from "./combat";
+import { remainingWeaponUses } from "./equipment";
 import { cellKey, distance, moveUnit, reachableCells } from "./movement";
 import { refreshRound } from "./skills";
 
@@ -13,7 +14,7 @@ export function chooseEnemyAction(state: BattleState, enemy: UnitInstance): AiAc
     for (const target of livingUnits(state, "ally")) {
       const cells = distance(cell, target.pos);
       const weapon = getWeapon(enemy.weaponId);
-      if (!canAttackAtDistance(weapon, cells) || weapon.damageKind === "healing") {
+      if (remainingWeaponUses(enemy) <= 0 || !canAttackAtDistance(weapon, cells) || weapon.damageKind === "healing") {
         continue;
       }
       const original = enemy.pos;
@@ -85,5 +86,8 @@ function executeAiAction(state: BattleState, action: AiAction): void {
 
 export function attackableEnemiesFrom(state: BattleState, unit: UnitInstance, cell: Cell): UnitInstance[] {
   const weapon = getWeapon(unit.weaponId);
+  if (remainingWeaponUses(unit) <= 0) {
+    return [];
+  }
   return livingUnits(state, unit.team === "ally" ? "enemy" : "ally").filter((target) => canAttackAtDistance(weapon, distance(cell, target.pos)));
 }

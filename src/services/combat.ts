@@ -11,6 +11,7 @@ import {
 } from "../data";
 import type { BattleState, CombatEvent, CombatForecast, CombatResolution, UnitInstance, WeaponDef } from "../models/types";
 import { findUnit } from "./chapter";
+import { remainingWeaponUses, spendWeaponUse, weaponMight } from "./equipment";
 import { createRng, rollPercent } from "./rng";
 import { distance } from "./movement";
 import { awardCombatExperience } from "./progression";
@@ -47,6 +48,8 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
   const defenderWeapon = getWeapon(defender.weaponId);
   const attackerStats = effectiveStats(attacker);
   const defenderStats = effectiveStats(defender);
+  const attackerCanUseWeapon = remainingWeaponUses(attacker) > 0;
+  const defenderCanUseWeapon = remainingWeaponUses(defender) > 0;
   const cells = distance(attacker.pos, defender.pos);
   const defenderTerrainId = state.grid[defender.pos.y]?.[defender.pos.x];
   if (!defenderTerrainId) {
@@ -56,19 +59,26 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
   const triangle = triangleValue(attackerWeapon, defenderWeapon);
   const multiplier = effectiveMultiplier(attackerWeapon, defender);
   const defense = attackerWeapon.damageKind === "magical" ? defenderStats.res : defenderStats.def + defenderTerrain.defense;
+  const forgedMight = weaponMight(attacker, attackerWeapon);
   const basePower =
     attackerWeapon.damageKind === "magical"
-      ? attackerStats.mag + attackerWeapon.might
-      : (attackerStats.str + attackerWeapon.might) * multiplier;
-  const damage = Math.max(COMBAT.minDamage, Math.floor(basePower + triangle * COMBAT.counterMight - defense));
-  const hit = clampPercent(
-      attackerWeapon.hit +
-      attackerStats.skill * 2 +
-      triangle * COMBAT.counterHit -
-      (defenderStats.spd * 2 + defenderStats.luck + defenderTerrain.avoid),
-  );
-  const crit = clampPercent(attackerWeapon.crit + Math.floor(attackerStats.skill * COMBAT.critFromSkill) - defenderStats.luck);
-  const followUp = attackSpeed(attacker, attackerWeapon) - attackSpeed(defender, defenderWeapon) >= COMBAT.doublingThreshold;
+      ? attackerStats.mag + forgedMight
+      : (attackerStats.str + forgedMight) * multiplier;
+  const damage = attackerCanUseWeapon
+    ? Math.max(COMBAT.minDamage, Math.floor(basePower + triangle * COMBAT.counterMight - defense))
+    : 0;
+  const hit = attackerCanUseWeapon
+    ? clampPercent(
+        attackerWeapon.hit +
+          attackerStats.skill * 2 +
+          triangle * COMBAT.counterHit -
+          (defenderStats.spd * 2 + defenderStats.luck + defenderTerrain.avoid),
+      )
+    : 0;
+  const crit = attackerCanUseWeapon
+    ? clampPercent(attackerWeapon.crit + Math.floor(attackerStats.skill * COMBAT.critFromSkill) - defenderStats.luck)
+    : 0;
+  const followUp = attackerCanUseWeapon && attackSpeed(attacker, attackerWeapon) - attackSpeed(defender, defenderWeapon) >= COMBAT.doublingThreshold;
   return {
     attackerId,
     defenderId,
@@ -77,7 +87,7 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
     hit,
     crit,
     followUp,
-    defenderCanCounter: canAttackAtDistance(defenderWeapon, cells) && defenderWeapon.damageKind !== "healing",
+    defenderCanCounter: defenderCanUseWeapon && canAttackAtDistance(defenderWeapon, cells) && defenderWeapon.damageKind !== "healing",
     triangle,
     effectiveMultiplier: multiplier,
   };
@@ -91,6 +101,9 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
   const defenderWeapon = getWeapon(defender.weaponId);
   if (!canAttackAtDistance(attackerWeapon, forecast.distance) || attackerWeapon.damageKind === "healing") {
     throw new Error(`${attacker.id} cannot attack ${defender.id}`);
+  }
+  if (remainingWeaponUses(attacker) <= 0) {
+    throw new Error(`${attacker.id} 的 ${attackerWeapon.name} 耐久耗尽。`);
   }
 
   const rng = createRng(state.rngState);
@@ -113,10 +126,18 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
 }
 
 function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: CombatEvent[], source: UnitInstance, target: UnitInstance): void {
+  const sourceWeapon = getWeapon(source.weaponId);
+  if (remainingWeaponUses(source) <= 0) {
+    return;
+  }
   const forecast = forecastCombat(state, source.id, target.id);
+  const remainingUses = spendWeaponUse(source);
   const hit = rollPercent(rng, forecast.hit, COMBAT.doubleRNG);
   if (!hit) {
     events.push({ type: "miss", sourceId: source.id, targetId: target.id });
+    if (remainingUses === 0) {
+      events.push({ type: "weaponBreak", sourceId: source.id, weaponId: sourceWeapon.id });
+    }
     return;
   }
 
@@ -131,17 +152,24 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
     target.acted = true;
     events.push({ type: "defeat", sourceId: source.id, targetId: target.id, retreat: targetDef.defeatBehavior === "retreat" });
   }
+  if (remainingUses === 0) {
+    events.push({ type: "weaponBreak", sourceId: source.id, weaponId: sourceWeapon.id });
+  }
 }
 
 function eventsToLog(state: BattleState, events: CombatEvent[]): string[] {
   return events.map((event) => {
     const sourceName = unitName(state, event.sourceId);
-    const targetName = unitName(state, event.targetId);
     if (event.type === "miss") {
+      const targetName = unitName(state, event.targetId);
       return `${sourceName} 的攻击落空。`;
     }
     if (event.type === "defeat") {
+      const targetName = unitName(state, event.targetId);
       return event.retreat ? `${targetName} 撤退。` : `${targetName} 倒下。`;
+    }
+    if (event.type === "weaponBreak") {
+      return `${sourceName} 的${getWeapon(event.weaponId).name}损坏。`;
     }
     return `${sourceName} 造成 ${event.damage} 点伤害${event.critical ? "！" : "。"}`;
   });

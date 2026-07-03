@@ -1,5 +1,6 @@
 import { getChapter, getUnitDef } from "../data";
 import type { BattleState, CampaignState, RosterEntry, UnitInstance } from "../models/types";
+import { normalizeWeaponForge, normalizeWeaponUses } from "./equipment";
 
 export function createInitialBattleState(chapterId = "ch01", campaign?: CampaignState): BattleState {
   const chapter = getChapter(chapterId);
@@ -23,6 +24,8 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
     if (!weaponId) {
       throw new Error(`Unit ${unitDef.id} has no weapon`);
     }
+    const weaponIds = deployment.team === "ally" ? rosterEntry?.weaponIds ?? [weaponId] : [weaponId];
+    const carriedWeaponIds = weaponIds.includes(weaponId) ? weaponIds : [...weaponIds, weaponId];
     return [{
       id: deployment.instanceId,
       defId: unitDef.id,
@@ -30,6 +33,8 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
       hp: rosterEntry?.stats.hp ?? unitDef.baseStats.hp,
       stats: { ...(rosterEntry?.stats ?? unitDef.baseStats) },
       weaponId,
+      weaponUses: normalizeWeaponUses(carriedWeaponIds, rosterEntry?.weaponUses),
+      weaponForge: normalizeWeaponForge(carriedWeaponIds, rosterEntry?.weaponForge),
       skillIds: [...(rosterEntry?.skillIds ?? unitDef.skillIds)],
       statuses: [],
       skillUses: {},
@@ -64,13 +69,16 @@ export function createRosterEntry(unitDefId: string, weaponId?: string): RosterE
   if (!entryWeaponId) {
     throw new Error(`Unit ${unitDef.id} has no weapon`);
   }
+  const weaponIds = [...new Set([...unitDef.weaponIds, entryWeaponId])];
   return {
     unitDefId: unitDef.id,
     level: unitDef.level,
     exp: 0,
     stats: { ...unitDef.baseStats },
     weaponId: entryWeaponId,
-    weaponIds: [...new Set(unitDef.weaponIds)],
+    weaponIds,
+    weaponUses: normalizeWeaponUses(weaponIds),
+    weaponForge: normalizeWeaponForge(weaponIds),
     skillIds: [...unitDef.skillIds],
     deployed: true,
   };
@@ -83,6 +91,8 @@ export function cloneBattleState(state: BattleState): BattleState {
     units: state.units.map((unit) => ({
       ...unit,
       stats: { ...unit.stats },
+      weaponUses: { ...unit.weaponUses },
+      weaponForge: { ...unit.weaponForge },
       statuses: unit.statuses.map((status) => ({ ...status })),
       skillUses: { ...unit.skillUses },
       pos: { ...unit.pos },

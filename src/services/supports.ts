@@ -77,11 +77,22 @@ export function viewSupportConversation(campaign: CampaignState, pairId: string,
     ...campaign,
     roster: campaign.roster.map((entry) => {
       if (!shouldUnlockSkill || !pair.units.includes(entry.unitDefId) || entry.skillIds.includes(pair.unlockSkillId)) {
-        return { ...entry, stats: { ...entry.stats }, weaponIds: [...entry.weaponIds], skillIds: [...entry.skillIds] };
+        return cloneRosterEntry(entry);
       }
-      return { ...entry, stats: { ...entry.stats }, weaponIds: [...entry.weaponIds], skillIds: [...entry.skillIds, pair.unlockSkillId] };
+      return { ...cloneRosterEntry(entry), skillIds: [...entry.skillIds, pair.unlockSkillId] };
     }),
     flags: { ...campaign.flags, [supportConversationKey(pair.id, rank)]: true },
     savedAt: Date.now(),
+  };
+}
+
+function cloneRosterEntry(entry: CampaignState["roster"][number]): CampaignState["roster"][number] {
+  return {
+    ...entry,
+    stats: { ...entry.stats },
+    weaponIds: [...entry.weaponIds],
+    weaponUses: { ...entry.weaponUses },
+    weaponForge: { ...entry.weaponForge },
+    skillIds: [...entry.skillIds],
   };
 }

@@ -27,6 +27,9 @@ export const ECONOMY = {
   startingGold: 1200,
   convoyCapacityPerWeapon: 99,
   rosterWeaponCapacity: 4,
+  repairCostRatio: 0.5,
+  forgeMaxLevel: 3,
+  forgeMightPerLevel: 1,
 } as const;
 
 export const BOND = {

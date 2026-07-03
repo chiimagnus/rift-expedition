@@ -127,6 +127,8 @@ export interface UnitInstance {
   hp: number;
   stats: Stats;
   weaponId: string;
+  weaponUses: Record<string, number>;
+  weaponForge: Record<string, number>;
   skillIds: string[];
   statuses: StatusEffect[];
   skillUses: Record<string, number>;
@@ -144,6 +146,8 @@ export interface RosterEntry {
   stats: Stats;
   weaponId: string;
   weaponIds: string[];
+  weaponUses: Record<string, number>;
+  weaponForge: Record<string, number>;
   skillIds: string[];
   deployed: boolean;
 }
@@ -237,7 +241,8 @@ export interface CombatForecast {
 export type CombatEvent =
   | { type: "hit"; sourceId: string; targetId: string; damage: number; critical: boolean; remainingHp: number }
   | { type: "miss"; sourceId: string; targetId: string }
-  | { type: "defeat"; sourceId: string; targetId: string; retreat: boolean };
+  | { type: "defeat"; sourceId: string; targetId: string; retreat: boolean }
+  | { type: "weaponBreak"; sourceId: string; weaponId: string };
 
 export interface CombatResolution {
   forecast: CombatForecast;
