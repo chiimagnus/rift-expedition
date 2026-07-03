@@ -1,0 +1,70 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { magicTriangle, weaponTriangle } from "../src/data/content";
+import { createInitialBattleState } from "../src/services/chapter";
+import { forecastCombat, resolveCombat } from "../src/services/combat";
+
+test("weapon and magic matrices have zero row sums", () => {
+  for (const row of Object.values(weaponTriangle)) {
+    assert.equal(Object.values(row).reduce((sum, value) => sum + value, 0), 0);
+  }
+  for (const row of Object.values(magicTriangle)) {
+    assert.equal(Object.values(row).reduce((sum, value) => sum + value, 0), 0);
+  }
+});
+
+test("A/03 physical example plus A/06 forest defense keeps forecast math", () => {
+  const state = createInitialBattleState();
+  state.grid = [["forest"]];
+  state.units = [
+    {
+      id: "sword",
+      defId: "cecilia",
+      team: "ally",
+      hp: 30,
+      stats: { hp: 30, str: 18, mag: 0, skill: 12, spd: 14, luck: 0, def: 5, res: 2, move: 5, con: 9 },
+      weaponId: "iron_sword",
+      skillIds: [],
+      pos: { x: 0, y: 0 },
+      acted: false,
+      alive: true,
+      level: 1,
+      exp: 0,
+    },
+    {
+      id: "axe",
+      defId: "nord_raider",
+      team: "enemy",
+      hp: 30,
+      stats: { hp: 30, str: 10, mag: 0, skill: 8, spd: 9, luck: 3, def: 7, res: 1, move: 5, con: 9 },
+      weaponId: "iron_axe",
+      skillIds: [],
+      pos: { x: 0, y: 0 },
+      acted: false,
+      alive: true,
+      level: 1,
+      exp: 0,
+    },
+  ];
+
+  const forecast = forecastCombat(state, "sword", "axe");
+  assert.equal(forecast.damage, 16);
+  assert.equal(forecast.hit, 88);
+  assert.equal(forecast.followUp, true);
+});
+
+test("combat resolution is deterministic from stored rng state", () => {
+  const left = createInitialBattleState();
+  const right = createInitialBattleState();
+  left.units.find((unit) => unit.id === "aldric")!.pos = { x: 9, y: 3 };
+  right.units.find((unit) => unit.id === "aldric")!.pos = { x: 9, y: 3 };
+
+  resolveCombat(left, "aldric", "bjorn");
+  resolveCombat(right, "aldric", "bjorn");
+
+  assert.deepEqual(
+    left.units.map((unit) => [unit.id, unit.hp, unit.alive]),
+    right.units.map((unit) => [unit.id, unit.hp, unit.alive]),
+  );
+  assert.equal(left.rngState, right.rngState);
+});
