@@ -87,12 +87,22 @@ export interface SkillDef {
   description: string;
 }
 
+export type SupportRank = "C" | "B" | "A" | "S";
+
+export interface SupportConversationDef {
+  rank: SupportRank;
+  lines: string[];
+  effect: string;
+}
+
 export interface SupportPairDef {
   id: string;
   units: [string, string];
   theme: string;
   unlockSkillId: string;
-  ranks: Array<"C" | "B" | "A" | "S">;
+  unlockRank: SupportRank;
+  ranks: SupportRank[];
+  conversations: SupportConversationDef[];
 }
 
 export interface UnitDef {
@@ -123,6 +133,15 @@ export interface UnitInstance {
   alive: boolean;
   level: number;
   exp: number;
+}
+
+export interface RosterEntry {
+  unitDefId: string;
+  level: number;
+  exp: number;
+  stats: Stats;
+  weaponId: string;
+  skillIds: string[];
 }
 
 export interface StatusEffect {
@@ -173,7 +192,7 @@ export interface CampaignState {
   version: number;
   currentChapterId: string;
   completedChapterIds: string[];
-  roster: string[];
+  roster: RosterEntry[];
   fallen: string[];
   bonds: Record<string, number>;
   taint: Record<string, number>;

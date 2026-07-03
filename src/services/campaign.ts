@@ -1,5 +1,6 @@
-import { chapterCatalog, endingCatalog, getChapter } from "../data";
-import type { CampaignState, EndingDef, StoryChoice } from "../models/types";
+import { chapterCatalog, endingCatalog, getChapter, getUnitDef } from "../data";
+import type { BattleState, CampaignState, EndingDef, RosterEntry, Stats, StoryChoice, UnitInstance } from "../models/types";
+import { createRosterEntry } from "./chapter";
 
 const SAVE_KEY = "rift-expedition.save.v1";
 const SAVE_VERSION = 1;
@@ -15,7 +16,7 @@ export function createNewCampaign(mode: CampaignState["mode"] = "classic"): Camp
     version: SAVE_VERSION,
     currentChapterId: "ch01",
     completedChapterIds: [],
-    roster: ["aldric", "valentin", "mirelle", "cecilia", "rowan", "seren"],
+    roster: ["aldric", "valentin", "mirelle", "cecilia", "rowan", "seren"].map((unitId) => createRosterEntry(unitId)),
     fallen: [],
     bonds: {},
     taint: { aldric: 0, elara: 0 },
@@ -77,16 +78,48 @@ export function applyStoryChoice(campaign: CampaignState, choice: StoryChoice, o
   };
 }
 
+export function mergeBattleIntoCampaign(campaign: CampaignState, state: BattleState): CampaignState {
+  const roster = campaign.roster.map(cloneRosterEntry);
+  const fallen = new Set(campaign.fallen);
+
+  for (const unit of state.units) {
+    if (unit.team !== "ally") {
+      continue;
+    }
+    const unitDef = getUnitDef(unit.defId);
+    if (campaign.mode === "classic" && !unit.alive && unitDef.defeatBehavior !== "retreat") {
+      fallen.add(unit.defId);
+      continue;
+    }
+    upsertRosterEntry(roster, unit);
+  }
+
+  return {
+    ...campaign,
+    roster,
+    fallen: [...fallen],
+    bonds: { ...campaign.bonds, ...state.bonds },
+    taint: {
+      ...campaign.taint,
+      aldric: Number(state.flags["dragonTaint:aldric"] ?? campaign.taint.aldric ?? 0),
+      elara: Number(state.flags["dragonTaint:elara"] ?? campaign.taint.elara ?? 0),
+    },
+    flags: { ...campaign.flags, ...state.flags },
+    seed: state.rngState,
+    savedAt: Date.now(),
+  };
+}
+
 export function chooseEnding(campaign: CampaignState): EndingDef {
   const endingChoice = campaign.flags.endingChoice;
   const totalTaint = Object.values(campaign.taint).reduce((sum, value) => sum + value, 0);
   if (totalTaint >= 6) {
     return endingCatalog.find((ending) => ending.id === "dragonfall") ?? endingCatalog[3]!;
   }
-  if (endingChoice === 1) {
+  if (endingChoice === 1 && !campaign.fallen.includes("aldric")) {
     return endingCatalog.find((ending) => ending.id === "sacrifice_aldric") ?? endingCatalog[0]!;
   }
-  if (endingChoice === 2) {
+  if (endingChoice === 2 && !campaign.fallen.includes("elara")) {
     return endingCatalog.find((ending) => ending.id === "sacrifice_elara") ?? endingCatalog[1]!;
   }
   if (endingChoice === 3 && (campaign.bonds["aldric:elara"] ?? 0) >= 180) {
@@ -111,7 +144,7 @@ function migrateCampaign(raw: Partial<CampaignState>): CampaignState {
     version: SAVE_VERSION,
     currentChapterId,
     completedChapterIds: Array.isArray(raw.completedChapterIds) ? raw.completedChapterIds.filter((id): id is string => typeof id === "string") : [],
-    roster: Array.isArray(raw.roster) ? raw.roster.filter((id): id is string => typeof id === "string") : fresh.roster,
+    roster: migrateRoster(raw.roster, fresh.roster),
     fallen: Array.isArray(raw.fallen) ? raw.fallen.filter((id): id is string => typeof id === "string") : [],
     bonds: isRecord(raw.bonds) ? raw.bonds : {},
     taint: isRecord(raw.taint) ? raw.taint : fresh.taint,
@@ -125,4 +158,79 @@ function migrateCampaign(raw: Partial<CampaignState>): CampaignState {
 
 function isRecord(value: unknown): value is Record<string, number | boolean> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function migrateRoster(raw: unknown, fallback: RosterEntry[]): RosterEntry[] {
+  if (!Array.isArray(raw)) {
+    return fallback.map(cloneRosterEntry);
+  }
+  const roster: RosterEntry[] = [];
+  for (const item of raw) {
+    const entry = migrateRosterEntry(item);
+    if (entry) {
+      roster.push(entry);
+    }
+  }
+  return roster.length > 0 ? roster : fallback.map(cloneRosterEntry);
+}
+
+function migrateRosterEntry(raw: unknown): RosterEntry | undefined {
+  if (typeof raw === "string") {
+    return safeRosterEntry(raw);
+  }
+  if (!isObject(raw) || typeof raw.unitDefId !== "string") {
+    return undefined;
+  }
+  const base = safeRosterEntry(raw.unitDefId);
+  if (!base) {
+    return undefined;
+  }
+  return {
+    unitDefId: base.unitDefId,
+    level: typeof raw.level === "number" ? raw.level : base.level,
+    exp: typeof raw.exp === "number" ? raw.exp : base.exp,
+    stats: isStats(raw.stats) ? raw.stats : base.stats,
+    weaponId: typeof raw.weaponId === "string" ? raw.weaponId : base.weaponId,
+    skillIds: Array.isArray(raw.skillIds) ? raw.skillIds.filter((id): id is string => typeof id === "string") : base.skillIds,
+  };
+}
+
+function safeRosterEntry(unitDefId: string): RosterEntry | undefined {
+  try {
+    return createRosterEntry(unitDefId);
+  } catch {
+    return undefined;
+  }
+}
+
+function upsertRosterEntry(roster: RosterEntry[], unit: UnitInstance): void {
+  const next = {
+    unitDefId: unit.defId,
+    level: unit.level,
+    exp: unit.exp,
+    stats: { ...unit.stats },
+    weaponId: unit.weaponId,
+    skillIds: [...unit.skillIds],
+  };
+  const index = roster.findIndex((entry) => entry.unitDefId === unit.defId);
+  if (index === -1) {
+    roster.push(next);
+  } else {
+    roster[index] = next;
+  }
+}
+
+function cloneRosterEntry(entry: RosterEntry): RosterEntry {
+  return { ...entry, stats: { ...entry.stats }, skillIds: [...entry.skillIds] };
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isStats(value: unknown): value is Stats {
+  if (!isObject(value)) {
+    return false;
+  }
+  return ["hp", "str", "mag", "skill", "spd", "luck", "def", "res", "move", "con"].every((key) => typeof value[key] === "number");
 }

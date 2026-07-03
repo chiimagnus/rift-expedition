@@ -11,6 +11,17 @@ export const COMBAT = {
   effMultiplier: 3,
 } as const;
 
+// ponytail: starting A/08 tuning; replace with balance-simmed coefficients once full Act 1 telemetry exists.
+export const GROWTH = {
+  baseNextExp: 36,
+  nextExpExponent: 1.5,
+  hitExp: 8,
+  killBaseExp: 24,
+  killLevelBonus: 8,
+  supportExp: 10,
+  levelCap: 20,
+} as const;
+
 export const BOND = {
   C: 0,
   B: 40,

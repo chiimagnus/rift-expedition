@@ -1,9 +1,10 @@
 import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef, getWeapon } from "../data";
 import type { Cell, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
-import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, loadCampaign, saveCampaign } from "../services/campaign";
+import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
 import { forecastCombat } from "../services/combat";
 import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
+import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
 
 const TILE = 32;
@@ -20,6 +21,7 @@ export class BattleScene extends Phaser.Scene {
   private board!: any;
   private overlay!: any;
   private texts: any[] = [];
+  private activeSupport: AvailableSupportConversation | undefined;
 
   constructor() {
     super("BattleScene");
@@ -161,6 +163,9 @@ export class BattleScene extends Phaser.Scene {
     } else if (this.vm.state.phase === "defeat") {
       this.drawDefeatPanel();
     }
+    if (this.activeSupport) {
+      this.drawSupportPanel();
+    }
   }
 
   private endTurnButton(): void {
@@ -184,9 +189,17 @@ export class BattleScene extends Phaser.Scene {
       this.button(6, 28, 58, 18, "新战役", () => {
         clearCampaign(globalThis.localStorage);
         this.campaign = createNewCampaign();
+        this.activeSupport = undefined;
         this.startChapter(this.campaign.currentChapterId);
         this.render();
       });
+      const support = firstUnviewedSupportConversation(this.campaign);
+      if (support && this.vm.state.phase === "player") {
+        this.button(68, 28, 58, 18, `支援${support.rank}`, () => {
+          this.activeSupport = support;
+          this.render();
+        });
+      }
       return;
     }
 
@@ -251,9 +264,35 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private startChapter(chapterId: string): void {
-    const state = createInitialBattleState(chapterId);
-    state.rngState = this.campaign.seed;
+    const state = createInitialBattleState(chapterId, this.campaign);
     this.vm = new BattleViewModel(state);
+  }
+
+  private drawSupportPanel(): void {
+    const support = this.activeSupport;
+    if (!support) {
+      return;
+    }
+    const conversation = support.pair.conversations.find((candidate) => candidate.rank === support.rank);
+    if (!conversation) {
+      return;
+    }
+    const names = support.pair.units.map((unitId) => getUnitDef(unitId).name).join(" × ");
+    this.panel(36, 48, 376, 222, 0x101014, 0.97);
+    this.addText(54, 64, `${names} · ${support.rank}`, { fontSize: "16px", color: "#f7e7b1", fontStyle: "700" });
+    this.addText(54, 92, `${conversation.lines.join("\n")}\n——${conversation.effect}`, {
+      fontSize: "11px",
+      color: "#f3efe4",
+      lineSpacing: 5,
+      wordWrap: { width: 340 },
+    });
+    this.button(144, 238, 160, 20, "确认", () => {
+      this.campaign = viewSupportConversation(this.campaign, support.pair.id, support.rank);
+      this.syncRosterSkillsToBattle();
+      saveCampaign(globalThis.localStorage, this.campaign);
+      this.activeSupport = undefined;
+      this.render();
+    });
   }
 
   private drawVictoryPanel(): void {
@@ -306,19 +345,23 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private advanceCampaign(): void {
-    this.campaign.seed = this.vm.state.rngState;
-    this.campaign.bonds = { ...this.campaign.bonds, ...this.vm.state.bonds };
-    this.campaign.taint = {
-      ...this.campaign.taint,
-      aldric: Number(this.vm.state.flags["dragonTaint:aldric"] ?? this.campaign.taint.aldric ?? 0),
-      elara: Number(this.vm.state.flags["dragonTaint:elara"] ?? this.campaign.taint.elara ?? 0),
-    };
+    this.campaign = mergeBattleIntoCampaign(this.campaign, this.vm.state);
     this.campaign = completeCurrentChapter(this.campaign);
     saveCampaign(globalThis.localStorage, this.campaign);
     if (!this.campaign.endingId) {
       this.startChapter(this.campaign.currentChapterId);
     }
     this.render();
+  }
+
+  private syncRosterSkillsToBattle(): void {
+    const rosterByUnit = new Map(this.campaign.roster.map((entry) => [entry.unitDefId, entry]));
+    for (const unit of this.vm.state.units) {
+      const entry = rosterByUnit.get(unit.defId);
+      if (unit.team === "ally" && entry) {
+        unit.skillIds = [...entry.skillIds];
+      }
+    }
   }
 
   private button(x: number, y: number, width: number, height: number, label: string, onClick: () => void): void {

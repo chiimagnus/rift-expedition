@@ -182,7 +182,7 @@ export class BattleViewModel {
     const classDef = getClass(unitDef.classId);
     const weapon = getWeapon(unit.weaponId);
     const statuses = unit.statuses.map((status) => `${status.id}:${status.turns}`).join(" ");
-    return `${unitDef.name} ${classDef.name}\nHP ${unit.hp}/${unit.stats.hp}  ${weapon.name}\n力${unit.stats.str} 魔${unit.stats.mag} 技${unit.stats.skill} 速${unit.stats.spd}\n防${unit.stats.def} 魔防${unit.stats.res} 移${unit.stats.move}${statuses ? `\n${statuses}` : ""}`;
+    return `${unitDef.name} Lv.${unit.level} E${unit.exp}\n${classDef.name} HP ${unit.hp}/${unit.stats.hp}  ${weapon.name}\n力${unit.stats.str} 魔${unit.stats.mag} 技${unit.stats.skill} 速${unit.stats.spd}\n防${unit.stats.def} 魔防${unit.stats.res} 移${unit.stats.move}${statuses ? `\n${statuses}` : ""}`;
   }
 
   objectiveText(): string {

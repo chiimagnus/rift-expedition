@@ -17,6 +17,7 @@ test("healing wave restores allied HP and spends action", () => {
   assert.equal(result.ok, true);
   assert.equal(aldric.hp, 27);
   assert.equal(seren.acted, true);
+  assert.ok(seren.exp > 0);
   assert.equal(state.bonds["aldric:seren"], 5);
 });
 

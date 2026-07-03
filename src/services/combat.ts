@@ -13,6 +13,7 @@ import type { BattleState, CombatEvent, CombatForecast, CombatResolution, UnitIn
 import { findUnit } from "./chapter";
 import { createRng, rollPercent } from "./rng";
 import { distance } from "./movement";
+import { awardCombatExperience } from "./progression";
 import { effectiveStats, hasStatus } from "./status";
 
 export function attackSpeed(unit: UnitInstance, weapon: WeaponDef): number {
@@ -105,8 +106,9 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
     strike(state, rng, events, defender, attacker);
   }
 
+  const expLogs = awardCombatExperience(state, rng, events);
   state.rngState = rng.state;
-  state.log.unshift(...eventsToLog(state, events));
+  state.log.unshift(...eventsToLog(state, events), ...expLogs);
   return { forecast, events };
 }
 

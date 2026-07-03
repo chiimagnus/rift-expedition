@@ -1,7 +1,7 @@
 import { getChapter, getUnitDef } from "../data";
-import type { BattleState, UnitInstance } from "../models/types";
+import type { BattleState, CampaignState, RosterEntry, UnitInstance } from "../models/types";
 
-export function createInitialBattleState(chapterId = "ch01"): BattleState {
+export function createInitialBattleState(chapterId = "ch01", campaign?: CampaignState): BattleState {
   const chapter = getChapter(chapterId);
   const grid = chapter.map.map((row) =>
     [...row].map((symbol) => {
@@ -13,28 +13,32 @@ export function createInitialBattleState(chapterId = "ch01"): BattleState {
     }),
   );
 
-  const units: UnitInstance[] = chapter.deployments.map((deployment) => {
+  const units: UnitInstance[] = chapter.deployments.flatMap((deployment) => {
     const unitDef = getUnitDef(deployment.unitDefId);
-    const weaponId = deployment.weaponId ?? unitDef.weaponIds[0];
+    const rosterEntry = deployment.team === "ally" ? campaign?.roster.find((entry) => entry.unitDefId === unitDef.id) : undefined;
+    if (deployment.team === "ally" && campaign?.mode === "classic" && campaign.fallen.includes(unitDef.id)) {
+      return [];
+    }
+    const weaponId = deployment.team === "ally" ? rosterEntry?.weaponId ?? deployment.weaponId ?? unitDef.weaponIds[0] : deployment.weaponId ?? unitDef.weaponIds[0];
     if (!weaponId) {
       throw new Error(`Unit ${unitDef.id} has no weapon`);
     }
-    return {
+    return [{
       id: deployment.instanceId,
       defId: unitDef.id,
       team: deployment.team,
-      hp: unitDef.baseStats.hp,
-      stats: { ...unitDef.baseStats },
+      hp: rosterEntry?.stats.hp ?? unitDef.baseStats.hp,
+      stats: { ...(rosterEntry?.stats ?? unitDef.baseStats) },
       weaponId,
-      skillIds: [...unitDef.skillIds],
+      skillIds: [...(rosterEntry?.skillIds ?? unitDef.skillIds)],
       statuses: [],
       skillUses: {},
       pos: { x: deployment.x, y: deployment.y },
       acted: false,
       alive: true,
-      level: unitDef.level,
-      exp: 0,
-    };
+      level: rosterEntry?.level ?? unitDef.level,
+      exp: rosterEntry?.exp ?? 0,
+    }];
   });
 
   return {
@@ -43,10 +47,30 @@ export function createInitialBattleState(chapterId = "ch01"): BattleState {
     phase: "player",
     grid,
     units,
-    rngState: 0x5eedc0de,
-    bonds: {},
-    flags: { dragonTaintAldric: 0, dragonTaintElara: 0 },
+    rngState: campaign?.seed ?? 0x5eedc0de,
+    bonds: { ...(campaign?.bonds ?? {}) },
+    flags: {
+      ...(campaign?.flags ?? {}),
+      "dragonTaint:aldric": campaign?.taint.aldric ?? 0,
+      "dragonTaint:elara": campaign?.taint.elara ?? 0,
+    },
     log: [...chapter.opening].reverse(),
+  };
+}
+
+export function createRosterEntry(unitDefId: string, weaponId?: string): RosterEntry {
+  const unitDef = getUnitDef(unitDefId);
+  const entryWeaponId = weaponId ?? unitDef.weaponIds[0];
+  if (!entryWeaponId) {
+    throw new Error(`Unit ${unitDef.id} has no weapon`);
+  }
+  return {
+    unitDefId: unitDef.id,
+    level: unitDef.level,
+    exp: 0,
+    stats: { ...unitDef.baseStats },
+    weaponId: entryWeaponId,
+    skillIds: [...unitDef.skillIds],
   };
 }
 

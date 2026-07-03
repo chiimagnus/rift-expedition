@@ -116,12 +116,301 @@ export const extraUnitCatalog: UnitDef[] = [
 ];
 
 export const supportPairCatalog: SupportPairDef[] = [
-  { id: "aldric_elara", units: ["aldric", "elara"], theme: "双生宿命/禁忌", unlockSkillId: "twin_pincer", ranks: ["C", "B", "A", "S"] },
-  { id: "aldric_mirelle", units: ["aldric", "mirelle"], theme: "禁忌暗恋", unlockSkillId: "oath_resonance", ranks: ["C", "B", "A"] },
-  { id: "elara_sigrun", units: ["elara", "sigrun"], theme: "姐妹情/背叛", unlockSkillId: "sister_guard", ranks: ["C", "B", "A"] },
-  { id: "bjorn_luca", units: ["bjorn", "luca"], theme: "喜剧搭档", unlockSkillId: "feint_snare", ranks: ["C", "B"] },
-  { id: "cecilia_aldric", units: ["cecilia", "aldric"], theme: "旧友对立/劝赎", unlockSkillId: "absolution_light", ranks: ["C", "B", "A"] },
-  { id: "lucian_livia", units: ["lucian", "livia"], theme: "双子骑士", unlockSkillId: "rally_speed", ranks: ["C", "B", "A"] },
-  { id: "yrsa_runa", units: ["yrsa", "runa"], theme: "女武神候补", unlockSkillId: "sister_guard", ranks: ["C", "B", "A"] },
-  { id: "dragon_elder_lost", units: ["dragon_elder", "lost_dragonkin"], theme: "失忆与传承", unlockSkillId: "stigma_seal", ranks: ["C", "B", "A"] },
+  {
+    id: "aldric_elara",
+    units: ["aldric", "elara"],
+    theme: "双生宿命/禁忌",
+    unlockSkillId: "twin_pincer",
+    unlockRank: "A",
+    ranks: ["C", "B", "A", "S"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "解锁誓约共鸣雏形，记录双生直觉。",
+        lines: [
+          "艾拉菈：你们南方人打仗总拿腔作势。刚才那一剑，你明明可以取我性命。",
+          "奥德里克：我不知道。只是那一瞬间，总觉得不该。",
+          "艾拉菈：真奇怪。我也是。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "龙痕共鸣时羁绊收益提高。",
+        lines: [
+          "奥德里克：祭坛在回应我们。不是回应军旗，是回应血。",
+          "艾拉菈：如果真相证明我们不该并肩呢？",
+          "奥德里克：那就先活到能质问真相的那天。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "解锁双生夹击。",
+        lines: [
+          "艾拉菈：我恨过你的国家，也恨过自己为什么无法恨你。",
+          "奥德里克：我也一样。命运把我们放在两边，但剑可以自己选择落点。",
+          "艾拉菈：那这一次，别偏半寸。和我一起刺穿它。",
+        ],
+      },
+      {
+        rank: "S",
+        effect: "真结局判定读取该誓约。",
+        lines: [
+          "奥德里克：封印要一条命。神以为这就能让我们重新彼此为敌。",
+          "艾拉菈：那就让神看清楚，血不是枷锁，爱也不是祭品。",
+          "奥德里克：若世界只给一条路，我们就把路砍出来。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "aldric_mirelle",
+    units: ["aldric", "mirelle"],
+    theme: "禁忌暗恋",
+    unlockSkillId: "oath_resonance",
+    unlockRank: "B",
+    ranks: ["C", "B", "A"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "米瑞尔获得被看见的动机。",
+        lines: [
+          "米瑞尔：殿下总是冲在最前面，像不需要任何人。",
+          "奥德里克：我需要火力压住左翼。刚才若没有你，我会死在那里。",
+          "米瑞尔：你记得？那我下次会让你更难忘。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "解锁誓约共鸣。",
+        lines: [
+          "米瑞尔：我知道自己不该奢望一个答案。可我至少想成为你的力量。",
+          "奥德里克：力量不是站在我身后。是有人敢在我错时拦住我。",
+          "米瑞尔：那你最好别讨厌我太吵。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "第13章后米瑞尔不会因阵营选择离队。",
+        lines: [
+          "奥德里克：这条路会让索雷因把我们都当叛徒。",
+          "米瑞尔：我怕过被抛下，不怕被通缉。",
+          "奥德里克：那就一起走。不是命令，是请求。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "elara_sigrun",
+    units: ["elara", "sigrun"],
+    theme: "姐妹情/背叛",
+    unlockSkillId: "sister_guard",
+    unlockRank: "B",
+    ranks: ["C", "B", "A"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "希格露恩恢复护卫誓言。",
+        lines: [
+          "希格露恩：公主，你又脱离阵线。",
+          "艾拉菈：如果我永远被阵线框住，就永远看不见真相。",
+          "希格露恩：那至少让我跟上。责骂你也是护卫职责。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "解锁雪誓护卫。",
+        lines: [
+          "艾拉菈：若我选择和南方人并肩，北境会称我为背叛者。",
+          "希格露恩：我效忠的不是北境的嘴，是那个会为士兵收尸的你。",
+          "艾拉菈：你总知道怎么让我没法逞强。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "希格露恩在第16章重组中留下。",
+        lines: [
+          "希格露恩：背叛这个词太便宜。真正昂贵的是继续相信。",
+          "艾拉菈：如果我错了？",
+          "希格露恩：那我会亲手把你拉回来，而不是把你交给别人审判。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "bjorn_luca",
+    units: ["bjorn", "luca"],
+    theme: "喜剧搭档",
+    unlockSkillId: "feint_snare",
+    unlockRank: "B",
+    ranks: ["C", "B"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "两人建立诱敌默契。",
+        lines: [
+          "卢卡：你每次冲锋前都吼那么大声，是战术还是嗓门失控？",
+          "比约恩：敌人看我，不看你。这叫牺牲。",
+          "卢卡：行，那我负责在你牺牲前把敌人腿射软。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "解锁佯攻牵制。",
+        lines: [
+          "比约恩：你跑得太快，我都来不及替你挡刀。",
+          "卢卡：你挡刀太慢，我只好先把刀骗走。",
+          "比约恩：听着像胆小。用起来像聪明。成交。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "cecilia_aldric",
+    units: ["cecilia", "aldric"],
+    theme: "旧友对立/劝赎",
+    unlockSkillId: "absolution_light",
+    unlockRank: "A",
+    ranks: ["C", "B", "A"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "旧友线记录第14章劝降伏笔。",
+        lines: [
+          "塞西莉亚：你变了，奥德里克。以前你不会质疑圣光。",
+          "奥德里克：以前我以为圣光不会烧村子。",
+          "塞西莉亚：别逼我把你当叛徒。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "塞西莉亚被洗脑时保留动摇标记。",
+        lines: [
+          "奥德里克：你手在抖。",
+          "塞西莉亚：那是愤怒。",
+          "奥德里克：不。你还记得我们曾发誓保护谁。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "解锁忏悔之光。",
+        lines: [
+          "塞西莉亚：如果我真的错了，那些死者要向谁讨债？",
+          "奥德里克：向操纵你的人，也向继续活着的我们。",
+          "塞西莉亚：那别让我逃。让我还。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "lucian_livia",
+    units: ["lucian", "livia"],
+    theme: "双子骑士",
+    unlockSkillId: "rally_speed",
+    unlockRank: "B",
+    ranks: ["C", "B", "A"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "双子共享阵型提示。",
+        lines: [
+          "卢修安：左翼太薄，我去补。",
+          "莉薇娅：你每次说补，最后都变成单骑突击。",
+          "卢修安：所以我才有你负责把我骂回来。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "解锁疾速号令。",
+        lines: [
+          "莉薇娅：我们不是一把剑的两面。你总该学会慢半步。",
+          "卢修安：慢半步会害人。",
+          "莉薇娅：快半步也会。听我的节奏。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "双子在同场存活时额外获得羁绊。",
+        lines: [
+          "卢修安：小时候我以为保护你就是挡在前面。",
+          "莉薇娅：现在呢？",
+          "卢修安：现在我知道，是相信你能和我并排。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "yrsa_runa",
+    units: ["yrsa", "runa"],
+    theme: "女武神候补",
+    unlockSkillId: "sister_guard",
+    unlockRank: "B",
+    ranks: ["C", "B", "A"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "两名候补停止互相抢功。",
+        lines: [
+          "伊尔莎：你刚才抢了我的击破。",
+          "露娜：我救了你的命。",
+          "伊尔莎：下次先说救命，再说抢功。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "解锁雪誓护卫。",
+        lines: [
+          "露娜：女武神不是谁飞得最高，是谁能把同伴带回来。",
+          "伊尔莎：听起来像教官的话。",
+          "露娜：她死前教我的。现在轮到我们记住。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "女武神线在第三幕提供撤离支援。",
+        lines: [
+          "伊尔莎：我一直想赢你。",
+          "露娜：现在呢？",
+          "伊尔莎：现在想和你一起赢一次大的。",
+        ],
+      },
+    ],
+  },
+  {
+    id: "dragon_elder_lost",
+    units: ["dragon_elder", "lost_dragonkin"],
+    theme: "失忆与传承",
+    unlockSkillId: "stigma_seal",
+    unlockRank: "A",
+    ranks: ["C", "B", "A"],
+    conversations: [
+      {
+        rank: "C",
+        effect: "失忆龙裔开始辨认古龙语。",
+        lines: [
+          "龙裔长老：你念错了。那不是战吼，是悼词。",
+          "失忆龙裔：我为什么会记得它的旋律？",
+          "龙裔长老：因为血比名字记得久。",
+        ],
+      },
+      {
+        rank: "B",
+        effect: "龙痕失控时获得一次提示。",
+        lines: [
+          "失忆龙裔：梦里有火，有翅膀，还有我杀死的人。",
+          "龙裔长老：记忆回来时会先像诅咒。",
+          "失忆龙裔：那之后呢？",
+          "龙裔长老：之后看你肯不肯把它变成责任。",
+        ],
+      },
+      {
+        rank: "A",
+        effect: "解锁龙痕封印。",
+        lines: [
+          "龙裔长老：封印不是否定力量，是给力量一个回家的方向。",
+          "失忆龙裔：如果我曾经失控？",
+          "龙裔长老：那今天就由你教别人如何停下。",
+        ],
+      },
+    ],
+  },
 ];

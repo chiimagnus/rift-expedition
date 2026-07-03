@@ -45,6 +45,10 @@ test("content references resolve across units, classes, skills, supports, and ch
     assert.ok(unitIds.has(pair.units[0]), pair.id);
     assert.ok(unitIds.has(pair.units[1]), pair.id);
     assert.ok(skillIds.has(pair.unlockSkillId), pair.id);
+    assert.ok(pair.ranks.includes(pair.unlockRank), `${pair.id}:unlockRank`);
+    for (const rank of pair.ranks) {
+      assert.ok(pair.conversations.some((conversation) => conversation.rank === rank), `${pair.id}:${rank}`);
+    }
   }
 
   for (const chapter of chapterCatalog) {

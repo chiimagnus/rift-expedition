@@ -7,9 +7,11 @@ import {
   completeCurrentChapter,
   createNewCampaign,
   loadCampaign,
+  mergeBattleIntoCampaign,
   saveCampaign,
   type StorageLike,
 } from "../src/services/campaign";
+import { createInitialBattleState, findUnit } from "../src/services/chapter";
 
 class MemoryStorage implements StorageLike {
   private readonly values = new Map<string, string>();
@@ -50,6 +52,27 @@ test("save and load round-trip current campaign state", () => {
   assert.equal(loaded.mode, "casual");
   assert.equal(loaded.currentChapterId, "ch09");
   assert.equal(loaded.flags.allegiance, 2);
+  assert.equal(loaded.roster[0]!.unitDefId, "aldric");
+});
+
+test("campaign merge persists roster growth and classic fallen units", () => {
+  const campaign = createNewCampaign("classic");
+  const state = createInitialBattleState("ch01", campaign);
+  const rowan = findUnit(state, "rowan");
+  const aldric = findUnit(state, "aldric");
+  rowan.alive = false;
+  rowan.hp = 0;
+  aldric.level = 2;
+  aldric.exp = 7;
+  aldric.stats.str += 1;
+
+  const merged = mergeBattleIntoCampaign(campaign, state);
+  const nextState = createInitialBattleState("ch02", merged);
+
+  assert.ok(merged.fallen.includes("rowan"));
+  assert.equal(merged.roster.find((entry) => entry.unitDefId === "aldric")!.level, 2);
+  assert.equal(merged.roster.find((entry) => entry.unitDefId === "aldric")!.stats.str, aldric.stats.str);
+  assert.equal(nextState.units.some((unit) => unit.defId === "rowan" && unit.team === "ally"), false);
 });
 
 test("ending selection follows B/11 ending tree", () => {

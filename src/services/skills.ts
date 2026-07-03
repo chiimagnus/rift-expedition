@@ -1,8 +1,11 @@
-import { BOND, getClass, getSkill, getUnitDef, getWeapon } from "../data";
+import { BOND, GROWTH, getClass, getSkill, getUnitDef, getWeapon } from "../data";
 import type { BattleState, SkillDef, UnitInstance } from "../models/types";
 import { findUnit, livingUnits } from "./chapter";
 import { distance } from "./movement";
+import { gainExperience } from "./progression";
+import { createRng } from "./rng";
 import { addStatus, hasStatus, tickStatuses } from "./status";
+import { bondKey } from "./supports";
 
 export interface SkillResult {
   ok: boolean;
@@ -72,6 +75,10 @@ function activateHealingWave(state: BattleState, unit: UnitInstance, targetId: s
   spendSkill(unit, "healing_wave");
   unit.acted = true;
   addBond(state, unit.defId, target.defId, 5);
+  const rng = createRng(state.rngState);
+  const expLogs = gainExperience(state, rng, unit, GROWTH.supportExp);
+  state.rngState = rng.state;
+  state.log.unshift(...expLogs);
   return pushResult(state, true, `${unitName(unit)} 治疗 ${unitName(target)} ${target.hp - before} 点。`);
 }
 
@@ -107,10 +114,6 @@ function addBond(state: BattleState, left: string, right: string, amount: number
   }
   const key = bondKey(left, right);
   state.bonds[key] = Math.min(BOND.S, (state.bonds[key] ?? 0) + amount);
-}
-
-function bondKey(left: string, right: string): string {
-  return [left, right].sort().join(":");
 }
 
 function spendSkill(unit: UnitInstance, skillId: string): void {
