@@ -1,33 +1,50 @@
-# TypeScript 项目开发规范 for AI
+# 双生圣痕 · 开发规范（仓库根）
 
-这份参考用于你在“生成/更新仓库的 AGENTS.md”时，遇到 TypeScript/JavaScript 项目（如 Node/React/Vite/Vitest/Playwright、浏览器扩展、脚手架工具等）可以遵循的通用约定。
+本文件是本仓库的开发约定，任何在此仓库工作的人/agent 都必须遵守。
 
-## 1) 结构与分层（优先“少而清晰”）
+## 分层架构
 
-- 优先把业务能力沉到 `services/`（数据访问、集成、编排、纯逻辑），UI/交互放 `ui/`，状态与用例编排放 `viewmodels/`。
-- 若项目有“平台/入口”概念（如 `entrypoints/`、`platform/`、`collectors/`），可以与 `services/` 平级；但跨层依赖需保持单向：`ui -> viewmodels -> services`（入口层可依赖所有层）。
-- 避免“同名能力在多处各自实现”，优先收敛为单一真源，并在 AGENTS.md 中指明真源路径。
+依赖方向严格从左到右，禁止反向：
 
-## 2) 导入路径与别名（减少 `../../..`）
+```
+entrypoints → ui → viewmodels → services → models
+```
 
-- 推荐使用 TS `paths` 做别名（例如 `@ui/*`、`@viewmodels/*`、`@services/*` 等），让导入表达层次而不是文件系统相对路径。
-- 采用别名通常不仅是“替换 import 字符串”，还需要维护：
-  - `tsconfig*.json`（`compilerOptions.baseUrl` + `paths`）
-  - bundler 配置（如 Vite/Webpack/Rollup）或运行时（如 ts-node）对别名的解析
-  - 测试运行器的别名映射（若测试也使用别名）
-- 如果某个目录（例如 `tests/`）明确不使用别名，应在 AGENTS.md 中写清楚，并保持一致。
+- `entrypoints` 可依赖所有层（只做组装）；其余层不得反向依赖上层。
+- `ui` 只能经由 `viewmodels` 访问下层，不得跳过 `viewmodels` 直达 `services`/`models`。
 
-## 3) 配置文件最小化（尊重现状）
+## 分层职责边界（对齐设计蓝图 E/20，严守）
 
-- 默认遵循仓库现有工具链与配置；除非明确被要求，不要引入新的 lint/format/test 配置文件来“补齐规范”。
-- 若必须新增/调整配置，优先复用已有文件（例如在既有 `tsconfig.json` 中扩展），避免堆叠多个相近配置产生漂移。
+- **ui**：渲染只读状态、播放演出、收集输入。禁止写规则、禁止直接改 `models`。
+- **viewmodels**：组织表现状态、把 Command 派发给 `services`。禁止依赖 Phaser、禁止写战斗规则。
+- **services**：结算/寻路/AI/存档等纯逻辑。禁止引用 Phaser、禁止读 DOM。
+- **models**：只放纯数据结构与不变量。禁止含行为副作用。
 
-## 4) 代码风格与格式化（以仓库为准）
+## 路径别名
 
-- 缩进、引号、换行等格式化细节以仓库现有规范为准；不要在重构中顺手做大规模格式化改动，避免噪音 diff。
-- 如果仓库已有统一入口脚本（如 `gate`、`lint:fix`、`format`），优先通过这些入口来保证一致性。
+- `@ui/*`、`@viewmodels/*`、`@services/*`、`@models/*` 均指向 `src/*`。
+- `entrypoints` 不设别名（没有层需要反向 import 它）。
+- 修改别名需同步改 `tsconfig.json`；esbuild 自动跟随 `tsconfig.json` 的 `paths`，无需单独改。
 
-## 5) 验证与回归（写进 AGENTS.md）
+## 测试
 
-- 在 AGENTS.md 中列出最小可验证链路（例如：`compile`、`test`、`build`），并说明各命令的“目的”和“适用范围”（例如只跑 Web 项目或只跑扩展）。
-- 对易回归区域（路由、打包产物、消息协议、别名解析）给出最小冒烟检查建议。
+- 测试运行器固定用 `npx --no-install tsx --test 'src/**/*.test.ts'`（用显式 glob 限定，切勿写成裸目录 `tsx --test src`——那会把 `src` 当字面文件名导致测试直接失败），不要用裸 `node --test`：已实测 Node 原生 `--test` 无法解析 `tsconfig.json` 的 `paths` 别名（`ERR_MODULE_NOT_FOUND`），`tsx` 可以。
+- 测试发现必须限定在 `src/**/*.test.ts` glob，不要跑裸 `tsx --test`（Node 测试运行器会把任何 `test/` 目录下的文件都当测试执行，也可能拾取非预期文件而报错）。
+- 测试文件放在被测模块旁，命名 `*.test.ts`。不要把非测试文件放进任何 `test/` 目录（测试运行器会误当测试执行）。
+
+## Phaser
+
+- 生产通过 `index.html` 的 CDN `<script>` 引入 Phaser（当前锁定 `4.2.0`），源代码里绝不 `import`/`require('phaser')`，仅用 `src/types/phaser-global.d.ts` 的全局声明兜底。
+- 沙箱无网，冒烟测试用 `scripts/smoke.mjs` 里的 route 拦截把 CDN 请求换成 `vendor/phaser.min.js`（与 CDN 同版本）。该文件是**本地测试夹具，不纳入 git**（见 `.gitignore`）——体积大且生产走 CDN，克隆/解压后需从 Notion《双生圣痕 · 源代码存档》的 `phaser.js.zip` 取回放到 `vendor/`；放在仓库根 `vendor/` 而非 `test/` 目录，以免被测试运行器误当测试执行。
+- 不要 `npm install phaser`。
+
+## 验证
+
+- 提交前必须跑 `bash scripts/gate.sh`（类型检查 / 测试 / 构建 / 冒烟四步全绿）。
+- 沙箱默认无网络，不要尝试 `npm install` / `npm ci`。
+
+## 提交约定
+
+- commit subject 格式：`<type>: <task-id> - <中文描述>`，例如 `feat: P1-T3 - 实现 BootScene 占位场景`。
+- 一个 task 一个原子提交；某 task 替换/废弃旧代码必须在同一 task 内直接删除，不得拖到最后清理。
+- `.github/features/**` 下的规划文件不纳入 git 提交，仅作工作区文件保留。

@@ -1,0 +1,13 @@
+{
+  "name": "twin-stigma-tactics",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "npx --no-install tsx --test 'src/**/*.test.ts'",
+    "build": "node scripts/build.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "gate": "bash scripts/gate.sh"
+  }
+}
