@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>双生圣痕 · 血脉宿命战棋</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        background: #101014;
+        color: #f3efe4;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      #game {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+
+      canvas {
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="game" aria-label="双生圣痕战棋棋盘"></main>
+    <script src="./vendor/phaser.min.js"></script>
+    <script src="./dist/main.js"></script>
+  </body>
+</html>

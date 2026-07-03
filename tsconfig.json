@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "strict": true,
+    "ignoreDeprecations": "6.0",
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@data/*": ["src/data/*"],
+      "@models/*": ["src/models/*"],
+      "@services/*": ["src/services/*"],
+      "@ui/*": ["src/ui/*"],
+      "@viewmodels/*": ["src/viewmodels/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.mjs"]
+}
