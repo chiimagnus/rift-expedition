@@ -1,0 +1,31 @@
+current_task_id = "P1-T1"
+
+[[tasks]]
+id = "P1-T1"
+title = "BattleViewModel 脚手架（selectUnit/moveTo，其余 Command 先 stub）"
+status = "pending"
+
+[[tasks]]
+id = "P1-T2"
+title = "Phase 1 合成测试地图+初始 BattleState 工厂函数（非真实第1章数据）"
+status = "pending"
+
+[[tasks]]
+id = "P1-T3"
+title = "entrypoints/main.ts 真实组装，取代 M0 空场景占位"
+status = "pending"
+
+[[tasks]]
+id = "P1-T4"
+title = "BattleScene 地形+网格渲染（占位色块+整数缩放相机）"
+status = "pending"
+
+[[tasks]]
+id = "P1-T5"
+title = "BattleScene 单位渲染+选中/可移动高亮+点击移动输入"
+status = "pending"
+
+[[tasks]]
+id = "P1-T6"
+title = "更新 smoke 脚本断言真实渲染+根 AGENTS.md 新增 M2 Phase1 模块说明"
+status = "pending"
