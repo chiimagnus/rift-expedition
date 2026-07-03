@@ -11,13 +11,8 @@ const mime = {
   '.css': 'text/css',
 }
 
-// ponytail: 生产用 index.html 里的 CDN 引入 Phaser；但沙箱无网，故 smoke 用
-// Playwright route 拦截 CDN 请求，用本地 vendor 的同版本 Phaser 回填，保持
-// “生产 CDN / 测试本地”策略；index.html 无需为测试改动。
-// 注意：vendor/phaser.min.js 是不纳入 git 的本地测试夹具（见 .gitignore），
-// 缺失时从 Notion 存档的 phaser.js.zip 取回；缺失会导致下方 route 回填失败。
-const PHASER_VENDOR = path.join(root, 'vendor/phaser.min.js')
-
+// Phaser 由 index.html 直接从本地 vendor/phaser.min.js 引入（vendor-only，不走 CDN）。
+// 下方静态服务器直接托管 vendor/ 等仓库文件，冒烟测试无需任何请求拦截/回填。
 const server = http.createServer(async (req, res) => {
   try {
     const urlPath = req.url === '/' ? '/index.html' : req.url
@@ -41,17 +36,6 @@ const browser = await chromium.launch({
   args: ['--no-sandbox'],
 })
 const page = await browser.newPage()
-
-// 拦截 CDN 的 Phaser 请求，回填本地 vendor 副本
-await page.route('**/cdn.jsdelivr.net/**', async (route) => {
-  try {
-    const body = await readFile(PHASER_VENDOR)
-    await route.fulfill({ status: 200, contentType: 'text/javascript', body })
-  } catch (err) {
-    errors.push(`vendor phaser fulfil failed: ${err.message}`)
-    await route.abort()
-  }
-})
 
 page.on('console', (msg) => {
   if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`)

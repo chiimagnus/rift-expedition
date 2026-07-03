@@ -34,8 +34,8 @@ entrypoints → ui → viewmodels → services → models
 
 ## Phaser
 
-- 生产通过 `index.html` 的 CDN `<script>` 引入 Phaser（当前锁定 `4.2.0`），源代码里绝不 `import`/`require('phaser')`，仅用 `src/types/phaser-global.d.ts` 的全局声明兜底。
-- 沙箱无网，冒烟测试用 `scripts/smoke.mjs` 里的 route 拦截把 CDN 请求换成 `vendor/phaser.min.js`（与 CDN 同版本）。该文件是**本地测试夹具，不纳入 git**（见 `.gitignore`）——体积大且生产走 CDN，克隆/解压后需从 Notion《双生圣痕 · 源代码存档》的 `phaser.js.zip` 取回放到 `vendor/`；放在仓库根 `vendor/` 而非 `test/` 目录，以免被测试运行器误当测试执行。
+- Phaser 一律从本地 `vendor/phaser.min.js`（锁定 `4.2.0`）引入：`index.html` 用 `<script src="./vendor/phaser.min.js">`，**不走 CDN**。源代码里绝不 `import`/`require('phaser')`，仅用 `src/types/phaser-global.d.ts` 的全局声明兜底。
+- `vendor/phaser.min.js` 是生产依赖，**纳入 git**（放仓库根 `vendor/` 而非 `test/`，以免被测试运行器误当测试执行）。冒烟测试 `scripts/smoke.mjs` 的静态服务器直接托管 `vendor/`，无需任何 CDN 请求拦截/回填。
 - 不要 `npm install phaser`。
 
 ## 验证
