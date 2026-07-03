@@ -3,6 +3,7 @@ import type { AiAction, BattleState, Cell, UnitInstance } from "../models/types"
 import { findUnit, livingUnits, unitAt, updateOutcome } from "./chapter";
 import { canAttackAtDistance, forecastCombat, resolveCombat } from "./combat";
 import { cellKey, distance, moveUnit, reachableCells } from "./movement";
+import { refreshRound } from "./skills";
 
 export function chooseEnemyAction(state: BattleState, enemy: UnitInstance): AiAction {
   const reachable = reachableCells(state, enemy);
@@ -61,6 +62,7 @@ export function runEnemyTurn(state: BattleState): void {
     for (const unit of state.units) {
       unit.acted = false;
     }
+    refreshRound(state);
     state.phase = "player";
     state.log.unshift(`第 ${state.turn} 回合。`);
   }

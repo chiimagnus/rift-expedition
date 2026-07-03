@@ -14,7 +14,7 @@
 - `vendor/phaser.min.js`：仓库内已有 Phaser 压缩构建产物；不要手改压缩文件。
 - `src/data/`：数据化内容真源，当前包含全地形、起始技能、24 章战役链、4 个结局与首批角色/武器/职业。
 - `src/models/`：纯类型与运行时状态模型。
-- `src/services/`：战斗、移动、AI、章节初始化、PRNG 等纯逻辑。
+- `src/services/`：战斗、移动、AI、技能/状态、战役存档、章节初始化、PRNG 等纯逻辑。
 - `src/viewmodels/`：把 UI Command 翻译成 service 调用。
 - `src/ui/`：Phaser Scene 与 HUD，只读渲染状态并上抛操作。
 - `src/entrypoints/`：浏览器入口。

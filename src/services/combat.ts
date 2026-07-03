@@ -13,9 +13,11 @@ import type { BattleState, CombatEvent, CombatForecast, CombatResolution, UnitIn
 import { findUnit } from "./chapter";
 import { createRng, rollPercent } from "./rng";
 import { distance } from "./movement";
+import { effectiveStats, hasStatus } from "./status";
 
 export function attackSpeed(unit: UnitInstance, weapon: WeaponDef): number {
-  return unit.stats.spd - Math.max(0, weapon.weight - unit.stats.con);
+  const stats = effectiveStats(unit);
+  return stats.spd - Math.max(0, weapon.weight - stats.con);
 }
 
 export function triangleValue(attackerWeapon: WeaponDef, defenderWeapon: WeaponDef): number {
@@ -42,6 +44,8 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
   const defender = findUnit(state, defenderId);
   const attackerWeapon = getWeapon(attacker.weaponId);
   const defenderWeapon = getWeapon(defender.weaponId);
+  const attackerStats = effectiveStats(attacker);
+  const defenderStats = effectiveStats(defender);
   const cells = distance(attacker.pos, defender.pos);
   const defenderTerrainId = state.grid[defender.pos.y]?.[defender.pos.x];
   if (!defenderTerrainId) {
@@ -50,19 +54,19 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
   const defenderTerrain = getTerrain(defenderTerrainId);
   const triangle = triangleValue(attackerWeapon, defenderWeapon);
   const multiplier = effectiveMultiplier(attackerWeapon, defender);
-  const defense = attackerWeapon.damageKind === "magical" ? defender.stats.res : defender.stats.def + defenderTerrain.defense;
+  const defense = attackerWeapon.damageKind === "magical" ? defenderStats.res : defenderStats.def + defenderTerrain.defense;
   const basePower =
     attackerWeapon.damageKind === "magical"
-      ? attacker.stats.mag + attackerWeapon.might
-      : (attacker.stats.str + attackerWeapon.might) * multiplier;
+      ? attackerStats.mag + attackerWeapon.might
+      : (attackerStats.str + attackerWeapon.might) * multiplier;
   const damage = Math.max(COMBAT.minDamage, Math.floor(basePower + triangle * COMBAT.counterMight - defense));
   const hit = clampPercent(
-    attackerWeapon.hit +
-      attacker.stats.skill * 2 +
+      attackerWeapon.hit +
+      attackerStats.skill * 2 +
       triangle * COMBAT.counterHit -
-      (defender.stats.spd * 2 + defender.stats.luck + defenderTerrain.avoid),
+      (defenderStats.spd * 2 + defenderStats.luck + defenderTerrain.avoid),
   );
-  const crit = clampPercent(attackerWeapon.crit + Math.floor(attacker.stats.skill * COMBAT.critFromSkill) - defender.stats.luck);
+  const crit = clampPercent(attackerWeapon.crit + Math.floor(attackerStats.skill * COMBAT.critFromSkill) - defenderStats.luck);
   const followUp = attackSpeed(attacker, attackerWeapon) - attackSpeed(defender, defenderWeapon) >= COMBAT.doublingThreshold;
   return {
     attackerId,
@@ -115,7 +119,8 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
   }
 
   const critical = rollPercent(rng, forecast.crit, false);
-  const damage = critical ? forecast.damage * 3 : forecast.damage;
+  const rawDamage = critical ? forecast.damage * 3 : forecast.damage;
+  const damage = hasStatus(target, "aegis") ? Math.max(COMBAT.minDamage, Math.floor(rawDamage / 2)) : rawDamage;
   target.hp = Math.max(0, target.hp - damage);
   events.push({ type: "hit", sourceId: source.id, targetId: target.id, damage, critical, remainingHp: target.hp });
   if (target.hp === 0) {

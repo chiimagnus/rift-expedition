@@ -108,11 +108,18 @@ export interface UnitInstance {
   stats: Stats;
   weaponId: string;
   skillIds: string[];
+  statuses: StatusEffect[];
+  skillUses: Record<string, number>;
   pos: Cell;
   acted: boolean;
   alive: boolean;
   level: number;
   exp: number;
+}
+
+export interface StatusEffect {
+  id: "stigma_awaken" | "aegis" | "sprint" | "poison";
+  turns: number;
 }
 
 export interface ChapterDef {

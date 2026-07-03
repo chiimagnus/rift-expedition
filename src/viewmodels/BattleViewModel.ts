@@ -4,10 +4,12 @@ import { attackableEnemiesFrom, runEnemyTurn } from "../services/ai";
 import { findUnit, updateOutcome, unitAt } from "../services/chapter";
 import { canAttackAtDistance, forecastCombat, resolveCombat } from "../services/combat";
 import { cellKey, distance, moveUnit, reachableCells, terrainAt } from "../services/movement";
+import { activateSkill, activeSkills } from "../services/skills";
 
 export class BattleViewModel {
   readonly state: BattleState;
   selectedUnitId: string | undefined;
+  selectedSkillId: string | undefined;
   hoverCell: Cell | undefined;
 
   constructor(state: BattleState) {
@@ -62,8 +64,13 @@ export class BattleViewModel {
     }
     const occupant = unitAt(this.state, cell.x, cell.y);
     const selected = this.selectedUnit;
+    if (selected && this.selectedSkillId) {
+      this.activateSelectedSkillAt(cell);
+      return;
+    }
     if (occupant?.team === "ally" && occupant.alive) {
       this.selectedUnitId = occupant.id;
+      this.selectedSkillId = undefined;
       return;
     }
     if (!selected || selected.acted) {
@@ -78,6 +85,7 @@ export class BattleViewModel {
       selected.acted = true;
       this.state.log.unshift(`${unitLabel(selected)} 移动至 (${cell.x + 1},${cell.y + 1})。`);
       this.selectedUnitId = undefined;
+      this.selectedSkillId = undefined;
       this.autoEndIfDone();
     }
   }
@@ -95,8 +103,36 @@ export class BattleViewModel {
     resolveCombat(this.state, attacker.id, target.id);
     attacker.acted = true;
     this.selectedUnitId = undefined;
+    this.selectedSkillId = undefined;
     updateOutcome(this.state);
     this.autoEndIfDone();
+  }
+
+  selectSkill(skillId: string): void {
+    const unit = this.selectedUnit;
+    if (!unit || unit.acted || unit.team !== "ally") {
+      return;
+    }
+    if (skillId === "stigma_awaken" || skillId === "aegis" || skillId === "sprint") {
+      const result = activateSkill(this.state, unit.id, skillId, unit.id);
+      if (!result.ok) {
+        this.state.log.unshift(result.message);
+      }
+      this.selectedUnitId = undefined;
+      this.selectedSkillId = undefined;
+      updateOutcome(this.state);
+      this.autoEndIfDone();
+      return;
+    }
+    this.selectedSkillId = skillId;
+    this.state.log.unshift("请选择技能目标。");
+  }
+
+  activeSkillList(unit: UnitInstance | undefined): ReturnType<typeof activeSkills> {
+    if (!unit || unit.acted || unit.team !== "ally") {
+      return [];
+    }
+    return activeSkills(unit);
   }
 
   waitSelected(): void {
@@ -107,6 +143,7 @@ export class BattleViewModel {
     unit.acted = true;
     this.state.log.unshift(`${unitLabel(unit)} 待机。`);
     this.selectedUnitId = undefined;
+    this.selectedSkillId = undefined;
     this.autoEndIfDone();
   }
 
@@ -115,6 +152,7 @@ export class BattleViewModel {
       return;
     }
     this.selectedUnitId = undefined;
+    this.selectedSkillId = undefined;
     for (const unit of this.state.units) {
       if (unit.team === "ally") {
         unit.acted = true;
@@ -143,7 +181,8 @@ export class BattleViewModel {
     const unitDef = getUnitDef(unit.defId);
     const classDef = getClass(unitDef.classId);
     const weapon = getWeapon(unit.weaponId);
-    return `${unitDef.name} ${classDef.name}\nHP ${unit.hp}/${unit.stats.hp}  ${weapon.name}\n力${unit.stats.str} 魔${unit.stats.mag} 技${unit.stats.skill} 速${unit.stats.spd}\n防${unit.stats.def} 魔防${unit.stats.res} 移${unit.stats.move}`;
+    const statuses = unit.statuses.map((status) => `${status.id}:${status.turns}`).join(" ");
+    return `${unitDef.name} ${classDef.name}\nHP ${unit.hp}/${unit.stats.hp}  ${weapon.name}\n力${unit.stats.str} 魔${unit.stats.mag} 技${unit.stats.skill} 速${unit.stats.spd}\n防${unit.stats.def} 魔防${unit.stats.res} 移${unit.stats.move}${statuses ? `\n${statuses}` : ""}`;
   }
 
   objectiveText(): string {
@@ -162,6 +201,24 @@ export class BattleViewModel {
     if (!anyReady) {
       this.endPlayerTurn();
     }
+  }
+
+  private activateSelectedSkillAt(cell: Cell): void {
+    const unit = this.selectedUnit;
+    const skillId = this.selectedSkillId;
+    if (!unit || !skillId) {
+      return;
+    }
+    const target = unitAt(this.state, cell.x, cell.y);
+    const result = activateSkill(this.state, unit.id, skillId, target?.id);
+    if (!result.ok) {
+      this.state.log.unshift(result.message);
+      return;
+    }
+    this.selectedUnitId = undefined;
+    this.selectedSkillId = undefined;
+    updateOutcome(this.state);
+    this.autoEndIfDone();
   }
 }
 

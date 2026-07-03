@@ -27,6 +27,8 @@ export function createInitialBattleState(chapterId = "ch01"): BattleState {
       stats: { ...unitDef.baseStats },
       weaponId,
       skillIds: [...unitDef.skillIds],
+      statuses: [],
+      skillUses: {},
       pos: { x: deployment.x, y: deployment.y },
       acted: false,
       alive: true,
@@ -52,7 +54,13 @@ export function cloneBattleState(state: BattleState): BattleState {
   return {
     ...state,
     grid: state.grid.map((row) => [...row]),
-    units: state.units.map((unit) => ({ ...unit, stats: { ...unit.stats }, pos: { ...unit.pos } })),
+    units: state.units.map((unit) => ({
+      ...unit,
+      stats: { ...unit.stats },
+      statuses: unit.statuses.map((status) => ({ ...status })),
+      skillUses: { ...unit.skillUses },
+      pos: { ...unit.pos },
+    })),
     bonds: { ...state.bonds },
     flags: { ...state.flags },
     log: [...state.log],

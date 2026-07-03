@@ -1,6 +1,7 @@
 import { getClass, getTerrain, getUnitDef } from "../data";
 import type { BattleState, Cell, UnitInstance } from "../models/types";
 import { unitAt } from "./chapter";
+import { effectiveStats } from "./status";
 
 export function cellKey(cell: Cell): string {
   return `${cell.x},${cell.y}`;
@@ -55,7 +56,7 @@ export function reachableCells(state: BattleState, unit: UnitInstance): Map<stri
         continue;
       }
       const nextCost = current.cost + cost;
-      if (nextCost > unit.stats.move) {
+      if (nextCost > effectiveStats(unit).move) {
         continue;
       }
       const key = cellKey(next);

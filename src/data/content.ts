@@ -125,7 +125,7 @@ export const skillCatalog: SkillDef[] = [
 ];
 
 export const unitCatalog: UnitDef[] = [
-  { id: "aldric", name: "奥德里克", faction: "sorein", classId: "dragon_lance", level: 1, baseStats: { hp: 27, str: 11, mag: 4, skill: 10, spd: 9, luck: 7, def: 9, res: 4, move: 6, con: 9 }, growths: dragonGrowth, weaponIds: ["iron_lance", "iron_sword"], skillIds: ["oath_resonance"], defeatBehavior: "retreat" },
+  { id: "aldric", name: "奥德里克", faction: "sorein", classId: "dragon_lance", level: 1, baseStats: { hp: 27, str: 11, mag: 4, skill: 10, spd: 9, luck: 7, def: 9, res: 4, move: 6, con: 9 }, growths: dragonGrowth, weaponIds: ["iron_lance", "iron_sword"], skillIds: ["oath_resonance", "stigma_awaken"], defeatBehavior: "retreat" },
   { id: "valentin", name: "瓦伦丁", faction: "sorein", classId: "armor", level: 3, baseStats: { hp: 30, str: 12, mag: 0, skill: 8, spd: 5, luck: 5, def: 13, res: 3, move: 4, con: 12 }, growths: armorGrowth, weaponIds: ["iron_lance"], skillIds: ["hold_fast"] },
   { id: "mirelle", name: "米瑞尔", faction: "sorein", classId: "mage", level: 1, baseStats: { hp: 19, str: 1, mag: 10, skill: 9, spd: 8, luck: 6, def: 3, res: 7, move: 5, con: 5 }, growths: mageGrowth, weaponIds: ["fire"], skillIds: ["triune_sage"] },
   { id: "cecilia", name: "塞西莉亚", faction: "church", classId: "sword_fighter", level: 2, baseStats: { hp: 23, str: 9, mag: 2, skill: 11, spd: 11, luck: 5, def: 5, res: 4, move: 5, con: 7 }, growths: infantryGrowth, weaponIds: ["iron_sword"], skillIds: ["calm"] },

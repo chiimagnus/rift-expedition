@@ -134,6 +134,7 @@ export class BattleScene extends Phaser.Scene {
       this.panel(4, HEIGHT - 82, 152, 78, 0x111820, 0.88);
       this.addText(10, HEIGHT - 76, this.vm.unitText(infoUnit), { fontSize: "10px", color: "#f3efe4", lineSpacing: 2 });
     }
+    this.drawActionMenu();
 
     if (this.vm.hoverCell && inBounds(this.vm.state, this.vm.hoverCell)) {
       this.panel(WIDTH - 138, HEIGHT - 50, 134, 46, 0x181410, 0.88);
@@ -175,6 +176,39 @@ export class BattleScene extends Phaser.Scene {
       this.vm.endPlayerTurn();
       this.render();
     });
+  }
+
+  private drawActionMenu(): void {
+    const unit = this.vm.selectedUnit;
+    if (!unit || unit.acted || unit.team !== "ally" || this.vm.state.phase !== "player") {
+      this.button(6, 28, 58, 18, "新战役", () => {
+        clearCampaign(globalThis.localStorage);
+        this.campaign = createNewCampaign();
+        this.startChapter(this.campaign.currentChapterId);
+        this.render();
+      });
+      return;
+    }
+
+    const x = 160;
+    let y = HEIGHT - 28;
+    this.button(x, y, 46, 18, "待机", () => {
+      this.vm.waitSelected();
+      this.render();
+    });
+    let offset = 50;
+    for (const skill of this.vm.activeSkillList(unit).slice(0, 3)) {
+      this.button(x + offset, y, 58, 18, skill.name, () => {
+        this.vm.selectSkill(skill.id);
+        this.render();
+      });
+      offset += 62;
+    }
+    if (this.vm.selectedSkillId) {
+      y -= 20;
+      this.panel(x, y, 180, 18, 0x2b1a1a, 0.88);
+      this.addText(x + 6, y + 4, `技能目标：${this.vm.selectedSkillId}`, { fontSize: "10px", color: "#ffd5d5" });
+    }
   }
 
   private panel(x: number, y: number, width: number, height: number, color: number, alpha: number): void {
@@ -274,6 +308,11 @@ export class BattleScene extends Phaser.Scene {
   private advanceCampaign(): void {
     this.campaign.seed = this.vm.state.rngState;
     this.campaign.bonds = { ...this.campaign.bonds, ...this.vm.state.bonds };
+    this.campaign.taint = {
+      ...this.campaign.taint,
+      aldric: Number(this.vm.state.flags["dragonTaint:aldric"] ?? this.campaign.taint.aldric ?? 0),
+      elara: Number(this.vm.state.flags["dragonTaint:elara"] ?? this.campaign.taint.elara ?? 0),
+    };
     this.campaign = completeCurrentChapter(this.campaign);
     saveCampaign(globalThis.localStorage, this.campaign);
     if (!this.campaign.endingId) {
