@@ -1,66 +1,66 @@
 version = 1
-current_task_id = "P1-T1"
+current_task_id = "P1-T8"
 
 [[tasks]]
 id = "P1-T1"
 title = "可注入种子 PRNG 服务"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t1"
-commit = ""
-note = ""
+commit = "8c8f8a8"
+note = "tests passed (3)"
 
 [[tasks]]
 id = "P1-T2"
 title = "地形数据模块（18 种）"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t2"
-commit = ""
-note = ""
+commit = "7753a2c"
+note = "tests passed (8)"
 
 [[tasks]]
 id = "P1-T3"
 title = "武器/魔法相克矩阵与 COMBAT 参数表"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t3"
-commit = ""
-note = ""
+commit = "4794fb1"
+note = "tests passed (6)"
 
 [[tasks]]
 id = "P1-T4"
 title = "单位数据模块（步/骑/飞）"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t4"
-commit = ""
-note = ""
+commit = "d457932"
+note = "tests passed (4)"
 
 [[tasks]]
 id = "P1-T5"
 title = "可达域计算服务（Dijkstra）"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t5"
-commit = ""
-note = ""
+commit = "9602507"
+note = "tests passed (6)"
 
 [[tasks]]
 id = "P1-T6"
 title = "跨模块数据引用完整性单测"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t6"
-commit = ""
-note = ""
+commit = "d7d8869"
+note = "tests passed (3)"
 
 [[tasks]]
 id = "P1-T7"
 title = "运行时战斗状态模型 BattleState/UnitInstance"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t7"
-commit = ""
-note = ""
+commit = "93fec6d"
+note = "tests passed (2)"
 
 [[tasks]]
 id = "P1-T8"
 title = "更新根 AGENTS.md 记录 M1 Phase1 新增模块"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t8"
-commit = ""
-note = ""
+commit = "12dbd2e"
+note = "AGENTS.md 已更新"
