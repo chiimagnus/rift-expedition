@@ -150,6 +150,10 @@ export class BattleViewModel {
     return getChapter(this.state.chapterId).objective;
   }
 
+  chapterTitle(): string {
+    return getChapter(this.state.chapterId).title;
+  }
+
   private autoEndIfDone(): void {
     if (this.state.phase !== "player") {
       return;

@@ -120,6 +120,9 @@ export interface ChapterDef {
   title: string;
   act: string;
   objective: string;
+  nextChapterId?: string;
+  victoryText?: string[];
+  choice?: StoryChoice;
   terrainLegend: Record<string, string>;
   map: string[];
   deployments: Array<{
@@ -131,6 +134,39 @@ export interface ChapterDef {
     weaponId?: string;
   }>;
   opening: string[];
+}
+
+export interface StoryChoice {
+  id: string;
+  prompt: string;
+  options: Array<{
+    text: string;
+    flag: string;
+    value: number | boolean;
+  }>;
+}
+
+export interface EndingDef {
+  id: string;
+  title: string;
+  condition: string;
+  tone: string;
+  text: string[];
+}
+
+export interface CampaignState {
+  version: number;
+  currentChapterId: string;
+  completedChapterIds: string[];
+  roster: string[];
+  fallen: string[];
+  bonds: Record<string, number>;
+  taint: Record<string, number>;
+  flags: Record<string, number | boolean>;
+  mode: "classic" | "casual";
+  seed: number;
+  savedAt: number;
+  endingId?: string;
 }
 
 export interface BattleState {

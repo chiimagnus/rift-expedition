@@ -1,6 +1,7 @@
-import { getClass, getTerrain, getUnitDef, getWeapon } from "../data";
+import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef, getWeapon } from "../data";
 import type { Cell, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
+import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, loadCampaign, saveCampaign } from "../services/campaign";
 import { forecastCombat } from "../services/combat";
 import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
@@ -14,6 +15,7 @@ const HEIGHT = ROWS * TILE;
 declare const Phaser: any;
 
 export class BattleScene extends Phaser.Scene {
+  private campaign = createNewCampaign();
   private vm!: BattleViewModel;
   private board!: any;
   private overlay!: any;
@@ -24,7 +26,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.vm = new BattleViewModel(createInitialBattleState());
+    this.campaign = loadCampaign(globalThis.localStorage);
+    this.startChapter(this.campaign.currentChapterId);
     this.board = this.add.graphics();
     this.overlay = this.add.graphics();
     this.input.on("pointermove", (pointer: any) => this.vm.setHover(screenToCell(pointer.x, pointer.y)));
@@ -115,6 +118,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private drawHud(): void {
+    if (this.campaign.endingId) {
+      this.drawEnding();
+      return;
+    }
     const phaseText = this.vm.state.phase === "player" ? "我方" : this.vm.state.phase === "enemy" ? "敌方" : this.vm.state.phase;
     this.panel(0, 0, WIDTH, 25, 0x101014, 0.82);
     this.addText(8, 5, `${phaseText}  第 ${this.vm.state.turn} 回合`, { fontSize: "12px", color: "#f3efe4" });
@@ -143,10 +150,16 @@ export class BattleScene extends Phaser.Scene {
     }
 
     this.panel(WIDTH - 188, 29, 184, 64, 0x101014, 0.72);
-    this.addText(WIDTH - 181, 35, this.vm.objectiveText(), { fontSize: "10px", color: "#f3efe4", wordWrap: { width: 172 } });
+    this.addText(WIDTH - 181, 35, `${this.vm.chapterTitle()}\n${this.vm.objectiveText()}`, { fontSize: "10px", color: "#f3efe4", wordWrap: { width: 172 } });
 
     this.panel(164, 29, 116, 58, 0x101014, 0.68);
     this.addText(170, 35, this.vm.state.log.slice(0, 3).join("\n"), { fontSize: "9px", color: "#f3efe4", lineSpacing: 2, wordWrap: { width: 105 } });
+
+    if (this.vm.state.phase === "victory") {
+      this.drawVictoryPanel();
+    } else if (this.vm.state.phase === "defeat") {
+      this.drawDefeatPanel();
+    }
   }
 
   private endTurnButton(): void {
@@ -201,6 +214,82 @@ export class BattleScene extends Phaser.Scene {
     created.setResolution(2);
     this.texts.push(created);
     return created;
+  }
+
+  private startChapter(chapterId: string): void {
+    const state = createInitialBattleState(chapterId);
+    state.rngState = this.campaign.seed;
+    this.vm = new BattleViewModel(state);
+  }
+
+  private drawVictoryPanel(): void {
+    const chapter = getChapter(this.vm.state.chapterId);
+    this.panel(58, 76, 332, 172, 0x111820, 0.94);
+    this.addText(70, 88, `${chapter.title} 完成`, { fontSize: "16px", color: "#f7e7b1", fontStyle: "700" });
+    this.addText(70, 112, (chapter.victoryText ?? ["战斗结束。"]).join("\n"), { fontSize: "11px", color: "#f3efe4", wordWrap: { width: 306 }, lineSpacing: 4 });
+
+    if (chapter.choice && this.campaign.flags[chapter.choice.options[0]?.flag ?? ""] == null) {
+      this.addText(70, 154, chapter.choice.prompt, { fontSize: "11px", color: "#e0c27a", wordWrap: { width: 306 } });
+      chapter.choice.options.forEach((option, index) => {
+        this.button(72, 174 + index * 22, 300, 18, option.text, () => this.advanceAfterChoice(index));
+      });
+      return;
+    }
+
+    this.button(144, 216, 160, 20, chapter.nextChapterId ? "进入下一章" : "查看结局", () => this.advanceCampaign());
+  }
+
+  private drawDefeatPanel(): void {
+    this.panel(86, 100, 276, 100, 0x201010, 0.94);
+    this.addText(112, 116, "败北", { fontSize: "18px", color: "#ffd5d5", fontStyle: "700" });
+    this.addText(112, 143, "战线崩溃。重新开始本章。", { fontSize: "11px", color: "#f3efe4" });
+    this.button(144, 169, 160, 20, "重试", () => this.startChapter(this.campaign.currentChapterId));
+  }
+
+  private drawEnding(): void {
+    if (!this.campaign.endingId) {
+      return;
+    }
+    const ending = getEnding(this.campaign.endingId);
+    this.panel(38, 52, 372, 210, 0x101014, 0.96);
+    this.addText(58, 70, ending.title, { fontSize: "20px", color: "#f7e7b1", fontStyle: "700" });
+    this.addText(58, 100, `${ending.tone}\n${ending.text.join("\n")}`, { fontSize: "12px", color: "#f3efe4", wordWrap: { width: 332 }, lineSpacing: 5 });
+    this.addText(58, 176, `触发条件：${ending.condition}`, { fontSize: "10px", color: "#d8c596", wordWrap: { width: 332 } });
+    this.button(142, 224, 164, 22, "新战役", () => {
+      clearCampaign(globalThis.localStorage);
+      this.campaign = createNewCampaign();
+      this.startChapter(this.campaign.currentChapterId);
+    });
+    this.addText(112, 252, `${endingCatalog.length} 个结局已接入`, { fontSize: "10px", color: "#8fa1b2" });
+  }
+
+  private advanceAfterChoice(optionIndex: number): void {
+    const chapter = getChapter(this.vm.state.chapterId);
+    if (chapter.choice) {
+      this.campaign = applyStoryChoice(this.campaign, chapter.choice, optionIndex);
+    }
+    this.advanceCampaign();
+  }
+
+  private advanceCampaign(): void {
+    this.campaign.seed = this.vm.state.rngState;
+    this.campaign.bonds = { ...this.campaign.bonds, ...this.vm.state.bonds };
+    this.campaign = completeCurrentChapter(this.campaign);
+    saveCampaign(globalThis.localStorage, this.campaign);
+    if (!this.campaign.endingId) {
+      this.startChapter(this.campaign.currentChapterId);
+    }
+    this.render();
+  }
+
+  private button(x: number, y: number, width: number, height: number, label: string, onClick: () => void): void {
+    this.overlay.fillStyle(0x4b3830, 0.95);
+    this.overlay.fillRoundedRect(x, y, width, height, 3);
+    this.overlay.lineStyle(1, 0xe0c27a, 1);
+    this.overlay.strokeRoundedRect(x, y, width, height, 3);
+    const text = this.addText(x + 8, y + 4, label, { fontSize: "10px", color: "#f7e7b1" });
+    text.setInteractive({ useHandCursor: true });
+    text.on("pointerdown", onClick);
   }
 
   private clearTexts(): void {

@@ -1,0 +1,60 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { getChapter } from "../src/data";
+import {
+  applyStoryChoice,
+  chooseEnding,
+  completeCurrentChapter,
+  createNewCampaign,
+  loadCampaign,
+  saveCampaign,
+  type StorageLike,
+} from "../src/services/campaign";
+
+class MemoryStorage implements StorageLike {
+  private readonly values = new Map<string, string>();
+
+  getItem(key: string): string | null {
+    return this.values.get(key) ?? null;
+  }
+
+  setItem(key: string, value: string): void {
+    this.values.set(key, value);
+  }
+
+  removeItem(key: string): void {
+    this.values.delete(key);
+  }
+}
+
+test("campaign completion advances through chapters", () => {
+  let campaign = createNewCampaign();
+  assert.equal(campaign.currentChapterId, "ch01");
+  campaign = completeCurrentChapter(campaign);
+  assert.equal(campaign.currentChapterId, "ch02");
+  assert.deepEqual(campaign.completedChapterIds, ["ch01"]);
+});
+
+test("story choices write reactive flags", () => {
+  const campaign = createNewCampaign();
+  const choice = getChapter("ch13").choice!;
+  const updated = applyStoryChoice(campaign, choice, 2);
+  assert.equal(updated.flags.allegiance, 3);
+});
+
+test("save and load round-trip current campaign state", () => {
+  const storage = new MemoryStorage();
+  const campaign = { ...createNewCampaign("casual"), currentChapterId: "ch09", flags: { allegiance: 2 } };
+  saveCampaign(storage, campaign);
+  const loaded = loadCampaign(storage);
+  assert.equal(loaded.mode, "casual");
+  assert.equal(loaded.currentChapterId, "ch09");
+  assert.equal(loaded.flags.allegiance, 2);
+});
+
+test("ending selection follows B/11 ending tree", () => {
+  assert.equal(chooseEnding({ ...createNewCampaign(), flags: { endingChoice: 1 } }).id, "sacrifice_aldric");
+  assert.equal(chooseEnding({ ...createNewCampaign(), flags: { endingChoice: 2 } }).id, "sacrifice_elara");
+  assert.equal(chooseEnding({ ...createNewCampaign(), flags: { endingChoice: 3 }, bonds: { "aldric:elara": 180 } }).id, "defy_god");
+  assert.equal(chooseEnding({ ...createNewCampaign(), taint: { aldric: 3, elara: 3 } }).id, "dragonfall");
+});
