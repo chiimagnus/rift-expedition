@@ -48,3 +48,16 @@ entrypoints → ui → viewmodels → services → models
 - commit subject 格式：`<type>: <task-id> - <中文描述>`，例如 `feat: P1-T3 - 实现 BootScene 占位场景`。
 - 一个 task 一个原子提交；某 task 替换/废弃旧代码必须在同一 task 内直接删除，不得拖到最后清理。
 - `.github/features/**` 下的规划文件不纳入 git 提交，仅作工作区文件保留。
+
+## M1 Phase 1 新增模块（m1-combat-core）
+
+本阶段只铺“数据 + 纯函数服务”地基，尚无战斗结算/渲染。所有数值逐条对齐 `.github/docs/` 设计蓝图（A/03 战斗、A/04 兵种、A/06 地形）。
+
+- `@models/terrain`：`TerrainDef` / `TERRAIN_DEFS`（18 种）/ `TERRAIN_BY_ID`。`moveCost` 按 foot/horse/fly 分存，`Infinity` 表不可通行；仅毒沼/火山岩为 `effect:'periodicDamage'`，其余特殊仅 `effectNote` 文字记录。
+- `@models/weapons`：`WEAPON_TRIANGLE` / `MAGIC_TRIANGLE`（每行和=0）、`COMBAT` 可调参表、`WEAPON_DEFS`（剑/斧/枪/弓，弓 1-2 射程带 `antiAirBonus`）/ `WEAPON_BY_ID`。
+- `@models/units`：`Stats` / `GrowthRates` / `UnitDef` / `UNIT_DEFS`（步 foot / 骑 horse / 飞 fly）/ `UNIT_BY_ID`；飞兵带 `tags:['flying']`。成长率仅声明，本阶段不参与运算。
+- `@models/battleState`：`BattleState` / `UnitInstance` 等运行时纯类型。`grid` 为 `string[][]`（地形 id，行优先 grid[y][x]），`rngState:number`。严禁 import `services` 层（含 type-only）。
+- `@services/prng`：`seed` / `next`（mulberry32，可注入种子、纯函数、可复现）。
+- `@services/reachable`：`computeReachable(grid, start, moveType, movePower)` — Dijkstra 四方向可达域，返回 `Set<"x,y">`。**grid 按 idea.md 核心需求 9 修正为 `string[][]`（地形 id，与 `BattleState.grid` 同型）**，而非 plan-p1 早期写的 `TerrainDef[][]`；调用方自行用 `TERRAIN_BY_ID[id]` 查具体地形。
+
+约定：数据模块（terrain/weapons/units）之间不得互相 import；service 可 import models（反向禁止）。
