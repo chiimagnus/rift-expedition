@@ -1,5 +1,5 @@
 version = 1
-current_task_id = "P1-T8"
+current_task_id = "P2-T1"
 
 [[tasks]]
 id = "P1-T1"
@@ -63,4 +63,82 @@ title = "更新根 AGENTS.md 记录 M1 Phase1 新增模块"
 status = "completed"
 plan = "plan-p1.md#p1-t8"
 commit = "12dbd2e"
-note = "AGENTS.md 已更新"
+note = "AGENTS.md 已更新；vendor 迁移审计修复 425e104（Gate=Go）"
+
+[[tasks]]
+id = "P2-T1"
+title = "魔法法术数据 MagicDef/MAGIC_DEFS"
+status = "pending"
+plan = "plan-p2.md#p2-t1"
+
+[[tasks]]
+id = "P2-T2"
+title = "Combatant 与伤害/相克/特攻计算"
+status = "pending"
+plan = "plan-p2.md#p2-t2"
+
+[[tasks]]
+id = "P2-T3"
+title = "命中/暴击与双 RNG 命中判定"
+status = "pending"
+plan = "plan-p2.md#p2-t3"
+
+[[tasks]]
+id = "P2-T4"
+title = "攻速与追击判定"
+status = "pending"
+plan = "plan-p2.md#p2-t4"
+
+[[tasks]]
+id = "P2-T5"
+title = "六步确定性结算编排 resolveCombat"
+status = "pending"
+plan = "plan-p2.md#p2-t5"
+
+[[tasks]]
+id = "P2-T6"
+title = "战斗边界规则（伤害下限/不可反击/特攻不叠乘/射程对称）"
+status = "pending"
+plan = "plan-p2.md#p2-t6"
+
+[[tasks]]
+id = "P2-T7"
+title = "更新根 AGENTS.md 记录 M1 Phase2 模块"
+status = "pending"
+plan = "plan-p2.md#p2-t7"
+
+[[tasks]]
+id = "P3-T1"
+title = "回合状态机行为 advancePhase"
+status = "pending"
+plan = "plan-p3.md#p3-t1"
+
+[[tasks]]
+id = "P3-T2"
+title = "1v1 相邻对砍决斗 simulateDuel"
+status = "pending"
+plan = "plan-p3.md#p3-t2"
+
+[[tasks]]
+id = "P3-T3"
+title = "循环赛统计 runMatchups（胜率表+告警）"
+status = "pending"
+plan = "plan-p3.md#p3-t3"
+
+[[tasks]]
+id = "P3-T4"
+title = "平衡模拟 CLI 入口与 npm sim 脚本"
+status = "pending"
+plan = "plan-p3.md#p3-t4"
+
+[[tasks]]
+id = "P3-T5"
+title = "平衡量化验收测试"
+status = "pending"
+plan = "plan-p3.md#p3-t5"
+
+[[tasks]]
+id = "P3-T6"
+title = "更新根 AGENTS.md 记录 M1 Phase3 模块"
+status = "pending"
+plan = "plan-p3.md#p3-t6"
