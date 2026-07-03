@@ -1,3 +1,4 @@
+import { extraClassCatalog, extraSkillCatalog, extraUnitCatalog, supportPairCatalog } from "./expandedContent";
 import type { ClassDef, Growths, SkillDef, TerrainDef, UnitDef, WeaponDef, WeaponKind } from "../models/types";
 
 export const COMBAT = {
@@ -59,7 +60,7 @@ export const terrainCatalog: TerrainDef[] = [
   { id: "cliff", name: "断崖", moveCost: { foot: null, horse: null, fly: 1 }, defense: 0, avoid: 0, effects: ["fall"] },
 ];
 
-export const classCatalog: ClassDef[] = [
+const baseClassCatalog: ClassDef[] = [
   { id: "dragon_lance", name: "龙裔·枪", moveKind: "horse", tags: ["cavalry", "dragon"], weaponKinds: ["lance", "sword"], promotesTo: ["paladin", "dragon_king", "stigma_bearer"] },
   { id: "dragon_pegasus", name: "龙裔·天马", moveKind: "fly", tags: ["flying", "dragon"], weaponKinds: ["lance", "fire", "ice", "thunder"], promotesTo: ["sky_knight", "dragon_king", "stigma_bearer"] },
   { id: "sword_fighter", name: "剑士", moveKind: "foot", tags: ["infantry"], weaponKinds: ["sword"], promotesTo: ["swordmaster", "hero"] },
@@ -81,6 +82,8 @@ export const classCatalog: ClassDef[] = [
   { id: "stigma_bearer", name: "圣痕使", moveKind: "foot", tags: ["dragon"], weaponKinds: ["dragon", "fire", "thunder"] },
 ];
 
+export const classCatalog = [...baseClassCatalog, ...extraClassCatalog] satisfies ClassDef[];
+
 export const weaponCatalog: WeaponDef[] = [
   { id: "iron_sword", name: "铁剑", kind: "sword", damageKind: "physical", might: 5, hit: 90, crit: 0, weight: 4, range: [1, 1] },
   { id: "iron_axe", name: "铁斧", kind: "axe", damageKind: "physical", might: 8, hit: 75, crit: 0, weight: 8, range: [1, 1] },
@@ -95,7 +98,7 @@ export const weaponCatalog: WeaponDef[] = [
   { id: "wyrmslayer", name: "龙杀剑", kind: "sword", damageKind: "physical", might: 7, hit: 80, crit: 0, weight: 7, range: [1, 1], effectiveTags: ["dragon"] },
 ];
 
-export const skillCatalog: SkillDef[] = [
+const baseSkillCatalog: SkillDef[] = [
   { id: "foresight", name: "见切", kind: "passive", trigger: "onDefend", effect: ["speedGapEvade"], condition: "速度差>=5", description: "速度差足够时必闪一次攻击。" },
   { id: "armor_break", name: "破甲", kind: "passive", trigger: "onAttack", effect: ["ignoreDef:50"], condition: "斧/锤", description: "无视目标一半防御。" },
   { id: "dragon_slayer", name: "屠龙", kind: "passive", trigger: "onAttack", effect: ["effective:dragon"], condition: "龙杀武器", description: "对龙裔特攻。" },
@@ -124,7 +127,9 @@ export const skillCatalog: SkillDef[] = [
   { id: "stigma_awaken", name: "龙痕觉醒", kind: "stigma", trigger: "manual", effect: ["stats:large", "dragonTaint:+1"], cost: "龙化值", condition: "主角限定", description: "三回合全属性大增，之后龙化累积。" },
 ];
 
-export const unitCatalog: UnitDef[] = [
+export const skillCatalog = [...baseSkillCatalog, ...extraSkillCatalog] satisfies SkillDef[];
+
+const baseUnitCatalog: UnitDef[] = [
   { id: "aldric", name: "奥德里克", faction: "sorein", classId: "dragon_lance", level: 1, baseStats: { hp: 27, str: 11, mag: 4, skill: 10, spd: 9, luck: 7, def: 9, res: 4, move: 6, con: 9 }, growths: dragonGrowth, weaponIds: ["iron_lance", "iron_sword"], skillIds: ["oath_resonance", "stigma_awaken"], defeatBehavior: "retreat" },
   { id: "valentin", name: "瓦伦丁", faction: "sorein", classId: "armor", level: 3, baseStats: { hp: 30, str: 12, mag: 0, skill: 8, spd: 5, luck: 5, def: 13, res: 3, move: 4, con: 12 }, growths: armorGrowth, weaponIds: ["iron_lance"], skillIds: ["hold_fast"] },
   { id: "mirelle", name: "米瑞尔", faction: "sorein", classId: "mage", level: 1, baseStats: { hp: 19, str: 1, mag: 10, skill: 9, spd: 8, luck: 6, def: 3, res: 7, move: 5, con: 5 }, growths: mageGrowth, weaponIds: ["fire"], skillIds: ["triune_sage"] },
@@ -138,6 +143,9 @@ export const unitCatalog: UnitDef[] = [
   { id: "nord_scout", name: "雪原游侠", faction: "nordheim", classId: "scout", level: 1, baseStats: { hp: 20, str: 7, mag: 0, skill: 10, spd: 11, luck: 6, def: 3, res: 2, move: 6, con: 6 }, growths: infantryGrowth, weaponIds: ["iron_sword"], skillIds: ["pathfinder"] },
   { id: "ice_mage", name: "冰系精灵法师", faction: "nordheim", classId: "mage", level: 1, baseStats: { hp: 18, str: 1, mag: 9, skill: 9, spd: 8, luck: 4, def: 2, res: 8, move: 5, con: 5 }, growths: mageGrowth, weaponIds: ["ice"], skillIds: [] },
 ];
+
+export const unitCatalog = [...baseUnitCatalog, ...extraUnitCatalog] satisfies UnitDef[];
+export { supportPairCatalog };
 
 export function byId<T extends { id: string }>(items: readonly T[], id: string): T {
   const item = items.find((candidate) => candidate.id === id);

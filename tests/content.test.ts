@@ -1,15 +1,60 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { chapterCatalog, classCatalog, endingCatalog, skillCatalog, terrainCatalog, unitCatalog } from "../src/data";
+import { chapterCatalog, classCatalog, endingCatalog, skillCatalog, supportPairCatalog, terrainCatalog, unitCatalog, weaponCatalog } from "../src/data";
 import { createInitialBattleState } from "../src/services/chapter";
 
 test("content baseline covers documented M0/M1 surfaces", () => {
   assert.equal(terrainCatalog.length, 18);
-  assert.equal(skillCatalog.length, 26);
-  assert.ok(classCatalog.length >= 10);
-  assert.ok(unitCatalog.length >= 12);
+  assert.equal(skillCatalog.length, 70);
+  assert.equal(classCatalog.length, 35);
+  assert.equal(unitCatalog.length, 35);
   assert.equal(chapterCatalog.length, 24);
   assert.equal(endingCatalog.length, 4);
+});
+
+test("content ids are unique across each catalog", () => {
+  for (const catalog of [terrainCatalog, weaponCatalog, skillCatalog, classCatalog, unitCatalog, chapterCatalog, endingCatalog, supportPairCatalog]) {
+    const ids = catalog.map((entry) => entry.id);
+    assert.equal(new Set(ids).size, ids.length);
+  }
+});
+
+test("content references resolve across units, classes, skills, supports, and chapters", () => {
+  const classIds = new Set(classCatalog.map((item) => item.id));
+  const weaponIds = new Set(weaponCatalog.map((item) => item.id));
+  const skillIds = new Set(skillCatalog.map((item) => item.id));
+  const unitIds = new Set(unitCatalog.map((item) => item.id));
+
+  for (const classDef of classCatalog) {
+    for (const promoted of classDef.promotesTo ?? []) {
+      assert.ok(classIds.has(promoted), `${classDef.id} -> ${promoted}`);
+    }
+  }
+
+  for (const unit of unitCatalog) {
+    assert.ok(classIds.has(unit.classId), unit.id);
+    for (const weaponId of unit.weaponIds) {
+      assert.ok(weaponIds.has(weaponId), `${unit.id}:${weaponId}`);
+    }
+    for (const skillId of unit.skillIds) {
+      assert.ok(skillIds.has(skillId), `${unit.id}:${skillId}`);
+    }
+  }
+
+  for (const pair of supportPairCatalog) {
+    assert.ok(unitIds.has(pair.units[0]), pair.id);
+    assert.ok(unitIds.has(pair.units[1]), pair.id);
+    assert.ok(skillIds.has(pair.unlockSkillId), pair.id);
+  }
+
+  for (const chapter of chapterCatalog) {
+    for (const deployment of chapter.deployments) {
+      assert.ok(unitIds.has(deployment.unitDefId), `${chapter.id}:${deployment.unitDefId}`);
+      if (deployment.weaponId) {
+        assert.ok(weaponIds.has(deployment.weaponId), `${chapter.id}:${deployment.weaponId}`);
+      }
+    }
+  }
 });
 
 test("all 24 chapters have a 14x10 playable tactical map with both teams", () => {

@@ -87,6 +87,14 @@ export interface SkillDef {
   description: string;
 }
 
+export interface SupportPairDef {
+  id: string;
+  units: [string, string];
+  theme: string;
+  unlockSkillId: string;
+  ranks: Array<"C" | "B" | "A" | "S">;
+}
+
 export interface UnitDef {
   id: string;
   name: string;
