@@ -121,7 +121,7 @@ Run: `git commit -m "feat: P1-T1 - 初始化仓库骨架与分层目录"`
 </head>
 <body>
   <div id="game-root"></div>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@4.2.0/dist/phaser.min.js"></script>
   <script type="module" src="./dist/main.js"></script>
 </body>
 </html>
@@ -136,7 +136,7 @@ declare const Phaser: any
 
 **Step 2: 验证**
 
-Run: `test -f index.html && grep -q 'phaser@3.80.1' index.html && npx tsc --noEmit`
+Run: `test -f index.html && grep -q 'phaser@4.2.0' index.html && npx tsc --noEmit`
 
 Expected: 无输出或仅有正常日志，退出码 0（此时 `src/entrypoints` 下还没有 `.ts` 文件，`tsc --noEmit` 仍应成功）。
 

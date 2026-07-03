@@ -1,82 +1,82 @@
 version = 1
-current_task_id = "P1-T1"
+current_task_id = ""
 
 [[tasks]]
 id = "P1-T1"
 title = "初始化仓库骨架与分层目录"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t1"
-commit = ""
-note = ""
+commit = "c754981"
+note = "CONFIG_OK；沙盒发生严重数据丢失（整个 src/ 与 .git 历史清空），已依据 plan-p1.md 原文精确重建并重新提交，commit 哈希已更新"
 
 [[tasks]]
 id = "P1-T2"
 title = "index.html 与 Phaser 全局类型声明"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t2"
-commit = ""
-note = ""
+commit = "2485814"
+note = "TSC_OK，重建后已提交"
 
 [[tasks]]
 id = "P1-T3"
 title = "实现 BootScene"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t3"
-commit = ""
-note = ""
+commit = "92059f2"
+note = "TSC_OK，重建后已提交"
 
 [[tasks]]
 id = "P1-T4"
 title = "实现 BattleScene"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t4"
-commit = ""
-note = ""
+commit = "2ca2062"
+note = "TSC_OK，重建后已提交"
 
 [[tasks]]
 id = "P1-T5"
 title = "实现 UIScene"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t5"
-commit = ""
-note = ""
+commit = "2bf1184"
+note = "TSC_OK，重建后已提交"
 
 [[tasks]]
 id = "P1-T6"
 title = "实现 entrypoints/main.ts 组装 Phaser.Game"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t6"
-commit = ""
-note = ""
+commit = "74af895"
+note = "TSC_OK，重建后已提交"
 
 [[tasks]]
 id = "P1-T7"
 title = "编写 esbuild 打包脚本并验证构建"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t7"
-commit = ""
-note = ""
+commit = "ad22edf"
+note = "BUILD_OK，重建后已提交；esbuild 直接 import 即可解析，无需绝对路径回退方案；提交已 amend 以并入清理掉的残留 .gitkeep"
 
 [[tasks]]
 id = "P1-T8"
 title = "编写 headless Chromium 冒烟脚本"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t8"
-commit = ""
-note = ""
+commit = "3161668"
+note = "SMOKE_OK；用户提供的 Phaser 实为 4.2.0（非 3.80.1），已将全项目对齐 4.2.0（index.html CDN + 本地 vendor）；fix 提交 8d8b9b2 修正版本；vendor 最初落在 test/vendor/、靠测试 glob 'src/**/*.test.ts'（见 d8a810d）规避误拾取；P1 审计中已进一步将其移至仓库根 vendor/（commit 054a2e0）消除与 AGENTS.md 的自相矛盾"
 
 [[tasks]]
 id = "P1-T9"
 title = "串联 gate.sh 并验证全绿"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t9"
-commit = ""
-note = ""
+commit = "021e87a"
+note = "GATE_OK（typecheck/test/build/smoke 四步全绿，1 个探针测试通过）；同时为 tsconfig 补上 types=[node] 以让 node:test 通过类型检查"
 
 [[tasks]]
 id = "P1-T10"
 title = "补充仓库根 AGENTS.md"
-status = "pending"
+status = "completed"
 plan = "plan-p1.md#p1-t10"
-commit = ""
-note = ""
+commit = "0eab914"
+note = "AGENTS_OK；后续 fix 提交 b48be9e/d8a810d 补回被沙箱回退的 tsconfig types 并把测试发现限定为 src glob"
