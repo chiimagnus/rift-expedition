@@ -6,6 +6,7 @@ import {
   chooseEnding,
   completeCurrentChapter,
   createNewCampaign,
+  ensureChapterRoster,
   loadCampaign,
   mergeBattleIntoCampaign,
   saveCampaign,
@@ -53,6 +54,16 @@ test("save and load round-trip current campaign state", () => {
   assert.equal(loaded.currentChapterId, "ch09");
   assert.equal(loaded.flags.allegiance, 2);
   assert.equal(loaded.roster[0]!.unitDefId, "aldric");
+  assert.equal(loaded.gold, campaign.gold);
+  assert.ok(loaded.convoy.iron_sword);
+});
+
+test("chapter roster recruits controllable perspective allies before deployment", () => {
+  const campaign = createNewCampaign();
+  const updated = ensureChapterRoster(campaign, "ch04");
+
+  assert.ok(updated.roster.some((entry) => entry.unitDefId === "elara"));
+  assert.ok(updated.roster.some((entry) => entry.unitDefId === "sigrun"));
 });
 
 test("campaign merge persists roster growth and classic fallen units", () => {

@@ -1,8 +1,9 @@
 import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef, getWeapon } from "../data";
-import type { Cell, TerrainDef, UnitInstance } from "../models/types";
+import type { CampaignState, Cell, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
-import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
+import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, ensureChapterRoster, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
 import { forecastCombat } from "../services/combat";
+import { assignConvoyWeapon, buyWeapon, canUseWeapon, cycleRosterWeapon, setRosterDeployment } from "../services/loadout";
 import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
 import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
@@ -124,9 +125,13 @@ export class BattleScene extends Phaser.Scene {
       this.drawEnding();
       return;
     }
-    const phaseText = this.vm.state.phase === "player" ? "我方" : this.vm.state.phase === "enemy" ? "敌方" : this.vm.state.phase;
+    const phaseText = this.vm.state.phase === "deploy" ? "部署" : this.vm.state.phase === "player" ? "我方" : this.vm.state.phase === "enemy" ? "敌方" : this.vm.state.phase;
     this.panel(0, 0, WIDTH, 25, 0x101014, 0.82);
     this.addText(8, 5, `${phaseText}  第 ${this.vm.state.turn} 回合`, { fontSize: "12px", color: "#f3efe4" });
+    if (this.vm.state.phase === "deploy") {
+      this.drawDeployPanel();
+      return;
+    }
     this.endTurnButton();
 
     const hoverUnit = this.vm.hoverCell ? unitAt(this.vm.state, this.vm.hoverCell.x, this.vm.hoverCell.y) : undefined;
@@ -264,8 +269,46 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private startChapter(chapterId: string): void {
+    this.campaign = ensureChapterRoster(this.campaign, chapterId);
+    saveCampaign(globalThis.localStorage, this.campaign);
     const state = createInitialBattleState(chapterId, this.campaign);
     this.vm = new BattleViewModel(state);
+  }
+
+  private drawDeployPanel(): void {
+    const chapter = getChapter(this.vm.state.chapterId);
+    const deployableIds = this.deployableUnitIds();
+    const deployable = this.campaign.roster.filter((entry) => deployableIds.includes(entry.unitDefId) && !this.campaign.fallen.includes(entry.unitDefId));
+    this.panel(4, 29, 260, 286, 0x101014, 0.92);
+    this.addText(14, 39, "战前部署", { fontSize: "15px", color: "#f7e7b1", fontStyle: "700" });
+    this.addText(14, 61, `${chapter.objective}\n金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, { fontSize: "9px", color: "#f3efe4", wordWrap: { width: 178 }, lineSpacing: 2 });
+    this.button(204, 39, 48, 18, "开战", () => {
+      this.vm.beginBattle();
+      this.render();
+    });
+    this.button(204, 61, 48, 18, "买铁剑", () => {
+      this.applyCampaignChange(() => buyWeapon(this.campaign, "iron_sword"));
+    });
+
+    deployable.slice(0, 8).forEach((entry, index) => {
+      const y = 88 + index * 26;
+      const unitDef = getUnitDef(entry.unitDefId);
+      const weapon = getWeapon(entry.weaponId);
+      this.addText(14, y, `${unitDef.name} ${entry.deployed ? "出" : "待"}\n${weapon.name}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
+      this.button(118, y + 1, 36, 16, entry.deployed ? "待命" : "出战", () => {
+        this.applyCampaignChange(() => setRosterDeployment(this.campaign, entry.unitDefId, !entry.deployed, deployableIds));
+      });
+      this.button(158, y + 1, 30, 16, "换", () => {
+        this.applyCampaignChange(() => cycleRosterWeapon(this.campaign, entry.unitDefId));
+      });
+      const convoyWeaponId = this.firstUsableConvoyWeapon(entry);
+      if (convoyWeaponId) {
+        this.button(192, y + 1, 30, 16, "取", () => {
+          this.applyCampaignChange(() => assignConvoyWeapon(this.campaign, entry.unitDefId, convoyWeaponId));
+        });
+      }
+    });
+
   }
 
   private drawSupportPanel(): void {
@@ -362,6 +405,39 @@ export class BattleScene extends Phaser.Scene {
         unit.skillIds = [...entry.skillIds];
       }
     }
+  }
+
+  private applyCampaignChange(update: () => CampaignState): void {
+    try {
+      this.campaign = update();
+      saveCampaign(globalThis.localStorage, this.campaign);
+      this.startChapter(this.campaign.currentChapterId);
+    } catch (error) {
+      this.vm.state.log.unshift(error instanceof Error ? error.message : "操作失败。");
+    }
+    this.render();
+  }
+
+  private deployableUnitIds(): string[] {
+    const ids = getChapter(this.vm.state.chapterId).deployments
+      .filter((deployment) => deployment.team === "ally")
+      .map((deployment) => deployment.unitDefId);
+    return [...new Set(ids)];
+  }
+
+  private convoySummary(): string {
+    const entries = Object.entries(this.campaign.convoy).filter(([, count]) => count > 0);
+    if (entries.length === 0) {
+      return "空";
+    }
+    return entries
+      .slice(0, 2)
+      .map(([weaponId, count]) => `${getWeapon(weaponId).name}${count}`)
+      .join(" ");
+  }
+
+  private firstUsableConvoyWeapon(entry: RosterEntry): string | undefined {
+    return Object.entries(this.campaign.convoy).find(([weaponId, count]) => count > 0 && canUseWeapon(entry.unitDefId, weaponId))?.[0];
   }
 
   private button(x: number, y: number, width: number, height: number, label: string, onClick: () => void): void {

@@ -1,4 +1,4 @@
-import { chapterCatalog, endingCatalog, getChapter, getUnitDef } from "../data";
+import { ECONOMY, chapterCatalog, endingCatalog, getChapter, getUnitDef } from "../data";
 import type { BattleState, CampaignState, EndingDef, RosterEntry, Stats, StoryChoice, UnitInstance } from "../models/types";
 import { createRosterEntry } from "./chapter";
 
@@ -18,6 +18,8 @@ export function createNewCampaign(mode: CampaignState["mode"] = "classic"): Camp
     completedChapterIds: [],
     roster: ["aldric", "valentin", "mirelle", "cecilia", "rowan", "seren"].map((unitId) => createRosterEntry(unitId)),
     fallen: [],
+    gold: ECONOMY.startingGold,
+    convoy: { iron_sword: 1, iron_lance: 1, short_bow: 1, fire: 1, heal_staff: 1 },
     bonds: {},
     taint: { aldric: 0, elara: 0 },
     flags: {},
@@ -76,6 +78,18 @@ export function applyStoryChoice(campaign: CampaignState, choice: StoryChoice, o
     flags: { ...campaign.flags, [option.flag]: option.value },
     savedAt: Date.now(),
   };
+}
+
+export function ensureChapterRoster(campaign: CampaignState, chapterId = campaign.currentChapterId): CampaignState {
+  const chapter = getChapter(chapterId);
+  const known = new Set(campaign.roster.map((entry) => entry.unitDefId));
+  const recruits = chapter.deployments
+    .filter((deployment) => deployment.team === "ally" && !known.has(deployment.unitDefId) && !campaign.fallen.includes(deployment.unitDefId))
+    .map((deployment) => createRosterEntry(deployment.unitDefId, deployment.weaponId));
+  if (recruits.length === 0) {
+    return campaign;
+  }
+  return { ...campaign, roster: [...campaign.roster.map(cloneRosterEntry), ...recruits], savedAt: Date.now() };
 }
 
 export function mergeBattleIntoCampaign(campaign: CampaignState, state: BattleState): CampaignState {
@@ -146,6 +160,8 @@ function migrateCampaign(raw: Partial<CampaignState>): CampaignState {
     completedChapterIds: Array.isArray(raw.completedChapterIds) ? raw.completedChapterIds.filter((id): id is string => typeof id === "string") : [],
     roster: migrateRoster(raw.roster, fresh.roster),
     fallen: Array.isArray(raw.fallen) ? raw.fallen.filter((id): id is string => typeof id === "string") : [],
+    gold: typeof raw.gold === "number" ? raw.gold : fresh.gold,
+    convoy: isNumberRecord(raw.convoy) ? raw.convoy : fresh.convoy,
     bonds: isRecord(raw.bonds) ? raw.bonds : {},
     taint: isRecord(raw.taint) ? raw.taint : fresh.taint,
     flags: isRecord(raw.flags) ? raw.flags : {},
@@ -191,7 +207,9 @@ function migrateRosterEntry(raw: unknown): RosterEntry | undefined {
     exp: typeof raw.exp === "number" ? raw.exp : base.exp,
     stats: isStats(raw.stats) ? raw.stats : base.stats,
     weaponId: typeof raw.weaponId === "string" ? raw.weaponId : base.weaponId,
+    weaponIds: Array.isArray(raw.weaponIds) ? raw.weaponIds.filter((id): id is string => typeof id === "string") : base.weaponIds,
     skillIds: Array.isArray(raw.skillIds) ? raw.skillIds.filter((id): id is string => typeof id === "string") : base.skillIds,
+    deployed: typeof raw.deployed === "boolean" ? raw.deployed : base.deployed,
   };
 }
 
@@ -204,13 +222,16 @@ function safeRosterEntry(unitDefId: string): RosterEntry | undefined {
 }
 
 function upsertRosterEntry(roster: RosterEntry[], unit: UnitInstance): void {
+  const previous = roster.find((entry) => entry.unitDefId === unit.defId);
   const next = {
     unitDefId: unit.defId,
     level: unit.level,
     exp: unit.exp,
     stats: { ...unit.stats },
     weaponId: unit.weaponId,
+    weaponIds: [...(previous?.weaponIds ?? [unit.weaponId])],
     skillIds: [...unit.skillIds],
+    deployed: previous?.deployed ?? true,
   };
   const index = roster.findIndex((entry) => entry.unitDefId === unit.defId);
   if (index === -1) {
@@ -221,7 +242,7 @@ function upsertRosterEntry(roster: RosterEntry[], unit: UnitInstance): void {
 }
 
 function cloneRosterEntry(entry: RosterEntry): RosterEntry {
-  return { ...entry, stats: { ...entry.stats }, skillIds: [...entry.skillIds] };
+  return { ...entry, stats: { ...entry.stats }, weaponIds: [...entry.weaponIds], skillIds: [...entry.skillIds] };
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -233,4 +254,11 @@ function isStats(value: unknown): value is Stats {
     return false;
   }
   return ["hp", "str", "mag", "skill", "spd", "luck", "def", "res", "move", "con"].every((key) => typeof value[key] === "number");
+}
+
+function isNumberRecord(value: unknown): value is Record<string, number> {
+  if (!isObject(value)) {
+    return false;
+  }
+  return Object.values(value).every((count) => typeof count === "number");
 }

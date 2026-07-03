@@ -77,9 +77,9 @@ export function viewSupportConversation(campaign: CampaignState, pairId: string,
     ...campaign,
     roster: campaign.roster.map((entry) => {
       if (!shouldUnlockSkill || !pair.units.includes(entry.unitDefId) || entry.skillIds.includes(pair.unlockSkillId)) {
-        return { ...entry, stats: { ...entry.stats }, skillIds: [...entry.skillIds] };
+        return { ...entry, stats: { ...entry.stats }, weaponIds: [...entry.weaponIds], skillIds: [...entry.skillIds] };
       }
-      return { ...entry, stats: { ...entry.stats }, skillIds: [...entry.skillIds, pair.unlockSkillId] };
+      return { ...entry, stats: { ...entry.stats }, weaponIds: [...entry.weaponIds], skillIds: [...entry.skillIds, pair.unlockSkillId] };
     }),
     flags: { ...campaign.flags, [supportConversationKey(pair.id, rank)]: true },
     savedAt: Date.now(),

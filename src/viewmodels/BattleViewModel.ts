@@ -162,6 +162,14 @@ export class BattleViewModel {
     runEnemyTurn(this.state);
   }
 
+  beginBattle(): void {
+    if (this.state.phase !== "deploy") {
+      return;
+    }
+    this.state.phase = "player";
+    this.state.log.unshift("部署完成，战斗开始。");
+  }
+
   setHover(cell: Cell | undefined): void {
     this.hoverCell = cell;
   }

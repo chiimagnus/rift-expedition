@@ -63,6 +63,8 @@ export interface WeaponDef {
   crit: number;
   weight: number;
   range: [number, number];
+  durability: number;
+  cost: number;
   effectiveTags?: UnitTag[];
   brave?: boolean;
 }
@@ -141,7 +143,9 @@ export interface RosterEntry {
   exp: number;
   stats: Stats;
   weaponId: string;
+  weaponIds: string[];
   skillIds: string[];
+  deployed: boolean;
 }
 
 export interface StatusEffect {
@@ -194,6 +198,8 @@ export interface CampaignState {
   completedChapterIds: string[];
   roster: RosterEntry[];
   fallen: string[];
+  gold: number;
+  convoy: Record<string, number>;
   bonds: Record<string, number>;
   taint: Record<string, number>;
   flags: Record<string, number | boolean>;

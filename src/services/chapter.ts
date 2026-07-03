@@ -16,7 +16,7 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
   const units: UnitInstance[] = chapter.deployments.flatMap((deployment) => {
     const unitDef = getUnitDef(deployment.unitDefId);
     const rosterEntry = deployment.team === "ally" ? campaign?.roster.find((entry) => entry.unitDefId === unitDef.id) : undefined;
-    if (deployment.team === "ally" && campaign?.mode === "classic" && campaign.fallen.includes(unitDef.id)) {
+    if (deployment.team === "ally" && ((campaign?.mode === "classic" && campaign.fallen.includes(unitDef.id)) || rosterEntry?.deployed === false)) {
       return [];
     }
     const weaponId = deployment.team === "ally" ? rosterEntry?.weaponId ?? deployment.weaponId ?? unitDef.weaponIds[0] : deployment.weaponId ?? unitDef.weaponIds[0];
@@ -44,7 +44,7 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
   return {
     chapterId: chapter.id,
     turn: 1,
-    phase: "player",
+    phase: campaign ? "deploy" : "player",
     grid,
     units,
     rngState: campaign?.seed ?? 0x5eedc0de,
@@ -70,7 +70,9 @@ export function createRosterEntry(unitDefId: string, weaponId?: string): RosterE
     exp: 0,
     stats: { ...unitDef.baseStats },
     weaponId: entryWeaponId,
+    weaponIds: [...new Set(unitDef.weaponIds)],
     skillIds: [...unitDef.skillIds],
+    deployed: true,
   };
 }
 

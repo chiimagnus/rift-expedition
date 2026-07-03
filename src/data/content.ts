@@ -22,6 +22,13 @@ export const GROWTH = {
   levelCap: 20,
 } as const;
 
+// ponytail: starting shop anchors; tune with A/09 balance simulations once loot/reward pacing is complete.
+export const ECONOMY = {
+  startingGold: 1200,
+  convoyCapacityPerWeapon: 99,
+  rosterWeaponCapacity: 4,
+} as const;
+
 export const BOND = {
   C: 0,
   B: 40,
@@ -96,17 +103,17 @@ const baseClassCatalog: ClassDef[] = [
 export const classCatalog = [...baseClassCatalog, ...extraClassCatalog] satisfies ClassDef[];
 
 export const weaponCatalog: WeaponDef[] = [
-  { id: "iron_sword", name: "铁剑", kind: "sword", damageKind: "physical", might: 5, hit: 90, crit: 0, weight: 4, range: [1, 1] },
-  { id: "iron_axe", name: "铁斧", kind: "axe", damageKind: "physical", might: 8, hit: 75, crit: 0, weight: 8, range: [1, 1] },
-  { id: "iron_lance", name: "铁枪", kind: "lance", damageKind: "physical", might: 7, hit: 80, crit: 0, weight: 7, range: [1, 1] },
-  { id: "short_bow", name: "短弓", kind: "bow", damageKind: "physical", might: 6, hit: 85, crit: 0, weight: 5, range: [2, 2], effectiveTags: ["flying"] },
-  { id: "fire", name: "炎术", kind: "fire", damageKind: "magical", might: 7, hit: 95, crit: 0, weight: 3, range: [1, 2] },
-  { id: "ice", name: "冰术", kind: "ice", damageKind: "magical", might: 6, hit: 90, crit: 5, weight: 4, range: [1, 2] },
-  { id: "thunder", name: "雷术", kind: "thunder", damageKind: "magical", might: 8, hit: 80, crit: 10, weight: 5, range: [1, 2] },
-  { id: "heal_staff", name: "治疗杖", kind: "staff", damageKind: "healing", might: 12, hit: 100, crit: 0, weight: 1, range: [1, 1] },
-  { id: "horseslayer", name: "破骑枪", kind: "lance", damageKind: "physical", might: 8, hit: 75, crit: 0, weight: 10, range: [1, 1], effectiveTags: ["cavalry"] },
-  { id: "hammer", name: "破甲锤", kind: "axe", damageKind: "physical", might: 9, hit: 70, crit: 0, weight: 12, range: [1, 1], effectiveTags: ["armored"] },
-  { id: "wyrmslayer", name: "龙杀剑", kind: "sword", damageKind: "physical", might: 7, hit: 80, crit: 0, weight: 7, range: [1, 1], effectiveTags: ["dragon"] },
+  { id: "iron_sword", name: "铁剑", kind: "sword", damageKind: "physical", might: 5, hit: 90, crit: 0, weight: 4, range: [1, 1], durability: 40, cost: 460 },
+  { id: "iron_axe", name: "铁斧", kind: "axe", damageKind: "physical", might: 8, hit: 75, crit: 0, weight: 8, range: [1, 1], durability: 35, cost: 520 },
+  { id: "iron_lance", name: "铁枪", kind: "lance", damageKind: "physical", might: 7, hit: 80, crit: 0, weight: 7, range: [1, 1], durability: 40, cost: 520 },
+  { id: "short_bow", name: "短弓", kind: "bow", damageKind: "physical", might: 6, hit: 85, crit: 0, weight: 5, range: [2, 2], durability: 35, cost: 560, effectiveTags: ["flying"] },
+  { id: "fire", name: "炎术", kind: "fire", damageKind: "magical", might: 7, hit: 95, crit: 0, weight: 3, range: [1, 2], durability: 35, cost: 620 },
+  { id: "ice", name: "冰术", kind: "ice", damageKind: "magical", might: 6, hit: 90, crit: 5, weight: 4, range: [1, 2], durability: 30, cost: 660 },
+  { id: "thunder", name: "雷术", kind: "thunder", damageKind: "magical", might: 8, hit: 80, crit: 10, weight: 5, range: [1, 2], durability: 30, cost: 740 },
+  { id: "heal_staff", name: "治疗杖", kind: "staff", damageKind: "healing", might: 12, hit: 100, crit: 0, weight: 1, range: [1, 1], durability: 30, cost: 600 },
+  { id: "horseslayer", name: "破骑枪", kind: "lance", damageKind: "physical", might: 8, hit: 75, crit: 0, weight: 10, range: [1, 1], durability: 20, cost: 980, effectiveTags: ["cavalry"] },
+  { id: "hammer", name: "破甲锤", kind: "axe", damageKind: "physical", might: 9, hit: 70, crit: 0, weight: 12, range: [1, 1], durability: 20, cost: 900, effectiveTags: ["armored"] },
+  { id: "wyrmslayer", name: "龙杀剑", kind: "sword", damageKind: "physical", might: 7, hit: 80, crit: 0, weight: 7, range: [1, 1], durability: 20, cost: 1200, effectiveTags: ["dragon"] },
 ];
 
 const baseSkillCatalog: SkillDef[] = [

@@ -41,6 +41,11 @@ test("content references resolve across units, classes, skills, supports, and ch
     }
   }
 
+  for (const weapon of weaponCatalog) {
+    assert.ok(weapon.durability > 0, `${weapon.id}:durability`);
+    assert.ok(weapon.cost > 0, `${weapon.id}:cost`);
+  }
+
   for (const pair of supportPairCatalog) {
     assert.ok(unitIds.has(pair.units[0]), pair.id);
     assert.ok(unitIds.has(pair.units[1]), pair.id);
