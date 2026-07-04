@@ -8,6 +8,7 @@ import { assignConvoyWeapon, buyWeapon, cycleRosterWeapon, forgeRosterWeapon, re
 import { inBounds } from "../services/movement";
 import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
+import { pageSlice } from "./layout";
 
 const TILE = 32;
 const COLS = 14;
@@ -15,6 +16,7 @@ const ROWS = 10;
 const WIDTH = COLS * TILE;
 const HEIGHT = ROWS * TILE;
 const SHOP_WEAPON_IDS = ["iron_sword", "iron_lance", "short_bow", "fire", "heal_staff"] as const;
+const DEPLOY_PAGE_SIZE = 5;
 
 declare const Phaser: any;
 
@@ -23,8 +25,10 @@ export class BattleScene extends Phaser.Scene {
   private vm!: BattleViewModel;
   private board!: any;
   private overlay!: any;
-  private texts: any[] = [];
+  private uiObjects: any[] = [];
+  private uiHitboxes: Array<{ x: number; y: number; width: number; height: number }> = [];
   private activeSupport: AvailableSupportConversation | undefined;
+  private deployPage = 0;
 
   constructor() {
     super("BattleScene");
@@ -35,8 +39,17 @@ export class BattleScene extends Phaser.Scene {
     this.startChapter(this.campaign.currentChapterId);
     this.board = this.add.graphics();
     this.overlay = this.add.graphics();
-    this.input.on("pointermove", (pointer: any) => this.vm.setHover(screenToCell(pointer.x, pointer.y)));
+    this.input.on("pointermove", (pointer: any) => {
+      const hover = this.isSystemScreenOpen() || this.pointerHitsUi(pointer.x, pointer.y) ? undefined : screenToCell(pointer.x, pointer.y);
+      if (!sameCell(this.vm.hoverCell, hover)) {
+        this.vm.setHover(hover);
+        this.render();
+      }
+    });
     this.input.on("pointerdown", (pointer: any) => {
+      if (this.isSystemScreenOpen() || this.pointerHitsUi(pointer.x, pointer.y)) {
+        return;
+      }
       const cell = screenToCell(pointer.x, pointer.y);
       if (cell) {
         this.vm.selectCell(cell);
@@ -55,11 +68,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   update(): void {
-    this.render();
   }
 
   private render(): void {
-    this.clearTexts();
+    this.clearUiObjects();
+    this.uiHitboxes = [];
     this.drawTerrain();
     this.drawHighlights();
     this.drawUnits();
@@ -135,6 +148,9 @@ export class BattleScene extends Phaser.Scene {
     this.addText(8, 5, `${phaseText}  第 ${this.vm.state.turn} 回合`, { fontSize: "12px", color: "#f3efe4" });
     if (this.vm.state.phase === "deploy") {
       this.drawDeployPanel();
+      if (this.activeSupport) {
+        this.drawSupportPanel();
+      }
       return;
     }
     this.endTurnButton();
@@ -181,13 +197,7 @@ export class BattleScene extends Phaser.Scene {
   private endTurnButton(): void {
     const x = WIDTH - 67;
     const y = 3;
-    this.overlay.fillStyle(0x4b3830, 0.95);
-    this.overlay.fillRoundedRect(x, y, 60, 19, 3);
-    this.overlay.lineStyle(1, 0xe0c27a, 1);
-    this.overlay.strokeRoundedRect(x, y, 60, 19, 3);
-    const text = this.addText(x + 9, y + 4, "结束", { fontSize: "11px", color: "#f7e7b1" });
-    text.setInteractive({ useHandCursor: true });
-    text.on("pointerdown", () => {
+    this.button(x, y, 60, 19, "结束", () => {
       this.vm.endPlayerTurn();
       this.render();
     });
@@ -242,6 +252,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private panel(x: number, y: number, width: number, height: number, color: number, alpha: number): void {
+    this.addHitbox(x, y, width, height);
     this.overlay.fillStyle(color, alpha);
     this.overlay.fillRoundedRect(x, y, width, height, 4);
     this.overlay.lineStyle(1, 0x3a3330, alpha);
@@ -263,11 +274,14 @@ export class BattleScene extends Phaser.Scene {
   private addText(x: number, y: number, text: string, style: Record<string, unknown>): any {
     const created = this.add.text(x, y, text, { fontFamily: "system-ui, sans-serif", ...style });
     created.setResolution(2);
-    this.texts.push(created);
+    this.uiObjects.push(created);
     return created;
   }
 
-  private startChapter(chapterId: string): void {
+  private startChapter(chapterId: string, resetDeployPage = true): void {
+    if (resetDeployPage) {
+      this.deployPage = 0;
+    }
     this.campaign = ensureChapterRoster(this.campaign, chapterId);
     saveCampaign(globalThis.localStorage, this.campaign);
     const state = createInitialBattleState(chapterId, this.campaign);
@@ -278,51 +292,104 @@ export class BattleScene extends Phaser.Scene {
     const chapter = getChapter(this.vm.state.chapterId);
     const deployableIds = this.deployableUnitIds();
     const deployable = this.campaign.roster.filter((entry) => deployableIds.includes(entry.unitDefId) && !this.campaign.fallen.includes(entry.unitDefId));
-    this.panel(4, 29, 440, 286, 0x101014, 0.92);
-    this.addText(14, 39, "战前部署", { fontSize: "15px", color: "#f7e7b1", fontStyle: "700" });
-    this.addText(14, 61, `${chapter.objective}\n金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, { fontSize: "9px", color: "#f3efe4", wordWrap: { width: 266 }, lineSpacing: 2 });
-    this.button(386, 39, 48, 18, "开战", () => {
+    const page = pageSlice(deployable, this.deployPage, DEPLOY_PAGE_SIZE);
+    const deployedCount = deployable.filter((entry) => entry.deployed).length;
+    this.deployPage = page.page;
+
+    this.panel(6, 28, WIDTH - 12, HEIGHT - 34, 0x101014, 0.96);
+    this.addText(16, 38, "战前部署", { fontSize: "15px", color: "#f7e7b1", fontStyle: "700" });
+    const support = firstUnviewedSupportConversation(this.campaign);
+    if (support) {
+      this.button(WIDTH - 134, 38, 56, 20, `支援${support.rank}`, () => {
+        this.activeSupport = support;
+        this.render();
+      });
+    }
+    this.button(WIDTH - 72, 38, 56, 20, "开战", () => {
       this.vm.beginBattle();
       this.render();
     });
+    this.addText(16, 61, chapter.objective, { fontSize: "10px", color: "#f3efe4", wordWrap: { width: 260 }, lineSpacing: 2 });
+    this.addText(16, 87, `出击 ${deployedCount}/${deployable.length}  金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, {
+      fontSize: "10px",
+      color: "#d8c596",
+      wordWrap: { width: 260 },
+    });
+    this.addText(296, 42, "侦察地图", { fontSize: "10px", color: "#e0c27a" });
+    this.drawScoutMap(296, 58, 10);
+
     SHOP_WEAPON_IDS.forEach((weaponId, index) => {
-      this.button(14 + index * 56, 84, 52, 16, `买${getWeapon(weaponId).name}`, () => {
+      this.button(16 + index * 55, 108, 52, 18, `买${getWeapon(weaponId).name}`, () => {
         this.applyCampaignChange(() => buyWeapon(this.campaign, weaponId));
       });
     });
 
-    deployable.slice(0, 8).forEach((entry, index) => {
-      const y = 108 + index * 26;
+    page.items.forEach((entry, index) => {
+      const y = 136 + index * 29;
       const unitDef = getUnitDef(entry.unitDefId);
-      this.addText(14, y, `${unitDef.name} ${classForRoster(entry).name} ${entry.deployed ? "出" : "待"}\n${this.rosterWeaponText(entry)}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
-      this.button(118, y + 1, 36, 16, entry.deployed ? "待命" : "出战", () => {
+      this.addText(16, y, `${unitDef.name} ${classForRoster(entry).name} ${entry.deployed ? "出" : "待"}\n${this.rosterWeaponText(entry)}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
+      this.button(142, y + 1, 42, 18, entry.deployed ? "待命" : "出战", () => {
         this.applyCampaignChange(() => setRosterDeployment(this.campaign, entry.unitDefId, !entry.deployed, deployableIds));
       });
-      this.button(158, y + 1, 30, 16, "换", () => {
+      this.button(188, y + 1, 30, 18, "换", () => {
         this.applyCampaignChange(() => cycleRosterWeapon(this.campaign, entry.unitDefId));
       });
       const convoyWeaponId = this.firstUsableConvoyWeapon(entry);
       if (convoyWeaponId) {
-        this.button(192, y + 1, 30, 16, "取", () => {
+        this.button(222, y + 1, 30, 18, "取", () => {
           this.applyCampaignChange(() => assignConvoyWeapon(this.campaign, entry.unitDefId, convoyWeaponId));
         });
       }
       if (repairWeaponCost(entry) > 0) {
-        this.button(226, y + 1, 30, 16, "修", () => {
+        this.button(256, y + 1, 30, 18, "修", () => {
           this.applyCampaignChange(() => repairRosterWeapon(this.campaign, entry.unitDefId));
         });
       }
       if (forgeWeaponCost(entry) > 0) {
-        this.button(260, y + 1, 30, 16, "锻", () => {
+        this.button(290, y + 1, 30, 18, "锻", () => {
           this.applyCampaignChange(() => forgeRosterWeapon(this.campaign, entry.unitDefId));
         });
       }
       promotionTargets(entry).slice(0, 3).forEach((classId, targetIndex) => {
-        this.button(294 + targetIndex * 32, y + 1, 30, 16, getClass(classId).name.slice(0, 2), () => {
+        this.button(324 + targetIndex * 34, y + 1, 32, 18, getClass(classId).name.slice(0, 2), () => {
           this.applyCampaignChange(() => promoteRosterUnit(this.campaign, entry.unitDefId, classId));
         });
       });
     });
+
+    if (page.totalPages > 1) {
+      this.button(16, 292, 54, 20, "上一页", () => {
+        this.deployPage -= 1;
+        this.render();
+      });
+      this.button(378, 292, 54, 20, "下一页", () => {
+        this.deployPage += 1;
+        this.render();
+      });
+    }
+    this.addText(188, 296, `第 ${page.page + 1}/${page.totalPages} 页  ${page.start + 1}-${page.end}/${deployable.length}`, {
+      fontSize: "10px",
+      color: "#8fa1b2",
+    });
+  }
+
+  private drawScoutMap(x: number, y: number, scale: number): void {
+    this.overlay.lineStyle(1, 0x3a3330, 1);
+    this.overlay.strokeRect(x - 1, y - 1, COLS * scale + 2, ROWS * scale + 2);
+    for (let row = 0; row < ROWS; row += 1) {
+      for (let col = 0; col < COLS; col += 1) {
+        const terrain = getTerrain(this.vm.state.grid[row]?.[col] ?? "plains");
+        this.overlay.fillStyle(terrainColor(terrain), 0.92);
+        this.overlay.fillRect(x + col * scale, y + row * scale, scale - 1, scale - 1);
+      }
+    }
+    for (const unit of this.vm.state.units) {
+      if (!unit.alive) {
+        continue;
+      }
+      this.overlay.fillStyle(unit.team === "ally" ? 0xf0c96a : 0xdb4a4a, 1);
+      this.overlay.fillRect(x + unit.pos.x * scale + 2, y + unit.pos.y * scale + 2, scale - 4, scale - 4);
+    }
   }
 
   private drawSupportPanel(): void {
@@ -334,6 +401,7 @@ export class BattleScene extends Phaser.Scene {
     if (!conversation) {
       return;
     }
+    this.drawSystemBackdrop();
     const names = support.pair.units.map((unitId) => getUnitDef(unitId).name).join(" × ");
     this.panel(36, 48, 376, 222, 0x101014, 0.97);
     this.addText(54, 64, `${names} · ${support.rank}`, { fontSize: "16px", color: "#f7e7b1", fontStyle: "700" });
@@ -354,6 +422,7 @@ export class BattleScene extends Phaser.Scene {
 
   private drawVictoryPanel(): void {
     const chapter = getChapter(this.vm.state.chapterId);
+    this.drawSystemBackdrop();
     this.panel(58, 76, 332, 172, 0x111820, 0.94);
     this.addText(70, 88, `${chapter.title} 完成`, { fontSize: "16px", color: "#f7e7b1", fontStyle: "700" });
     this.addText(70, 112, (chapter.victoryText ?? ["战斗结束。"]).join("\n"), { fontSize: "11px", color: "#f3efe4", wordWrap: { width: 306 }, lineSpacing: 4 });
@@ -370,6 +439,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private drawDefeatPanel(): void {
+    this.drawSystemBackdrop();
     this.panel(86, 100, 276, 100, 0x201010, 0.94);
     this.addText(112, 116, "败北", { fontSize: "18px", color: "#ffd5d5", fontStyle: "700" });
     this.addText(112, 143, "战线崩溃。重新开始本章。", { fontSize: "11px", color: "#f3efe4" });
@@ -381,6 +451,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     const ending = getEnding(this.campaign.endingId);
+    this.drawSystemBackdrop();
     this.panel(38, 52, 372, 210, 0x101014, 0.96);
     this.addText(58, 70, ending.title, { fontSize: "20px", color: "#f7e7b1", fontStyle: "700" });
     this.addText(58, 100, `${ending.tone}\n${ending.text.join("\n")}`, { fontSize: "12px", color: "#f3efe4", wordWrap: { width: 332 }, lineSpacing: 5 });
@@ -426,7 +497,7 @@ export class BattleScene extends Phaser.Scene {
     try {
       this.campaign = update();
       saveCampaign(globalThis.localStorage, this.campaign);
-      this.startChapter(this.campaign.currentChapterId);
+      this.startChapter(this.campaign.currentChapterId, false);
     } catch (error) {
       this.vm.state.log.unshift(error instanceof Error ? error.message : "操作失败。");
     }
@@ -462,21 +533,44 @@ export class BattleScene extends Phaser.Scene {
     return `${weapon.name}${forge ? `+${forge}` : ""} ${uses}/${weapon.durability}`;
   }
 
+  private drawSystemBackdrop(): void {
+    this.addHitbox(0, 25, WIDTH, HEIGHT - 25);
+    this.overlay.fillStyle(0x05060a, 0.76);
+    this.overlay.fillRect(0, 25, WIDTH, HEIGHT - 25);
+  }
+
   private button(x: number, y: number, width: number, height: number, label: string, onClick: () => void): void {
+    this.addHitbox(x, y, width, height);
     this.overlay.fillStyle(0x4b3830, 0.95);
     this.overlay.fillRoundedRect(x, y, width, height, 3);
     this.overlay.lineStyle(1, 0xe0c27a, 1);
     this.overlay.strokeRoundedRect(x, y, width, height, 3);
-    const text = this.addText(x + 8, y + 4, label, { fontSize: "10px", color: "#f7e7b1" });
-    text.setInteractive({ useHandCursor: true });
-    text.on("pointerdown", onClick);
+    this.addText(x + 8, y + 4, label, { fontSize: "10px", color: "#f7e7b1" });
+    const zone = this.add.zone(x, y, width, height).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    zone.on("pointerdown", (_pointer: unknown, _localX: unknown, _localY: unknown, event: { stopPropagation?: () => void } | undefined) => {
+      event?.stopPropagation?.();
+      onClick();
+    });
+    this.uiObjects.push(zone);
   }
 
-  private clearTexts(): void {
-    for (const text of this.texts) {
-      text.destroy();
+  private addHitbox(x: number, y: number, width: number, height: number): void {
+    this.uiHitboxes.push({ x, y, width, height });
+  }
+
+  private pointerHitsUi(x: number, y: number): boolean {
+    return this.uiHitboxes.some((box) => x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height);
+  }
+
+  private isSystemScreenOpen(): boolean {
+    return Boolean(this.campaign.endingId || this.activeSupport || this.vm.state.phase === "deploy" || this.vm.state.phase === "victory" || this.vm.state.phase === "defeat");
+  }
+
+  private clearUiObjects(): void {
+    for (const object of this.uiObjects) {
+      object.destroy();
     }
-    this.texts = [];
+    this.uiObjects = [];
   }
 }
 
@@ -496,6 +590,10 @@ function parseCellKey(key: string): Cell {
     throw new Error(`Invalid cell key: ${key}`);
   }
   return { x, y };
+}
+
+function sameCell(left: Cell | undefined, right: Cell | undefined): boolean {
+  return left?.x === right?.x && left?.y === right?.y;
 }
 
 function terrainColor(terrain: TerrainDef): number {

@@ -15,4 +15,8 @@ if (!bundle.includes("BattleScene")) {
   throw new Error("game bundle does not contain the battle scene");
 }
 
+if (!bundle.includes("pageSlice") || !bundle.includes("DEPLOY_PAGE_SIZE")) {
+  throw new Error("game bundle does not contain the deployment screen controls");
+}
+
 console.log("smoke ok");
