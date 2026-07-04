@@ -189,15 +189,29 @@ export interface ChapterDef {
   choice?: StoryChoice;
   terrainLegend: Record<string, string>;
   map: string[];
-  deployments: Array<{
-    unitDefId: string;
-    instanceId: string;
-    team: Team;
-    x: number;
-    y: number;
-    weaponId?: string;
-  }>;
+  deployments: ChapterDeployment[];
+  events?: ChapterEvent[];
   opening: string[];
+}
+
+export interface ChapterDeployment {
+  unitDefId: string;
+  instanceId: string;
+  team: Team;
+  x: number;
+  y: number;
+  weaponId?: string;
+}
+
+export interface ChapterEvent {
+  id: string;
+  type: "reinforcement";
+  turn: number;
+  phase: "playerStart" | "enemyStart";
+  telegraph?: string;
+  message?: string;
+  ambush?: boolean;
+  deployments: ChapterDeployment[];
 }
 
 export type ChapterVictoryCondition =

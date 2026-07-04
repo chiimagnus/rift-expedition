@@ -60,10 +60,27 @@ test("content references resolve across units, classes, skills, supports, and ch
   }
 
   for (const chapter of chapterCatalog) {
+    const chapterInstanceIds = new Set(chapter.deployments.map((deployment) => deployment.instanceId));
     for (const deployment of chapter.deployments) {
       assert.ok(unitIds.has(deployment.unitDefId), `${chapter.id}:${deployment.unitDefId}`);
       if (deployment.weaponId) {
         assert.ok(weaponIds.has(deployment.weaponId), `${chapter.id}:${deployment.weaponId}`);
+      }
+    }
+    for (const event of chapter.events ?? []) {
+      assert.ok(event.id, `${chapter.id}:event:id`);
+      assert.ok(event.turn > 1, `${chapter.id}:${event.id}:turn`);
+      assert.ok(event.deployments.length > 0, `${chapter.id}:${event.id}:deployments`);
+      if (event.ambush) {
+        assert.ok(event.telegraph, `${chapter.id}:${event.id}:ambushTelegraph`);
+      }
+      for (const deployment of event.deployments) {
+        assert.ok(!chapterInstanceIds.has(deployment.instanceId), `${chapter.id}:${event.id}:${deployment.instanceId}:duplicate`);
+        chapterInstanceIds.add(deployment.instanceId);
+        assert.ok(unitIds.has(deployment.unitDefId), `${chapter.id}:${event.id}:${deployment.unitDefId}`);
+        if (deployment.weaponId) {
+          assert.ok(weaponIds.has(deployment.weaponId), `${chapter.id}:${event.id}:${deployment.weaponId}`);
+        }
       }
     }
   }

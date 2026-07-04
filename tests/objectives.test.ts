@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { chapterCatalog } from "../src/data";
 import type { ChapterDefeatCondition, ChapterVictoryCondition } from "../src/models/types";
+import { processChapterEvents } from "../src/services/chapterEvents";
 import { createInitialBattleState, findUnit, updateOutcome } from "../src/services/chapter";
 
 test("chapter objectives are structured and reference deployed units", () => {
@@ -45,6 +46,8 @@ test("survive and compound objectives honor the required turn count", () => {
   assert.equal(survive.phase, "victory");
 
   const bridge = createInitialBattleState("ch03");
+  bridge.turn = 2;
+  processChapterEvents(bridge, "enemyStart");
   for (const enemy of bridge.units.filter((unit) => unit.team === "enemy")) {
     enemy.alive = false;
   }

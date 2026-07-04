@@ -148,6 +148,7 @@ export const endingCatalog: EndingDef[] = [
 export const storyChapters: ChapterDef[] = outlines.map((outline, index) => {
   const nextChapterId = index === outlines.length - 1 ? undefined : outlines[index + 1]!.id;
   const choice = choiceFor(outline.id);
+  const events = eventsFor(outline.id);
   return {
     id: outline.id,
     title: outline.title,
@@ -159,6 +160,7 @@ export const storyChapters: ChapterDef[] = outlines.map((outline, index) => {
     terrainLegend: legend,
     map: maps[outline.map],
     deployments: deploymentsFor(outline.side),
+    ...(events.length > 0 ? { events } : {}),
     opening: outline.opening,
     ...(nextChapterId ? { nextChapterId } : {}),
     ...(choice ? { choice } : {}),
@@ -204,4 +206,86 @@ function choiceFor(chapterId: string): ChapterDef["choice"] {
     };
   }
   return undefined;
+}
+
+function eventsFor(chapterId: string): NonNullable<ChapterDef["events"]> {
+  if (chapterId === "ch03") {
+    return [
+      {
+        id: "north_bridge_wave",
+        type: "reinforcement",
+        turn: 2,
+        phase: "enemyStart",
+        ambush: true,
+        telegraph: "林线外响起号角，北境援军下回合会从西北山道压上。",
+        message: "北境援军从西北山道杀出。",
+        deployments: [
+          { unitDefId: "nord_raider", instanceId: "ch03_wave_raider", team: "enemy", x: 0, y: 1, weaponId: "iron_axe" },
+          { unitDefId: "nord_scout", instanceId: "ch03_wave_scout", team: "enemy", x: 1, y: 1, weaponId: "iron_sword" },
+        ],
+      },
+    ];
+  }
+  if (chapterId === "ch12") {
+    return [
+      {
+        id: "church_pincer",
+        type: "reinforcement",
+        turn: 2,
+        phase: "enemyStart",
+        ambush: true,
+        telegraph: "雪雾里传来圣钟回声，教会伏兵下回合会从东北包抄。",
+        message: "教会伏兵撕开雪雾，截断退路。",
+        deployments: [
+          { unitDefId: "nord_raider", instanceId: "ch12_zealot_wave", team: "enemy", x: 13, y: 0, weaponId: "hammer" },
+          { unitDefId: "ice_mage", instanceId: "ch12_oracle_wave", team: "enemy", x: 12, y: 0, weaponId: "thunder" },
+        ],
+      },
+    ];
+  }
+  if (chapterId === "ch15") {
+    return [
+      {
+        id: "pontiff_second_phase",
+        type: "reinforcement",
+        turn: 2,
+        phase: "enemyStart",
+        telegraph: "祭坛纹路转为白金色，下回合宗座会召来第二阶段守卫。",
+        message: "织命守卫响应祭坛，战线升级。",
+        deployments: [
+          { unitDefId: "valentin", instanceId: "ch15_templar_phase2", team: "enemy", x: 8, y: 4, weaponId: "iron_lance" },
+          { unitDefId: "ice_mage", instanceId: "ch15_oracle_phase2", team: "enemy", x: 9, y: 5, weaponId: "thunder" },
+        ],
+      },
+      {
+        id: "pontiff_third_phase",
+        type: "reinforcement",
+        turn: 3,
+        phase: "enemyStart",
+        telegraph: "祭坛裂缝喷出龙痕光，下回合宗座会压入最终阶段。",
+        message: "龙痕光暴涨，最终守卫逼近祭坛。",
+        deployments: [
+          { unitDefId: "mirelle", instanceId: "ch15_mage_phase3", team: "enemy", x: 5, y: 6, weaponId: "fire" },
+          { unitDefId: "rowan", instanceId: "ch15_bow_phase3", team: "enemy", x: 8, y: 6, weaponId: "short_bow" },
+        ],
+      },
+    ];
+  }
+  if (chapterId === "ch20") {
+    return [
+      {
+        id: "seal_core_guard",
+        type: "reinforcement",
+        turn: 3,
+        phase: "enemyStart",
+        telegraph: "封印核心开始逆转，下回合古龙记忆会唤醒守卫。",
+        message: "古龙记忆化作守卫，逼迫队伍守住核心。",
+        deployments: [
+          { unitDefId: "lost_dragonkin", instanceId: "ch20_memory_dragon", team: "enemy", x: 6, y: 4, weaponId: "wyrmslayer" },
+          { unitDefId: "dragon_elder", instanceId: "ch20_memory_elder", team: "enemy", x: 7, y: 5, weaponId: "fire" },
+        ],
+      },
+    ];
+  }
+  return [];
 }

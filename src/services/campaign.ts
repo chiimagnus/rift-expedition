@@ -120,7 +120,7 @@ export function mergeBattleIntoCampaign(campaign: CampaignState, state: BattleSt
       aldric: Number(state.flags["dragonTaint:aldric"] ?? campaign.taint.aldric ?? 0),
       elara: Number(state.flags["dragonTaint:elara"] ?? campaign.taint.elara ?? 0),
     },
-    flags: { ...campaign.flags, ...state.flags },
+    flags: { ...campaign.flags, ...persistentBattleFlags(state.flags) },
     seed: state.rngState,
     savedAt: Date.now(),
   };
@@ -251,6 +251,10 @@ function upsertRosterEntry(roster: RosterEntry[], unit: UnitInstance): void {
   } else {
     roster[index] = next;
   }
+}
+
+function persistentBattleFlags(flags: BattleState["flags"]): BattleState["flags"] {
+  return Object.fromEntries(Object.entries(flags).filter(([key]) => !key.startsWith("chapterEvent:")));
 }
 
 function cloneRosterEntry(entry: RosterEntry): RosterEntry {

@@ -1,6 +1,7 @@
 import { getWeapon } from "../data";
 import type { AiAction, BattleState, Cell, UnitInstance } from "../models/types";
 import { findUnit, livingUnits, unitAt, updateOutcome } from "./chapter";
+import { processChapterEvents } from "./chapterEvents";
 import { forecastCombat, resolveCombat } from "./combat";
 import { remainingWeaponUses } from "./equipment";
 import { cellKey, distance, moveUnit, reachableCells } from "./movement";
@@ -61,9 +62,13 @@ function bestAttackAction(state: BattleState, enemy: UnitInstance, targets: Unit
 
 export function runEnemyTurn(state: BattleState): void {
   state.phase = "enemy";
+  processChapterEvents(state, "enemyStart");
   for (const enemy of livingUnits(state, "enemy")) {
     if (isTerminalPhase(state.phase)) {
       break;
+    }
+    if (enemy.acted) {
+      continue;
     }
     const action = chooseEnemyAction(state, enemy);
     executeAiAction(state, action);
@@ -79,6 +84,7 @@ export function runEnemyTurn(state: BattleState): void {
     refreshRound(state);
     state.phase = "player";
     state.log.unshift(`第 ${state.turn} 回合。`);
+    processChapterEvents(state, "playerStart");
     updateOutcome(state);
   }
 }

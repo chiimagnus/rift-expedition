@@ -1,6 +1,8 @@
 import { getChapter, getUnitDef } from "../data";
 import type { BattleState, CampaignState, ChapterDefeatCondition, ChapterVictoryCondition, RosterEntry, UnitInstance } from "../models/types";
 import { normalizeWeaponForge, normalizeWeaponUses } from "./equipment";
+import { instantiateDeployment } from "./deployments";
+import { hasPendingHostileReinforcements, processChapterEvents } from "./chapterEvents";
 
 export function createInitialBattleState(chapterId = "ch01", campaign?: CampaignState): BattleState {
   const chapter = getChapter(chapterId);
@@ -15,40 +17,11 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
   );
 
   const units: UnitInstance[] = chapter.deployments.flatMap((deployment) => {
-    const unitDef = getUnitDef(deployment.unitDefId);
-    const rosterEntry = deployment.team === "ally" ? campaign?.roster.find((entry) => entry.unitDefId === unitDef.id) : undefined;
-    if (deployment.team === "ally" && ((campaign?.mode === "classic" && campaign.fallen.includes(unitDef.id)) || rosterEntry?.deployed === false)) {
-      return [];
-    }
-    const weaponId = deployment.team === "ally" ? rosterEntry?.weaponId ?? deployment.weaponId ?? unitDef.weaponIds[0] : deployment.weaponId ?? unitDef.weaponIds[0];
-    if (!weaponId) {
-      throw new Error(`Unit ${unitDef.id} has no weapon`);
-    }
-    const weaponIds = deployment.team === "ally" ? rosterEntry?.weaponIds ?? [weaponId] : [weaponId];
-    const carriedWeaponIds = weaponIds.includes(weaponId) ? weaponIds : [...weaponIds, weaponId];
-    return [{
-      id: deployment.instanceId,
-      defId: unitDef.id,
-      team: deployment.team,
-      classId: deployment.team === "ally" ? rosterEntry?.classId ?? unitDef.classId : unitDef.classId,
-      hp: rosterEntry?.stats.hp ?? unitDef.baseStats.hp,
-      stats: { ...(rosterEntry?.stats ?? unitDef.baseStats) },
-      weaponId,
-      weaponUses: normalizeWeaponUses(carriedWeaponIds, rosterEntry?.weaponUses),
-      weaponForge: normalizeWeaponForge(carriedWeaponIds, rosterEntry?.weaponForge),
-      skillIds: [...(rosterEntry?.skillIds ?? unitDef.skillIds)],
-      statuses: [],
-      skillUses: {},
-      pos: { x: deployment.x, y: deployment.y },
-      acted: false,
-      moved: false,
-      alive: true,
-      level: rosterEntry?.level ?? unitDef.level,
-      exp: rosterEntry?.exp ?? 0,
-    }];
+    const unit = instantiateDeployment(deployment, campaign);
+    return unit ? [unit] : [];
   });
 
-  return {
+  const state: BattleState = {
     chapterId: chapter.id,
     turn: 1,
     phase: campaign ? "deploy" : "player",
@@ -63,6 +36,8 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
     },
     log: [...chapter.opening].reverse(),
   };
+  processChapterEvents(state, "playerStart");
+  return state;
 }
 
 export function createRosterEntry(unitDefId: string, weaponId?: string): RosterEntry {
@@ -148,7 +123,7 @@ export function updateOutcome(state: BattleState): void {
 
 function isVictoryConditionMet(state: BattleState, condition: ChapterVictoryCondition): boolean {
   if (condition.type === "rout") {
-    return livingUnits(state, "enemy").length === 0;
+    return livingUnits(state, "enemy").length === 0 && !hasPendingHostileReinforcements(state);
   }
   if (condition.type === "defeatBoss") {
     return condition.targetInstanceIds.every((unitId) => {
