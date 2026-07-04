@@ -28,6 +28,7 @@ import {
   hasSkill,
   hitBonus,
   ignoresTerrainAvoid,
+  rangeHitPenalty,
 } from "./skillEffects";
 import { addStatus, effectiveStats, hasStatus } from "./status";
 
@@ -96,7 +97,8 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
             attackerStats.skill * 2 +
             triangle * COMBAT.counterHit +
             hitBonus(state, attacker) -
-            (defenderStats.spd * 2 + defenderStats.luck + terrainAvoid + avoidBonus(state, defender)),
+            rangeHitPenalty(attacker, attackerWeapon, cells) -
+            (defenderStats.spd * 2 + defenderStats.luck + terrainAvoid + avoidBonus(state, defender, attackerWeapon)),
         )
     : 0;
   const rawCrit = critMultiplier(state, attacker) === 100 ? 100 : (attackerWeapon.crit + Math.floor(attackerStats.skill * COMBAT.critFromSkill)) * critMultiplier(state, attacker);

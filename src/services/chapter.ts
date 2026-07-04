@@ -41,6 +41,7 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
       skillUses: {},
       pos: { x: deployment.x, y: deployment.y },
       acted: false,
+      moved: false,
       alive: true,
       level: rosterEntry?.level ?? unitDef.level,
       exp: rosterEntry?.exp ?? 0,

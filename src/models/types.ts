@@ -136,6 +136,7 @@ export interface UnitInstance {
   skillUses: Record<string, number>;
   pos: Cell;
   acted: boolean;
+  moved?: boolean;
   alive: boolean;
   level: number;
   exp: number;

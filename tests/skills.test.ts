@@ -115,6 +115,58 @@ test("damage, crit, and accuracy passives share forecast math", () => {
   assert.equal(forecastCombat(state, "cecilia", "valentin").crit, 0);
 });
 
+test("expanded passive and class skills feed shared combat math", () => {
+  const state = createInitialBattleState();
+  state.grid = [
+    ["plains", "plains", "plains", "plains"],
+    ["plains", "plains", "plains", "plains"],
+  ];
+  const rowan = findUnit(state, "rowan");
+  const valentin = findUnit(state, "valentin");
+  const mirelle = findUnit(state, "mirelle");
+  const cecilia = findUnit(state, "cecilia");
+  const bjorn = findUnit(state, "bjorn");
+  const raider = findUnit(state, "raider_a");
+
+  rowan.pos = { x: 0, y: 0 };
+  valentin.pos = { x: 2, y: 0 };
+  rowan.stats.str = 24;
+  valentin.moved = true;
+  const movedDamage = forecastCombat(state, "rowan", "valentin").damage;
+  valentin.moved = false;
+  const braced = forecastCombat(state, "rowan", "valentin");
+  assert.ok(braced.damage < movedDamage);
+  valentin.skillIds.push("anti_arrow_stance");
+  assert.ok(forecastCombat(state, "rowan", "valentin").hit < braced.hit);
+
+  mirelle.pos = { x: 0, y: 1 };
+  bjorn.pos = { x: 1, y: 1 };
+  const mageDamage = forecastCombat(state, "mirelle", "bjorn").damage;
+  mirelle.skillIds.push("archmage_focus");
+  assert.ok(forecastCombat(state, "mirelle", "bjorn").damage > mageDamage);
+
+  rowan.pos = { x: 0, y: 0 };
+  cecilia.pos = { x: 0, y: 1 };
+  bjorn.pos = { x: 2, y: 0 };
+  bjorn.stats.spd = 10;
+  bjorn.stats.luck = 10;
+  rowan.skillIds = [];
+  const normalHit = forecastCombat(state, "rowan", "bjorn").hit;
+  rowan.skillIds.push("feint_snare");
+  const feintHit = forecastCombat(state, "rowan", "bjorn").hit;
+  assert.ok(feintHit > normalHit);
+  raider.pos = { x: 1, y: 0 };
+  raider.skillIds.push("black_knight_dread");
+  assert.ok(forecastCombat(state, "rowan", "bjorn").hit < feintHit);
+
+  raider.pos = { x: 3, y: 1 };
+  rowan.skillIds = ["cloud_piercer"];
+  bjorn.pos = { x: 3, y: 0 };
+  const longShot = forecastCombat(state, "rowan", "bjorn").hit;
+  rowan.skillIds.push("ballista_lockon");
+  assert.ok(forecastCombat(state, "rowan", "bjorn").hit > longShot);
+});
+
 test("foresight spends its once-per-battle dodge and poison blade applies status", () => {
   const state = createInitialBattleState();
   state.grid = [["plains", "plains"]];

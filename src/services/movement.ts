@@ -2,7 +2,7 @@ import { getTerrain } from "../data";
 import type { BattleState, Cell, UnitInstance } from "../models/types";
 import { classForUnit } from "./classes";
 import { unitAt } from "./chapter";
-import { ignoresTerrainSlow } from "./skillEffects";
+import { hasSkill, ignoresTerrainSlow } from "./skillEffects";
 import { effectiveStats } from "./status";
 
 export function cellKey(cell: Cell): string {
@@ -31,10 +31,14 @@ export function movementCost(state: BattleState, unit: UnitInstance, cell: Cell)
   }
   const classDef = classForUnit(unit);
   const terrain = terrainAt(state, cell);
+  const baseCost = terrain.moveCost[classDef.moveKind];
+  if (baseCost == null) {
+    return null;
+  }
   if (ignoresTerrainSlow(unit, terrain)) {
     return 1;
   }
-  return terrain.moveCost[classDef.moveKind];
+  return baseCost;
 }
 
 export function reachableCells(state: BattleState, unit: UnitInstance): Map<string, { cell: Cell; cost: number }> {
@@ -56,7 +60,7 @@ export function reachableCells(state: BattleState, unit: UnitInstance): Map<stri
         continue;
       }
       const occupant = unitAt(state, next.x, next.y);
-      if (occupant && occupant.id !== unit.id) {
+      if (occupant && occupant.id !== unit.id && !canMoveThrough(unit, occupant)) {
         continue;
       }
       const nextCost = current.cost + cost;
@@ -85,7 +89,11 @@ export function moveUnit(state: BattleState, unit: UnitInstance, cell: Cell): bo
   if (!canOccupy(state, unit, cell)) {
     return false;
   }
+  const moved = unit.pos.x !== cell.x || unit.pos.y !== cell.y;
   unit.pos = { ...cell };
+  if (moved) {
+    unit.moved = true;
+  }
   return true;
 }
 
@@ -96,4 +104,8 @@ export function neighbors(cell: Cell): Cell[] {
     { x: cell.x, y: cell.y + 1 },
     { x: cell.x, y: cell.y - 1 },
   ];
+}
+
+function canMoveThrough(unit: UnitInstance, occupant: UnitInstance): boolean {
+  return occupant.team === unit.team && hasSkill(occupant, "trailblazer");
 }

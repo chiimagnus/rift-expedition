@@ -1,12 +1,17 @@
-import type { BattleState, TerrainDef, UnitInstance, WeaponDef } from "../models/types";
+import { COMBAT } from "../data";
+import type { BattleState, TerrainDef, UnitInstance, WeaponDef, WeaponKind } from "../models/types";
 import { classForUnit } from "./classes";
+
+const DREAD_AURA_RANGE = 2;
 
 export function hasSkill(unit: Pick<UnitInstance, "skillIds">, skillId: string): boolean {
   return unit.skillIds.includes(skillId);
 }
 
 export function attackRange(unit: Pick<UnitInstance, "skillIds">, weapon: WeaponDef): [number, number] {
-  const bonus = hasSkill(unit, "cloud_piercer") && weapon.kind === "bow" ? 1 : 0;
+  const bonus =
+    (hasSkill(unit, "cloud_piercer") && weapon.kind === "bow" ? 1 : 0) +
+    (hasSkill(unit, "ballista_lockon") && (weapon.kind === "bow" || weapon.kind === "thunder") ? 2 : 0);
   return [weapon.range[0], weapon.range[1] + bonus];
 }
 
@@ -41,6 +46,9 @@ export function damageBonus(state: BattleState, attacker: UnitInstance, defender
   if (hasSkill(attacker, "dragon_slayer") && weapon.effectiveTags?.includes("dragon") && defenderTags.includes("dragon")) {
     bonus += weapon.might * 2;
   }
+  if (hasSkill(attacker, "archmage_focus") && isElementalMagic(weapon.kind)) {
+    bonus += 3;
+  }
   bonus += statusValue(attacker, "charge");
   return bonus;
 }
@@ -52,6 +60,10 @@ export function defenseBonus(state: BattleState, defender: UnitInstance, terrain
   }
   if (defender.hp <= Math.floor(defender.stats.hp * 0.3) && hasSkill(defender, "last_stand")) {
     bonus += 3;
+  }
+  if (!defender.moved && hasSkill(defender, "hold_fast")) {
+    const baseDefense = magical ? defender.stats.res : defender.stats.def;
+    bonus += Math.max(1, Math.floor(baseDefense * 0.3));
   }
   if (adjacentAllies(state, defender).some((ally) => hasSkill(ally, "shield_wall") && classForUnit(ally).tags.includes("armored"))) {
     bonus += magical ? 0 : 2;
@@ -67,15 +79,31 @@ export function hitBonus(state: BattleState, attacker: UnitInstance): number {
   if (hasSkill(attacker, "oath_resonance") && adjacentAllies(state, attacker).length > 0) {
     bonus += 15;
   }
+  if (hasSkill(attacker, "feint_snare") && adjacentAllies(state, attacker).length > 0) {
+    bonus += 10;
+  }
+  if (nearbyEnemies(state, attacker, DREAD_AURA_RANGE).some((enemy) => hasSkill(enemy, "black_knight_dread"))) {
+    bonus -= 10;
+  }
   return bonus;
 }
 
-export function avoidBonus(state: BattleState, defender: UnitInstance): number {
+export function avoidBonus(state: BattleState, defender: UnitInstance, attackerWeapon?: WeaponDef): number {
   let bonus = hasSkill(defender, "oath_resonance") && adjacentAllies(state, defender).length > 0 ? 15 : 0;
+  if (attackerWeapon?.kind === "bow" && hasSkill(defender, "anti_arrow_stance")) {
+    bonus += 20;
+  }
   if (defender.statuses.some((status) => status.id === "marked" && status.turns > 0)) {
     bonus -= 15;
   }
   return bonus;
+}
+
+export function rangeHitPenalty(attacker: UnitInstance, weapon: WeaponDef, cells: number): number {
+  if (cells <= weapon.range[1] || hasSkill(attacker, "ballista_lockon")) {
+    return 0;
+  }
+  return COMBAT.longRangeHitPenalty;
 }
 
 export function critMultiplier(state: BattleState, attacker: UnitInstance): number {
@@ -98,10 +126,10 @@ export function foresightReady(attacker: UnitInstance, defender: UnitInstance): 
 }
 
 export function ignoresTerrainSlow(unit: UnitInstance, terrain: TerrainDef): boolean {
-  if (!hasSkill(unit, "pathfinder") || !classForUnit(unit).tags.includes("infantry")) {
-    return false;
+  if (hasSkill(unit, "pathfinder") && classForUnit(unit).tags.includes("infantry")) {
+    return terrain.id === "forest" || terrain.id === "deep_forest" || terrain.id === "mountain" || terrain.id === "peak";
   }
-  return terrain.id === "forest" || terrain.id === "deep_forest" || terrain.id === "mountain" || terrain.id === "peak";
+  return hasSkill(unit, "snowstep") && (terrain.id === "mountain" || terrain.id === "peak");
 }
 
 function adjacentAllies(state: BattleState, unit: UnitInstance): UnitInstance[] {
@@ -112,6 +140,19 @@ function adjacentAllies(state: BattleState, unit: UnitInstance): UnitInstance[] 
       candidate.id !== unit.id &&
       Math.abs(candidate.pos.x - unit.pos.x) + Math.abs(candidate.pos.y - unit.pos.y) <= 1,
   );
+}
+
+function nearbyEnemies(state: BattleState, unit: UnitInstance, range: number): UnitInstance[] {
+  return state.units.filter(
+    (candidate) =>
+      candidate.alive &&
+      candidate.team !== unit.team &&
+      Math.abs(candidate.pos.x - unit.pos.x) + Math.abs(candidate.pos.y - unit.pos.y) <= range,
+  );
+}
+
+function isElementalMagic(kind: WeaponKind): boolean {
+  return kind === "fire" || kind === "ice" || kind === "thunder";
 }
 
 function terrainHeight(state: BattleState, unit: UnitInstance): number {

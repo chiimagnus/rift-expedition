@@ -9,6 +9,8 @@ export const COMBAT = {
   critFromSkill: 0.5,
   doubleRNG: true,
   effMultiplier: 3,
+  // ponytail: starting long-range penalty; tune with A/09 simulations once siege weapon data lands.
+  longRangeHitPenalty: 10,
 } as const;
 
 // ponytail: starting A/08 tuning; replace with balance-simmed coefficients once full Act 1 telemetry exists.

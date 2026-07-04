@@ -122,6 +122,9 @@ export function refreshRound(state: BattleState): void {
       accrueAdjacentBonds(state, unit);
     }
   }
+  for (const unit of state.units) {
+    unit.moved = false;
+  }
 }
 
 function applyStatusEffects(state: BattleState, unit: UnitInstance): void {
