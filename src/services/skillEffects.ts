@@ -106,6 +106,29 @@ export function rangeHitPenalty(attacker: UnitInstance, weapon: WeaponDef, cells
   return COMBAT.longRangeHitPenalty;
 }
 
+export function primeBloodMemory(state: BattleState, fallen: UnitInstance): UnitInstance[] {
+  const witnesses = state.units.filter(
+    (unit) =>
+      unit.alive &&
+      unit.team === fallen.team &&
+      unit.id !== fallen.id &&
+      hasSkill(unit, "blood_memory") &&
+      classForUnit(unit).tags.includes("dragon"),
+  );
+  for (const witness of witnesses) {
+    witness.skillUses.blood_memory = 1;
+  }
+  return witnesses;
+}
+
+export function consumeBloodMemory(unit: UnitInstance): boolean {
+  if ((unit.skillUses.blood_memory ?? 0) <= 0) {
+    return false;
+  }
+  unit.skillUses.blood_memory = (unit.skillUses.blood_memory ?? 0) - 1;
+  return true;
+}
+
 export function critMultiplier(state: BattleState, attacker: UnitInstance): number {
   if (hasSkill(attacker, "twin_pincer") && adjacentAllies(state, attacker).length > 0) {
     return 100;

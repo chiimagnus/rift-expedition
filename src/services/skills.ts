@@ -2,11 +2,11 @@ import { BOND, GROWTH, getSkill, getUnitDef, getWeapon } from "../data";
 import type { BattleState, Cell, SkillDef, UnitInstance } from "../models/types";
 import { findUnit, livingUnits, unitAt } from "./chapter";
 import { classForUnit } from "./classes";
-import { canUnitAttackAtDistance, hasSkill } from "./skillEffects";
+import { canUnitAttackAtDistance, consumeBloodMemory, hasSkill, primeBloodMemory } from "./skillEffects";
 import { addStatus, effectiveStats, hasStatus, tickStatuses } from "./status";
 import { distance, inBounds, movementCost, neighbors, terrainAt } from "./movement";
 import { gainExperience } from "./progression";
-import { createRng } from "./rng";
+import { createRng, rollPercent } from "./rng";
 import { bondKey } from "./supports";
 
 export interface SkillResult {
@@ -135,6 +135,7 @@ function applyStatusEffects(state: BattleState, unit: UnitInstance): void {
     if (unit.hp === 0) {
       unit.alive = false;
       unit.acted = true;
+      primeBloodMemory(state, unit);
       state.log.unshift(`${unitName(unit)} 毒发倒下。`);
     }
   }
@@ -157,6 +158,7 @@ function applyTerrainEffects(state: BattleState, unit: UnitInstance): void {
     if (unit.hp === 0) {
       unit.alive = false;
       unit.acted = true;
+      primeBloodMemory(state, unit);
       state.log.unshift(`${unitName(unit)} 倒在${terrain.name}中。`);
     }
   }
@@ -174,7 +176,7 @@ function activateHealingWave(state: BattleState, unit: UnitInstance, targetId: s
     return { ok: false, message: "治疗距离不足。" };
   }
   const weapon = getWeapon(unit.weaponId);
-  const amount = Math.max(1, weapon.might + unit.stats.mag);
+  const amount = healingAmount(state, unit, Math.max(1, weapon.might + unit.stats.mag));
   const before = target.hp;
   target.hp = Math.min(target.stats.hp, target.hp + amount);
   spendSkill(state, unit, "healing_wave");
@@ -195,13 +197,15 @@ function activateStigma(state: BattleState, unit: UnitInstance): SkillResult {
   if (hasStatus(unit, "stigma_awaken")) {
     return { ok: false, message: "龙痕已经觉醒。" };
   }
-  addStatus(unit, { id: "stigma_awaken", turns: 3 });
+  const empowered = consumeBloodMemory(unit);
+  addStatus(unit, { id: "stigma_awaken", turns: empowered ? 4 : 3 });
   spendSkill(state, unit, "stigma_awaken");
   unit.acted = true;
   const taintKey = `dragonTaint:${unit.defId}`;
-  const nextTaint = Number(state.flags[taintKey] ?? 0) + 1;
+  const taintGain = stigmaTaintGain(state, unit, 1);
+  const nextTaint = Number(state.flags[taintKey] ?? 0) + taintGain;
   state.flags[taintKey] = nextTaint;
-  return pushResult(state, true, `${unitName(unit)} 解放龙痕，三回合内全属性提升，龙化值 +1。`);
+  return pushResult(state, true, `${unitName(unit)} 解放龙痕，${empowered ? "血忆延长觉醒，" : ""}龙化值 ${taintGain > 0 ? `+${taintGain}` : "未增加"}。`);
 }
 
 function activateCharge(state: BattleState, unit: UnitInstance): SkillResult {
@@ -257,7 +261,7 @@ function activateFortify(state: BattleState, unit: UnitInstance): SkillResult {
   if (targets.length === 0) {
     return { ok: false, message: "周围没有受伤友军。" };
   }
-  const amount = Math.max(1, Math.floor(effectiveStats(unit).mag / 2) + 8);
+  const amount = healingAmount(state, unit, Math.max(1, Math.floor(effectiveStats(unit).mag / 2) + 8));
   for (const target of targets) {
     target.hp = Math.min(target.stats.hp, target.hp + amount);
     addBond(state, unit.defId, target.defId, 3);
@@ -429,17 +433,19 @@ function activateStigmaRoar(state: BattleState, unit: UnitInstance): SkillResult
   if (targets.length === 0) {
     return { ok: false, message: "周围没有可震慑目标。" };
   }
+  const empowered = consumeBloodMemory(unit);
   for (const target of targets) {
-    addStatus(target, { id: "frozen", turns: 1 });
+    addStatus(target, { id: "frozen", turns: empowered ? 2 : 1 });
     const dx = Math.sign(target.pos.x - unit.pos.x);
     const dy = Math.sign(target.pos.y - unit.pos.y);
     moveForced(state, target, { x: dx, y: dy }, 1);
   }
   const key = `dragonTaint:${unit.defId}`;
-  state.flags[key] = Number(state.flags[key] ?? 0) + 1;
+  const taintGain = stigmaTaintGain(state, unit, 1);
+  state.flags[key] = Number(state.flags[key] ?? 0) + taintGain;
   spendSkill(state, unit, "stigma_roar");
   unit.acted = true;
-  return pushResult(state, true, `${unitName(unit)} 发出龙吼，震慑 ${targets.length} 名敌人，龙化值 +1。`);
+  return pushResult(state, true, `${unitName(unit)} 发出龙吼，震慑 ${targets.length} 名敌人，龙化值 ${taintGain > 0 ? `+${taintGain}` : "未增加"}。`);
 }
 
 function accrueAdjacentBonds(state: BattleState, unit: UnitInstance): void {
@@ -461,6 +467,23 @@ function addBond(state: BattleState, left: string, right: string, amount: number
 
 function adjacentUnits(state: BattleState, unit: UnitInstance): UnitInstance[] {
   return livingUnits(state).filter((target) => target.id !== unit.id && distance(unit.pos, target.pos) <= 1);
+}
+
+function healingAmount(state: BattleState, unit: UnitInstance, baseAmount: number): number {
+  if (!hasSkill(unit, "holy_focus")) {
+    return baseAmount;
+  }
+  const rng = createRng(state.rngState);
+  const focused = rollPercent(rng, effectiveStats(unit).skill, false);
+  state.rngState = rng.state;
+  return focused ? baseAmount + Math.max(1, Math.floor(baseAmount / 2)) : baseAmount;
+}
+
+function stigmaTaintGain(state: BattleState, unit: UnitInstance, baseGain: number): number {
+  if (baseGain <= 0 || !hasSkill(unit, "forbidden_vow")) {
+    return baseGain;
+  }
+  return adjacentUnits(state, unit).some((target) => target.team === unit.team) ? baseGain - 1 : baseGain;
 }
 
 function targetedUnit(state: BattleState, targetId: string | undefined): UnitInstance | undefined {

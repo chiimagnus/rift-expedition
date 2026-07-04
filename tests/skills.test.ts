@@ -23,6 +23,23 @@ test("healing wave restores allied HP and spends action", () => {
   assert.equal(state.bonds["aldric:seren"], 5);
 });
 
+test("holy focus can turn a heal into a larger deterministic recovery", () => {
+  const state = createInitialBattleState();
+  const seren = findUnit(state, "seren");
+  const aldric = findUnit(state, "aldric");
+  seren.skillIds.push("holy_focus");
+  seren.stats.skill = 100;
+  seren.pos = { x: 2, y: 8 };
+  aldric.pos = { x: 3, y: 8 };
+  aldric.stats.hp = 40;
+  aldric.hp = 1;
+
+  const result = activateSkill(state, "seren", "healing_wave", "aldric");
+
+  assert.equal(result.ok, true);
+  assert.equal(aldric.hp, 31);
+});
+
 test("stigma awakening raises forecast damage and adds dragon taint", () => {
   const state = createInitialBattleState();
   findUnit(state, "aldric").pos = { x: 9, y: 3 };
@@ -35,6 +52,41 @@ test("stigma awakening raises forecast damage and adds dragon taint", () => {
   assert.equal(result.ok, true);
   assert.equal(state.flags["dragonTaint:aldric"], 1);
   assert.ok(after > before);
+});
+
+test("blood memory and forbidden vow alter the next stigma action", () => {
+  const state = createInitialBattleState();
+  state.grid = [
+    ["plains", "plains", "plains"],
+    ["plains", "plains", "plains"],
+  ];
+  const bjorn = findUnit(state, "bjorn");
+  const cecilia = findUnit(state, "cecilia");
+  const aldric = findUnit(state, "aldric");
+  const seren = findUnit(state, "seren");
+  bjorn.team = "enemy";
+  bjorn.pos = { x: 0, y: 0 };
+  bjorn.stats.str = 50;
+  bjorn.stats.skill = 100;
+  cecilia.team = "ally";
+  cecilia.pos = { x: 1, y: 0 };
+  cecilia.hp = 1;
+  aldric.team = "ally";
+  aldric.pos = { x: 2, y: 0 };
+  aldric.skillIds.push("blood_memory", "forbidden_vow");
+  seren.team = "ally";
+  seren.pos = { x: 2, y: 1 };
+
+  resolveCombat(state, "bjorn", "cecilia");
+  assert.equal(cecilia.alive, false);
+  assert.equal(aldric.skillUses.blood_memory, 1);
+
+  const result = activateSkill(state, "aldric", "stigma_awaken", "aldric");
+
+  assert.equal(result.ok, true);
+  assert.equal(aldric.statuses.find((status) => status.id === "stigma_awaken")?.turns, 4);
+  assert.equal(aldric.skillUses.blood_memory, 0);
+  assert.equal(state.flags["dragonTaint:aldric"], 0);
 });
 
 test("aegis halves incoming damage", () => {
@@ -165,6 +217,52 @@ test("expanded passive and class skills feed shared combat math", () => {
   const longShot = forecastCombat(state, "rowan", "bjorn").hit;
   rowan.skillIds.push("ballista_lockon");
   assert.ok(forecastCombat(state, "rowan", "bjorn").hit > longShot);
+});
+
+test("sister guard redirects a hit and guard lunge answers for a pinned ally", () => {
+  const guarded = createInitialBattleState();
+  guarded.grid = [["plains", "plains", "plains", "plains"]];
+  const rowan = findUnit(guarded, "rowan");
+  const elara = findUnit(guarded, "elara");
+  const sigrun = findUnit(guarded, "sigrun");
+  rowan.team = "enemy";
+  rowan.pos = { x: 0, y: 0 };
+  rowan.stats.skill = 100;
+  rowan.skillIds.push("cloud_piercer");
+  elara.team = "ally";
+  elara.pos = { x: 2, y: 0 };
+  sigrun.team = "ally";
+  sigrun.pos = { x: 3, y: 0 };
+  sigrun.skillIds.push("sister_guard");
+  const elaraHp = elara.hp;
+  const sigrunHp = sigrun.hp;
+
+  resolveCombat(guarded, "rowan", "elara");
+
+  assert.equal(elara.hp, elaraHp);
+  assert.ok(sigrun.hp < sigrunHp);
+  assert.equal(sigrun.skillUses.sister_guard, 1);
+
+  const lunged = createInitialBattleState();
+  lunged.grid = [["plains", "plains", "plains"]];
+  const archer = findUnit(lunged, "rowan");
+  const valentin = findUnit(lunged, "valentin");
+  const guard = findUnit(lunged, "sigrun");
+  archer.team = "enemy";
+  archer.pos = { x: 0, y: 0 };
+  valentin.team = "ally";
+  valentin.pos = { x: 2, y: 0 };
+  valentin.hp = valentin.stats.hp;
+  guard.team = "ally";
+  guard.pos = { x: 1, y: 0 };
+  guard.stats.str = 20;
+  guard.stats.skill = 100;
+  const archerHp = archer.hp;
+
+  resolveCombat(lunged, "rowan", "valentin");
+
+  assert.ok(archer.hp < archerHp);
+  assert.equal(guard.skillUses.guard_lunge, 1);
 });
 
 test("foresight spends its once-per-battle dodge and poison blade applies status", () => {

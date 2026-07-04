@@ -28,6 +28,7 @@ import {
   hasSkill,
   hitBonus,
   ignoresTerrainAvoid,
+  primeBloodMemory,
   rangeHitPenalty,
 } from "./skillEffects";
 import { addStatus, effectiveStats, hasStatus } from "./status";
@@ -121,26 +122,39 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
 }
 
 export function resolveCombat(state: BattleState, attackerId: string, defenderId: string): CombatResolution {
-  const forecast = forecastCombat(state, attackerId, defenderId);
   const attacker = findUnit(state, attackerId);
-  const defender = findUnit(state, defenderId);
+  const intendedDefender = findUnit(state, defenderId);
   const attackerWeapon = getWeapon(attacker.weaponId);
-  const defenderWeapon = getWeapon(defender.weaponId);
-  if (!canUnitAttackAtDistance(attacker, attackerWeapon, forecast.distance) || attackerWeapon.damageKind === "healing") {
-    throw new Error(`${attacker.id} cannot attack ${defender.id}`);
+  if (!canUnitAttackAtDistance(attacker, attackerWeapon, distance(attacker.pos, intendedDefender.pos)) || attackerWeapon.damageKind === "healing") {
+    throw new Error(`${attacker.id} cannot attack ${intendedDefender.id}`);
   }
   if (remainingWeaponUses(attacker) <= 0) {
     throw new Error(`${attacker.id} 的 ${attackerWeapon.name} 耐久耗尽。`);
   }
 
+  const defender = sisterGuardTarget(state, attacker, intendedDefender) ?? intendedDefender;
+  if (defender.id !== intendedDefender.id) {
+    defender.skillUses.sister_guard = (defender.skillUses.sister_guard ?? 0) + 1;
+  }
+  const forecast = forecastCombat(state, attackerId, defender.id);
+  const defenderWeapon = getWeapon(defender.weaponId);
+
   const rng = createRng(state.rngState);
   const events: CombatEvent[] = [];
+  const reactionLogs = defender.id === intendedDefender.id ? [] : [`${unitName(state, defender.id)} 护住 ${unitName(state, intendedDefender.id)}。`];
   strike(state, rng, events, attacker, defender);
   if (defender.alive && attacker.alive && hasSkill(attacker, "adept") && rollPercent(rng, effectiveStats(attacker).skill, false)) {
     strike(state, rng, events, attacker, defender);
   }
-  if (defender.alive && attacker.alive && forecast.defenderCanCounter) {
-    strike(state, rng, events, defender, attacker);
+  if (defender.alive && attacker.alive) {
+    const counterUnit = forecast.defenderCanCounter ? defender : guardLungeCounter(state, defender, attacker);
+    if (counterUnit) {
+      if (counterUnit.id !== defender.id) {
+        counterUnit.skillUses.guard_lunge = (counterUnit.skillUses.guard_lunge ?? 0) + 1;
+        reactionLogs.push(`${unitName(state, counterUnit.id)} 援护 ${unitName(state, defender.id)} 反击。`);
+      }
+      strike(state, rng, events, counterUnit, attacker);
+    }
   }
   if (defender.alive && attacker.alive && forecast.followUp) {
     strike(state, rng, events, attacker, defender);
@@ -151,7 +165,7 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
 
   const expLogs = awardCombatExperience(state, rng, events);
   state.rngState = rng.state;
-  state.log.unshift(...eventsToLog(state, events), ...expLogs);
+  state.log.unshift(...reactionLogs, ...eventsToLog(state, events), ...expLogs);
   return { forecast, events };
 }
 
@@ -191,6 +205,7 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
     const targetDef = getUnitDef(target.defId);
     target.alive = false;
     target.acted = true;
+    primeBloodMemory(state, target);
     events.push({ type: "defeat", sourceId: source.id, targetId: target.id, retreat: targetDef.defeatBehavior === "retreat" });
   }
   if (remainingUses === 0) {
@@ -219,6 +234,37 @@ function eventsToLog(state: BattleState, events: CombatEvent[]): string[] {
 function unitName(state: BattleState, instanceId: string): string {
   const unit = state.units.find((candidate) => candidate.id === instanceId);
   return unit ? getUnitDef(unit.defId).name : instanceId;
+}
+
+function sisterGuardTarget(state: BattleState, attacker: UnitInstance, defender: UnitInstance): UnitInstance | undefined {
+  const weapon = getWeapon(attacker.weaponId);
+  return state.units.find(
+    (candidate) =>
+      candidate.alive &&
+      candidate.team === defender.team &&
+      candidate.id !== defender.id &&
+      hasSkill(candidate, "sister_guard") &&
+      (candidate.skillUses.sister_guard ?? 0) === 0 &&
+      distance(candidate.pos, defender.pos) <= 1 &&
+      canUnitAttackAtDistance(attacker, weapon, distance(attacker.pos, candidate.pos)),
+  );
+}
+
+function guardLungeCounter(state: BattleState, defender: UnitInstance, attacker: UnitInstance): UnitInstance | undefined {
+  return state.units.find((candidate) => {
+    if (
+      !candidate.alive ||
+      candidate.team !== defender.team ||
+      candidate.id === defender.id ||
+      !hasSkill(candidate, "guard_lunge") ||
+      (candidate.skillUses.guard_lunge ?? 0) > 0 ||
+      distance(candidate.pos, defender.pos) > 1
+    ) {
+      return false;
+    }
+    const weapon = getWeapon(candidate.weaponId);
+    return remainingWeaponUses(candidate) > 0 && weapon.damageKind !== "healing" && canUnitAttackAtDistance(candidate, weapon, distance(candidate.pos, attacker.pos));
+  });
 }
 
 function clampPercent(value: number): number {
