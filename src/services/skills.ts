@@ -127,6 +127,7 @@ export function refreshRound(state: BattleState): void {
   }
   for (const unit of state.units) {
     unit.moved = false;
+    unit.cantoMoveLeft = 0;
   }
 }
 

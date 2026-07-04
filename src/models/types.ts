@@ -137,6 +137,7 @@ export interface UnitInstance {
   pos: Cell;
   acted: boolean;
   moved?: boolean;
+  cantoMoveLeft?: number;
   alive: boolean;
   level: number;
   exp: number;
