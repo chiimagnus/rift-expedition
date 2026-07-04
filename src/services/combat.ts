@@ -182,7 +182,7 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
   const damage = hasStatus(target, "aegis") ? Math.max(COMBAT.minDamage, Math.floor(rawDamage / 2)) : rawDamage;
   target.hp = Math.max(0, target.hp - damage);
   events.push({ type: "hit", sourceId: source.id, targetId: target.id, damage, critical, remainingHp: target.hp });
-  if (hasSkill(source, "poison_blade")) {
+  if (hasStatus(source, "poison_blade")) {
     addStatus(target, { id: "poison", turns: 3 });
   }
   if (target.hp === 0) {

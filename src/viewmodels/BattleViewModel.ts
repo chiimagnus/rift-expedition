@@ -6,7 +6,7 @@ import { classForUnit } from "../services/classes";
 import { forecastCombat, resolveCombat } from "../services/combat";
 import { remainingWeaponUses, weaponForgeLevel } from "../services/equipment";
 import { cellKey, distance, moveUnit, reachableCells, terrainAt } from "../services/movement";
-import { activateSkill, activeSkills } from "../services/skills";
+import { activateSkill, activeSkills, skillRequiresTarget } from "../services/skills";
 import { canUnitAttackAtDistance } from "../services/skillEffects";
 
 export class BattleViewModel {
@@ -121,7 +121,7 @@ export class BattleViewModel {
     if (!unit || unit.acted || unit.team !== "ally") {
       return;
     }
-    if (skillId === "stigma_awaken" || skillId === "aegis" || skillId === "sprint") {
+    if (!skillRequiresTarget(skillId)) {
       const result = activateSkill(this.state, unit.id, skillId, unit.id);
       if (!result.ok) {
         this.state.log.unshift(result.message);
@@ -227,7 +227,7 @@ export class BattleViewModel {
     if (!unit || !skillId) {
       return;
     }
-    const target = unitAt(this.state, cell.x, cell.y);
+    const target = this.state.units.find((candidate) => candidate.pos.x === cell.x && candidate.pos.y === cell.y && (candidate.alive || skillId === "resurrection"));
     const result = activateSkill(this.state, unit.id, skillId, target?.id);
     if (!result.ok) {
       this.state.log.unshift(result.message);

@@ -41,6 +41,7 @@ export function damageBonus(state: BattleState, attacker: UnitInstance, defender
   if (hasSkill(attacker, "dragon_slayer") && weapon.effectiveTags?.includes("dragon") && defenderTags.includes("dragon")) {
     bonus += weapon.might * 2;
   }
+  bonus += statusValue(attacker, "charge");
   return bonus;
 }
 
@@ -70,7 +71,11 @@ export function hitBonus(state: BattleState, attacker: UnitInstance): number {
 }
 
 export function avoidBonus(state: BattleState, defender: UnitInstance): number {
-  return hasSkill(defender, "oath_resonance") && adjacentAllies(state, defender).length > 0 ? 15 : 0;
+  let bonus = hasSkill(defender, "oath_resonance") && adjacentAllies(state, defender).length > 0 ? 15 : 0;
+  if (defender.statuses.some((status) => status.id === "marked" && status.turns > 0)) {
+    bonus -= 15;
+  }
+  return bonus;
 }
 
 export function critMultiplier(state: BattleState, attacker: UnitInstance): number {
@@ -118,4 +123,8 @@ function terrainHeight(state: BattleState, unit: UnitInstance): number {
     return 2;
   }
   return terrainId === "forest" || terrainId === "deep_forest" ? 1 : 0;
+}
+
+function statusValue(unit: UnitInstance, id: UnitInstance["statuses"][number]["id"]): number {
+  return unit.statuses.find((status) => status.id === id && status.turns > 0)?.value ?? 0;
 }

@@ -156,8 +156,23 @@ export interface RosterEntry {
 }
 
 export interface StatusEffect {
-  id: "stigma_awaken" | "aegis" | "sprint" | "poison";
+  id:
+    | "stigma_awaken"
+    | "aegis"
+    | "sprint"
+    | "poison"
+    | "poison_blade"
+    | "charge"
+    | "rally_defense"
+    | "rally_speed"
+    | "barrier"
+    | "marked"
+    | "silence"
+    | "frozen"
+    | "taunted";
   turns: number;
+  sourceId?: string;
+  value?: number;
 }
 
 export interface ChapterDef {
