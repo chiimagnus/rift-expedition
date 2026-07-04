@@ -52,6 +52,77 @@ test("aegis halves incoming damage", () => {
   assert.ok(aldric.hp > aldric.stats.hp - normal);
 });
 
+test("combat passive skills alter forecast and resolution", () => {
+  const state = createInitialBattleState();
+  state.grid = [["plains", "plains", "plains", "forest"]];
+  const rowan = findUnit(state, "rowan");
+  const bjorn = findUnit(state, "bjorn");
+  rowan.pos = { x: 0, y: 0 };
+  bjorn.pos = { x: 3, y: 0 };
+
+  const blockedByTerrain = forecastCombat(state, "rowan", "bjorn").hit;
+  rowan.skillIds.push("cloud_piercer");
+  assert.ok(forecastCombat(state, "rowan", "bjorn").hit > blockedByTerrain);
+  rowan.skillIds.push("quickdraw");
+  rowan.stats.spd = bjorn.stats.spd + 3;
+  assert.equal(forecastCombat(state, "rowan", "bjorn").followUp, true);
+  assert.doesNotThrow(() => resolveCombat(state, "rowan", "bjorn"));
+});
+
+test("damage, crit, and accuracy passives share forecast math", () => {
+  const state = createInitialBattleState();
+  state.grid = [["plains", "plains"]];
+  const cecilia = findUnit(state, "cecilia");
+  const valentin = findUnit(state, "valentin");
+  cecilia.pos = { x: 0, y: 0 };
+  valentin.pos = { x: 1, y: 0 };
+  cecilia.weaponId = "iron_axe";
+  cecilia.weaponUses.iron_axe = 35;
+  cecilia.weaponForge.iron_axe = 0;
+  cecilia.stats.skill = 20;
+  valentin.stats.spd = 31;
+  valentin.stats.luck = 10;
+
+  const normalDamage = forecastCombat(state, "cecilia", "valentin").damage;
+  cecilia.skillIds.push("armor_break", "iaijutsu");
+  const lowHit = forecastCombat(state, "cecilia", "valentin").hit;
+  cecilia.skillIds.push("steady_hand");
+  const skilled = forecastCombat(state, "cecilia", "valentin");
+  assert.ok(skilled.damage > normalDamage);
+  assert.ok(skilled.crit > 0);
+  assert.ok(lowHit < 60);
+  assert.equal(skilled.hit, 60);
+
+  valentin.skillIds.push("calm");
+  assert.equal(forecastCombat(state, "cecilia", "valentin").crit, 0);
+});
+
+test("foresight spends its once-per-battle dodge and poison blade applies status", () => {
+  const state = createInitialBattleState();
+  state.grid = [["plains", "plains"]];
+  const cecilia = findUnit(state, "cecilia");
+  const bjorn = findUnit(state, "bjorn");
+  cecilia.pos = { x: 0, y: 0 };
+  bjorn.pos = { x: 1, y: 0 };
+  cecilia.skillIds.push("foresight");
+  cecilia.stats.spd = 20;
+  cecilia.weaponUses[cecilia.weaponId] = 0;
+  bjorn.stats.spd = 5;
+
+  const beforeHp = cecilia.hp;
+  assert.equal(forecastCombat(state, "bjorn", "cecilia").hit, 0);
+  resolveCombat(state, "bjorn", "cecilia");
+  assert.equal(cecilia.hp, beforeHp);
+  assert.equal(cecilia.skillUses.foresight, 1);
+
+  bjorn.skillIds.push("poison_blade", "steady_hand");
+  cecilia.statuses = [];
+  cecilia.stats.spd = 0;
+  cecilia.stats.luck = 0;
+  resolveCombat(state, "bjorn", "cecilia");
+  assert.ok(cecilia.statuses.some((status) => status.id === "poison"));
+});
+
 test("round refresh accrues adjacent bonds and ticks statuses", () => {
   const state = createInitialBattleState();
   const aldric = findUnit(state, "aldric");

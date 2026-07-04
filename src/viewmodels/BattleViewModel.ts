@@ -3,10 +3,11 @@ import type { BattleState, Cell, CombatForecast, UnitInstance } from "../models/
 import { attackableEnemiesFrom, runEnemyTurn } from "../services/ai";
 import { findUnit, updateOutcome, unitAt } from "../services/chapter";
 import { classForUnit } from "../services/classes";
-import { canAttackAtDistance, forecastCombat, resolveCombat } from "../services/combat";
+import { forecastCombat, resolveCombat } from "../services/combat";
 import { remainingWeaponUses, weaponForgeLevel } from "../services/equipment";
 import { cellKey, distance, moveUnit, reachableCells, terrainAt } from "../services/movement";
 import { activateSkill, activeSkills } from "../services/skills";
+import { canUnitAttackAtDistance } from "../services/skillEffects";
 
 export class BattleViewModel {
   readonly state: BattleState;
@@ -54,7 +55,7 @@ export class BattleViewModel {
       return undefined;
     }
     const weapon = getWeapon(unit.weaponId);
-    if (remainingWeaponUses(unit) <= 0 || !canAttackAtDistance(weapon, distance(unit.pos, target.pos))) {
+    if (remainingWeaponUses(unit) <= 0 || !canUnitAttackAtDistance(unit, weapon, distance(unit.pos, target.pos))) {
       return undefined;
     }
     return forecastCombat(this.state, unit.id, target.id);
@@ -103,7 +104,7 @@ export class BattleViewModel {
       this.state.log.unshift(`${weapon.name} 已损坏。`);
       return;
     }
-    if (!canAttackAtDistance(weapon, distance(attacker.pos, target.pos))) {
+    if (!canUnitAttackAtDistance(attacker, weapon, distance(attacker.pos, target.pos))) {
       this.state.log.unshift("射程不符。");
       return;
     }

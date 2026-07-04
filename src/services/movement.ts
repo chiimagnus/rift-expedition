@@ -2,6 +2,7 @@ import { getTerrain } from "../data";
 import type { BattleState, Cell, UnitInstance } from "../models/types";
 import { classForUnit } from "./classes";
 import { unitAt } from "./chapter";
+import { ignoresTerrainSlow } from "./skillEffects";
 import { effectiveStats } from "./status";
 
 export function cellKey(cell: Cell): string {
@@ -30,6 +31,9 @@ export function movementCost(state: BattleState, unit: UnitInstance, cell: Cell)
   }
   const classDef = classForUnit(unit);
   const terrain = terrainAt(state, cell);
+  if (ignoresTerrainSlow(unit, terrain)) {
+    return 1;
+  }
   return terrain.moveCost[classDef.moveKind];
 }
 

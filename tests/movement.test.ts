@@ -16,6 +16,17 @@ test("terrain movement follows A/06 costs", () => {
   assert.equal(movementCost(state, elara, { x: 2, y: 0 }), 1);
 });
 
+test("pathfinder ignores forest and mountain slow for infantry", () => {
+  const state = createInitialBattleState();
+  const cecilia = findUnit(state, "cecilia");
+  state.grid = [["forest", "mountain"]];
+
+  assert.equal(movementCost(state, cecilia, { x: 0, y: 0 }), 2);
+  cecilia.skillIds.push("pathfinder");
+  assert.equal(movementCost(state, cecilia, { x: 0, y: 0 }), 1);
+  assert.equal(movementCost(state, cecilia, { x: 1, y: 0 }), 1);
+});
+
 test("reachable cells block occupied enemies and impassable terrain", () => {
   const state = createInitialBattleState();
   const aldric = findUnit(state, "aldric");

@@ -7,6 +7,7 @@ import { forecastCombat } from "../services/combat";
 import { forgeWeaponCost, remainingWeaponUses, repairWeaponCost } from "../services/equipment";
 import { assignConvoyWeapon, buyWeapon, cycleRosterWeapon, forgeRosterWeapon, repairRosterWeapon, setRosterDeployment } from "../services/loadout";
 import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
+import { canUnitAttackAtDistance } from "../services/skillEffects";
 import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
 
@@ -253,7 +254,7 @@ export class BattleScene extends Phaser.Scene {
       return undefined;
     }
     const weapon = getWeapon(selected.weaponId);
-    if (!weapon || remainingWeaponUses(selected) <= 0 || distance(selected.pos, target.pos) < weapon.range[0] || distance(selected.pos, target.pos) > weapon.range[1]) {
+    if (!weapon || remainingWeaponUses(selected) <= 0 || !canUnitAttackAtDistance(selected, weapon, distance(selected.pos, target.pos))) {
       return undefined;
     }
     return forecastCombat(this.vm.state, selected.id, target.id);

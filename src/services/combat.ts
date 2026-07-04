@@ -15,7 +15,21 @@ import { remainingWeaponUses, spendWeaponUse, weaponMight } from "./equipment";
 import { createRng, rollPercent } from "./rng";
 import { distance } from "./movement";
 import { awardCombatExperience } from "./progression";
-import { effectiveStats, hasStatus } from "./status";
+import {
+  armorBreaks,
+  avoidBonus,
+  canUnitAttackAtDistance,
+  critAvoidBonus,
+  critMultiplier,
+  damageBonus,
+  defenseBonus,
+  followUpThreshold,
+  foresightReady,
+  hasSkill,
+  hitBonus,
+  ignoresTerrainAvoid,
+} from "./skillEffects";
+import { addStatus, effectiveStats, hasStatus } from "./status";
 
 export function attackSpeed(unit: UnitInstance, weapon: WeaponDef): number {
   const stats = effectiveStats(unit);
@@ -58,27 +72,38 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
   const defenderTerrain = getTerrain(defenderTerrainId);
   const triangle = triangleValue(attackerWeapon, defenderWeapon);
   const multiplier = effectiveMultiplier(attackerWeapon, defender);
-  const defense = attackerWeapon.damageKind === "magical" ? defenderStats.res : defenderStats.def + defenderTerrain.defense;
+  const terrainDefense = attackerWeapon.damageKind === "magical" ? 0 : defenderTerrain.defense;
+  const rawDefense = attackerWeapon.damageKind === "magical" ? defenderStats.res : defenderStats.def;
+  const defense = Math.max(
+    0,
+    Math.floor((armorBreaks(attacker, attackerWeapon) ? rawDefense * 0.5 : rawDefense) + terrainDefense + defenseBonus(state, defender, defenderTerrain, attackerWeapon.damageKind === "magical")),
+  );
   const forgedMight = weaponMight(attacker, attackerWeapon);
   const basePower =
     attackerWeapon.damageKind === "magical"
-      ? attackerStats.mag + forgedMight
-      : (attackerStats.str + forgedMight) * multiplier;
+      ? attackerStats.mag + forgedMight + damageBonus(state, attacker, defender, attackerWeapon)
+      : (attackerStats.str + forgedMight + damageBonus(state, attacker, defender, attackerWeapon)) * multiplier;
   const damage = attackerCanUseWeapon
     ? Math.max(COMBAT.minDamage, Math.floor(basePower + triangle * COMBAT.counterMight - defense))
     : 0;
+  const terrainAvoid = ignoresTerrainAvoid(attacker, attackerWeapon) ? 0 : defenderTerrain.avoid;
   const hit = attackerCanUseWeapon
-    ? clampPercent(
-        attackerWeapon.hit +
-          attackerStats.skill * 2 +
-          triangle * COMBAT.counterHit -
-          (defenderStats.spd * 2 + defenderStats.luck + defenderTerrain.avoid),
-      )
+    ? foresightReady(attacker, defender)
+      ? 0
+      : hitFloor(
+          attacker,
+          attackerWeapon.hit +
+            attackerStats.skill * 2 +
+            triangle * COMBAT.counterHit +
+            hitBonus(state, attacker) -
+            (defenderStats.spd * 2 + defenderStats.luck + terrainAvoid + avoidBonus(state, defender)),
+        )
     : 0;
+  const rawCrit = critMultiplier(state, attacker) === 100 ? 100 : (attackerWeapon.crit + Math.floor(attackerStats.skill * COMBAT.critFromSkill)) * critMultiplier(state, attacker);
   const crit = attackerCanUseWeapon
-    ? clampPercent(attackerWeapon.crit + Math.floor(attackerStats.skill * COMBAT.critFromSkill) - defenderStats.luck)
+    ? clampPercent(rawCrit - defenderStats.luck - critAvoidBonus(defender))
     : 0;
-  const followUp = attackerCanUseWeapon && attackSpeed(attacker, attackerWeapon) - attackSpeed(defender, defenderWeapon) >= COMBAT.doublingThreshold;
+  const followUp = attackerCanUseWeapon && attackSpeed(attacker, attackerWeapon) - attackSpeed(defender, defenderWeapon) >= followUpThreshold(attacker, attackerWeapon);
   return {
     attackerId,
     defenderId,
@@ -87,7 +112,7 @@ export function forecastCombat(state: BattleState, attackerId: string, defenderI
     hit,
     crit,
     followUp,
-    defenderCanCounter: defenderCanUseWeapon && canAttackAtDistance(defenderWeapon, cells) && defenderWeapon.damageKind !== "healing",
+    defenderCanCounter: defenderCanUseWeapon && canUnitAttackAtDistance(defender, defenderWeapon, cells) && defenderWeapon.damageKind !== "healing",
     triangle,
     effectiveMultiplier: multiplier,
   };
@@ -99,7 +124,7 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
   const defender = findUnit(state, defenderId);
   const attackerWeapon = getWeapon(attacker.weaponId);
   const defenderWeapon = getWeapon(defender.weaponId);
-  if (!canAttackAtDistance(attackerWeapon, forecast.distance) || attackerWeapon.damageKind === "healing") {
+  if (!canUnitAttackAtDistance(attacker, attackerWeapon, forecast.distance) || attackerWeapon.damageKind === "healing") {
     throw new Error(`${attacker.id} cannot attack ${defender.id}`);
   }
   if (remainingWeaponUses(attacker) <= 0) {
@@ -109,13 +134,16 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
   const rng = createRng(state.rngState);
   const events: CombatEvent[] = [];
   strike(state, rng, events, attacker, defender);
+  if (defender.alive && attacker.alive && hasSkill(attacker, "adept") && rollPercent(rng, effectiveStats(attacker).skill, false)) {
+    strike(state, rng, events, attacker, defender);
+  }
   if (defender.alive && attacker.alive && forecast.defenderCanCounter) {
     strike(state, rng, events, defender, attacker);
   }
   if (defender.alive && attacker.alive && forecast.followUp) {
     strike(state, rng, events, attacker, defender);
   }
-  if (defender.alive && attacker.alive && attackSpeed(defender, defenderWeapon) - attackSpeed(attacker, attackerWeapon) >= COMBAT.doublingThreshold) {
+  if (defender.alive && attacker.alive && attackSpeed(defender, defenderWeapon) - attackSpeed(attacker, attackerWeapon) >= followUpThreshold(defender, defenderWeapon)) {
     strike(state, rng, events, defender, attacker);
   }
 
@@ -132,6 +160,14 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
   }
   const forecast = forecastCombat(state, source.id, target.id);
   const remainingUses = spendWeaponUse(source);
+  if (foresightReady(source, target)) {
+    target.skillUses.foresight = (target.skillUses.foresight ?? 0) + 1;
+    events.push({ type: "miss", sourceId: source.id, targetId: target.id });
+    if (remainingUses === 0) {
+      events.push({ type: "weaponBreak", sourceId: source.id, weaponId: sourceWeapon.id });
+    }
+    return;
+  }
   const hit = rollPercent(rng, forecast.hit, COMBAT.doubleRNG);
   if (!hit) {
     events.push({ type: "miss", sourceId: source.id, targetId: target.id });
@@ -146,6 +182,9 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
   const damage = hasStatus(target, "aegis") ? Math.max(COMBAT.minDamage, Math.floor(rawDamage / 2)) : rawDamage;
   target.hp = Math.max(0, target.hp - damage);
   events.push({ type: "hit", sourceId: source.id, targetId: target.id, damage, critical, remainingHp: target.hp });
+  if (hasSkill(source, "poison_blade")) {
+    addStatus(target, { id: "poison", turns: 3 });
+  }
   if (target.hp === 0) {
     const targetDef = getUnitDef(target.defId);
     target.alive = false;
@@ -182,4 +221,9 @@ function unitName(state: BattleState, instanceId: string): string {
 
 function clampPercent(value: number): number {
   return Math.max(0, Math.min(100, Math.floor(value)));
+}
+
+function hitFloor(attacker: UnitInstance, value: number): number {
+  const hit = clampPercent(value);
+  return hasSkill(attacker, "steady_hand") ? Math.max(60, hit) : hit;
 }
