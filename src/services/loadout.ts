@@ -1,5 +1,6 @@
-import { ECONOMY, getClass, getUnitDef, getWeapon } from "../data";
+import { ECONOMY, getWeapon } from "../data";
 import type { CampaignState, RosterEntry } from "../models/types";
+import { baseClassId, canClassUseWeapon, canRosterUseWeapon } from "./classes";
 import { forgeWeaponCost, normalizeWeaponForge, normalizeWeaponUses, repairWeaponCost } from "./equipment";
 
 export function setRosterDeployment(campaign: CampaignState, unitDefId: string, deployed: boolean, requiredUnitIds?: readonly string[]): CampaignState {
@@ -52,7 +53,7 @@ export function assignConvoyWeapon(campaign: CampaignState, unitDefId: string, w
   if ((campaign.convoy[weaponId] ?? 0) <= 0) {
     throw new Error("仓库没有这件武器。");
   }
-  if (!canUseWeapon(unitDefId, weaponId)) {
+  if (!canRosterUseWeapon(entry, weaponId)) {
     throw new Error("该单位无法装备这类武器。");
   }
   if (entry.weaponIds.includes(weaponId)) {
@@ -131,9 +132,7 @@ export function forgeRosterWeapon(campaign: CampaignState, unitDefId: string, we
 }
 
 export function canUseWeapon(unitDefId: string, weaponId: string): boolean {
-  const unitDef = getUnitDef(unitDefId);
-  const classDef = getClass(unitDef.classId);
-  return classDef.weaponKinds.includes(getWeapon(weaponId).kind);
+  return canClassUseWeapon(baseClassId(unitDefId), weaponId);
 }
 
 function setRosterWeapon(campaign: CampaignState, unitDefId: string, weaponId: string): CampaignState {
@@ -141,7 +140,7 @@ function setRosterWeapon(campaign: CampaignState, unitDefId: string, weaponId: s
   if (!entry.weaponIds.includes(weaponId)) {
     throw new Error("该单位未携带这件武器。");
   }
-  if (!canUseWeapon(unitDefId, weaponId)) {
+  if (!canRosterUseWeapon(entry, weaponId)) {
     throw new Error("该单位无法装备这类武器。");
   }
   return {

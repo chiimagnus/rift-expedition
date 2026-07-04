@@ -19,6 +19,7 @@ export const GROWTH = {
   killBaseExp: 24,
   killLevelBonus: 8,
   supportExp: 10,
+  promotionLevel: 10,
   levelCap: 20,
 } as const;
 
@@ -92,15 +93,15 @@ const baseClassCatalog: ClassDef[] = [
   { id: "archer", name: "弓兵", moveKind: "foot", tags: ["archer"], weaponKinds: ["bow"], promotesTo: ["sniper", "ranger"] },
   { id: "healer", name: "治疗", moveKind: "foot", tags: ["healer"], weaponKinds: ["staff"], promotesTo: ["bishop", "saint"] },
   { id: "scout", name: "斥候", moveKind: "foot", tags: ["scout"], weaponKinds: ["sword", "bow"], promotesTo: ["thief", "assassin"] },
-  { id: "swordmaster", name: "剑圣", moveKind: "foot", tags: ["infantry"], weaponKinds: ["sword"] },
-  { id: "hero", name: "勇者", moveKind: "foot", tags: ["infantry"], weaponKinds: ["sword", "axe"] },
-  { id: "paladin", name: "圣骑士", moveKind: "horse", tags: ["cavalry"], weaponKinds: ["sword", "lance"] },
-  { id: "general", name: "将军", moveKind: "foot", tags: ["armored"], weaponKinds: ["lance", "axe"] },
-  { id: "sage", name: "贤者", moveKind: "foot", tags: ["mage"], weaponKinds: ["fire", "ice", "thunder", "staff"] },
-  { id: "sniper", name: "狙击手", moveKind: "foot", tags: ["archer"], weaponKinds: ["bow"] },
-  { id: "bishop", name: "主教", moveKind: "foot", tags: ["healer", "mage"], weaponKinds: ["staff", "fire"] },
-  { id: "dragon_king", name: "龙王", moveKind: "foot", tags: ["dragon"], weaponKinds: ["dragon", "sword", "lance"] },
-  { id: "stigma_bearer", name: "圣痕使", moveKind: "foot", tags: ["dragon"], weaponKinds: ["dragon", "fire", "thunder"] },
+  { id: "swordmaster", name: "剑圣", moveKind: "foot", tags: ["infantry"], weaponKinds: ["sword"], skillIds: ["iaijutsu"] },
+  { id: "hero", name: "勇者", moveKind: "foot", tags: ["infantry"], weaponKinds: ["sword", "axe"], skillIds: ["hero_dual_wield"] },
+  { id: "paladin", name: "圣骑士", moveKind: "horse", tags: ["cavalry"], weaponKinds: ["sword", "lance"], skillIds: ["paladin_canto"] },
+  { id: "general", name: "将军", moveKind: "foot", tags: ["armored"], weaponKinds: ["lance", "axe"], skillIds: ["bulwark"] },
+  { id: "sage", name: "贤者", moveKind: "foot", tags: ["mage"], weaponKinds: ["fire", "ice", "thunder", "staff"], skillIds: ["triune_sage"] },
+  { id: "sniper", name: "狙击手", moveKind: "foot", tags: ["archer"], weaponKinds: ["bow"], skillIds: ["cloud_piercer"] },
+  { id: "bishop", name: "主教", moveKind: "foot", tags: ["healer", "mage"], weaponKinds: ["staff", "fire"], skillIds: ["resurrection"] },
+  { id: "dragon_king", name: "龙王", moveKind: "foot", tags: ["dragon"], weaponKinds: ["dragon", "sword", "lance"], skillIds: ["stigma_roar"] },
+  { id: "stigma_bearer", name: "圣痕使", moveKind: "foot", tags: ["dragon"], weaponKinds: ["dragon", "fire", "thunder"], skillIds: ["stigma_seal"] },
 ];
 
 export const classCatalog = [...baseClassCatalog, ...extraClassCatalog] satisfies ClassDef[];

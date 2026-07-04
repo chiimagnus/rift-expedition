@@ -30,6 +30,7 @@ export function createInitialBattleState(chapterId = "ch01", campaign?: Campaign
       id: deployment.instanceId,
       defId: unitDef.id,
       team: deployment.team,
+      classId: deployment.team === "ally" ? rosterEntry?.classId ?? unitDef.classId : unitDef.classId,
       hp: rosterEntry?.stats.hp ?? unitDef.baseStats.hp,
       stats: { ...(rosterEntry?.stats ?? unitDef.baseStats) },
       weaponId,
@@ -72,6 +73,7 @@ export function createRosterEntry(unitDefId: string, weaponId?: string): RosterE
   const weaponIds = [...new Set([...unitDef.weaponIds, entryWeaponId])];
   return {
     unitDefId: unitDef.id,
+    classId: unitDef.classId,
     level: unitDef.level,
     exp: 0,
     stats: { ...unitDef.baseStats },

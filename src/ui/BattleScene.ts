@@ -2,9 +2,10 @@ import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef,
 import type { CampaignState, Cell, ChapterVictoryCondition, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
 import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, ensureChapterRoster, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
+import { canRosterUseWeapon, classForRoster, classForUnit, promoteRosterUnit, promotionTargets } from "../services/classes";
 import { forecastCombat } from "../services/combat";
 import { forgeWeaponCost, remainingWeaponUses, repairWeaponCost } from "../services/equipment";
-import { assignConvoyWeapon, buyWeapon, canUseWeapon, cycleRosterWeapon, forgeRosterWeapon, repairRosterWeapon, setRosterDeployment } from "../services/loadout";
+import { assignConvoyWeapon, buyWeapon, cycleRosterWeapon, forgeRosterWeapon, repairRosterWeapon, setRosterDeployment } from "../services/loadout";
 import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
 import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
@@ -108,8 +109,7 @@ export class BattleScene extends Phaser.Scene {
       if (!unit.alive) {
         continue;
       }
-      const unitDef = getUnitDef(unit.defId);
-      const classDef = getClass(unitDef.classId);
+      const classDef = classForUnit(unit);
       const x = unit.pos.x * TILE;
       const y = unit.pos.y * TILE;
       const fill = unit.team === "ally" ? 0xf0c96a : 0x76b7e8;
@@ -285,10 +285,10 @@ export class BattleScene extends Phaser.Scene {
     const chapter = getChapter(this.vm.state.chapterId);
     const deployableIds = this.deployableUnitIds();
     const deployable = this.campaign.roster.filter((entry) => deployableIds.includes(entry.unitDefId) && !this.campaign.fallen.includes(entry.unitDefId));
-    this.panel(4, 29, 300, 286, 0x101014, 0.92);
+    this.panel(4, 29, 440, 286, 0x101014, 0.92);
     this.addText(14, 39, "战前部署", { fontSize: "15px", color: "#f7e7b1", fontStyle: "700" });
-    this.addText(14, 61, `${chapter.objective}\n金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, { fontSize: "9px", color: "#f3efe4", wordWrap: { width: 178 }, lineSpacing: 2 });
-    this.button(246, 39, 48, 18, "开战", () => {
+    this.addText(14, 61, `${chapter.objective}\n金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, { fontSize: "9px", color: "#f3efe4", wordWrap: { width: 266 }, lineSpacing: 2 });
+    this.button(386, 39, 48, 18, "开战", () => {
       this.vm.beginBattle();
       this.render();
     });
@@ -301,7 +301,7 @@ export class BattleScene extends Phaser.Scene {
     deployable.slice(0, 8).forEach((entry, index) => {
       const y = 108 + index * 26;
       const unitDef = getUnitDef(entry.unitDefId);
-      this.addText(14, y, `${unitDef.name} ${entry.deployed ? "出" : "待"}\n${this.rosterWeaponText(entry)}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
+      this.addText(14, y, `${unitDef.name} ${classForRoster(entry).name} ${entry.deployed ? "出" : "待"}\n${this.rosterWeaponText(entry)}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
       this.button(118, y + 1, 36, 16, entry.deployed ? "待命" : "出战", () => {
         this.applyCampaignChange(() => setRosterDeployment(this.campaign, entry.unitDefId, !entry.deployed, deployableIds));
       });
@@ -324,6 +324,11 @@ export class BattleScene extends Phaser.Scene {
           this.applyCampaignChange(() => forgeRosterWeapon(this.campaign, entry.unitDefId));
         });
       }
+      promotionTargets(entry).slice(0, 3).forEach((classId, targetIndex) => {
+        this.button(294 + targetIndex * 32, y + 1, 30, 16, getClass(classId).name.slice(0, 2), () => {
+          this.applyCampaignChange(() => promoteRosterUnit(this.campaign, entry.unitDefId, classId));
+        });
+      });
     });
   }
 
@@ -418,6 +423,7 @@ export class BattleScene extends Phaser.Scene {
     for (const unit of this.vm.state.units) {
       const entry = rosterByUnit.get(unit.defId);
       if (unit.team === "ally" && entry) {
+        unit.classId = entry.classId;
         unit.skillIds = [...entry.skillIds];
       }
     }
@@ -453,7 +459,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private firstUsableConvoyWeapon(entry: RosterEntry): string | undefined {
-    return Object.entries(this.campaign.convoy).find(([weaponId, count]) => count > 0 && !entry.weaponIds.includes(weaponId) && canUseWeapon(entry.unitDefId, weaponId))?.[0];
+    return Object.entries(this.campaign.convoy).find(([weaponId, count]) => count > 0 && !entry.weaponIds.includes(weaponId) && canRosterUseWeapon(entry, weaponId))?.[0];
   }
 
   private rosterWeaponText(entry: RosterEntry): string {
@@ -515,8 +521,7 @@ function terrainColor(terrain: TerrainDef): number {
 }
 
 function unitGlyph(unit: UnitInstance): string {
-  const unitDef = getUnitDef(unit.defId);
-  const classDef = getClass(unitDef.classId);
+  const classDef = classForUnit(unit);
   if (classDef.tags.includes("flying")) {
     return "F";
   }

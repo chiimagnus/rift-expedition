@@ -1,5 +1,6 @@
-import { getClass, getTerrain, getUnitDef } from "../data";
+import { getTerrain } from "../data";
 import type { BattleState, Cell, UnitInstance } from "../models/types";
+import { classForUnit } from "./classes";
 import { unitAt } from "./chapter";
 import { effectiveStats } from "./status";
 
@@ -27,8 +28,7 @@ export function movementCost(state: BattleState, unit: UnitInstance, cell: Cell)
   if (!inBounds(state, cell)) {
     return null;
   }
-  const unitDef = getUnitDef(unit.defId);
-  const classDef = getClass(unitDef.classId);
+  const classDef = classForUnit(unit);
   const terrain = terrainAt(state, cell);
   return terrain.moveCost[classDef.moveKind];
 }

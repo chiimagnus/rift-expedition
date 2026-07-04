@@ -1,6 +1,5 @@
 import {
   COMBAT,
-  getClass,
   getTerrain,
   getUnitDef,
   getWeapon,
@@ -11,6 +10,7 @@ import {
 } from "../data";
 import type { BattleState, CombatEvent, CombatForecast, CombatResolution, UnitInstance, WeaponDef } from "../models/types";
 import { findUnit } from "./chapter";
+import { classForUnit } from "./classes";
 import { remainingWeaponUses, spendWeaponUse, weaponMight } from "./equipment";
 import { createRng, rollPercent } from "./rng";
 import { distance } from "./movement";
@@ -33,7 +33,7 @@ export function triangleValue(attackerWeapon: WeaponDef, defenderWeapon: WeaponD
 }
 
 export function effectiveMultiplier(weapon: WeaponDef, defender: UnitInstance): number {
-  const tags = getClass(getUnitDef(defender.defId).classId).tags;
+  const tags = classForUnit(defender).tags;
   return weapon.effectiveTags?.some((tag) => tags.includes(tag)) ? COMBAT.effMultiplier : 1;
 }
 

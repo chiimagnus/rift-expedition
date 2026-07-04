@@ -75,6 +75,7 @@ export interface ClassDef {
   moveKind: MoveKind;
   tags: UnitTag[];
   weaponKinds: WeaponKind[];
+  skillIds?: string[];
   promotesTo?: string[];
 }
 
@@ -124,6 +125,7 @@ export interface UnitInstance {
   id: string;
   defId: string;
   team: Team;
+  classId: string;
   hp: number;
   stats: Stats;
   weaponId: string;
@@ -141,6 +143,7 @@ export interface UnitInstance {
 
 export interface RosterEntry {
   unitDefId: string;
+  classId: string;
   level: number;
   exp: number;
   stats: Stats;

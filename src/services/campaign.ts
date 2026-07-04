@@ -1,6 +1,7 @@
 import { ECONOMY, chapterCatalog, endingCatalog, getChapter, getUnitDef } from "../data";
 import type { BattleState, CampaignState, EndingDef, RosterEntry, Stats, StoryChoice, UnitInstance } from "../models/types";
 import { createRosterEntry } from "./chapter";
+import { baseClassId, isKnownClassId } from "./classes";
 import { normalizeWeaponForge, normalizeWeaponUses } from "./equipment";
 
 const SAVE_KEY = "rift-expedition.save.v1";
@@ -206,6 +207,7 @@ function migrateRosterEntry(raw: unknown): RosterEntry | undefined {
   const carriedWeaponIds = typeof raw.weaponId === "string" && !weaponIds.includes(raw.weaponId) ? [...weaponIds, raw.weaponId] : weaponIds;
   return {
     unitDefId: base.unitDefId,
+    classId: typeof raw.classId === "string" && isKnownClassId(raw.classId) ? raw.classId : base.classId,
     level: typeof raw.level === "number" ? raw.level : base.level,
     exp: typeof raw.exp === "number" ? raw.exp : base.exp,
     stats: isStats(raw.stats) ? raw.stats : base.stats,
@@ -232,6 +234,7 @@ function upsertRosterEntry(roster: RosterEntry[], unit: UnitInstance): void {
   const weaponIds = previousWeaponIds.includes(unit.weaponId) ? previousWeaponIds : [...previousWeaponIds, unit.weaponId];
   const next = {
     unitDefId: unit.defId,
+    classId: isKnownClassId(unit.classId) ? unit.classId : previous?.classId ?? baseClassId(unit.defId),
     level: unit.level,
     exp: unit.exp,
     stats: { ...unit.stats },

@@ -29,6 +29,9 @@ test("content references resolve across units, classes, skills, supports, and ch
     for (const promoted of classDef.promotesTo ?? []) {
       assert.ok(classIds.has(promoted), `${classDef.id} -> ${promoted}`);
     }
+    for (const skillId of classDef.skillIds ?? []) {
+      assert.ok(skillIds.has(skillId), `${classDef.id}:${skillId}`);
+    }
   }
 
   for (const unit of unitCatalog) {

@@ -1,7 +1,8 @@
-import { getClass, getChapter, getTerrain, getUnitDef, getWeapon } from "../data";
+import { getChapter, getTerrain, getUnitDef, getWeapon } from "../data";
 import type { BattleState, Cell, CombatForecast, UnitInstance } from "../models/types";
 import { attackableEnemiesFrom, runEnemyTurn } from "../services/ai";
 import { findUnit, updateOutcome, unitAt } from "../services/chapter";
+import { classForUnit } from "../services/classes";
 import { canAttackAtDistance, forecastCombat, resolveCombat } from "../services/combat";
 import { remainingWeaponUses, weaponForgeLevel } from "../services/equipment";
 import { cellKey, distance, moveUnit, reachableCells, terrainAt } from "../services/movement";
@@ -193,7 +194,7 @@ export class BattleViewModel {
       return "";
     }
     const unitDef = getUnitDef(unit.defId);
-    const classDef = getClass(unitDef.classId);
+    const classDef = classForUnit(unit);
     const weapon = getWeapon(unit.weaponId);
     const uses = remainingWeaponUses(unit);
     const forge = weaponForgeLevel(unit);

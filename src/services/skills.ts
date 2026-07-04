@@ -1,6 +1,7 @@
-import { BOND, GROWTH, getClass, getSkill, getUnitDef, getWeapon } from "../data";
+import { BOND, GROWTH, getSkill, getUnitDef, getWeapon } from "../data";
 import type { BattleState, SkillDef, UnitInstance } from "../models/types";
 import { findUnit, livingUnits } from "./chapter";
+import { classForUnit } from "./classes";
 import { distance, terrainAt } from "./movement";
 import { gainExperience } from "./progression";
 import { createRng } from "./rng";
@@ -106,7 +107,7 @@ function activateHealingWave(state: BattleState, unit: UnitInstance, targetId: s
 }
 
 function activateStigma(state: BattleState, unit: UnitInstance): SkillResult {
-  const classDef = getClass(getUnitDef(unit.defId).classId);
+  const classDef = classForUnit(unit);
   if (!classDef.tags.includes("dragon")) {
     return { ok: false, message: "只有龙裔能觉醒龙痕。" };
   }
