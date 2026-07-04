@@ -1,7 +1,7 @@
 import { BOND, GROWTH, getClass, getSkill, getUnitDef, getWeapon } from "../data";
 import type { BattleState, SkillDef, UnitInstance } from "../models/types";
 import { findUnit, livingUnits } from "./chapter";
-import { distance } from "./movement";
+import { distance, terrainAt } from "./movement";
 import { gainExperience } from "./progression";
 import { createRng } from "./rng";
 import { addStatus, hasStatus, tickStatuses } from "./status";
@@ -51,8 +51,31 @@ export function activateSkill(state: BattleState, unitId: string, skillId: strin
 export function refreshRound(state: BattleState): void {
   for (const unit of livingUnits(state)) {
     tickStatuses(unit);
+    applyTerrainEffects(state, unit);
     if (unit.team === "ally") {
       accrueAdjacentBonds(state, unit);
+    }
+  }
+}
+
+function applyTerrainEffects(state: BattleState, unit: UnitInstance): void {
+  const terrain = terrainAt(state, unit.pos);
+  if (terrain.effects.includes("regen10") || terrain.effects.includes("bossRegen")) {
+    const amount = Math.max(1, Math.floor(unit.stats.hp * 0.1));
+    const before = unit.hp;
+    unit.hp = Math.min(unit.stats.hp, unit.hp + amount);
+    if (unit.hp > before) {
+      state.log.unshift(`${unitName(unit)} 借助${terrain.name}恢复 ${unit.hp - before} 点。`);
+    }
+  }
+  if (terrain.effects.includes("poison")) {
+    const damage = Math.max(1, Math.floor(unit.stats.hp * 0.1));
+    unit.hp = Math.max(0, unit.hp - damage);
+    state.log.unshift(`${unitName(unit)} 被${terrain.name}侵蚀 ${damage} 点。`);
+    if (unit.hp === 0) {
+      unit.alive = false;
+      unit.acted = true;
+      state.log.unshift(`${unitName(unit)} 倒在${terrain.name}中。`);
     }
   }
 }
