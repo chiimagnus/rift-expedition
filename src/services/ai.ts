@@ -66,6 +66,7 @@ export function runEnemyTurn(state: BattleState): void {
     refreshRound(state);
     state.phase = "player";
     state.log.unshift(`第 ${state.turn} 回合。`);
+    updateOutcome(state);
   }
 }
 

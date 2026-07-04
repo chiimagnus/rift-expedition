@@ -1,5 +1,5 @@
 import { getChapter, getUnitDef } from "../data";
-import type { BattleState, CampaignState, RosterEntry, UnitInstance } from "../models/types";
+import type { BattleState, CampaignState, ChapterDefeatCondition, ChapterVictoryCondition, RosterEntry, UnitInstance } from "../models/types";
 import { normalizeWeaponForge, normalizeWeaponUses } from "./equipment";
 
 export function createInitialBattleState(chapterId = "ch01", campaign?: CampaignState): BattleState {
@@ -120,13 +120,94 @@ export function unitAt(state: BattleState, x: number, y: number): UnitInstance |
 }
 
 export function updateOutcome(state: BattleState): void {
+  if (state.phase === "victory" || state.phase === "defeat") {
+    return;
+  }
+  const chapter = getChapter(state.chapterId);
   const allies = livingUnits(state, "ally");
-  const enemies = livingUnits(state, "enemy");
   if (allies.length === 0) {
     state.phase = "defeat";
     state.log.unshift("我方全灭。宿命暂时吞没了抵抗。");
-  } else if (enemies.length === 0) {
-    state.phase = "victory";
-    state.log.unshift("北境先锋撤退。奥德里克与艾拉菈都记住了彼此的眼神。");
+    return;
   }
+  const failedCondition = chapter.defeatConditions?.find((condition) => isDefeatConditionMet(state, condition));
+  if (failedCondition) {
+    state.phase = "defeat";
+    state.log.unshift(defeatConditionText(state, failedCondition));
+    return;
+  }
+
+  if (isVictoryConditionMet(state, chapter.victoryCondition ?? { type: "rout" })) {
+    state.phase = "victory";
+    state.log.unshift(victoryConditionText(chapter.victoryCondition ?? { type: "rout" }));
+  }
+}
+
+function isVictoryConditionMet(state: BattleState, condition: ChapterVictoryCondition): boolean {
+  if (condition.type === "rout") {
+    return livingUnits(state, "enemy").length === 0;
+  }
+  if (condition.type === "defeatBoss") {
+    return condition.targetInstanceIds.every((unitId) => {
+      const target = state.units.find((unit) => unit.id === unitId);
+      return target ? !target.alive : false;
+    });
+  }
+  if (condition.type === "survive") {
+    return state.turn > condition.turns;
+  }
+  if (condition.type === "seize") {
+    return livingUnits(state, "ally").some((unit) => isAllowedUnit(unit, condition.unitDefIds) && unit.pos.x === condition.x && unit.pos.y === condition.y);
+  }
+  if (condition.type === "escape") {
+    return condition.unitDefIds.every((unitDefId) => livingUnits(state, "ally").some((unit) => unit.defId === unitDefId && unit.pos.x === condition.x && unit.pos.y === condition.y));
+  }
+  if (condition.type === "all") {
+    return condition.conditions.every((nested) => isVictoryConditionMet(state, nested));
+  }
+  return condition.conditions.some((nested) => isVictoryConditionMet(state, nested));
+}
+
+function isDefeatConditionMet(state: BattleState, condition: ChapterDefeatCondition): boolean {
+  if (condition.type === "protectUnit") {
+    return protectedUnits(state, condition).some((unit) => !unit?.alive);
+  }
+  return false;
+}
+
+function protectedUnits(state: BattleState, condition: Extract<ChapterDefeatCondition, { type: "protectUnit" }>): Array<UnitInstance | undefined> {
+  const byInstance = condition.instanceIds?.map((id) => state.units.find((unit) => unit.id === id)) ?? [];
+  const byDef = condition.unitDefIds?.map((id) => state.units.find((unit) => unit.defId === id && unit.team === "ally")) ?? [];
+  return [...byInstance, ...byDef];
+}
+
+function isAllowedUnit(unit: UnitInstance, unitDefIds: string[] | undefined): boolean {
+  return !unitDefIds || unitDefIds.includes(unit.defId);
+}
+
+function victoryConditionText(condition: ChapterVictoryCondition): string {
+  if (condition.type === "rout") {
+    return "敌军崩溃，目标达成。";
+  }
+  if (condition.type === "defeatBoss") {
+    return "关键目标撤退，目标达成。";
+  }
+  if (condition.type === "survive") {
+    return `坚守 ${condition.turns} 回合，目标达成。`;
+  }
+  if (condition.type === "seize") {
+    return "目标地点已占领。";
+  }
+  if (condition.type === "escape") {
+    return "指定单位抵达撤离点。";
+  }
+  return "复合目标达成。";
+}
+
+function defeatConditionText(state: BattleState, condition: ChapterDefeatCondition): string {
+  if (condition.type === "protectUnit") {
+    const name = protectedUnits(state, condition).find((unit) => !unit?.alive);
+    return `${name ? getUnitDef(name.defId).name : "保护目标"} 倒下，目标失败。`;
+  }
+  return "目标失败。";
 }

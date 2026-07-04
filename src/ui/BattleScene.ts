@@ -1,5 +1,5 @@
 import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef, getWeapon } from "../data";
-import type { CampaignState, Cell, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
+import type { CampaignState, Cell, ChapterVictoryCondition, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
 import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, ensureChapterRoster, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
 import { forecastCombat } from "../services/combat";
@@ -92,6 +92,10 @@ export class BattleScene extends Phaser.Scene {
       const { x, y } = parseCellKey(key);
       this.overlay.fillStyle(0xd64545, 0.34);
       this.overlay.fillRect(x * TILE + 5, y * TILE + 5, TILE - 10, TILE - 10);
+    }
+    for (const cell of objectiveCells(getChapter(this.vm.state.chapterId).victoryCondition)) {
+      this.overlay.lineStyle(2, 0xf0c96a, 0.95);
+      this.overlay.strokeRect(cell.x * TILE + 4, cell.y * TILE + 4, TILE - 8, TILE - 8);
     }
     if (this.vm.hoverCell && inBounds(this.vm.state, this.vm.hoverCell)) {
       this.overlay.lineStyle(2, 0xf3efe4, 0.95);
@@ -539,4 +543,17 @@ function counterText(value: number): string {
     return "相克 ▼";
   }
   return "相克 -";
+}
+
+function objectiveCells(condition: ChapterVictoryCondition | undefined): Cell[] {
+  if (!condition) {
+    return [];
+  }
+  if (condition.type === "seize" || condition.type === "escape") {
+    return [{ x: condition.x, y: condition.y }];
+  }
+  if (condition.type === "all" || condition.type === "any") {
+    return condition.conditions.flatMap(objectiveCells);
+  }
+  return [];
 }

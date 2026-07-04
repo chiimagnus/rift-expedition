@@ -162,6 +162,8 @@ export interface ChapterDef {
   title: string;
   act: string;
   objective: string;
+  victoryCondition?: ChapterVictoryCondition;
+  defeatConditions?: ChapterDefeatCondition[];
   nextChapterId?: string;
   victoryText?: string[];
   choice?: StoryChoice;
@@ -177,6 +179,17 @@ export interface ChapterDef {
   }>;
   opening: string[];
 }
+
+export type ChapterVictoryCondition =
+  | { type: "rout" }
+  | { type: "defeatBoss"; targetInstanceIds: string[] }
+  | { type: "survive"; turns: number }
+  | { type: "seize"; x: number; y: number; unitDefIds?: string[] }
+  | { type: "escape"; x: number; y: number; unitDefIds: string[] }
+  | { type: "all"; conditions: ChapterVictoryCondition[] }
+  | { type: "any"; conditions: ChapterVictoryCondition[] };
+
+export type ChapterDefeatCondition = { type: "protectUnit"; unitDefIds?: string[]; instanceIds?: string[] };
 
 export interface StoryChoice {
   id: string;

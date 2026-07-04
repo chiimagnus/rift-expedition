@@ -87,6 +87,7 @@ export class BattleViewModel {
       this.state.log.unshift(`${unitLabel(selected)} 移动至 (${cell.x + 1},${cell.y + 1})。`);
       this.selectedUnitId = undefined;
       this.selectedSkillId = undefined;
+      updateOutcome(this.state);
       this.autoEndIfDone();
     }
   }

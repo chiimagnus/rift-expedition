@@ -5,6 +5,7 @@ export const chapter01: ChapterDef = {
   title: "01 边境遭遇",
   act: "第一幕：相遇与背叛",
   objective: "击退北境先锋；艾拉菈与比约恩会撤退，战斗后进入下一章伏笔。",
+  victoryCondition: { type: "rout" },
   nextChapterId: "ch02",
   victoryText: [
     "北境先锋退入林线。奥德里克没有追击，他第一次怀疑“净化”这个词。",
