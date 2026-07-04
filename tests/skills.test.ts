@@ -394,6 +394,30 @@ test("positioning active skills swap, push, smite, and pull units", () => {
   assert.deepEqual(rowan.pos, { x: 2, y: 0 });
 });
 
+test("falcon mercy carries an adjacent ally to a legal safe cell", () => {
+  const state = createInitialBattleState();
+  state.grid = [["plains", "plains", "plains", "plains"]];
+  const sigrun = findUnit(state, "sigrun");
+  const cecilia = findUnit(state, "cecilia");
+  const bjorn = findUnit(state, "bjorn");
+  state.units = [sigrun, cecilia, bjorn];
+  sigrun.team = "ally";
+  sigrun.classId = "falcon_knight";
+  sigrun.skillIds.push("falcon_mercy");
+  sigrun.pos = { x: 1, y: 0 };
+  cecilia.team = "ally";
+  cecilia.pos = { x: 2, y: 0 };
+  bjorn.team = "enemy";
+  bjorn.pos = { x: 3, y: 0 };
+
+  const result = activateSkill(state, "sigrun", "falcon_mercy", "cecilia");
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(cecilia.pos, { x: 0, y: 0 });
+  assert.equal(sigrun.acted, true);
+  assert.equal(sigrun.skillUses.falcon_mercy, 1);
+});
+
 test("damage active skills affect multiple tactical shapes", () => {
   const state = createInitialBattleState();
   state.grid = [

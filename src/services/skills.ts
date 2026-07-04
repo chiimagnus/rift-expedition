@@ -89,6 +89,9 @@ export function activateSkill(state: BattleState, unitId: string, skillId: strin
   if (skillId === "rescue_pull") {
     return activateRescuePull(state, unit, targetId);
   }
+  if (skillId === "falcon_mercy") {
+    return activateFalconMercy(state, unit, targetId);
+  }
   if (skillId === "gale_cross") {
     return activateGaleCross(state, unit, targetId);
   }
@@ -351,6 +354,26 @@ function activateRescuePull(state: BattleState, unit: UnitInstance, targetId: st
   return pushResult(state, true, `${unitName(unit)} 将 ${unitName(target)} 拉回身边。`);
 }
 
+function activateFalconMercy(state: BattleState, unit: UnitInstance, targetId: string | undefined): SkillResult {
+  if (classForUnit(unit).id !== "falcon_knight") {
+    return { ok: false, message: "只有隼骑能发动救护。" };
+  }
+  const target = targetedUnit(state, targetId);
+  if (!target || target.team !== unit.team || !target.alive || target.id === unit.id || distance(unit.pos, target.pos) !== 1) {
+    return { ok: false, message: "只能救护相邻友军。" };
+  }
+  const destination = neighbors(unit.pos)
+    .filter((cell) => canEnterForced(state, target, cell))
+    .sort((a, b) => compareCarryDestinations(state, target, a, b))[0];
+  if (!destination) {
+    return { ok: false, message: "身边没有可放下的空格。" };
+  }
+  target.pos = destination;
+  spendSkill(state, unit, "falcon_mercy");
+  unit.acted = true;
+  return pushResult(state, true, `${unitName(unit)} 带离 ${unitName(target)}。`);
+}
+
 function activateGaleCross(state: BattleState, unit: UnitInstance, targetId: string | undefined): SkillResult {
   const target = targetedUnit(state, targetId);
   const weapon = getWeapon(unit.weaponId);
@@ -508,6 +531,28 @@ function moveForced(state: BattleState, target: UnitInstance, delta: Cell, steps
 
 function canEnterForced(state: BattleState, target: UnitInstance, cell: Cell): boolean {
   return inBounds(state, cell) && !unitAt(state, cell.x, cell.y) && movementCost(state, target, cell) != null;
+}
+
+function compareCarryDestinations(state: BattleState, target: UnitInstance, a: Cell, b: Cell): number {
+  const safetyA = nearestEnemyDistance(state, target, a);
+  const safetyB = nearestEnemyDistance(state, target, b);
+  if (safetyA !== safetyB) {
+    return safetyB - safetyA;
+  }
+  const carryA = distance(a, target.pos);
+  const carryB = distance(b, target.pos);
+  if (carryA !== carryB) {
+    return carryB - carryA;
+  }
+  return a.x - b.x || a.y - b.y;
+}
+
+function nearestEnemyDistance(state: BattleState, target: UnitInstance, cell: Cell): number {
+  const enemies = livingUnits(state, target.team === "ally" ? "enemy" : "ally");
+  if (enemies.length === 0) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return Math.min(...enemies.map((enemy) => distance(cell, enemy.pos)));
 }
 
 function dealSkillDamage(state: BattleState, source: UnitInstance, target: UnitInstance, magical: boolean, bonus = 0): number {
