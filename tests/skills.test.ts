@@ -265,6 +265,36 @@ test("sister guard redirects a hit and guard lunge answers for a pinned ally", (
   assert.equal(guard.skillUses.guard_lunge, 1);
 });
 
+test("mercy leaves retreating targets alive and ranger skirmish steps back", () => {
+  const mercyState = createInitialBattleState();
+  mercyState.grid = [["plains", "plains"]];
+  const cecilia = findUnit(mercyState, "cecilia");
+  const bjorn = findUnit(mercyState, "bjorn");
+  cecilia.pos = { x: 0, y: 0 };
+  cecilia.stats.str = 50;
+  cecilia.stats.skill = 100;
+  cecilia.skillIds.push("mercy");
+  bjorn.pos = { x: 1, y: 0 };
+  bjorn.hp = 5;
+
+  resolveCombat(mercyState, "cecilia", "bjorn");
+
+  assert.equal(bjorn.alive, true);
+  assert.equal(bjorn.hp, 1);
+
+  const skirmishState = createInitialBattleState();
+  skirmishState.grid = [["plains", "plains", "plains", "plains"]];
+  const rowan = findUnit(skirmishState, "rowan");
+  const raider = findUnit(skirmishState, "raider_a");
+  rowan.pos = { x: 1, y: 0 };
+  rowan.skillIds.push("ranger_skirmish");
+  raider.pos = { x: 3, y: 0 };
+
+  resolveCombat(skirmishState, "rowan", "raider_a");
+
+  assert.deepEqual(rowan.pos, { x: 0, y: 0 });
+});
+
 test("foresight spends its once-per-battle dodge and poison blade applies status", () => {
   const state = createInitialBattleState();
   state.grid = [["plains", "plains"]];

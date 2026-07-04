@@ -9,11 +9,11 @@ import {
   weaponTriangle,
 } from "../data";
 import type { BattleState, CombatEvent, CombatForecast, CombatResolution, UnitInstance, WeaponDef } from "../models/types";
-import { findUnit } from "./chapter";
+import { findUnit, unitAt } from "./chapter";
 import { classForUnit } from "./classes";
 import { remainingWeaponUses, spendWeaponUse, weaponMight } from "./equipment";
 import { createRng, rollPercent } from "./rng";
-import { distance } from "./movement";
+import { distance, movementCost, neighbors } from "./movement";
 import { awardCombatExperience } from "./progression";
 import {
   armorBreaks,
@@ -163,9 +163,10 @@ export function resolveCombat(state: BattleState, attackerId: string, defenderId
     strike(state, rng, events, defender, attacker);
   }
 
+  const movementLogs = rangerSkirmishStepBack(state, attacker, defender);
   const expLogs = awardCombatExperience(state, rng, events);
   state.rngState = rng.state;
-  state.log.unshift(...reactionLogs, ...eventsToLog(state, events), ...expLogs);
+  state.log.unshift(...reactionLogs, ...eventsToLog(state, events), ...movementLogs, ...expLogs);
   return { forecast, events };
 }
 
@@ -196,13 +197,15 @@ function strike(state: BattleState, rng: ReturnType<typeof createRng>, events: C
   const critical = rollPercent(rng, forecast.crit, false);
   const rawDamage = critical ? forecast.damage * 3 : forecast.damage;
   const damage = hasStatus(target, "aegis") ? Math.max(COMBAT.minDamage, Math.floor(rawDamage / 2)) : rawDamage;
-  target.hp = Math.max(0, target.hp - damage);
-  events.push({ type: "hit", sourceId: source.id, targetId: target.id, damage, critical, remainingHp: target.hp });
+  const targetDef = getUnitDef(target.defId);
+  const mercy = hasSkill(source, "mercy") && targetDef.defeatBehavior === "retreat" && target.hp <= damage;
+  const dealt = mercy ? Math.max(0, target.hp - 1) : damage;
+  target.hp = mercy ? 1 : Math.max(0, target.hp - damage);
+  events.push({ type: "hit", sourceId: source.id, targetId: target.id, damage: dealt, critical, remainingHp: target.hp });
   if (hasStatus(source, "poison_blade")) {
     addStatus(target, { id: "poison", turns: 3 });
   }
-  if (target.hp === 0) {
-    const targetDef = getUnitDef(target.defId);
+  if (!mercy && target.hp === 0) {
     target.alive = false;
     target.acted = true;
     primeBloodMemory(state, target);
@@ -265,6 +268,27 @@ function guardLungeCounter(state: BattleState, defender: UnitInstance, attacker:
     const weapon = getWeapon(candidate.weaponId);
     return remainingWeaponUses(candidate) > 0 && weapon.damageKind !== "healing" && canUnitAttackAtDistance(candidate, weapon, distance(candidate.pos, attacker.pos));
   });
+}
+
+function rangerSkirmishStepBack(state: BattleState, attacker: UnitInstance, defender: UnitInstance): string[] {
+  if (!attacker.alive || !hasSkill(attacker, "ranger_skirmish")) {
+    return [];
+  }
+  const currentDistance = distance(attacker.pos, defender.pos);
+  const destination = neighbors(attacker.pos)
+    .filter(
+      (cell) =>
+        distance(cell, defender.pos) > currentDistance &&
+        !unitAt(state, cell.x, cell.y) &&
+        movementCost(state, attacker, cell) != null,
+    )
+    .sort((left, right) => distance(right, defender.pos) - distance(left, defender.pos))[0];
+  if (!destination) {
+    return [];
+  }
+  attacker.pos = destination;
+  attacker.moved = true;
+  return [`${unitName(state, attacker.id)} 游击后撤。`];
 }
 
 function clampPercent(value: number): number {
