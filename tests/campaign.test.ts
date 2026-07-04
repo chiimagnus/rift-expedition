@@ -75,15 +75,27 @@ test("campaign merge persists roster growth and classic fallen units", () => {
   rowan.hp = 0;
   aldric.level = 2;
   aldric.exp = 7;
+  aldric.classId = "dragon_king";
   aldric.stats.str += 1;
+  aldric.weaponUses[aldric.weaponId] = aldric.weaponUses[aldric.weaponId]! - 2;
+  aldric.weaponForge[aldric.weaponId] = 1;
+  state.flags["chapterEvent:ch01:test:resolved"] = true;
+  state.flags.storyFlag = true;
 
   const merged = mergeBattleIntoCampaign(campaign, state);
   const nextState = createInitialBattleState("ch02", merged);
+  const mergedAldric = merged.roster.find((entry) => entry.unitDefId === "aldric")!;
 
   assert.ok(merged.fallen.includes("rowan"));
-  assert.equal(merged.roster.find((entry) => entry.unitDefId === "aldric")!.level, 2);
-  assert.equal(merged.roster.find((entry) => entry.unitDefId === "aldric")!.stats.str, aldric.stats.str);
+  assert.equal(mergedAldric.level, 2);
+  assert.equal(mergedAldric.classId, "dragon_king");
+  assert.equal(mergedAldric.stats.str, aldric.stats.str);
+  assert.equal(mergedAldric.weaponUses[aldric.weaponId], aldric.weaponUses[aldric.weaponId]);
+  assert.equal(mergedAldric.weaponForge[aldric.weaponId], 1);
+  assert.equal(merged.flags["chapterEvent:ch01:test:resolved"], undefined);
+  assert.equal(merged.flags.storyFlag, true);
   assert.equal(nextState.units.some((unit) => unit.defId === "rowan" && unit.team === "ally"), false);
+  assert.equal(findUnit(nextState, "aldric").classId, "dragon_king");
 });
 
 test("ending selection follows B/11 ending tree", () => {

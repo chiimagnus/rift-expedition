@@ -1,10 +1,11 @@
 import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef, getWeapon } from "../data";
-import type { CampaignState, Cell, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
+import type { CampaignState, Cell, ChapterVictoryCondition, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
 import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, ensureChapterRoster, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
-import { forecastCombat } from "../services/combat";
-import { assignConvoyWeapon, buyWeapon, canUseWeapon, cycleRosterWeapon, setRosterDeployment } from "../services/loadout";
-import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
+import { canRosterUseWeapon, classForRoster, classForUnit, promoteRosterUnit, promotionTargets } from "../services/classes";
+import { forgeWeaponCost, repairWeaponCost } from "../services/equipment";
+import { assignConvoyWeapon, buyWeapon, cycleRosterWeapon, forgeRosterWeapon, repairRosterWeapon, setRosterDeployment } from "../services/loadout";
+import { inBounds } from "../services/movement";
 import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
 
@@ -13,6 +14,7 @@ const COLS = 14;
 const ROWS = 10;
 const WIDTH = COLS * TILE;
 const HEIGHT = ROWS * TILE;
+const SHOP_WEAPON_IDS = ["iron_sword", "iron_lance", "short_bow", "fire", "heal_staff"] as const;
 
 declare const Phaser: any;
 
@@ -91,6 +93,10 @@ export class BattleScene extends Phaser.Scene {
       this.overlay.fillStyle(0xd64545, 0.34);
       this.overlay.fillRect(x * TILE + 5, y * TILE + 5, TILE - 10, TILE - 10);
     }
+    for (const cell of objectiveCells(getChapter(this.vm.state.chapterId).victoryCondition)) {
+      this.overlay.lineStyle(2, 0xf0c96a, 0.95);
+      this.overlay.strokeRect(cell.x * TILE + 4, cell.y * TILE + 4, TILE - 8, TILE - 8);
+    }
     if (this.vm.hoverCell && inBounds(this.vm.state, this.vm.hoverCell)) {
       this.overlay.lineStyle(2, 0xf3efe4, 0.95);
       this.overlay.strokeRect(this.vm.hoverCell.x * TILE + 1, this.vm.hoverCell.y * TILE + 1, TILE - 2, TILE - 2);
@@ -102,8 +108,7 @@ export class BattleScene extends Phaser.Scene {
       if (!unit.alive) {
         continue;
       }
-      const unitDef = getUnitDef(unit.defId);
-      const classDef = getClass(unitDef.classId);
+      const classDef = classForUnit(unit);
       const x = unit.pos.x * TILE;
       const y = unit.pos.y * TILE;
       const fill = unit.team === "ally" ? 0xf0c96a : 0x76b7e8;
@@ -215,6 +220,13 @@ export class BattleScene extends Phaser.Scene {
       this.render();
     });
     let offset = 50;
+    if (this.vm.canVisitSelected()) {
+      this.button(x + offset, y, 46, 18, "访问", () => {
+        this.vm.visitSelected();
+        this.render();
+      });
+      offset += 50;
+    }
     for (const skill of this.vm.activeSkillList(unit).slice(0, 3)) {
       this.button(x + offset, y, 58, 18, skill.name, () => {
         this.vm.selectSkill(skill.id);
@@ -237,20 +249,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private previewAtHover() {
-    const selected = this.vm.selectedUnit;
-    const hover = this.vm.hoverCell;
-    if (!selected || !hover) {
-      return undefined;
-    }
-    const target = unitAt(this.vm.state, hover.x, hover.y);
-    if (!target || target.team === selected.team) {
-      return undefined;
-    }
-    const weapon = getWeapon(selected.weaponId);
-    if (!weapon || distance(selected.pos, target.pos) < weapon.range[0] || distance(selected.pos, target.pos) > weapon.range[1]) {
-      return undefined;
-    }
-    return forecastCombat(this.vm.state, selected.id, target.id);
+    return this.vm.preview;
   }
 
   private objectAt(cell: Cell): string {
@@ -258,7 +257,7 @@ export class BattleScene extends Phaser.Scene {
     if (unit) {
       return getUnitDef(unit.defId).name;
     }
-    return terrainAt(this.vm.state, cell).effects.join(" / ") || " ";
+    return this.vm.objectText(cell);
   }
 
   private addText(x: number, y: number, text: string, style: Record<string, unknown>): any {
@@ -279,22 +278,23 @@ export class BattleScene extends Phaser.Scene {
     const chapter = getChapter(this.vm.state.chapterId);
     const deployableIds = this.deployableUnitIds();
     const deployable = this.campaign.roster.filter((entry) => deployableIds.includes(entry.unitDefId) && !this.campaign.fallen.includes(entry.unitDefId));
-    this.panel(4, 29, 260, 286, 0x101014, 0.92);
+    this.panel(4, 29, 440, 286, 0x101014, 0.92);
     this.addText(14, 39, "战前部署", { fontSize: "15px", color: "#f7e7b1", fontStyle: "700" });
-    this.addText(14, 61, `${chapter.objective}\n金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, { fontSize: "9px", color: "#f3efe4", wordWrap: { width: 178 }, lineSpacing: 2 });
-    this.button(204, 39, 48, 18, "开战", () => {
+    this.addText(14, 61, `${chapter.objective}\n金 ${this.campaign.gold}  仓 ${this.convoySummary()}`, { fontSize: "9px", color: "#f3efe4", wordWrap: { width: 266 }, lineSpacing: 2 });
+    this.button(386, 39, 48, 18, "开战", () => {
       this.vm.beginBattle();
       this.render();
     });
-    this.button(204, 61, 48, 18, "买铁剑", () => {
-      this.applyCampaignChange(() => buyWeapon(this.campaign, "iron_sword"));
+    SHOP_WEAPON_IDS.forEach((weaponId, index) => {
+      this.button(14 + index * 56, 84, 52, 16, `买${getWeapon(weaponId).name}`, () => {
+        this.applyCampaignChange(() => buyWeapon(this.campaign, weaponId));
+      });
     });
 
     deployable.slice(0, 8).forEach((entry, index) => {
-      const y = 88 + index * 26;
+      const y = 108 + index * 26;
       const unitDef = getUnitDef(entry.unitDefId);
-      const weapon = getWeapon(entry.weaponId);
-      this.addText(14, y, `${unitDef.name} ${entry.deployed ? "出" : "待"}\n${weapon.name}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
+      this.addText(14, y, `${unitDef.name} ${classForRoster(entry).name} ${entry.deployed ? "出" : "待"}\n${this.rosterWeaponText(entry)}`, { fontSize: "9px", color: "#f3efe4", lineSpacing: 1 });
       this.button(118, y + 1, 36, 16, entry.deployed ? "待命" : "出战", () => {
         this.applyCampaignChange(() => setRosterDeployment(this.campaign, entry.unitDefId, !entry.deployed, deployableIds));
       });
@@ -307,8 +307,22 @@ export class BattleScene extends Phaser.Scene {
           this.applyCampaignChange(() => assignConvoyWeapon(this.campaign, entry.unitDefId, convoyWeaponId));
         });
       }
+      if (repairWeaponCost(entry) > 0) {
+        this.button(226, y + 1, 30, 16, "修", () => {
+          this.applyCampaignChange(() => repairRosterWeapon(this.campaign, entry.unitDefId));
+        });
+      }
+      if (forgeWeaponCost(entry) > 0) {
+        this.button(260, y + 1, 30, 16, "锻", () => {
+          this.applyCampaignChange(() => forgeRosterWeapon(this.campaign, entry.unitDefId));
+        });
+      }
+      promotionTargets(entry).slice(0, 3).forEach((classId, targetIndex) => {
+        this.button(294 + targetIndex * 32, y + 1, 30, 16, getClass(classId).name.slice(0, 2), () => {
+          this.applyCampaignChange(() => promoteRosterUnit(this.campaign, entry.unitDefId, classId));
+        });
+      });
     });
-
   }
 
   private drawSupportPanel(): void {
@@ -402,6 +416,7 @@ export class BattleScene extends Phaser.Scene {
     for (const unit of this.vm.state.units) {
       const entry = rosterByUnit.get(unit.defId);
       if (unit.team === "ally" && entry) {
+        unit.classId = entry.classId;
         unit.skillIds = [...entry.skillIds];
       }
     }
@@ -437,7 +452,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private firstUsableConvoyWeapon(entry: RosterEntry): string | undefined {
-    return Object.entries(this.campaign.convoy).find(([weaponId, count]) => count > 0 && canUseWeapon(entry.unitDefId, weaponId))?.[0];
+    return Object.entries(this.campaign.convoy).find(([weaponId, count]) => count > 0 && !entry.weaponIds.includes(weaponId) && canRosterUseWeapon(entry, weaponId))?.[0];
+  }
+
+  private rosterWeaponText(entry: RosterEntry): string {
+    const weapon = getWeapon(entry.weaponId);
+    const uses = entry.weaponUses[entry.weaponId] ?? weapon.durability;
+    const forge = entry.weaponForge[entry.weaponId] ?? 0;
+    return `${weapon.name}${forge ? `+${forge}` : ""} ${uses}/${weapon.durability}`;
   }
 
   private button(x: number, y: number, width: number, height: number, label: string, onClick: () => void): void {
@@ -492,8 +514,7 @@ function terrainColor(terrain: TerrainDef): number {
 }
 
 function unitGlyph(unit: UnitInstance): string {
-  const unitDef = getUnitDef(unit.defId);
-  const classDef = getClass(unitDef.classId);
+  const classDef = classForUnit(unit);
   if (classDef.tags.includes("flying")) {
     return "F";
   }
@@ -520,4 +541,17 @@ function counterText(value: number): string {
     return "相克 ▼";
   }
   return "相克 -";
+}
+
+function objectiveCells(condition: ChapterVictoryCondition | undefined): Cell[] {
+  if (!condition) {
+    return [];
+  }
+  if (condition.type === "seize" || condition.type === "escape") {
+    return [{ x: condition.x, y: condition.y }];
+  }
+  if (condition.type === "all" || condition.type === "any") {
+    return condition.conditions.flatMap(objectiveCells);
+  }
+  return [];
 }

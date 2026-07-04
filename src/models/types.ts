@@ -75,6 +75,7 @@ export interface ClassDef {
   moveKind: MoveKind;
   tags: UnitTag[];
   weaponKinds: WeaponKind[];
+  skillIds?: string[];
   promotesTo?: string[];
 }
 
@@ -124,14 +125,19 @@ export interface UnitInstance {
   id: string;
   defId: string;
   team: Team;
+  classId: string;
   hp: number;
   stats: Stats;
   weaponId: string;
+  weaponUses: Record<string, number>;
+  weaponForge: Record<string, number>;
   skillIds: string[];
   statuses: StatusEffect[];
   skillUses: Record<string, number>;
   pos: Cell;
   acted: boolean;
+  moved?: boolean;
+  cantoMoveLeft?: number;
   alive: boolean;
   level: number;
   exp: number;
@@ -139,18 +145,36 @@ export interface UnitInstance {
 
 export interface RosterEntry {
   unitDefId: string;
+  classId: string;
   level: number;
   exp: number;
   stats: Stats;
   weaponId: string;
   weaponIds: string[];
+  weaponUses: Record<string, number>;
+  weaponForge: Record<string, number>;
   skillIds: string[];
   deployed: boolean;
 }
 
 export interface StatusEffect {
-  id: "stigma_awaken" | "aegis" | "sprint" | "poison";
+  id:
+    | "stigma_awaken"
+    | "aegis"
+    | "sprint"
+    | "poison"
+    | "poison_blade"
+    | "charge"
+    | "rally_defense"
+    | "rally_speed"
+    | "barrier"
+    | "marked"
+    | "silence"
+    | "frozen"
+    | "taunted";
   turns: number;
+  sourceId?: string;
+  value?: number;
 }
 
 export interface ChapterDef {
@@ -158,21 +182,62 @@ export interface ChapterDef {
   title: string;
   act: string;
   objective: string;
+  victoryCondition?: ChapterVictoryCondition;
+  defeatConditions?: ChapterDefeatCondition[];
   nextChapterId?: string;
   victoryText?: string[];
   choice?: StoryChoice;
   terrainLegend: Record<string, string>;
   map: string[];
-  deployments: Array<{
-    unitDefId: string;
-    instanceId: string;
-    team: Team;
-    x: number;
-    y: number;
-    weaponId?: string;
-  }>;
+  deployments: ChapterDeployment[];
+  events?: ChapterEvent[];
+  visits?: ChapterVisitReward[];
   opening: string[];
 }
+
+export interface ChapterDeployment {
+  unitDefId: string;
+  instanceId: string;
+  team: Team;
+  x: number;
+  y: number;
+  weaponId?: string;
+}
+
+export interface ChapterEvent {
+  id: string;
+  type: "reinforcement";
+  turn: number;
+  phase: "playerStart" | "enemyStart";
+  telegraph?: string;
+  message?: string;
+  ambush?: boolean;
+  deployments: ChapterDeployment[];
+}
+
+export interface ChapterVisitReward {
+  id: string;
+  x: number;
+  y: number;
+  label: string;
+  message: string;
+  gold?: number;
+  weaponId?: string;
+  weaponCount?: number;
+  flag?: string;
+  value?: number | boolean;
+}
+
+export type ChapterVictoryCondition =
+  | { type: "rout" }
+  | { type: "defeatBoss"; targetInstanceIds: string[] }
+  | { type: "survive"; turns: number }
+  | { type: "seize"; x: number; y: number; unitDefIds?: string[] }
+  | { type: "escape"; x: number; y: number; unitDefIds: string[] }
+  | { type: "all"; conditions: ChapterVictoryCondition[] }
+  | { type: "any"; conditions: ChapterVictoryCondition[] };
+
+export type ChapterDefeatCondition = { type: "protectUnit"; unitDefIds?: string[]; instanceIds?: string[] };
 
 export interface StoryChoice {
   id: string;
@@ -237,7 +302,8 @@ export interface CombatForecast {
 export type CombatEvent =
   | { type: "hit"; sourceId: string; targetId: string; damage: number; critical: boolean; remainingHp: number }
   | { type: "miss"; sourceId: string; targetId: string }
-  | { type: "defeat"; sourceId: string; targetId: string; retreat: boolean };
+  | { type: "defeat"; sourceId: string; targetId: string; retreat: boolean }
+  | { type: "weaponBreak"; sourceId: string; weaponId: string };
 
 export interface CombatResolution {
   forecast: CombatForecast;

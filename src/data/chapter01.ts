@@ -5,6 +5,7 @@ export const chapter01: ChapterDef = {
   title: "01 边境遭遇",
   act: "第一幕：相遇与背叛",
   objective: "击退北境先锋；艾拉菈与比约恩会撤退，战斗后进入下一章伏笔。",
+  victoryCondition: { type: "rout" },
   nextChapterId: "ch02",
   victoryText: [
     "北境先锋退入林线。奥德里克没有追击，他第一次怀疑“净化”这个词。",
@@ -45,6 +46,19 @@ export const chapter01: ChapterDef = {
     { unitDefId: "nord_raider", instanceId: "raider_a", team: "enemy", x: 9, y: 2, weaponId: "iron_axe" },
     { unitDefId: "nord_scout", instanceId: "scout_a", team: "enemy", x: 12, y: 5, weaponId: "iron_sword" },
     { unitDefId: "ice_mage", instanceId: "ice_mage_a", team: "enemy", x: 9, y: 5, weaponId: "ice" },
+  ],
+  visits: [
+    {
+      id: "border_hamlet",
+      x: 3,
+      y: 4,
+      label: "边境村",
+      message: "村民把藏起的治疗杖交给奥德里克：别让圣光只剩审判。",
+      weaponId: "heal_staff",
+      weaponCount: 1,
+      flag: "visitedBorderHamlet",
+      value: true,
+    },
   ],
   opening: [
     "奥德里克：边境村还在燃烧。教会说北境人皆为异端，但火焰没有回答我。",

@@ -10,22 +10,22 @@ const healer: Growths = { hp: 55, str: 5, mag: 45, skill: 40, spd: 45, luck: 45,
 const dragon: Growths = { hp: 80, str: 55, mag: 45, skill: 55, spd: 55, luck: 45, def: 40, res: 40 };
 
 export const extraClassCatalog: ClassDef[] = [
-  { id: "wyvern_lord", name: "龙骑将", moveKind: "fly", tags: ["flying", "cavalry"], weaponKinds: ["lance", "axe"] },
+  { id: "wyvern_lord", name: "龙骑将", moveKind: "fly", tags: ["flying", "cavalry"], weaponKinds: ["lance", "axe"], skillIds: ["dive"] },
   { id: "sky_knight", name: "天空骑士", moveKind: "fly", tags: ["flying"], weaponKinds: ["lance"] },
-  { id: "falcon_knight", name: "隼骑", moveKind: "fly", tags: ["flying"], weaponKinds: ["sword", "lance"] },
-  { id: "temple_guard", name: "圣殿卫", moveKind: "foot", tags: ["armored"], weaponKinds: ["lance", "staff"] },
-  { id: "archmage", name: "大法师", moveKind: "foot", tags: ["mage"], weaponKinds: ["fire", "ice", "thunder"] },
-  { id: "ranger", name: "游侠", moveKind: "foot", tags: ["archer", "scout"], weaponKinds: ["bow", "sword"] },
-  { id: "saint", name: "圣女", moveKind: "foot", tags: ["healer"], weaponKinds: ["staff"] },
-  { id: "thief", name: "神偷", moveKind: "foot", tags: ["scout"], weaponKinds: ["sword", "bow"] },
-  { id: "assassin", name: "刺客", moveKind: "foot", tags: ["scout"], weaponKinds: ["sword"] },
+  { id: "falcon_knight", name: "隼骑", moveKind: "fly", tags: ["flying"], weaponKinds: ["sword", "lance"], skillIds: ["falcon_mercy"] },
+  { id: "temple_guard", name: "圣殿卫", moveKind: "foot", tags: ["armored"], weaponKinds: ["lance", "staff"], skillIds: ["shield_wall"] },
+  { id: "archmage", name: "大法师", moveKind: "foot", tags: ["mage"], weaponKinds: ["fire", "ice", "thunder"], skillIds: ["archmage_focus"] },
+  { id: "ranger", name: "游侠", moveKind: "foot", tags: ["archer", "scout"], weaponKinds: ["bow", "sword"], skillIds: ["ranger_skirmish"] },
+  { id: "saint", name: "圣女", moveKind: "foot", tags: ["healer"], weaponKinds: ["staff"], skillIds: ["saint_refresh"] },
+  { id: "thief", name: "神偷", moveKind: "foot", tags: ["scout"], weaponKinds: ["sword", "bow"], skillIds: ["trailblazer"] },
+  { id: "assassin", name: "刺客", moveKind: "foot", tags: ["scout"], weaponKinds: ["sword"], skillIds: ["assassin_lethality"] },
   { id: "wyvern_rider", name: "龙骑兵", moveKind: "fly", tags: ["flying", "cavalry"], weaponKinds: ["lance"] },
   { id: "warrior", name: "勇士", moveKind: "foot", tags: ["infantry"], weaponKinds: ["axe", "bow"] },
   { id: "war_cleric", name: "战斗修士", moveKind: "foot", tags: ["healer", "infantry"], weaponKinds: ["staff", "axe"] },
   { id: "dancer", name: "战鼓舞者", moveKind: "foot", tags: ["healer"], weaponKinds: ["staff"] },
-  { id: "ballista", name: "魔导炮", moveKind: "foot", tags: ["siege", "archer"], weaponKinds: ["bow", "thunder"] },
+  { id: "ballista", name: "魔导炮", moveKind: "foot", tags: ["siege", "archer"], weaponKinds: ["bow", "thunder"], skillIds: ["ballista_lockon"] },
   { id: "valkyrie", name: "女武神", moveKind: "fly", tags: ["flying", "mage"], weaponKinds: ["lance", "ice", "thunder"] },
-  { id: "black_knight", name: "黑骑士", moveKind: "horse", tags: ["cavalry", "armored"], weaponKinds: ["sword", "lance"] },
+  { id: "black_knight", name: "黑骑士", moveKind: "horse", tags: ["cavalry", "armored"], weaponKinds: ["sword", "lance"], skillIds: ["black_knight_dread"] },
 ];
 
 const passiveSkills: SkillDef[] = [

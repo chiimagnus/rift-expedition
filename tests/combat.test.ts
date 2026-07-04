@@ -21,9 +21,12 @@ test("A/03 physical example plus A/06 forest defense keeps forecast math", () =>
       id: "sword",
       defId: "cecilia",
       team: "ally",
+      classId: "sword_fighter",
       hp: 30,
       stats: { hp: 30, str: 18, mag: 0, skill: 12, spd: 14, luck: 0, def: 5, res: 2, move: 5, con: 9 },
       weaponId: "iron_sword",
+      weaponUses: { iron_sword: 40 },
+      weaponForge: { iron_sword: 0 },
       skillIds: [],
       statuses: [],
       skillUses: {},
@@ -37,9 +40,12 @@ test("A/03 physical example plus A/06 forest defense keeps forecast math", () =>
       id: "axe",
       defId: "nord_raider",
       team: "enemy",
+      classId: "sword_fighter",
       hp: 30,
       stats: { hp: 30, str: 10, mag: 0, skill: 8, spd: 9, luck: 3, def: 7, res: 1, move: 5, con: 9 },
       weaponId: "iron_axe",
+      weaponUses: { iron_axe: 35 },
+      weaponForge: { iron_axe: 0 },
       skillIds: [],
       statuses: [],
       skillUses: {},
@@ -71,4 +77,17 @@ test("combat resolution is deterministic from stored rng state", () => {
     right.units.map((unit) => [unit.id, unit.hp, unit.alive]),
   );
   assert.equal(left.rngState, right.rngState);
+});
+
+test("combat spends weapon durability and blocks broken weapons", () => {
+  const state = createInitialBattleState();
+  const aldric = state.units.find((unit) => unit.id === "aldric")!;
+  aldric.pos = { x: 9, y: 3 };
+  aldric.weaponUses[aldric.weaponId] = 1;
+
+  resolveCombat(state, "aldric", "bjorn");
+
+  assert.equal(aldric.weaponUses[aldric.weaponId], 0);
+  assert.ok(state.log.some((line) => line.includes("损坏")));
+  assert.throws(() => resolveCombat(state, "aldric", "bjorn"), /耐久耗尽/);
 });
