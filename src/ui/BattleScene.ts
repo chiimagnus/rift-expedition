@@ -1,4 +1,4 @@
-import { endingCatalog, getChapter, getClass, getEnding, getTerrain, getUnitDef, getWeapon } from "../data";
+import { endingCatalog, getChapter, getClass, getEnding, getSkill, getTerrain, getUnitDef, getWeapon } from "../data";
 import type { CampaignState, Cell, ChapterVictoryCondition, RosterEntry, TerrainDef, UnitInstance } from "../models/types";
 import { createInitialBattleState, unitAt } from "../services/chapter";
 import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, ensureChapterRoster, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
@@ -143,7 +143,7 @@ export class BattleScene extends Phaser.Scene {
       this.drawEnding();
       return;
     }
-    const phaseText = this.vm.state.phase === "deploy" ? "部署" : this.vm.state.phase === "player" ? "我方" : this.vm.state.phase === "enemy" ? "敌方" : this.vm.state.phase;
+    const phaseText = phaseLabel(this.vm.state.phase);
     this.panel(0, 0, WIDTH, 25, 0x101014, 0.82);
     this.addText(8, 5, `${phaseText}  第 ${this.vm.state.turn} 回合`, { fontSize: "12px", color: "#f3efe4" });
     if (this.vm.state.phase === "deploy") {
@@ -172,10 +172,10 @@ export class BattleScene extends Phaser.Scene {
 
     const preview = this.previewAtHover();
     if (preview) {
-      this.panel(164, HEIGHT - 62, 120, 58, 0x211111, 0.9);
-      this.addText(170, HEIGHT - 56, `伤害 ${preview.damage}${preview.followUp ? " x2" : ""}`, { fontSize: "11px", color: "#ffd5d5" });
-      this.addText(170, HEIGHT - 39, `命中 ${preview.hit}%  暴 ${preview.crit}%`, { fontSize: "10px", color: "#f3efe4" });
-      this.addText(170, HEIGHT - 23, `${counterText(preview.triangle)} ${preview.defenderCanCounter ? "可反击" : "不可反击"}`, { fontSize: "10px", color: "#f3efe4" });
+      this.panel(164, 94, 120, 58, 0x211111, 0.9);
+      this.addText(170, 100, `伤害 ${preview.damage}${preview.followUp ? " x2" : ""}`, { fontSize: "11px", color: "#ffd5d5" });
+      this.addText(170, 117, `命中 ${preview.hit}%  暴 ${preview.crit}%`, { fontSize: "10px", color: "#f3efe4" });
+      this.addText(170, 133, `${counterText(preview.triangle)} ${preview.defenderCanCounter ? "可反击" : "不可反击"}`, { fontSize: "10px", color: "#f3efe4" });
     }
 
     this.panel(WIDTH - 188, 29, 184, 64, 0x101014, 0.72);
@@ -205,7 +205,7 @@ export class BattleScene extends Phaser.Scene {
 
   private drawActionMenu(): void {
     const unit = this.vm.selectedUnit;
-    if (!unit || unit.acted || unit.team !== "ally" || this.vm.state.phase !== "player") {
+    if (!unit || unit.team !== "ally" || this.vm.state.phase !== "player") {
       this.button(6, 28, 58, 18, "新战役", () => {
         clearCampaign(globalThis.localStorage);
         this.campaign = createNewCampaign();
@@ -220,6 +220,9 @@ export class BattleScene extends Phaser.Scene {
           this.render();
         });
       }
+      return;
+    }
+    if (!this.vm.canSelectedAct()) {
       return;
     }
 
@@ -246,8 +249,12 @@ export class BattleScene extends Phaser.Scene {
     }
     if (this.vm.selectedSkillId) {
       y -= 20;
-      this.panel(x, y, 180, 18, 0x2b1a1a, 0.88);
-      this.addText(x + 6, y + 4, `技能目标：${this.vm.selectedSkillId}`, { fontSize: "10px", color: "#ffd5d5" });
+      this.panel(x, y, 186, 18, 0x2b1a1a, 0.88);
+      this.addText(x + 6, y + 4, `技能目标：${getSkill(this.vm.selectedSkillId).name}`, { fontSize: "10px", color: "#ffd5d5" });
+      this.button(x + 140, y, 42, 18, "取消", () => {
+        this.vm.cancelSelectedSkill();
+        this.render();
+      });
     }
   }
 
@@ -534,9 +541,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private drawSystemBackdrop(): void {
-    this.addHitbox(0, 25, WIDTH, HEIGHT - 25);
+    this.addHitbox(0, 0, WIDTH, HEIGHT);
     this.overlay.fillStyle(0x05060a, 0.76);
     this.overlay.fillRect(0, 25, WIDTH, HEIGHT - 25);
+    const blocker = this.add.zone(0, 0, WIDTH, HEIGHT).setOrigin(0, 0).setInteractive();
+    blocker.on("pointerdown", (_pointer: unknown, _localX: unknown, _localY: unknown, event: { stopPropagation?: () => void } | undefined) => {
+      event?.stopPropagation?.();
+    });
+    this.uiObjects.push(blocker);
   }
 
   private button(x: number, y: number, width: number, height: number, label: string, onClick: () => void): void {
@@ -639,6 +651,17 @@ function counterText(value: number): string {
     return "相克 ▼";
   }
   return "相克 -";
+}
+
+function phaseLabel(phase: string): string {
+  const labels: Record<string, string> = {
+    deploy: "部署",
+    player: "我方",
+    enemy: "敌方",
+    victory: "胜利",
+    defeat: "败北",
+  };
+  return labels[phase] ?? phase;
 }
 
 function objectiveCells(condition: ChapterVictoryCondition | undefined): Cell[] {

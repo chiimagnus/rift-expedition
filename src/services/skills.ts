@@ -216,7 +216,7 @@ function activateCharge(state: BattleState, unit: UnitInstance): SkillResult {
   if (!classForUnit(unit).tags.includes("cavalry")) {
     return { ok: false, message: "只有骑兵能发动冲锋。" };
   }
-  // ponytail: current battle flow has no move-then-attack action; use half move as the momentum seed until Canto/move-attack lands.
+  // ponytail: no per-action path history here; use half move as the momentum seed until charge tracks actual movement.
   const bonus = Math.max(1, Math.floor(effectiveStats(unit).move / 2));
   addStatus(unit, { id: "charge", turns: 1, value: bonus });
   spendSkill(state, unit, "charge");
