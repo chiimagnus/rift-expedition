@@ -3,11 +3,9 @@ import type { CampaignState, Cell, ChapterVictoryCondition, RosterEntry, Terrain
 import { createInitialBattleState, unitAt } from "../services/chapter";
 import { applyStoryChoice, clearCampaign, completeCurrentChapter, createNewCampaign, ensureChapterRoster, loadCampaign, mergeBattleIntoCampaign, saveCampaign } from "../services/campaign";
 import { canRosterUseWeapon, classForRoster, classForUnit, promoteRosterUnit, promotionTargets } from "../services/classes";
-import { forecastCombat } from "../services/combat";
-import { forgeWeaponCost, remainingWeaponUses, repairWeaponCost } from "../services/equipment";
+import { forgeWeaponCost, repairWeaponCost } from "../services/equipment";
 import { assignConvoyWeapon, buyWeapon, cycleRosterWeapon, forgeRosterWeapon, repairRosterWeapon, setRosterDeployment } from "../services/loadout";
-import { cellKey, distance, inBounds, terrainAt } from "../services/movement";
-import { canUnitAttackAtDistance } from "../services/skillEffects";
+import { inBounds } from "../services/movement";
 import { firstUnviewedSupportConversation, type AvailableSupportConversation, viewSupportConversation } from "../services/supports";
 import { BattleViewModel } from "../viewmodels/BattleViewModel";
 
@@ -222,6 +220,13 @@ export class BattleScene extends Phaser.Scene {
       this.render();
     });
     let offset = 50;
+    if (this.vm.canVisitSelected()) {
+      this.button(x + offset, y, 46, 18, "访问", () => {
+        this.vm.visitSelected();
+        this.render();
+      });
+      offset += 50;
+    }
     for (const skill of this.vm.activeSkillList(unit).slice(0, 3)) {
       this.button(x + offset, y, 58, 18, skill.name, () => {
         this.vm.selectSkill(skill.id);
@@ -244,20 +249,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private previewAtHover() {
-    const selected = this.vm.selectedUnit;
-    const hover = this.vm.hoverCell;
-    if (!selected || !hover) {
-      return undefined;
-    }
-    const target = unitAt(this.vm.state, hover.x, hover.y);
-    if (!target || target.team === selected.team) {
-      return undefined;
-    }
-    const weapon = getWeapon(selected.weaponId);
-    if (!weapon || remainingWeaponUses(selected) <= 0 || !canUnitAttackAtDistance(selected, weapon, distance(selected.pos, target.pos))) {
-      return undefined;
-    }
-    return forecastCombat(this.vm.state, selected.id, target.id);
+    return this.vm.preview;
   }
 
   private objectAt(cell: Cell): string {
@@ -265,7 +257,7 @@ export class BattleScene extends Phaser.Scene {
     if (unit) {
       return getUnitDef(unit.defId).name;
     }
-    return terrainAt(this.vm.state, cell).effects.join(" / ") || " ";
+    return this.vm.objectText(cell);
   }
 
   private addText(x: number, y: number, text: string, style: Record<string, unknown>): any {

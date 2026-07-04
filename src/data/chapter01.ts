@@ -47,6 +47,19 @@ export const chapter01: ChapterDef = {
     { unitDefId: "nord_scout", instanceId: "scout_a", team: "enemy", x: 12, y: 5, weaponId: "iron_sword" },
     { unitDefId: "ice_mage", instanceId: "ice_mage_a", team: "enemy", x: 9, y: 5, weaponId: "ice" },
   ],
+  visits: [
+    {
+      id: "border_hamlet",
+      x: 3,
+      y: 4,
+      label: "边境村",
+      message: "村民把藏起的治疗杖交给奥德里克：别让圣光只剩审判。",
+      weaponId: "heal_staff",
+      weaponCount: 1,
+      flag: "visitedBorderHamlet",
+      value: true,
+    },
+  ],
   opening: [
     "奥德里克：边境村还在燃烧。教会说北境人皆为异端，但火焰没有回答我。",
     "瓦伦丁：守住桥口，别让年轻人冲进森林。骑兵在林里会死得很难看。",

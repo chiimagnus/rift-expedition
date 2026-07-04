@@ -83,6 +83,21 @@ test("content references resolve across units, classes, skills, supports, and ch
         }
       }
     }
+    const visitIds = new Set<string>();
+    for (const visit of chapter.visits ?? []) {
+      assert.ok(!visitIds.has(visit.id), `${chapter.id}:visit:${visit.id}:duplicate`);
+      visitIds.add(visit.id);
+      assert.ok(visit.x >= 0 && visit.x < 14, `${chapter.id}:${visit.id}:x`);
+      assert.ok(visit.y >= 0 && visit.y < 10, `${chapter.id}:${visit.id}:y`);
+      const terrainSymbol = chapter.map[visit.y]?.[visit.x];
+      const terrainId = terrainSymbol ? chapter.terrainLegend[terrainSymbol] : undefined;
+      const terrain = terrainCatalog.find((candidate) => candidate.id === terrainId);
+      assert.ok(terrain?.effects.includes("visit"), `${chapter.id}:${visit.id}:terrain`);
+      assert.ok((visit.gold ?? 0) > 0 || visit.weaponId || visit.flag, `${chapter.id}:${visit.id}:reward`);
+      if (visit.weaponId) {
+        assert.ok(weaponIds.has(visit.weaponId), `${chapter.id}:${visit.id}:${visit.weaponId}`);
+      }
+    }
   }
 });
 

@@ -4,6 +4,7 @@ import { runEnemyTurn } from "../services/ai";
 import { findUnit, updateOutcome, unitAt } from "../services/chapter";
 import { classForUnit } from "../services/classes";
 import { forecastCombat, resolveCombat } from "../services/combat";
+import { canVisit, visitChapterSite, visitSummary } from "../services/chapterVisits";
 import { remainingWeaponUses, weaponForgeLevel } from "../services/equipment";
 import { cellKey, distance, moveUnit, reachableCells, terrainAt } from "../services/movement";
 import { activateSkill, activeSkills, skillRequiresTarget } from "../services/skills";
@@ -174,6 +175,27 @@ export class BattleViewModel {
     return activeSkills(unit);
   }
 
+  canVisitSelected(): boolean {
+    const unit = this.selectedUnit;
+    return unit ? canVisit(this.state, unit) : false;
+  }
+
+  visitSelected(): void {
+    const unit = this.selectedUnit;
+    if (!unit) {
+      return;
+    }
+    const result = visitChapterSite(this.state, unit.id);
+    if (!result.ok) {
+      this.state.log.unshift(result.message);
+      return;
+    }
+    this.selectedUnitId = undefined;
+    this.selectedSkillId = undefined;
+    updateOutcome(this.state);
+    this.autoEndIfDone();
+  }
+
   waitSelected(): void {
     const unit = this.selectedUnit;
     if (!unit || unit.team !== "ally" || (unit.acted && (unit.cantoMoveLeft ?? 0) <= 0)) {
@@ -221,6 +243,11 @@ export class BattleViewModel {
     }
     const terrain = terrainAt(this.state, cell);
     return `${terrain.name} 防${terrain.defense} 避${terrain.avoid}`;
+  }
+
+  objectText(cell: Cell): string {
+    const summary = visitSummary(this.state, cell);
+    return summary ?? (terrainAt(this.state, cell).effects.join(" / ") || " ");
   }
 
   unitText(unit: UnitInstance | undefined): string {

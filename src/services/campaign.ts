@@ -97,6 +97,7 @@ export function ensureChapterRoster(campaign: CampaignState, chapterId = campaig
 export function mergeBattleIntoCampaign(campaign: CampaignState, state: BattleState): CampaignState {
   const roster = campaign.roster.map(cloneRosterEntry);
   const fallen = new Set(campaign.fallen);
+  const rewards = battleRewards(state.flags);
 
   for (const unit of state.units) {
     if (unit.team !== "ally") {
@@ -114,6 +115,8 @@ export function mergeBattleIntoCampaign(campaign: CampaignState, state: BattleSt
     ...campaign,
     roster,
     fallen: [...fallen],
+    gold: campaign.gold + rewards.gold,
+    convoy: mergeConvoy(campaign.convoy, rewards.convoy),
     bonds: { ...campaign.bonds, ...state.bonds },
     taint: {
       ...campaign.taint,
@@ -254,7 +257,33 @@ function upsertRosterEntry(roster: RosterEntry[], unit: UnitInstance): void {
 }
 
 function persistentBattleFlags(flags: BattleState["flags"]): BattleState["flags"] {
-  return Object.fromEntries(Object.entries(flags).filter(([key]) => !key.startsWith("chapterEvent:")));
+  return Object.fromEntries(Object.entries(flags).filter(([key]) => !isRuntimeBattleFlag(key)));
+}
+
+function battleRewards(flags: BattleState["flags"]): { gold: number; convoy: Record<string, number> } {
+  const convoy: Record<string, number> = {};
+  for (const [key, value] of Object.entries(flags)) {
+    if (key === "battleReward:gold") {
+      continue;
+    }
+    if (key.startsWith("battleReward:item:") && typeof value === "number") {
+      const weaponId = key.slice("battleReward:item:".length);
+      convoy[weaponId] = (convoy[weaponId] ?? 0) + value;
+    }
+  }
+  return { gold: Number(flags["battleReward:gold"] ?? 0), convoy };
+}
+
+function mergeConvoy(base: CampaignState["convoy"], rewards: Record<string, number>): CampaignState["convoy"] {
+  const next = { ...base };
+  for (const [weaponId, count] of Object.entries(rewards)) {
+    next[weaponId] = (next[weaponId] ?? 0) + count;
+  }
+  return next;
+}
+
+function isRuntimeBattleFlag(key: string): boolean {
+  return key.startsWith("chapterEvent:") || key.startsWith("chapterVisit:") || key.startsWith("battleReward:");
 }
 
 function cloneRosterEntry(entry: RosterEntry): RosterEntry {

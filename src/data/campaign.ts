@@ -149,6 +149,7 @@ export const storyChapters: ChapterDef[] = outlines.map((outline, index) => {
   const nextChapterId = index === outlines.length - 1 ? undefined : outlines[index + 1]!.id;
   const choice = choiceFor(outline.id);
   const events = eventsFor(outline.id);
+  const visits = visitsFor(outline.id);
   return {
     id: outline.id,
     title: outline.title,
@@ -161,6 +162,7 @@ export const storyChapters: ChapterDef[] = outlines.map((outline, index) => {
     map: maps[outline.map],
     deployments: deploymentsFor(outline.side),
     ...(events.length > 0 ? { events } : {}),
+    ...(visits.length > 0 ? { visits } : {}),
     opening: outline.opening,
     ...(nextChapterId ? { nextChapterId } : {}),
     ...(choice ? { choice } : {}),
@@ -284,6 +286,53 @@ function eventsFor(chapterId: string): NonNullable<ChapterDef["events"]> {
           { unitDefId: "lost_dragonkin", instanceId: "ch20_memory_dragon", team: "enemy", x: 6, y: 4, weaponId: "wyrmslayer" },
           { unitDefId: "dragon_elder", instanceId: "ch20_memory_elder", team: "enemy", x: 7, y: 5, weaponId: "fire" },
         ],
+      },
+    ];
+  }
+  return [];
+}
+
+function visitsFor(chapterId: string): NonNullable<ChapterDef["visits"]> {
+  if (chapterId === "ch02") {
+    return [
+      {
+        id: "refugee_cellar",
+        x: 2,
+        y: 2,
+        label: "焦土村地窖",
+        message: "难民从地窖递出钱袋：拿去修武器，别让下一个村子也烧起来。",
+        gold: 300,
+        flag: "savedRefugeeCellar",
+        value: true,
+      },
+    ];
+  }
+  if (chapterId === "ch10") {
+    return [
+      {
+        id: "archive_contact",
+        x: 5,
+        y: 0,
+        label: "档案馆密室",
+        message: "档案管理员留下短弓和密语：教会在记录双生，也在抹掉证人。",
+        weaponId: "short_bow",
+        weaponCount: 1,
+        flag: "archiveContactHelped",
+        value: true,
+      },
+    ];
+  }
+  if (chapterId === "ch14") {
+    return [
+      {
+        id: "cecilia_memory",
+        x: 2,
+        y: 2,
+        label: "旧友民居",
+        message: "屋内还挂着塞西莉亚旧日的誓词。奥德里克记住了能唤醒她的话。",
+        gold: 200,
+        flag: "ceciliaMemoryFound",
+        value: true,
       },
     ];
   }

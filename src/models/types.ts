@@ -191,6 +191,7 @@ export interface ChapterDef {
   map: string[];
   deployments: ChapterDeployment[];
   events?: ChapterEvent[];
+  visits?: ChapterVisitReward[];
   opening: string[];
 }
 
@@ -212,6 +213,19 @@ export interface ChapterEvent {
   message?: string;
   ambush?: boolean;
   deployments: ChapterDeployment[];
+}
+
+export interface ChapterVisitReward {
+  id: string;
+  x: number;
+  y: number;
+  label: string;
+  message: string;
+  gold?: number;
+  weaponId?: string;
+  weaponCount?: number;
+  flag?: string;
+  value?: number | boolean;
 }
 
 export type ChapterVictoryCondition =
