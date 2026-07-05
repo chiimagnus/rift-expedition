@@ -9,6 +9,33 @@
     "author": "Rift Expedition project"
   },
   {
+    "id": "tileset.chapter1_village",
+    "path": "Assets/Tilesets/chapter1_village_tileset.png",
+    "type": "tileset",
+    "source": "local self-made procedural pixel tileset for village chapter areas",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "tileset.chapter1_wilds",
+    "path": "Assets/Tilesets/chapter1_wilds_tileset.png",
+    "type": "tileset",
+    "source": "local self-made procedural pixel tileset for wilds chapter areas",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "tileset.chapter1_cave",
+    "path": "Assets/Tilesets/chapter1_cave_tileset.png",
+    "type": "tileset",
+    "source": "local self-made procedural pixel tileset for cave chapter areas",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
     "id": "sprite.actor_warrior",
     "path": "Assets/Sprites/actor_warrior.png",
     "type": "sprite",
@@ -99,6 +126,177 @@
     "author": "Rift Expedition project"
   },
   {
+    "id": "spritesheet.party_classes",
+    "path": "Assets/Characters/party_classes.png",
+    "type": "spritesheet",
+    "source": "local self-made procedural pixel spritesheet for player class silhouettes",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.village_npcs",
+    "path": "Assets/Characters/village_npcs.png",
+    "type": "spritesheet",
+    "source": "local self-made procedural pixel spritesheet for chapter village NPCs",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.human_enemies",
+    "path": "Assets/Characters/human_enemies.png",
+    "type": "spritesheet",
+    "source": "local self-made procedural pixel spritesheet for chapter human enemies",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.beasts_and_monsters",
+    "path": "Assets/Characters/beasts_and_monsters.png",
+    "type": "spritesheet",
+    "source": "local self-made procedural pixel spritesheet for beasts and corrupted creatures",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.slash",
+    "path": "Assets/Icons/icon_slash.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.guard",
+    "path": "Assets/Icons/icon_guard.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.battle_cry",
+    "path": "Assets/Icons/icon_battle_cry.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.aimed_shot",
+    "path": "Assets/Icons/icon_aimed_shot.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.pin_down",
+    "path": "Assets/Icons/icon_pin_down.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.rain_arrow",
+    "path": "Assets/Icons/icon_rain_arrow.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.spark",
+    "path": "Assets/Icons/icon_spark.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.mend",
+    "path": "Assets/Icons/icon_mend.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.oil_flare",
+    "path": "Assets/Icons/icon_oil_flare.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.backstab",
+    "path": "Assets/Icons/icon_backstab.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.smoke_step",
+    "path": "Assets/Icons/icon_smoke_step.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.rupture",
+    "path": "Assets/Icons/icon_rupture.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.potion",
+    "path": "Assets/Icons/icon_potion.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.chest",
+    "path": "Assets/Icons/icon_chest.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "icon.element_ore",
+    "path": "Assets/Icons/icon_element_ore.png",
+    "type": "icon",
+    "source": "local self-made procedural pixel icon",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
     "id": "audio.ui_click",
     "path": "Assets/Audio/ui_click.wav",
     "type": "audio",
@@ -130,6 +328,69 @@
     "path": "Assets/Audio/area_bgm_loop.wav",
     "type": "audio",
     "source": "local procedurally generated WAV tone",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.battle_start",
+    "path": "Assets/Audio/battle_start.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV cue",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.chest_open",
+    "path": "Assets/Audio/chest_open.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV cue",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.heal_drink",
+    "path": "Assets/Audio/heal_drink.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV cue",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.village_theme_loop",
+    "path": "Assets/Audio/village_theme_loop.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV ambience loop",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.wilds_theme_loop",
+    "path": "Assets/Audio/wilds_theme_loop.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV ambience loop",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.cave_theme_loop",
+    "path": "Assets/Audio/cave_theme_loop.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV ambience loop",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.cave_drip",
+    "path": "Assets/Audio/cave_drip.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV cave cue",
     "license": "self-made",
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"
