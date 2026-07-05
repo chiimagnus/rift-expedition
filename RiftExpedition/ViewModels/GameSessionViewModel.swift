@@ -12,9 +12,15 @@ final class GameSessionViewModel {
     var party: [Actor] = []
     var explorationController = ExplorationController()
     let partyCreationViewModel: PartyCreationViewModel
+    let dialogViewModel: DialogViewModel
 
     init(contentBundle: Bundle = .main) {
-        partyCreationViewModel = Self.loadPartyCreation(from: contentBundle)
+        let catalog = Self.loadCatalog(from: contentBundle)
+        partyCreationViewModel = Self.makePartyCreation(from: catalog)
+        dialogViewModel = DialogViewModel(
+            scripts: DialogViewModel.loadScripts(from: contentBundle),
+            questDefinitions: catalog?.quests ?? []
+        )
     }
 
     func startNewGame() {
@@ -44,18 +50,40 @@ final class GameSessionViewModel {
         statusText = "手动存档与自动存档将在此管理。"
     }
 
+    func openDialog(_ dialogID: String) {
+        if dialogViewModel.start(dialogID: dialogID) {
+            appState = .dialogue
+        } else {
+            statusText = "没有找到对话。"
+        }
+    }
+
+    func openQuestLog() {
+        appState = .questLog
+    }
+
+    func closePanel() {
+        appState = party.isEmpty ? .mainMenu : .exploration
+    }
+
+    func beginBattleFromDialog(encounterID: String) {
+        appState = .battle
+        statusText = "遭遇已触发。"
+    }
+
     func returnToMainMenu() {
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
     }
 
-    private static func loadPartyCreation(from bundle: Bundle) -> PartyCreationViewModel {
-        guard let dataDirectory = bundle.resourceURL?.appending(path: "Data"),
-              let catalog = try? ContentLoader.load(from: dataDirectory)
-        else {
-            return PartyCreationViewModel(classes: [])
-        }
+    private static func loadCatalog(from bundle: Bundle) -> ContentCatalog? {
+        guard let dataDirectory = bundle.resourceURL?.appending(path: "Data") else { return nil }
+        return try? ContentLoader.load(from: dataDirectory)
+    }
+
+    private static func makePartyCreation(from catalog: ContentCatalog?) -> PartyCreationViewModel {
+        guard let catalog else { return PartyCreationViewModel(classes: []) }
         let skillNames: [String: String] = Dictionary(uniqueKeysWithValues: catalog.skills.map { ($0.id, $0.displayName) })
         return PartyCreationViewModel(classes: catalog.classes, skillNamesByID: skillNames)
     }

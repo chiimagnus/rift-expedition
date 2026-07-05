@@ -1,0 +1,48 @@
+import RiftCore
+import XCTest
+@testable import RiftExpedition
+
+@MainActor
+final class DialogViewModelTests: XCTestCase {
+    func testAcceptQuestOptionUpdatesQuestLog() throws {
+        let viewModel = DialogViewModel(scripts: [script], questDefinitions: [quest])
+
+        XCTAssertTrue(viewModel.start(dialogID: "elder_intro"))
+        let option = try XCTUnwrap(viewModel.activeDialog?.options.first)
+
+        XCTAssertEqual(viewModel.choose(option), .none)
+        XCTAssertEqual(viewModel.questLogEntries.first?.id, "blood_debt")
+        XCTAssertEqual(viewModel.questLogEntries.first?.status, .active)
+    }
+
+    func testBattleOptionReturnsEncounterID() throws {
+        let viewModel = DialogViewModel(scripts: [script], questDefinitions: [quest])
+
+        XCTAssertTrue(viewModel.start(dialogID: "elder_intro"))
+        let option = try XCTUnwrap(viewModel.activeDialog?.options.last)
+
+        XCTAssertEqual(viewModel.choose(option), .startBattle("boar_intro"))
+    }
+
+    private var script: DialogScript {
+        DialogScript(
+            id: "elder_intro",
+            speakerName: "村长",
+            lines: ["去村外查清楚。"],
+            options: [
+                DialogOption(id: "accept", title: "接下任务", action: .acceptQuest, questID: "blood_debt", encounterID: nil),
+                DialogOption(id: "fight", title: "拔剑吧", action: .startBattle, questID: nil, encounterID: "boar_intro")
+            ]
+        )
+    }
+
+    private var quest: QuestDefinition {
+        QuestDefinition(
+            id: "blood_debt",
+            title: "血债",
+            summary: "查清旧矿洞。",
+            startDialogID: "elder_intro",
+            turnInDialogID: "elder_return"
+        )
+    }
+}

@@ -19,7 +19,18 @@ struct GameRootView: View {
                 )
             case .exploration:
                 exploration
-            case .dialogue, .battle, .inventory, .saveLoad, .chapterComplete:
+            case .dialogue:
+                DialogView(
+                    viewModel: viewModel.dialogViewModel,
+                    onClose: viewModel.closePanel,
+                    onStartBattle: viewModel.beginBattleFromDialog
+                )
+            case .questLog:
+                QuestLogView(
+                    entries: viewModel.dialogViewModel.questLogEntries,
+                    onClose: viewModel.closePanel
+                )
+            case .battle, .inventory, .saveLoad, .chapterComplete:
                 simpleStatePanel
             }
         }
@@ -79,6 +90,14 @@ struct GameRootView: View {
                     .font(.headline)
                 Text(viewModel.statusText)
                     .font(.callout)
+                HStack {
+                    Button("和村长交谈") {
+                        viewModel.openDialog("elder_intro")
+                    }
+                    Button("任务日志") {
+                        viewModel.openQuestLog()
+                    }
+                }
             }
             .padding(14)
             .foregroundStyle(.white)

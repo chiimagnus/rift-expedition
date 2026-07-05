@@ -3,6 +3,7 @@ enum AppState: Equatable {
     case partyCreation
     case exploration
     case dialogue
+    case questLog
     case battle
     case inventory
     case saveLoad
@@ -18,6 +19,8 @@ enum AppState: Equatable {
             "探索"
         case .dialogue:
             "对话"
+        case .questLog:
+            "任务日志"
         case .battle:
             "战斗"
         case .inventory:

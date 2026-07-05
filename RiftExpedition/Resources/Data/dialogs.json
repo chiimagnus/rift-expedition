@@ -1,0 +1,50 @@
+[
+  {
+    "id": "elder_intro",
+    "speakerName": "村长",
+    "lines": [
+      "你们来得正好。昨夜有人在村外看见火光，旧矿洞那边传来了兽叫。",
+      "帮我去查清楚。若能带回线索，我会把村里仅剩的武器交给你们。"
+    ],
+    "options": [
+      {
+        "id": "accept_blood_debt",
+        "title": "接下任务：血债",
+        "action": "acceptQuest",
+        "questID": "blood_debt"
+      },
+      {
+        "id": "fight_now",
+        "title": "你在撒谎，拔剑吧",
+        "action": "startBattle",
+        "encounterID": "boar_intro"
+      },
+      {
+        "id": "leave",
+        "title": "先离开",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "elder_return",
+    "speakerName": "村长",
+    "lines": [
+      "你们真的回来了。看来旧矿洞没有把所有人都吞掉。",
+      "把线索交给我，这笔血债才算有了开头。"
+    ],
+    "options": [
+      {
+        "id": "complete_blood_debt",
+        "title": "交付线索",
+        "action": "completeQuest",
+        "questID": "blood_debt"
+      },
+      {
+        "id": "leave",
+        "title": "先离开",
+        "action": "close"
+      }
+    ]
+  }
+]
