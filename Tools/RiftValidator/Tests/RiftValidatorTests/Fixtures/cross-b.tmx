@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="4" height="4" tilewidth="32" tileheight="32">
+  <objectgroup name="spawn">
+    <object id="1" x="16" y="16">
+      <properties>
+        <property name="id" value="entry"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="npc"/>
+  <objectgroup name="encounter"/>
+  <objectgroup name="trigger"/>
+  <objectgroup name="exit">
+    <object id="2" x="112" y="16">
+      <properties>
+        <property name="targetAreaId" value="cross-a"/>
+        <property name="targetSpawnId" value="start"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="navObstacle"/>
+  <objectgroup name="surface"/>
+  <objectgroup name="item"/>
+</map>

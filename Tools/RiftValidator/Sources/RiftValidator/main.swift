@@ -68,8 +68,11 @@ func mapURLs(resourcesRoot: URL, areaID: String?) throws -> [URL] {
 
 do {
     let arguments = try parseArguments(CommandLine.arguments)
-    let results = try mapURLs(resourcesRoot: arguments.resourcesRoot, areaID: arguments.areaID).map { url in
-        try MapValidator.validate(url: url, areaID: arguments.areaID)
+    let urls = try mapURLs(resourcesRoot: arguments.resourcesRoot, areaID: arguments.areaID)
+    let results = if let areaID = arguments.areaID {
+        try [MapValidator.validate(url: urls[0], areaID: areaID)]
+    } else {
+        try MapValidator.validate(urls: urls)
     }
     let assetManifest = arguments.resourcesRoot.appending(path: "Assets/assets-manifest.json")
     let assetResult = FileManager.default.fileExists(atPath: assetManifest.path)

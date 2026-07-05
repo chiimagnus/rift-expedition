@@ -15,6 +15,15 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(result.reportMarkdown().contains("Missing object layer: spawn"))
     }
 
+    func testCrossAreaExitCanTargetSpawnInAnotherMap() throws {
+        let results = try MapValidator.validate(urls: [
+            fixture("cross-a"),
+            fixture("cross-b")
+        ])
+
+        XCTAssertTrue(results.allSatisfy(\.isValid), results.map { $0.reportMarkdown() }.joined(separator: "\n"))
+    }
+
     private func fixture(_ name: String) throws -> URL {
         try XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "tmx", subdirectory: "Fixtures"))
     }

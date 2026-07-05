@@ -71,10 +71,20 @@ public enum MapValidator {
 
     public static func validate(url: URL, areaID: String? = nil) throws -> MapValidationResult {
         let map = try TiledMapParser.parse(url: url, areaID: areaID ?? url.deletingPathExtension().lastPathComponent)
-        return MapValidationResult(map: map, issues: collectIssues(in: map))
+        return MapValidationResult(map: map, issues: collectIssues(in: map, spawnIndex: spawnIndex(for: [map])))
     }
 
-    private static func collectIssues(in map: TiledMap) -> [MapValidationIssue] {
+    public static func validate(urls: [URL]) throws -> [MapValidationResult] {
+        let maps = try urls.map { url in
+            try TiledMapParser.parse(url: url, areaID: url.deletingPathExtension().lastPathComponent)
+        }
+        let index = spawnIndex(for: maps)
+        return maps.map { map in
+            MapValidationResult(map: map, issues: collectIssues(in: map, spawnIndex: index))
+        }
+    }
+
+    private static func collectIssues(in map: TiledMap, spawnIndex: [String: Set<String>]) -> [MapValidationIssue] {
         var issues: [MapValidationIssue] = []
 
         for layer in requiredProperties.keys.sorted() where map.objectGroups[layer] == nil {
@@ -96,10 +106,15 @@ public enum MapValidator {
             }
         }
 
-        let spawnIDs = Set(map.objectGroups["spawn", default: []].compactMap { $0.properties["id"] })
         for exit in map.objectGroups["exit", default: []] {
-            if let targetSpawnID = exit.properties["targetSpawnId"], !spawnIDs.contains(targetSpawnID) {
-                issues.append(MapValidationIssue(message: "exit object \(exit.tiledID) targets missing spawn: \(targetSpawnID)"))
+            guard
+                let targetAreaID = exit.properties["targetAreaId"],
+                let targetSpawnID = exit.properties["targetSpawnId"]
+            else {
+                continue
+            }
+            if !(spawnIndex[targetAreaID]?.contains(targetSpawnID) ?? false) {
+                issues.append(MapValidationIssue(message: "exit object \(exit.tiledID) targets missing spawn: \(targetAreaID).\(targetSpawnID)"))
             }
         }
 
@@ -112,6 +127,12 @@ public enum MapValidator {
         }
 
         return issues
+    }
+
+    private static func spawnIndex(for maps: [TiledMap]) -> [String: Set<String>] {
+        Dictionary(uniqueKeysWithValues: maps.map { map in
+            (map.areaID, Set(map.objectGroups["spawn", default: []].compactMap { $0.properties["id"] }))
+        })
     }
 }
 
