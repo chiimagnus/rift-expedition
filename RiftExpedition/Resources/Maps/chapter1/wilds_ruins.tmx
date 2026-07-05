@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="11">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="15">
   <properties>
     <property name="areaName" value="旧驿站废墟"/>
     <property name="assetId" value="tileset.chapter1_wilds"/>
@@ -46,6 +46,12 @@
   <objectgroup id="3" name="npc">
   </objectgroup>
   <objectgroup id="4" name="encounter">
+    <object id="11" name="废墟纵火者" x="544" y="256" width="160" height="128">
+      <properties>
+        <property name="encounterId" value="ruins_element_raiders"/>
+        <property name="radius" value="104"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="5" name="trigger">
   </objectgroup>
@@ -102,7 +108,22 @@
     </object>
   </objectgroup>
   <objectgroup id="8" name="surface">
+    <object id="12" name="漏油地面" x="496" y="320" width="128" height="96">
+      <properties>
+        <property name="surfaceType" value="oil"/>
+      </properties>
+    </object>
+    <object id="13" name="余火" x="656" y="288" width="96" height="96">
+      <properties>
+        <property name="surfaceType" value="fire"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="9" name="item">
+    <object id="14" name="烧黑的戒指" x="768" y="448">
+      <properties>
+        <property name="itemId" value="scorched_ring"/>
+      </properties>
+    </object>
   </objectgroup>
 </map>

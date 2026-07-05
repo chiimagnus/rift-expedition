@@ -107,6 +107,23 @@
     "kind": "quest"
   },
   {
+    "id": "scorched_ring",
+    "displayName": "烧黑的银戒",
+    "kind": "equipment",
+    "equipment": {
+      "id": "scorched_ring",
+      "displayName": "烧黑的银戒",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 2
+      }
+    }
+  },
+  {
     "id": "minor_healing_draught",
     "displayName": "止血药剂",
     "kind": "consumable",
