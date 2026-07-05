@@ -57,10 +57,27 @@ struct GameRootView: View {
                 } else {
                     simpleStatePanel
                 }
+            case .settings:
+                SettingsView(
+                    viewModel: viewModel,
+                    onClose: viewModel.closePanel
+                )
             case .chapterComplete:
                 simpleStatePanel
             }
+
+            if viewModel.isDebugOverlayVisible {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        DebugOverlayView(viewModel: viewModel)
+                    }
+                }
+                .padding()
+            }
         }
+        .scaleEffect(viewModel.uiScale)
         .frame(minWidth: 960, minHeight: 540)
     }
 
@@ -96,6 +113,10 @@ struct GameRootView: View {
                 Button("读取存档") {
                     viewModel.openSaveLoad()
                 }
+
+                Button("设置") {
+                    viewModel.openSettings()
+                }
             }
             .buttonStyle(.borderedProminent)
 
@@ -129,6 +150,9 @@ struct GameRootView: View {
                     }
                     Button("任务日志") {
                         viewModel.openQuestLog()
+                    }
+                    Button("设置") {
+                        viewModel.openSettings()
                     }
                 }
             }

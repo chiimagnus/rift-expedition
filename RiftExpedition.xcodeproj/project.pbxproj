@@ -26,8 +26,10 @@
 		6802995F9D5D42B766DFD4D6 /* BattleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C293E92E0C61C83BC23C3D8 /* BattleViewModel.swift */; };
 		6B6AA44F5BF0D3257C309ECF /* DialogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */; };
 		75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E228968FC56BB933A3CABE /* GameLog.swift */; };
+		762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD76F051C6CC030C6D0731 /* SettingsView.swift */; };
 		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
 		7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */; };
+		9183538DE747AB36298AB423 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE3322D8EF6763B46BF3C1B /* AudioService.swift */; };
 		991189CB683319A94BEAA1A2 /* SaveLoadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78DDEC2D739BDADDB200C294 /* SaveLoadViewModel.swift */; };
 		9FA8A833859854299DEEFCFB /* PartyCreationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */; };
 		A3CC69DA628AF017095209CF /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A59363E369752C0EBF6B922 /* GameScene.swift */; };
@@ -41,6 +43,7 @@
 		D20908863543301B1459C3A6 /* Maps in Resources */ = {isa = PBXBuildFile; fileRef = 6F7AC4E0DEC480F958D181E4 /* Maps */; };
 		D479EFB7CB00F0F6C5A17847 /* EncounterTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */; };
 		D8515217F7C286DD42149DC7 /* SKTiled in Frameworks */ = {isa = PBXBuildFile; productRef = 144D526509E751239A80D9D5 /* SKTiled */; };
+		D875A9994F538C9CA37B297C /* DebugOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */; };
 		E13BE2848D6EE0DB41CA094B /* DialogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19AB8D6F4144C335B1A905D /* DialogViewModel.swift */; };
 		E152D139378F269AE18D4DEA /* NavigationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6DF617AC4CE8F345CC0AF6 /* NavigationService.swift */; };
 		E4425829A2497C821875B3A5 /* SaveGameStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEFAC17CDF2FC399752FBAA /* SaveGameStore.swift */; };
@@ -75,6 +78,7 @@
 		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterTriggerService.swift; sourceTree = "<group>"; };
+		5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlayView.swift; sourceTree = "<group>"; };
 		5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleHUDView.swift; sourceTree = "<group>"; };
 		5FEFAC17CDF2FC399752FBAA /* SaveGameStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveGameStore.swift; sourceTree = "<group>"; };
 		62D9C87993ED01E0C345D4D1 /* GameRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRootView.swift; sourceTree = "<group>"; };
@@ -89,9 +93,11 @@
 		9378BAD0E4B3DC7D9AF2FBCD /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Assets; path = RiftExpedition/Resources/Assets; sourceTree = SOURCE_ROOT; };
 		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
 		A2B16655338F5A7331D323D9 /* QuestLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestLogView.swift; sourceTree = "<group>"; };
+		ABCD76F051C6CC030C6D0731 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationControllerTests.swift; sourceTree = "<group>"; };
 		BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationViewModel.swift; sourceTree = "<group>"; };
 		BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSmoke.swift; sourceTree = "<group>"; };
+		BEE3322D8EF6763B46BF3C1B /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		C6489FE796C584D033A572F3 /* PartyCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationView.swift; sourceTree = "<group>"; };
 		CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewModelTests.swift; sourceTree = "<group>"; };
 		D19AB8D6F4144C335B1A905D /* DialogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewModel.swift; sourceTree = "<group>"; };
@@ -124,6 +130,7 @@
 			children = (
 				96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */,
 				B739B4055280D63B63A7CC7E /* App */,
+				359F95E38BA7DCDFF421AD83 /* Audio */,
 				C4BE167B9FC3C9C579982340 /* Game */,
 				883BBACC6D864102375B37A1 /* Resources */,
 				007FE09F355AE72FEF873D54 /* Save */,
@@ -147,11 +154,13 @@
 			children = (
 				5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */,
 				D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */,
+				5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */,
 				DFB40451858A3BC818E7A3E9 /* DialogView.swift */,
 				DC8CCE68052376171EBF56FA /* InventoryView.swift */,
 				C6489FE796C584D033A572F3 /* PartyCreationView.swift */,
 				A2B16655338F5A7331D323D9 /* QuestLogView.swift */,
 				7101425E7A0C85952FE84AFB /* SaveLoadView.swift */,
+				ABCD76F051C6CC030C6D0731 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -171,6 +180,14 @@
 				53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */,
 			);
 			path = Encounter;
+			sourceTree = "<group>";
+		};
+		359F95E38BA7DCDFF421AD83 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				BEE3322D8EF6763B46BF3C1B /* AudioService.swift */,
+			);
+			path = Audio;
 			sourceTree = "<group>";
 		};
 		3968D4C864D2AA654CD507A1 /* Exploration */ = {
@@ -387,10 +404,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */,
+				9183538DE747AB36298AB423 /* AudioService.swift in Sources */,
 				4CE2615E38C0F74F8077058B /* BattleHUDView.swift in Sources */,
 				6802995F9D5D42B766DFD4D6 /* BattleViewModel.swift in Sources */,
 				2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */,
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
+				D875A9994F538C9CA37B297C /* DebugOverlayView.swift in Sources */,
 				CB9CFA9956BA963FF8ECE217 /* DialogView.swift in Sources */,
 				E13BE2848D6EE0DB41CA094B /* DialogViewModel.swift in Sources */,
 				D479EFB7CB00F0F6C5A17847 /* EncounterTriggerService.swift in Sources */,
@@ -411,6 +430,7 @@
 				E4425829A2497C821875B3A5 /* SaveGameStore.swift in Sources */,
 				ED3D5492A209D88E71E23C04 /* SaveLoadView.swift in Sources */,
 				991189CB683319A94BEAA1A2 /* SaveLoadViewModel.swift in Sources */,
+				762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */,
 				A8CCEAD8EEF70AAF3D485948 /* TiledMapLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

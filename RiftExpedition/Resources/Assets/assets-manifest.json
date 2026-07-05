@@ -7,5 +7,41 @@
     "license": "self-made",
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.ui_click",
+    "path": "Assets/Audio/ui_click.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV tone",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.attack_hit",
+    "path": "Assets/Audio/attack_hit.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV tone",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.skill_cast",
+    "path": "Assets/Audio/skill_cast.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV tone",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "audio.area_bgm_loop",
+    "path": "Assets/Audio/area_bgm_loop.wav",
+    "type": "audio",
+    "source": "local procedurally generated WAV tone",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
   }
 ]

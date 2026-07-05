@@ -7,6 +7,7 @@ enum AppState: Equatable {
     case battle
     case inventory
     case saveLoad
+    case settings
     case chapterComplete
 
     var title: String {
@@ -27,6 +28,8 @@ enum AppState: Equatable {
             "背包"
         case .saveLoad:
             "存档"
+        case .settings:
+            "设置"
         case .chapterComplete:
             "章节完成"
         }

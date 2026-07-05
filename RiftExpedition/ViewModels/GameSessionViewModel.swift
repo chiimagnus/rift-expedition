@@ -17,6 +17,9 @@ final class GameSessionViewModel {
     }
     var inventoryViewModel: InventoryViewModel?
     var saveLoadViewModel: SaveLoadViewModel?
+    let audioService: AudioService
+    var uiScale = 1.0
+    var isDebugOverlayVisible = false
     private var encounterTriggerService: EncounterTriggerService?
     private let encounterDefinitions: [EncounterDefinition]
     private let skillDefinitions: [SkillDefinition]
@@ -26,8 +29,13 @@ final class GameSessionViewModel {
     let partyCreationViewModel: PartyCreationViewModel
     let dialogViewModel: DialogViewModel
 
-    init(contentBundle: Bundle = .main, saveGameStore: SaveGameStore = SaveGameStore()) {
+    init(
+        contentBundle: Bundle = .main,
+        saveGameStore: SaveGameStore = SaveGameStore(),
+        audioService: AudioService = AudioService()
+    ) {
         self.saveGameStore = saveGameStore
+        self.audioService = audioService
         let catalog = Self.loadCatalog(from: contentBundle)
         encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
         skillDefinitions = catalog?.skills ?? []
@@ -41,11 +49,13 @@ final class GameSessionViewModel {
     }
 
     func startNewGame() {
+        audioService.play(.click)
         appState = .partyCreation
         statusText = "选择两名冒险者后进入第一章。"
     }
 
     func enterExploration() {
+        audioService.playAreaBGM()
         appState = .exploration
         statusText = "点击地图移动队长。"
     }
@@ -69,6 +79,7 @@ final class GameSessionViewModel {
     }
 
     func openSaveLoad() {
+        audioService.play(.click)
         if saveLoadViewModel == nil {
             saveLoadViewModel = SaveLoadViewModel(
                 store: saveGameStore,
@@ -83,6 +94,7 @@ final class GameSessionViewModel {
     }
 
     func openDialog(_ dialogID: String) {
+        audioService.play(.click)
         if dialogViewModel.start(dialogID: dialogID) {
             appState = .dialogue
         } else {
@@ -91,11 +103,22 @@ final class GameSessionViewModel {
     }
 
     func openQuestLog() {
+        audioService.play(.click)
         appState = .questLog
     }
 
     func openInventory() {
+        audioService.play(.click)
         appState = .inventory
+    }
+
+    func openSettings() {
+        audioService.play(.click)
+        appState = .settings
+    }
+
+    func toggleDebugOverlay() {
+        isDebugOverlayVisible.toggle()
     }
 
     func closePanel() {
@@ -114,6 +137,7 @@ final class GameSessionViewModel {
     }
 
     func returnToMainMenu() {
+        audioService.stopAreaBGM()
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
@@ -123,6 +147,7 @@ final class GameSessionViewModel {
     }
 
     private func startBattle(_ encounter: EncounterDefinition) {
+        audioService.play(.attack)
         battleViewModel = BattleViewModel(
             state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
             skills: skillDefinitions
@@ -179,6 +204,14 @@ final class GameSessionViewModel {
         return inventory
     }
 
+    var debugObstacleCount: Int {
+        initialMapMetadata?.navObstacles.count ?? 0
+    }
+
+    var debugEncounterTriggerCount: Int {
+        initialMapMetadata?.encounterTriggers.count ?? 0
+    }
+
     private func configureEncounterTriggers() {
         if let metadata = initialMapMetadata {
             encounterTriggerService = EncounterTriggerService(
@@ -210,6 +243,10 @@ extension GameSessionViewModel: GameSceneEventHandling {
 
         explorationController.switchToNextLeader()
         statusText = "已切换队长。"
+    }
+
+    func gameSceneDidRequestDebugToggle(_ scene: GameScene) {
+        toggleDebugOverlay()
     }
 
     func gameScene(_ scene: GameScene, didAdvance deltaTime: TimeInterval) {

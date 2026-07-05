@@ -5,6 +5,7 @@ protocol GameSceneEventHandling: AnyObject {
     func gameSceneDidLoad(_ scene: GameScene)
     func gameScene(_ scene: GameScene, didClickWorld point: CGPoint)
     func gameSceneDidRequestLeaderSwitch(_ scene: GameScene)
+    func gameSceneDidRequestDebugToggle(_ scene: GameScene)
     func gameScene(_ scene: GameScene, didAdvance deltaTime: TimeInterval)
 }
 
@@ -41,6 +42,11 @@ final class GameScene: SKScene {
     }
 
     override func keyDown(with event: NSEvent) {
+        if event.charactersIgnoringModifiers?.lowercased() == "d" {
+            eventHandler?.gameSceneDidRequestDebugToggle(self)
+            return
+        }
+
         guard isWorldInputEnabled else {
             super.keyDown(with: event)
             return
