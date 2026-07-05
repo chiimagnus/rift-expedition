@@ -258,5 +258,57 @@
         "statuses": []
       }
     ]
+  },
+  {
+    "id": "rift_custodian",
+    "displayName": "裂隙看守",
+    "enemies": [
+      {
+        "id": "custodian_guard_1",
+        "displayName": "顾家暗卫",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 4,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 34,
+          "health": 34,
+          "attack": 9,
+          "defense": 5,
+          "evasion": 4,
+          "magic": 2,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "warrior",
+        "skillIDs": ["slash", "spark"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "rift_hatchling_1",
+        "displayName": "受惊裂隙幼体",
+        "kind": "monster",
+        "faction": "monster",
+        "level": 3,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 26,
+          "health": 26,
+          "attack": 7,
+          "defense": 3,
+          "evasion": 5,
+          "magic": 3,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
   }
 ]
