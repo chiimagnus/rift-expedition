@@ -7,5 +7,32 @@
     "target": "enemy",
     "affectsAllies": false,
     "canBeDodged": true
+  },
+  {
+    "id": "aimed_shot",
+    "displayName": "瞄准射击",
+    "actionPointCost": 2,
+    "range": 6.0,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true
+  },
+  {
+    "id": "spark",
+    "displayName": "火花",
+    "actionPointCost": 2,
+    "range": 5.0,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": false
+  },
+  {
+    "id": "backstab",
+    "displayName": "背刺",
+    "actionPointCost": 3,
+    "range": 1.2,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true
   }
 ]

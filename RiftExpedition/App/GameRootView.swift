@@ -12,7 +12,11 @@ struct GameRootView: View {
             case .mainMenu:
                 mainMenu
             case .partyCreation:
-                partyCreation
+                PartyCreationView(
+                    viewModel: viewModel.partyCreationViewModel,
+                    onConfirm: viewModel.startChapterWithSelectedParty,
+                    onBack: viewModel.returnToMainMenu
+                )
             case .exploration:
                 exploration
             case .dialogue, .battle, .inventory, .saveLoad, .chapterComplete:
@@ -63,33 +67,6 @@ struct GameRootView: View {
         }
         .frame(maxWidth: 760, alignment: .leading)
         .padding(56)
-    }
-
-    private var partyCreation: some View {
-        VStack(spacing: 22) {
-            Text("创建队伍")
-                .font(.largeTitle.bold())
-                .foregroundStyle(.white)
-
-            Text("首版队伍固定为两人。下一步会接入四职业选择；当前可先进入场景验证应用壳。")
-                .foregroundStyle(.white.opacity(0.72))
-                .multilineTextAlignment(.center)
-
-            HStack {
-                Button("返回主菜单") {
-                    viewModel.returnToMainMenu()
-                }
-
-                Button("进入第一张地图") {
-                    viewModel.enterExploration()
-                }
-                .keyboardShortcut(.defaultAction)
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .frame(maxWidth: 620)
-        .padding(40)
-        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var exploration: some View {

@@ -17,5 +17,62 @@
       "weaponID": "rusted_sword",
       "armorID": "padded_armor"
     }
+  },
+  {
+    "id": "archer",
+    "displayName": "弓箭手",
+    "initialStats": {
+      "maxHealth": 28,
+      "health": 28,
+      "attack": 7,
+      "defense": 3,
+      "evasion": 5,
+      "magic": 1,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["aimed_shot"],
+    "defaultEquipment": {
+      "weaponID": "worn_bow",
+      "armorID": "padded_armor"
+    }
+  },
+  {
+    "id": "mage",
+    "displayName": "法师",
+    "initialStats": {
+      "maxHealth": 24,
+      "health": 24,
+      "attack": 3,
+      "defense": 2,
+      "evasion": 3,
+      "magic": 8,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["spark"],
+    "defaultEquipment": {
+      "weaponID": "cracked_staff",
+      "armorID": "padded_armor"
+    }
+  },
+  {
+    "id": "rogue",
+    "displayName": "刺客",
+    "initialStats": {
+      "maxHealth": 26,
+      "health": 26,
+      "attack": 6,
+      "defense": 3,
+      "evasion": 7,
+      "magic": 2,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["backstab"],
+    "defaultEquipment": {
+      "weaponID": "chipped_dagger",
+      "armorID": "padded_armor"
+    }
   }
 ]

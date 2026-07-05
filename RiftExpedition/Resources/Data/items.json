@@ -32,5 +32,56 @@
         "magic": 0
       }
     }
+  },
+  {
+    "id": "worn_bow",
+    "displayName": "旧猎弓",
+    "kind": "equipment",
+    "equipment": {
+      "id": "worn_bow",
+      "displayName": "旧猎弓",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 2,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "cracked_staff",
+    "displayName": "裂纹法杖",
+    "kind": "equipment",
+    "equipment": {
+      "id": "cracked_staff",
+      "displayName": "裂纹法杖",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 0,
+        "magic": 2
+      }
+    }
+  },
+  {
+    "id": "chipped_dagger",
+    "displayName": "缺口匕首",
+    "kind": "equipment",
+    "equipment": {
+      "id": "chipped_dagger",
+      "displayName": "缺口匕首",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 1,
+        "defense": 0,
+        "evasion": 2,
+        "magic": 0
+      }
+    }
   }
 ]
