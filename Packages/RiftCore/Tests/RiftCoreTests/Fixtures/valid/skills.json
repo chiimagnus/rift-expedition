@@ -1,0 +1,11 @@
+[
+  {
+    "id": "slash",
+    "displayName": "劈砍",
+    "actionPointCost": 2,
+    "range": 1.5,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "bad_gpl_sprite",
+    "path": "Assets/gpl.png",
+    "type": "sprite",
+    "source": "test fixture",
+    "license": "GPL",
+    "downloadedAt": "2026-07-05",
+    "author": "fixture"
+  },
+  {
+    "id": "bad_sharealike_sprite",
+    "path": "Assets/sharealike.png",
+    "type": "sprite",
+    "source": "test fixture",
+    "license": "CC-BY-SA",
+    "downloadedAt": "2026-07-05",
+    "author": "fixture"
+  },
+  {
+    "id": "unknown_placeholder_icon",
+    "path": "Assets/missing.png",
+    "type": "icon",
+    "source": "test fixture",
+    "license": "unknown",
+    "downloadedAt": "2026-07-05",
+    "author": "fixture"
+  }
+]

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="10" height="10" tilewidth="32" tileheight="32">
+  <objectgroup name="spawn">
+    <object id="1" x="32" y="32">
+      <properties>
+        <property name="id" value="start"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="npc">
+    <object id="2" x="64" y="32">
+      <properties>
+        <property name="actorId" value="elder"/>
+        <property name="dialogId" value="elder_intro"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="encounter">
+    <object id="3" x="128" y="32">
+      <properties>
+        <property name="encounterId" value="wolves_01"/>
+        <property name="radius" value="48"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="trigger">
+    <object id="4" x="160" y="32">
+      <properties>
+        <property name="triggerId" value="intro_cut"/>
+        <property name="action" value="dialogue:elder_intro"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="exit">
+    <object id="5" x="288" y="160">
+      <properties>
+        <property name="targetAreaId" value="valid-map"/>
+        <property name="targetSpawnId" value="start"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="navObstacle">
+    <object id="6" x="96" y="96" width="64" height="64">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="surface">
+    <object id="7" x="192" y="96" width="32" height="32">
+      <properties>
+        <property name="surfaceType" value="water"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup name="item">
+    <object id="8" x="224" y="96">
+      <properties>
+        <property name="itemId" value="rusted_sword"/>
+      </properties>
+    </object>
+  </objectgroup>
+</map>
