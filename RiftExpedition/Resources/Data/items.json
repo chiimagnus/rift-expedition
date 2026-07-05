@@ -85,6 +85,23 @@
     }
   },
   {
+    "id": "river_charm",
+    "displayName": "河誓坠饰",
+    "kind": "equipment",
+    "equipment": {
+      "id": "river_charm",
+      "displayName": "河誓坠饰",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 2,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 1
+      }
+    }
+  },
+  {
     "id": "minor_healing_draught",
     "displayName": "止血药剂",
     "kind": "consumable",

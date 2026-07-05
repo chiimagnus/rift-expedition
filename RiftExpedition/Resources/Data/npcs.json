@@ -26,5 +26,12 @@
     "role": "地标",
     "homeAreaID": "village_square",
     "defaultDialogID": "notice_board"
+  },
+  {
+    "id": "healer",
+    "displayName": "药师林婆",
+    "role": "村庄药师",
+    "homeAreaID": "village_riverside",
+    "defaultDialogID": "healer_request"
   }
 ]

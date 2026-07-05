@@ -31,6 +31,29 @@
     ]
   },
   {
+    "id": "healer_request",
+    "speakerName": "药师林婆",
+    "lines": [
+      "村里三个孩子开始发毒热，普通草药压不住。",
+      "若你们去野外河湾，替我采一束苦根草回来。"
+    ]
+  },
+  {
+    "id": "healer_return",
+    "speakerName": "药师林婆",
+    "lines": [
+      "把苦根草给我，这些止血药剂你们带走。"
+    ]
+  },
+  {
+    "id": "bridge_warning",
+    "speakerName": "河桥木牌",
+    "lines": [
+      "过桥去野外河湾，别在夜里回头。",
+      "桥下水面浮着彩色油膜。"
+    ]
+  },
+  {
     "id": "elder_return",
     "speakerName": "村长顾怀恩",
     "lines": [

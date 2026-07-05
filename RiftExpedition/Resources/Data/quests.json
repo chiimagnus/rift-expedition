@@ -7,5 +7,14 @@
     "turnInDialogID": "elder_return",
     "rewardItemIDs": ["rusted_sword"],
     "rewardSkillIDs": ["slash"]
+  },
+  {
+    "id": "bitterroot_medicine",
+    "title": "苦根草药",
+    "summary": "药师林婆需要野外河湾的苦根草，以压住村民身上的毒热。",
+    "startDialogID": "healer_request",
+    "turnInDialogID": "healer_return",
+    "rewardItemIDs": ["minor_healing_draught"],
+    "rewardSkillIDs": []
   }
 ]

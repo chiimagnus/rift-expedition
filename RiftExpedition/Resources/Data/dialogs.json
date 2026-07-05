@@ -68,6 +68,64 @@
     ]
   },
   {
+    "id": "healer_request",
+    "speakerName": "药师林婆",
+    "lines": [
+      "别光盯着婚宴那点热闹。昨夜之后，村里三个孩子开始发毒热。",
+      "普通草药压不住，只有野外河湾的苦根草能救急。那地方靠近旧矿洞水脉，你们若路过，替我采一束回来。",
+      "我没有钱，但药柜里还有几瓶止血药剂。拿命换来的草，我不会白收。"
+    ],
+    "options": [
+      {
+        "id": "accept_bitterroot",
+        "title": "接下支线：苦根草药",
+        "action": "acceptQuest",
+        "questID": "bitterroot_medicine"
+      },
+      {
+        "id": "close",
+        "title": "先离开",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "healer_return",
+    "speakerName": "药师林婆",
+    "lines": [
+      "你们身上有苦根草的腥味。快给我，孩子们撑不了太久。",
+      "这些药剂带走。别问我为什么会备这么多，旧矿洞这些年从没真正安静过。"
+    ],
+    "options": [
+      {
+        "id": "complete_bitterroot",
+        "title": "交付苦根草",
+        "action": "completeQuest",
+        "questID": "bitterroot_medicine"
+      },
+      {
+        "id": "close",
+        "title": "还没找到",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "bridge_warning",
+    "speakerName": "河桥木牌",
+    "lines": [
+      "桥板潮湿发黑，木牌上刻着：过桥去野外河湾，别在夜里回头。",
+      "桥下水面偶尔浮起彩色油膜，像有人把矿洞深处的东西倒进了河里。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "离开木牌",
+        "action": "close"
+      }
+    ]
+  },
+  {
     "id": "elder_return",
     "speakerName": "村长顾怀恩",
     "lines": [
