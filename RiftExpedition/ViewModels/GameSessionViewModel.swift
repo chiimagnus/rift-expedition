@@ -10,6 +10,7 @@ final class GameSessionViewModel {
     var statusText = "裂隙正在沉睡。"
     var lastWorldClick: CGPoint?
     var party: [Actor] = []
+    var explorationController = ExplorationController()
     let partyCreationViewModel: PartyCreationViewModel
 
     init(contentBundle: Bundle = .main) {
@@ -34,6 +35,7 @@ final class GameSessionViewModel {
         }
 
         party = createdParty
+        explorationController.configureParty(createdParty, at: CGPoint(x: 96, y: 96))
         enterExploration()
     }
 
@@ -66,6 +68,24 @@ extension GameSessionViewModel: GameSceneEventHandling {
 
     func gameScene(_ scene: GameScene, didClickWorld point: CGPoint) {
         lastWorldClick = point
-        statusText = "目标位置：\(Int(point.x)), \(Int(point.y))"
+        if appState == .exploration {
+            explorationController.setLeaderDestination(point)
+            statusText = "队长移动到：\(Int(point.x)), \(Int(point.y))"
+        } else {
+            statusText = "目标位置：\(Int(point.x)), \(Int(point.y))"
+        }
+    }
+
+    func gameSceneDidRequestLeaderSwitch(_ scene: GameScene) {
+        guard appState == .exploration else { return }
+
+        explorationController.switchToNextLeader()
+        statusText = "已切换队长。"
+    }
+
+    func gameScene(_ scene: GameScene, didAdvance deltaTime: TimeInterval) {
+        guard appState == .exploration else { return }
+
+        explorationController.advance(deltaTime: deltaTime)
     }
 }

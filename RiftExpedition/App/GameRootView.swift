@@ -115,9 +115,16 @@ private struct ExplorationSceneView: View {
         SpriteView(scene: scene)
             .onAppear {
                 scene.eventHandler = viewModel
+                scene.renderParty(
+                    viewModel.explorationController.members,
+                    leaderID: viewModel.explorationController.leaderID
+                )
             }
             .onDisappear {
                 scene.eventHandler = nil
+            }
+            .onChange(of: viewModel.explorationController) { _, controller in
+                scene.renderParty(controller.members, leaderID: controller.leaderID)
             }
     }
 }

@@ -4,6 +4,8 @@ import SpriteKit
 protocol GameSceneEventHandling: AnyObject {
     func gameSceneDidLoad(_ scene: GameScene)
     func gameScene(_ scene: GameScene, didClickWorld point: CGPoint)
+    func gameSceneDidRequestLeaderSwitch(_ scene: GameScene)
+    func gameScene(_ scene: GameScene, didAdvance deltaTime: TimeInterval)
 }
 
 @MainActor
@@ -12,6 +14,8 @@ final class GameScene: SKScene {
 
     weak var eventHandler: (any GameSceneEventHandling)?
     private var tilemap: SKNode?
+    private var lastUpdateTime: TimeInterval?
+    private var partyNodes: [String: SKShapeNode] = [:]
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -20,6 +24,7 @@ final class GameScene: SKScene {
     }
 
     override func didMove(to view: SKView) {
+        view.window?.makeFirstResponder(view)
         backgroundColor = SKColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1)
         drawGround()
         loadInitialMap()
@@ -30,6 +35,40 @@ final class GameScene: SKScene {
         let point = event.location(in: self)
         eventHandler?.gameScene(self, didClickWorld: point)
         markClick(at: point)
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.charactersIgnoringModifiers == "\t" {
+            eventHandler?.gameSceneDidRequestLeaderSwitch(self)
+            return
+        }
+        super.keyDown(with: event)
+    }
+
+    override func update(_ currentTime: TimeInterval) {
+        defer { lastUpdateTime = currentTime }
+        guard let lastUpdateTime else { return }
+
+        let deltaTime = min(currentTime - lastUpdateTime, 1.0 / 15.0)
+        eventHandler?.gameScene(self, didAdvance: deltaTime)
+    }
+
+    func renderParty(_ members: [PartyMemberPosition], leaderID: String?) {
+        let memberIDs = Set(members.map(\.actorID))
+        let staleActorIDs = partyNodes.keys.filter { !memberIDs.contains($0) }
+        for actorID in staleActorIDs {
+            partyNodes[actorID]?.removeFromParent()
+            partyNodes[actorID] = nil
+        }
+
+        for member in members {
+            let node = partyNodes[member.actorID] ?? makePartyNode(for: member)
+            node.position = member.position
+            node.fillColor = member.actorID == leaderID
+                ? SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
+                : SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 1)
+            partyNodes[member.actorID] = node
+        }
     }
 
     private func drawGround() {
@@ -54,6 +93,16 @@ final class GameScene: SKScene {
         marker.strokeColor = .white
         marker.lineWidth = 2
         addChild(marker)
+    }
+
+    private func makePartyNode(for member: PartyMemberPosition) -> SKShapeNode {
+        let node = SKShapeNode(circleOfRadius: 14)
+        node.name = "party_\(member.actorID)"
+        node.strokeColor = .white
+        node.lineWidth = 2
+        node.zPosition = 10
+        addChild(node)
+        return node
     }
 
     private func loadInitialMap() {

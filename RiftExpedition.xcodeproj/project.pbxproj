@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
 		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
+		165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */; };
 		1848CFC49F32B6EF6667BE62 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 88DF543C5A5385E21EDF8CFD /* Data */; };
 		1D86B4BB78F507A4FF4DCBBC /* PartyCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6489FE796C584D033A572F3 /* PartyCreationView.swift */; };
 		25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */; };
 		3611029602000DC07423A95F /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 9378BAD0E4B3DC7D9AF2FBCD /* Assets */; };
 		4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E20289D96B7086117044C4B /* AppState.swift */; };
 		578732DC3C52AB58C25A427E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16878055CA8AAE8E6F1D52DF /* ContentView.swift */; };
+		6347CEA63EB39C695173C2CB /* ExplorationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5A0519DE22D34D64B8042B /* ExplorationController.swift */; };
 		75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E228968FC56BB933A3CABE /* GameLog.swift */; };
 		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
 		7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */; };
@@ -47,6 +49,7 @@
 		26E228968FC56BB933A3CABE /* GameLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLog.swift; sourceTree = "<group>"; };
 		2E20289D96B7086117044C4B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationServiceTests.swift; sourceTree = "<group>"; };
+		3A5A0519DE22D34D64B8042B /* ExplorationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationController.swift; sourceTree = "<group>"; };
 		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		62D9C87993ED01E0C345D4D1 /* GameRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRootView.swift; sourceTree = "<group>"; };
@@ -56,6 +59,7 @@
 		8A59363E369752C0EBF6B922 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		9378BAD0E4B3DC7D9AF2FBCD /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Assets; path = RiftExpedition/Resources/Assets; sourceTree = SOURCE_ROOT; };
 		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
+		B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationControllerTests.swift; sourceTree = "<group>"; };
 		BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationViewModel.swift; sourceTree = "<group>"; };
 		BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSmoke.swift; sourceTree = "<group>"; };
 		C6489FE796C584D033A572F3 /* PartyCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationView.swift; sourceTree = "<group>"; };
@@ -110,6 +114,14 @@
 			path = Navigation;
 			sourceTree = "<group>";
 		};
+		3968D4C864D2AA654CD507A1 /* Exploration */ = {
+			isa = PBXGroup;
+			children = (
+				3A5A0519DE22D34D64B8042B /* ExplorationController.swift */,
+			);
+			path = Exploration;
+			sourceTree = "<group>";
+		};
 		41FC92A3B820B2D1FF31BEC0 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -150,6 +162,7 @@
 			isa = PBXGroup;
 			children = (
 				3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */,
+				B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */,
 				30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */,
 				FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */,
 			);
@@ -190,6 +203,7 @@
 			children = (
 				8A59363E369752C0EBF6B922 /* GameScene.swift */,
 				E9690F5B30C8F52EA2944A2B /* TiledMapLoader.swift */,
+				3968D4C864D2AA654CD507A1 /* Exploration */,
 				08020C780A8F1BB98FF87CBD /* Navigation */,
 				F0CF89C5CC5AAB2C2E43DE04 /* Tiled */,
 			);
@@ -304,6 +318,7 @@
 			files = (
 				4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */,
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
+				6347CEA63EB39C695173C2CB /* ExplorationController.swift in Sources */,
 				75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */,
 				EA26E71CCD073F770F867A1E /* GameRootView.swift in Sources */,
 				A3CC69DA628AF017095209CF /* GameScene.swift in Sources */,
@@ -323,6 +338,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */,
+				165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */,
 				25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */,
 				9FA8A833859854299DEEFCFB /* PartyCreationViewModelTests.swift in Sources */,
 			);
