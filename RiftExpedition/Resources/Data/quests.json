@@ -2,11 +2,11 @@
   {
     "id": "blood_debt",
     "title": "血债：失踪的新娘",
-    "summary": "沈砚在婚宴前失踪，未婚夫指控外来法师，村长要求你们先从村外脚印查起。",
+    "summary": "沈砚在婚宴前失踪，未婚夫梁铮诬陷外来法师；你们需要沿村外脚印、野路线索和旧矿洞账册查明真相，揭穿村长顾怀恩偷采元素矿引发污染。",
     "startDialogID": "elder_intro",
     "turnInDialogID": "elder_return",
-    "rewardItemIDs": ["rusted_sword"],
-    "rewardSkillIDs": ["slash"]
+    "rewardItemIDs": ["rift_shard_amulet"],
+    "rewardSkillIDs": ["water_orb"]
   },
   {
     "id": "bitterroot_medicine",
