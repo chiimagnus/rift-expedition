@@ -15,9 +15,11 @@ final class GameSessionViewModel {
     var battleState: BattleState? {
         battleViewModel?.state
     }
+    var inventoryViewModel: InventoryViewModel?
     private var encounterTriggerService: EncounterTriggerService?
     private let encounterDefinitions: [EncounterDefinition]
     private let skillDefinitions: [SkillDefinition]
+    private let itemDefinitions: [ItemDefinition]
     private let initialMapMetadata: TiledMapMetadata?
     let partyCreationViewModel: PartyCreationViewModel
     let dialogViewModel: DialogViewModel
@@ -26,6 +28,7 @@ final class GameSessionViewModel {
         let catalog = Self.loadCatalog(from: contentBundle)
         encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
         skillDefinitions = catalog?.skills ?? []
+        itemDefinitions = catalog?.items ?? []
         initialMapMetadata = try? TiledMapLoader.loadMetadata(areaID: "vertical_slice", bundle: contentBundle)
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
         dialogViewModel = DialogViewModel(
@@ -52,6 +55,11 @@ final class GameSessionViewModel {
         }
 
         party = createdParty
+        inventoryViewModel = InventoryViewModel(
+            party: createdParty,
+            inventory: Self.makeStartingInventory(for: createdParty),
+            itemDefinitions: itemDefinitions
+        )
         explorationController.configureParty(createdParty, at: CGPoint(x: 96, y: 96))
         if let metadata = initialMapMetadata {
             encounterTriggerService = EncounterTriggerService(
@@ -79,7 +87,14 @@ final class GameSessionViewModel {
         appState = .questLog
     }
 
+    func openInventory() {
+        appState = .inventory
+    }
+
     func closePanel() {
+        if let inventoryViewModel {
+            party = inventoryViewModel.party
+        }
         appState = party.isEmpty ? .mainMenu : .exploration
     }
 
@@ -96,11 +111,12 @@ final class GameSessionViewModel {
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
         battleViewModel = nil
+        inventoryViewModel = nil
     }
 
     private func startBattle(_ encounter: EncounterDefinition) {
         battleViewModel = BattleViewModel(
-            state: BattleState(actors: party + encounter.enemies),
+            state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
             skills: skillDefinitions
         )
         appState = .battle
@@ -116,6 +132,17 @@ final class GameSessionViewModel {
         guard let catalog else { return PartyCreationViewModel(classes: []) }
         let skillNames: [String: String] = Dictionary(uniqueKeysWithValues: catalog.skills.map { ($0.id, $0.displayName) })
         return PartyCreationViewModel(classes: catalog.classes, skillNamesByID: skillNames)
+    }
+
+    private static func makeStartingInventory(for party: [Actor]) -> PartyInventory {
+        var inventory = PartyInventory()
+        for actor in party {
+            let equippedItemIDs = [actor.equipment.weaponID, actor.equipment.armorID, actor.equipment.accessoryID]
+            for itemID in equippedItemIDs.compactMap({ $0 }) {
+                inventory.addItem(id: itemID)
+            }
+        }
+        return inventory
     }
 }
 

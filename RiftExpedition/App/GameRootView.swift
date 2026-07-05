@@ -30,6 +30,15 @@ struct GameRootView: View {
                     entries: viewModel.dialogViewModel.questLogEntries,
                     onClose: viewModel.closePanel
                 )
+            case .inventory:
+                if let inventoryViewModel = viewModel.inventoryViewModel {
+                    InventoryView(
+                        viewModel: inventoryViewModel,
+                        onClose: viewModel.closePanel
+                    )
+                } else {
+                    simpleStatePanel
+                }
             case .battle:
                 if let battleViewModel = viewModel.battleViewModel {
                     BattleHUDView(
@@ -39,7 +48,7 @@ struct GameRootView: View {
                 } else {
                     simpleStatePanel
                 }
-            case .inventory, .saveLoad, .chapterComplete:
+            case .saveLoad, .chapterComplete:
                 simpleStatePanel
             }
         }
@@ -102,6 +111,9 @@ struct GameRootView: View {
                 HStack {
                     Button("和村长交谈") {
                         viewModel.openDialog("elder_intro")
+                    }
+                    Button("背包") {
+                        viewModel.openInventory()
                     }
                     Button("任务日志") {
                         viewModel.openQuestLog()

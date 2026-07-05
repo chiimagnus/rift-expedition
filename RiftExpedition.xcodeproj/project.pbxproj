@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0246E914ED83246EA311D898 /* InventoryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */; };
 		07A9D3403701FF8FA75EAE88 /* GameSessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */; };
 		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
 		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
@@ -14,6 +15,7 @@
 		1848CFC49F32B6EF6667BE62 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 88DF543C5A5385E21EDF8CFD /* Data */; };
 		1D86B4BB78F507A4FF4DCBBC /* PartyCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6489FE796C584D033A572F3 /* PartyCreationView.swift */; };
 		25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */; };
+		2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */; };
 		3611029602000DC07423A95F /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 9378BAD0E4B3DC7D9AF2FBCD /* Assets */; };
 		4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E20289D96B7086117044C4B /* AppState.swift */; };
 		4CE2615E38C0F74F8077058B /* BattleHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */; };
@@ -31,6 +33,8 @@
 		B21B8E81F017A5DA43739B18 /* LineOfSightService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91E145CC57DAABAD58BA948 /* LineOfSightService.swift */; };
 		B9EB9523CC4829EB2BE7C946 /* QuestLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B16655338F5A7331D323D9 /* QuestLogView.swift */; };
 		C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD21D61B804614283239218 /* RiftExpeditionApp.swift */; };
+		C4AB3902B42AB9F9ACD5E503 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC8CCE68052376171EBF56FA /* InventoryView.swift */; };
+		C7C1D3A7139B0EAB08203DB5 /* InventoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC223499FD6F98F40939CDB /* InventoryViewModel.swift */; };
 		CB9CFA9956BA963FF8ECE217 /* DialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB40451858A3BC818E7A3E9 /* DialogView.swift */; };
 		D20908863543301B1459C3A6 /* Maps in Resources */ = {isa = PBXBuildFile; fileRef = 6F7AC4E0DEC480F958D181E4 /* Maps */; };
 		D479EFB7CB00F0F6C5A17847 /* EncounterTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */; };
@@ -62,6 +66,7 @@
 		26E228968FC56BB933A3CABE /* GameLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLog.swift; sourceTree = "<group>"; };
 		2E20289D96B7086117044C4B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationServiceTests.swift; sourceTree = "<group>"; };
+		3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewModelTests.swift; sourceTree = "<group>"; };
 		3A5A0519DE22D34D64B8042B /* ExplorationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationController.swift; sourceTree = "<group>"; };
 		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -71,6 +76,7 @@
 		6F7AC4E0DEC480F958D181E4 /* Maps */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Maps; path = RiftExpedition/Resources/Maps; sourceTree = SOURCE_ROOT; };
 		7A6DF617AC4CE8F345CC0AF6 /* NavigationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationService.swift; sourceTree = "<group>"; };
 		7C293E92E0C61C83BC23C3D8 /* BattleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleViewModel.swift; sourceTree = "<group>"; };
+		7EC223499FD6F98F40939CDB /* InventoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewModel.swift; sourceTree = "<group>"; };
 		88DF543C5A5385E21EDF8CFD /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Data; path = RiftExpedition/Resources/Data; sourceTree = SOURCE_ROOT; };
 		8A59363E369752C0EBF6B922 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		9378BAD0E4B3DC7D9AF2FBCD /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Assets; path = RiftExpedition/Resources/Assets; sourceTree = SOURCE_ROOT; };
@@ -83,6 +89,8 @@
 		CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewModelTests.swift; sourceTree = "<group>"; };
 		D19AB8D6F4144C335B1A905D /* DialogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewModel.swift; sourceTree = "<group>"; };
 		D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionViewModel.swift; sourceTree = "<group>"; };
+		D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterSheetView.swift; sourceTree = "<group>"; };
+		DC8CCE68052376171EBF56FA /* InventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryView.swift; sourceTree = "<group>"; };
 		DFB40451858A3BC818E7A3E9 /* DialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogView.swift; sourceTree = "<group>"; };
 		E9690F5B30C8F52EA2944A2B /* TiledMapLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledMapLoader.swift; sourceTree = "<group>"; };
 		F91E145CC57DAABAD58BA948 /* LineOfSightService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineOfSightService.swift; sourceTree = "<group>"; };
@@ -121,7 +129,9 @@
 			isa = PBXGroup;
 			children = (
 				5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */,
+				D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */,
 				DFB40451858A3BC818E7A3E9 /* DialogView.swift */,
+				DC8CCE68052376171EBF56FA /* InventoryView.swift */,
 				C6489FE796C584D033A572F3 /* PartyCreationView.swift */,
 				A2B16655338F5A7331D323D9 /* QuestLogView.swift */,
 			);
@@ -186,6 +196,7 @@
 				7C293E92E0C61C83BC23C3D8 /* BattleViewModel.swift */,
 				D19AB8D6F4144C335B1A905D /* DialogViewModel.swift */,
 				D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */,
+				7EC223499FD6F98F40939CDB /* InventoryViewModel.swift */,
 				BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */,
 			);
 			path = ViewModels;
@@ -200,6 +211,7 @@
 				13ADCD02CE1DDCFC52A3C22E /* EncounterTriggerServiceTests.swift */,
 				B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */,
 				13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */,
+				3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */,
 				30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */,
 				FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */,
 			);
@@ -357,6 +369,7 @@
 				4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */,
 				4CE2615E38C0F74F8077058B /* BattleHUDView.swift in Sources */,
 				6802995F9D5D42B766DFD4D6 /* BattleViewModel.swift in Sources */,
+				2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */,
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
 				CB9CFA9956BA963FF8ECE217 /* DialogView.swift in Sources */,
 				E13BE2848D6EE0DB41CA094B /* DialogViewModel.swift in Sources */,
@@ -366,6 +379,8 @@
 				EA26E71CCD073F770F867A1E /* GameRootView.swift in Sources */,
 				A3CC69DA628AF017095209CF /* GameScene.swift in Sources */,
 				7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */,
+				C4AB3902B42AB9F9ACD5E503 /* InventoryView.swift in Sources */,
+				C7C1D3A7139B0EAB08203DB5 /* InventoryViewModel.swift in Sources */,
 				B21B8E81F017A5DA43739B18 /* LineOfSightService.swift in Sources */,
 				E152D139378F269AE18D4DEA /* NavigationService.swift in Sources */,
 				1D86B4BB78F507A4FF4DCBBC /* PartyCreationView.swift in Sources */,
@@ -387,6 +402,7 @@
 				FFA0837788C20216C0548B5E /* EncounterTriggerServiceTests.swift in Sources */,
 				165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */,
 				07A9D3403701FF8FA75EAE88 /* GameSessionViewModelTests.swift in Sources */,
+				0246E914ED83246EA311D898 /* InventoryViewModelTests.swift in Sources */,
 				25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */,
 				9FA8A833859854299DEEFCFB /* PartyCreationViewModelTests.swift in Sources */,
 			);
