@@ -1,3 +1,5 @@
 .DS_Store
 .codegraph/
 .github/features/
+.build/
+**/.build/
