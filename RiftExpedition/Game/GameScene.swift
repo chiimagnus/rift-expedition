@@ -13,6 +13,7 @@ final class GameScene: SKScene {
     static let sceneSize = CGSize(width: 1280, height: 720)
 
     weak var eventHandler: (any GameSceneEventHandling)?
+    var isWorldInputEnabled = true
     private var tilemap: SKNode?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKShapeNode] = [:]
@@ -32,12 +33,19 @@ final class GameScene: SKScene {
     }
 
     override func mouseDown(with event: NSEvent) {
+        guard isWorldInputEnabled else { return }
+
         let point = event.location(in: self)
         eventHandler?.gameScene(self, didClickWorld: point)
         markClick(at: point)
     }
 
     override func keyDown(with event: NSEvent) {
+        guard isWorldInputEnabled else {
+            super.keyDown(with: event)
+            return
+        }
+
         if event.charactersIgnoringModifiers == "\t" {
             eventHandler?.gameSceneDidRequestLeaderSwitch(self)
             return

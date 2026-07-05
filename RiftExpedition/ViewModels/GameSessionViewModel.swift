@@ -11,9 +11,13 @@ final class GameSessionViewModel {
     var lastWorldClick: CGPoint?
     var party: [Actor] = []
     var explorationController = ExplorationController()
-    var battleState: BattleState?
+    var battleViewModel: BattleViewModel?
+    var battleState: BattleState? {
+        battleViewModel?.state
+    }
     private var encounterTriggerService: EncounterTriggerService?
     private let encounterDefinitions: [EncounterDefinition]
+    private let skillDefinitions: [SkillDefinition]
     private let initialMapMetadata: TiledMapMetadata?
     let partyCreationViewModel: PartyCreationViewModel
     let dialogViewModel: DialogViewModel
@@ -21,6 +25,7 @@ final class GameSessionViewModel {
     init(contentBundle: Bundle = .main) {
         let catalog = Self.loadCatalog(from: contentBundle)
         encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
+        skillDefinitions = catalog?.skills ?? []
         initialMapMetadata = try? TiledMapLoader.loadMetadata(areaID: "vertical_slice", bundle: contentBundle)
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
         dialogViewModel = DialogViewModel(
@@ -90,10 +95,14 @@ final class GameSessionViewModel {
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
+        battleViewModel = nil
     }
 
     private func startBattle(_ encounter: EncounterDefinition) {
-        battleState = BattleState(actors: party + encounter.enemies)
+        battleViewModel = BattleViewModel(
+            state: BattleState(actors: party + encounter.enemies),
+            skills: skillDefinitions
+        )
         appState = .battle
         statusText = "遭遇已触发。"
     }

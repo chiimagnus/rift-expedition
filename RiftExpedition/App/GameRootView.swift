@@ -30,7 +30,16 @@ struct GameRootView: View {
                     entries: viewModel.dialogViewModel.questLogEntries,
                     onClose: viewModel.closePanel
                 )
-            case .battle, .inventory, .saveLoad, .chapterComplete:
+            case .battle:
+                if let battleViewModel = viewModel.battleViewModel {
+                    BattleHUDView(
+                        viewModel: battleViewModel,
+                        onReturnToMenu: viewModel.returnToMainMenu
+                    )
+                } else {
+                    simpleStatePanel
+                }
+            case .inventory, .saveLoad, .chapterComplete:
                 simpleStatePanel
             }
         }
@@ -133,6 +142,7 @@ private struct ExplorationSceneView: View {
     var body: some View {
         SpriteView(scene: scene)
             .onAppear {
+                scene.isWorldInputEnabled = viewModel.appState == .exploration
                 scene.eventHandler = viewModel
                 scene.renderParty(
                     viewModel.explorationController.members,
@@ -140,7 +150,11 @@ private struct ExplorationSceneView: View {
                 )
             }
             .onDisappear {
+                scene.isWorldInputEnabled = false
                 scene.eventHandler = nil
+            }
+            .onChange(of: viewModel.appState) { _, appState in
+                scene.isWorldInputEnabled = appState == .exploration
             }
             .onChange(of: viewModel.explorationController) { _, controller in
                 scene.renderParty(controller.members, leaderID: controller.leaderID)
