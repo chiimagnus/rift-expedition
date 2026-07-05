@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": "tileset.vertical_slice_palette",
+    "path": "Assets/Tilesets/vertical_slice_palette.svg",
+    "type": "tileset",
+    "source": "local self-made SVG for vertical_slice map",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  }
+]

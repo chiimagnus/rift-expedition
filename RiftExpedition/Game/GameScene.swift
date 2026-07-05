@@ -11,6 +11,7 @@ final class GameScene: SKScene {
     static let sceneSize = CGSize(width: 1280, height: 720)
 
     weak var eventHandler: (any GameSceneEventHandling)?
+    private var tilemap: SKNode?
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -20,8 +21,9 @@ final class GameScene: SKScene {
 
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1)
-        eventHandler?.gameSceneDidLoad(self)
         drawGround()
+        loadInitialMap()
+        eventHandler?.gameSceneDidLoad(self)
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -52,5 +54,19 @@ final class GameScene: SKScene {
         marker.strokeColor = .white
         marker.lineWidth = 2
         addChild(marker)
+    }
+
+    private func loadInitialMap() {
+        guard tilemap == nil else { return }
+
+        do {
+            let loadedMap = try TiledMapLoader.load(areaID: "vertical_slice")
+            loadedMap.position = .zero
+            loadedMap.zPosition = 1
+            addChild(loadedMap)
+            tilemap = loadedMap
+        } catch {
+            GameLog.map.error("vertical_slice.tmx 加载失败")
+        }
     }
 }
