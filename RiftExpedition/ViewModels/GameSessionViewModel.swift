@@ -16,15 +16,18 @@ final class GameSessionViewModel {
         battleViewModel?.state
     }
     var inventoryViewModel: InventoryViewModel?
+    var saveLoadViewModel: SaveLoadViewModel?
     private var encounterTriggerService: EncounterTriggerService?
     private let encounterDefinitions: [EncounterDefinition]
     private let skillDefinitions: [SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
     private let initialMapMetadata: TiledMapMetadata?
+    private let saveGameStore: SaveGameStore
     let partyCreationViewModel: PartyCreationViewModel
     let dialogViewModel: DialogViewModel
 
-    init(contentBundle: Bundle = .main) {
+    init(contentBundle: Bundle = .main, saveGameStore: SaveGameStore = SaveGameStore()) {
+        self.saveGameStore = saveGameStore
         let catalog = Self.loadCatalog(from: contentBundle)
         encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
         skillDefinitions = catalog?.skills ?? []
@@ -61,16 +64,20 @@ final class GameSessionViewModel {
             itemDefinitions: itemDefinitions
         )
         explorationController.configureParty(createdParty, at: CGPoint(x: 96, y: 96))
-        if let metadata = initialMapMetadata {
-            encounterTriggerService = EncounterTriggerService(
-                triggers: metadata.encounterTriggers,
-                encounters: encounterDefinitions
-            )
-        }
+        configureEncounterTriggers()
         enterExploration()
     }
 
     func openSaveLoad() {
+        if saveLoadViewModel == nil {
+            saveLoadViewModel = SaveLoadViewModel(
+                store: saveGameStore,
+                makeSave: { [weak self] in self?.makeCurrentSave() },
+                applySave: { [weak self] save in self?.apply(save) }
+            )
+        } else {
+            saveLoadViewModel?.refresh()
+        }
         appState = .saveLoad
         statusText = "手动存档与自动存档将在此管理。"
     }
@@ -112,6 +119,7 @@ final class GameSessionViewModel {
         lastWorldClick = nil
         battleViewModel = nil
         inventoryViewModel = nil
+        saveLoadViewModel = nil
     }
 
     private func startBattle(_ encounter: EncounterDefinition) {
@@ -121,6 +129,32 @@ final class GameSessionViewModel {
         )
         appState = .battle
         statusText = "遭遇已触发。"
+    }
+
+    private func makeCurrentSave() -> SaveGame? {
+        let currentParty = inventoryViewModel?.party ?? party
+        guard !currentParty.isEmpty else { return nil }
+
+        return SaveGame(
+            currentAreaID: "vertical_slice",
+            currentSpawnID: "start",
+            party: currentParty,
+            inventory: inventoryViewModel?.inventory ?? PartyInventory()
+        )
+    }
+
+    private func apply(_ save: SaveGame) {
+        party = save.party
+        inventoryViewModel = InventoryViewModel(
+            party: save.party,
+            inventory: save.inventory,
+            itemDefinitions: itemDefinitions
+        )
+        explorationController.configureParty(save.party, at: CGPoint(x: 96, y: 96))
+        configureEncounterTriggers()
+        battleViewModel = nil
+        appState = .exploration
+        statusText = "已读取存档。"
     }
 
     private static func loadCatalog(from bundle: Bundle) -> ContentCatalog? {
@@ -143,6 +177,15 @@ final class GameSessionViewModel {
             }
         }
         return inventory
+    }
+
+    private func configureEncounterTriggers() {
+        if let metadata = initialMapMetadata {
+            encounterTriggerService = EncounterTriggerService(
+                triggers: metadata.encounterTriggers,
+                encounters: encounterDefinitions
+            )
+        }
     }
 }
 

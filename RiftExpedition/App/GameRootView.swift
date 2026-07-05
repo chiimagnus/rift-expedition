@@ -48,7 +48,16 @@ struct GameRootView: View {
                 } else {
                     simpleStatePanel
                 }
-            case .saveLoad, .chapterComplete:
+            case .saveLoad:
+                if let saveLoadViewModel = viewModel.saveLoadViewModel {
+                    SaveLoadView(
+                        viewModel: saveLoadViewModel,
+                        onClose: viewModel.closePanel
+                    )
+                } else {
+                    simpleStatePanel
+                }
+            case .chapterComplete:
                 simpleStatePanel
             }
         }
@@ -114,6 +123,9 @@ struct GameRootView: View {
                     }
                     Button("背包") {
                         viewModel.openInventory()
+                    }
+                    Button("存档") {
+                        viewModel.openSaveLoad()
                     }
                     Button("任务日志") {
                         viewModel.openQuestLog()
