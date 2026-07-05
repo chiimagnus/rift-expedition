@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="13">
+  <properties>
+    <property name="areaName" value="断塔野路"/>
+    <property name="assetId" value="tileset.chapter1_wilds"/>
+  </properties>
+  <tileset firstgid="1" name="chapter1_wilds_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
+    <image source="../../Assets/Tilesets/chapter1_wilds_tileset.png" width="256" height="32"/>
+  </tileset>
+  <layer id="1" name="terrain" width="32" height="20">
+    <data encoding="csv">
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,2,2,2,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,1,8,
+8,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,8,
+8,1,1,1,1,2,2,2,2,2,1,1,1,1,1,2,2,2,2,2,1,1,1,1,1,2,2,2,2,2,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+    </data>
+  </layer>
+  <objectgroup id="2" name="spawn">
+    <object id="1" name="from_outskirts" x="96" y="320">
+      <properties>
+        <property name="id" value="from_outskirts"/>
+      </properties>
+    </object>
+    <object id="2" name="from_ruins" x="896" y="160">
+      <properties>
+        <property name="id" value="from_ruins"/>
+      </properties>
+    </object>
+    <object id="3" name="from_riverbank" x="896" y="512">
+      <properties>
+        <property name="id" value="from_riverbank"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup id="3" name="npc">
+  </objectgroup>
+  <objectgroup id="4" name="encounter">
+  </objectgroup>
+  <objectgroup id="5" name="trigger">
+  </objectgroup>
+  <objectgroup id="6" name="exit">
+    <object id="4" name="回村外" x="32" y="288" width="32" height="64">
+      <properties>
+        <property name="targetAreaId" value="village_outskirts"/>
+        <property name="targetSpawnId" value="from_wilds_road"/>
+      </properties>
+    </object>
+    <object id="5" name="去废墟" x="960" y="128" width="32" height="64">
+      <properties>
+        <property name="targetAreaId" value="wilds_ruins"/>
+        <property name="targetSpawnId" value="from_road"/>
+      </properties>
+    </object>
+    <object id="6" name="去河湾" x="960" y="480" width="32" height="64">
+      <properties>
+        <property name="targetAreaId" value="wilds_riverbank"/>
+        <property name="targetSpawnId" value="from_road"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup id="7" name="navObstacle">
+    <object id="7" name="北边界" x="0" y="0" width="1024" height="32">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="8" name="南边界" x="0" y="608" width="1024" height="32">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="9" name="西边界" x="0" y="0" width="32" height="640">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="10" name="东边界" x="992" y="0" width="32" height="640">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="11" name="倒木路障" x="416" y="288" width="160" height="64">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="12" name="断塔石影" x="704" y="96" width="96" height="96">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup id="8" name="surface">
+  </objectgroup>
+  <objectgroup id="9" name="item">
+  </objectgroup>
+</map>

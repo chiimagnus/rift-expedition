@@ -55,29 +55,47 @@ enum ValidationCLIError: Error, CustomStringConvertible {
 func mapURLs(resourcesRoot: URL, areaID: String?) throws -> [URL] {
     let mapsRoot = resourcesRoot.appending(path: "Maps")
     if let areaID {
-        return [mapsRoot.appending(path: "\(areaID).tmx")]
+        let url = try allMapURLs(mapsRoot: mapsRoot)
+            .first { $0.deletingPathExtension().lastPathComponent == areaID }
+        return [url ?? mapsRoot.appending(path: "\(areaID).tmx")]
     }
 
-    let contents = (try? FileManager.default.contentsOfDirectory(at: mapsRoot, includingPropertiesForKeys: nil)) ?? []
-    let maps = contents.filter { $0.pathExtension == "tmx" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+    let maps = try allMapURLs(mapsRoot: mapsRoot)
     if maps.isEmpty {
         throw ValidationCLIError.noMaps(mapsRoot)
     }
     return maps
 }
 
+func allMapURLs(mapsRoot: URL) throws -> [URL] {
+    guard let enumerator = FileManager.default.enumerator(
+        at: mapsRoot,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+    ) else {
+        return []
+    }
+
+    return enumerator
+        .compactMap { $0 as? URL }
+        .filter { $0.pathExtension == "tmx" }
+        .sorted { $0.path < $1.path }
+}
+
 do {
     let arguments = try parseArguments(CommandLine.arguments)
-    let urls = try mapURLs(resourcesRoot: arguments.resourcesRoot, areaID: arguments.areaID)
+    let urls = try mapURLs(resourcesRoot: arguments.resourcesRoot, areaID: nil)
+    let allResults = try MapValidator.validate(urls: urls)
     let results = if let areaID = arguments.areaID {
-        try [MapValidator.validate(url: urls[0], areaID: areaID)]
+        allResults.filter { $0.map.areaID == areaID }
     } else {
-        try MapValidator.validate(urls: urls)
+        allResults
     }
     let assetManifest = arguments.resourcesRoot.appending(path: "Assets/assets-manifest.json")
     let assetResult = FileManager.default.fileExists(atPath: assetManifest.path)
         ? try AssetValidator.validate(resourcesRoot: arguments.resourcesRoot)
         : nil
+    let worldResults = try WorldGraphValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
 
     if let previewDirectory = arguments.previewDirectory {
         for result in results {
@@ -86,6 +104,7 @@ do {
     }
 
     var reportSections = results.map { $0.reportMarkdown() }
+    reportSections.append(contentsOf: worldResults.map { $0.reportMarkdown() })
     if let assetResult {
         reportSections.append(assetResult.reportMarkdown())
     }
@@ -97,7 +116,9 @@ do {
         print(report)
     }
 
-    let issueCount = results.reduce(0) { $0 + $1.issues.count } + (assetResult?.issues.count ?? 0)
+    let issueCount = results.reduce(0) { $0 + $1.issues.count }
+        + worldResults.reduce(0) { $0 + $1.issues.count }
+        + (assetResult?.issues.count ?? 0)
     if issueCount > 0 {
         exit(EXIT_FAILURE)
     }

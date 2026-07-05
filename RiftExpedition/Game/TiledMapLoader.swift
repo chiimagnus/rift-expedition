@@ -95,6 +95,9 @@ enum TiledMapLoader {
         if let url = bundle.url(forResource: areaID, withExtension: "tmx", subdirectory: "Maps") {
             return url
         }
+        if let url = bundle.url(forResource: areaID, withExtension: "tmx", subdirectory: "Maps/chapter1") {
+            return url
+        }
         if let url = bundle.url(forResource: areaID, withExtension: "tmx") {
             return url
         }

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="9">
+  <properties>
+    <property name="areaName" value="裂隙洞心"/>
+    <property name="assetId" value="tileset.chapter1_cave"/>
+  </properties>
+  <tileset firstgid="1" name="chapter1_cave_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
+    <image source="../../Assets/Tilesets/chapter1_cave_tileset.png" width="256" height="32"/>
+  </tileset>
+  <layer id="1" name="terrain" width="32" height="20">
+    <data encoding="csv">
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,7,7,7,7,7,7,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,7,7,7,7,7,7,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,7,7,7,7,7,7,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,7,7,7,7,7,7,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,7,7,7,7,7,7,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,7,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+    </data>
+  </layer>
+  <objectgroup id="2" name="spawn">
+    <object id="1" name="from_mines" x="96" y="320">
+      <properties>
+        <property name="id" value="from_mines"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup id="3" name="npc">
+  </objectgroup>
+  <objectgroup id="4" name="encounter">
+  </objectgroup>
+  <objectgroup id="5" name="trigger">
+  </objectgroup>
+  <objectgroup id="6" name="exit">
+    <object id="2" name="回矿道" x="32" y="288" width="32" height="64">
+      <properties>
+        <property name="targetAreaId" value="cave_mines"/>
+        <property name="targetSpawnId" value="from_depths"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup id="7" name="navObstacle">
+    <object id="3" name="北边界" x="0" y="0" width="1024" height="32">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="4" name="南边界" x="0" y="608" width="1024" height="32">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="5" name="西边界" x="0" y="0" width="32" height="640">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="6" name="东边界" x="992" y="0" width="32" height="640">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="7" name="裂隙核心" x="448" y="224" width="160" height="160">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+    <object id="8" name="塌陷石带" x="704" y="384" width="160" height="64">
+      <properties>
+        <property name="blocksMovement" value="true"/>
+        <property name="blocksSight" value="true"/>
+      </properties>
+    </object>
+  </objectgroup>
+  <objectgroup id="8" name="surface">
+  </objectgroup>
+  <objectgroup id="9" name="item">
+  </objectgroup>
+</map>
