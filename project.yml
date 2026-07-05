@@ -1,0 +1,56 @@
+name: RiftExpedition
+options:
+  minimumXcodeGenVersion: 2.44.0
+  createIntermediateGroups: true
+settings:
+  base:
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+packages:
+  RiftCore:
+    path: Packages/RiftCore
+targets:
+  RiftExpedition:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: RiftExpedition
+        excludes:
+          - Resources
+    resources:
+      - path: RiftExpedition/Resources
+    dependencies:
+      - package: RiftCore
+    entitlements:
+      path: RiftExpedition/RiftExpedition.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.riftexpedition.game
+        PRODUCT_NAME: RiftExpedition
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_CFBundleDisplayName: 裂隙远征
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.games
+        CODE_SIGN_STYLE: Automatic
+  RiftExpeditionTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: RiftExpeditionTests
+    dependencies:
+      - target: RiftExpedition
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+schemes:
+  RiftExpedition:
+    shared: true
+    build:
+      targets:
+        RiftExpedition: all
+    test:
+      gatherCoverageData: false
+      targets:
+        - name: RiftExpeditionTests

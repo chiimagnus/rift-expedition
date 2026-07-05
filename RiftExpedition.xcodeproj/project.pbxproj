@@ -1,0 +1,463 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
+		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
+		578732DC3C52AB58C25A427E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16878055CA8AAE8E6F1D52DF /* ContentView.swift */; };
+		A3CC69DA628AF017095209CF /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A59363E369752C0EBF6B922 /* GameScene.swift */; };
+		C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD21D61B804614283239218 /* RiftExpeditionApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5EDFEC619151D736AE0C9652 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 458DFF6F63C8A0A64A18CBF7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7F125E9A933BCA4AAC245B6B;
+			remoteInfo = RiftExpedition;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0B17603B09208858E2CBF0AF /* RiftExpedition.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RiftExpedition.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		16878055CA8AAE8E6F1D52DF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		178952F0342DDAB252E026EA /* RiftCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RiftCore; path = Packages/RiftCore; sourceTree = SOURCE_ROOT; };
+		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
+		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A59363E369752C0EBF6B922 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
+		FDD21D61B804614283239218 /* RiftExpeditionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiftExpeditionApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E875758D1151B9D67EA0BB1A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		007FAE374E397CB9050B976B /* RiftExpedition */ = {
+			isa = PBXGroup;
+			children = (
+				96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */,
+				B739B4055280D63B63A7CC7E /* App */,
+				C4BE167B9FC3C9C579982340 /* Game */,
+			);
+			path = RiftExpedition;
+			sourceTree = "<group>";
+		};
+		41FC92A3B820B2D1FF31BEC0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0B17603B09208858E2CBF0AF /* RiftExpedition.app */,
+				3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		9798658D7C0C8A661087A924 /* RiftExpeditionTests */ = {
+			isa = PBXGroup;
+			children = (
+				3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */,
+			);
+			path = RiftExpeditionTests;
+			sourceTree = "<group>";
+		};
+		B739B4055280D63B63A7CC7E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				16878055CA8AAE8E6F1D52DF /* ContentView.swift */,
+				FDD21D61B804614283239218 /* RiftExpeditionApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B7454E688FFA400A079F2AB1 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				178952F0342DDAB252E026EA /* RiftCore */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		B82E909A30D8F496A328F7AA = {
+			isa = PBXGroup;
+			children = (
+				B7454E688FFA400A079F2AB1 /* Packages */,
+				007FAE374E397CB9050B976B /* RiftExpedition */,
+				9798658D7C0C8A661087A924 /* RiftExpeditionTests */,
+				41FC92A3B820B2D1FF31BEC0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C4BE167B9FC3C9C579982340 /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				8A59363E369752C0EBF6B922 /* GameScene.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		376818D0EE0C71553BD29CDD /* RiftExpeditionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8FA46E7CB197A8D69749526A /* Build configuration list for PBXNativeTarget "RiftExpeditionTests" */;
+			buildPhases = (
+				E0699AECC75FC066A48AC07C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9AF7D703059714E59BE9387E /* PBXTargetDependency */,
+			);
+			name = RiftExpeditionTests;
+			packageProductDependencies = (
+			);
+			productName = RiftExpeditionTests;
+			productReference = 3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7F125E9A933BCA4AAC245B6B /* RiftExpedition */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BCDE6C229595C47A1998F6BB /* Build configuration list for PBXNativeTarget "RiftExpedition" */;
+			buildPhases = (
+				35F6D565A5C7F35569A73BB0 /* Sources */,
+				E875758D1151B9D67EA0BB1A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RiftExpedition;
+			packageProductDependencies = (
+				66F68254A710BE031FA3C538 /* RiftCore */,
+			);
+			productName = RiftExpedition;
+			productReference = 0B17603B09208858E2CBF0AF /* RiftExpedition.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		458DFF6F63C8A0A64A18CBF7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					7F125E9A933BCA4AAC245B6B = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = CF6314D2CB787296B9A86C5E /* Build configuration list for PBXProject "RiftExpedition" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = B82E909A30D8F496A328F7AA;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7F125E9A933BCA4AAC245B6B /* RiftExpedition */,
+				376818D0EE0C71553BD29CDD /* RiftExpeditionTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		35F6D565A5C7F35569A73BB0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
+				A3CC69DA628AF017095209CF /* GameScene.swift in Sources */,
+				C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E0699AECC75FC066A48AC07C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9AF7D703059714E59BE9387E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7F125E9A933BCA4AAC245B6B /* RiftExpedition */;
+			targetProxy = 5EDFEC619151D736AE0C9652 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4242278FF2CF7550DCBB9AF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		5D7BA52CD38A00E6CCCD0F91 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RiftExpedition.app/Contents/MacOS/RiftExpedition";
+			};
+			name = Release;
+		};
+		BABD2F7D1B7F560587D01EB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RiftExpedition.app/Contents/MacOS/RiftExpedition";
+			};
+			name = Debug;
+		};
+		BDBD6B2681E601AE97FE0031 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.riftexpedition.game;
+				PRODUCT_NAME = RiftExpedition;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		CB559F48FB37C59ABB751518 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.riftexpedition.game;
+				PRODUCT_NAME = RiftExpedition;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		E23C2CB8574100C3065C56C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8FA46E7CB197A8D69749526A /* Build configuration list for PBXNativeTarget "RiftExpeditionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BABD2F7D1B7F560587D01EB2 /* Debug */,
+				5D7BA52CD38A00E6CCCD0F91 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BCDE6C229595C47A1998F6BB /* Build configuration list for PBXNativeTarget "RiftExpedition" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BDBD6B2681E601AE97FE0031 /* Debug */,
+				CB559F48FB37C59ABB751518 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CF6314D2CB787296B9A86C5E /* Build configuration list for PBXProject "RiftExpedition" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4242278FF2CF7550DCBB9AF0 /* Debug */,
+				E23C2CB8574100C3065C56C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/RiftCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		66F68254A710BE031FA3C538 /* RiftCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RiftCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 458DFF6F63C8A0A64A18CBF7 /* Project object */;
+}
