@@ -107,6 +107,11 @@
     "kind": "quest"
   },
   {
+    "id": "bitterroot_herb",
+    "displayName": "苦根草",
+    "kind": "quest"
+  },
+  {
     "id": "scorched_ring",
     "displayName": "烧黑的银戒",
     "kind": "equipment",

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="12">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="15">
   <properties>
     <property name="areaName" value="苦根河湾"/>
     <property name="assetId" value="tileset.chapter1_wilds"/>
@@ -107,7 +107,22 @@
     </object>
   </objectgroup>
   <objectgroup id="8" name="surface">
+    <object id="12" name="浅水滩" x="256" y="384" width="512" height="160">
+      <properties>
+        <property name="surfaceType" value="water"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="9" name="item">
+    <object id="13" name="苦根草" x="736" y="512">
+      <properties>
+        <property name="itemId" value="bitterroot_herb"/>
+      </properties>
+    </object>
+    <object id="14" name="破旧药包" x="256" y="192">
+      <properties>
+        <property name="itemId" value="minor_healing_draught"/>
+      </properties>
+    </object>
   </objectgroup>
 </map>
