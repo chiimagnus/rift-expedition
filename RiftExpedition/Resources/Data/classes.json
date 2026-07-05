@@ -12,10 +12,11 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["slash"],
+    "initialSkillIDs": ["slash", "shield_bash", "rallying_guard"],
     "defaultEquipment": {
       "weaponID": "rusted_sword",
-      "armorID": "padded_armor"
+      "armorID": "padded_armor",
+      "accessoryID": "training_buckle"
     }
   },
   {
@@ -31,10 +32,11 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["aimed_shot"],
+    "initialSkillIDs": ["aimed_shot", "hamstring_shot", "oil_arrow"],
     "defaultEquipment": {
       "weaponID": "worn_bow",
-      "armorID": "padded_armor"
+      "armorID": "scout_jacket",
+      "accessoryID": "fletching_ring"
     }
   },
   {
@@ -50,10 +52,11 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["spark"],
+    "initialSkillIDs": ["spark", "water_orb", "mending_light"],
     "defaultEquipment": {
       "weaponID": "cracked_staff",
-      "armorID": "padded_armor"
+      "armorID": "apprentice_robe",
+      "accessoryID": "ember_focus"
     }
   },
   {
@@ -69,10 +72,11 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["backstab"],
+    "initialSkillIDs": ["backstab", "throwing_knife", "venom_edge"],
     "defaultEquipment": {
       "weaponID": "chipped_dagger",
-      "armorID": "padded_armor"
+      "armorID": "shadow_cloak",
+      "accessoryID": "lucky_thread"
     }
   }
 ]

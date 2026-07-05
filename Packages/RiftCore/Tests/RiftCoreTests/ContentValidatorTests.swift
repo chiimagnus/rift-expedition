@@ -1,3 +1,4 @@
+import Foundation
 import XCTest
 @testable import RiftCore
 
@@ -43,7 +44,71 @@ final class ContentValidatorTests: XCTestCase {
         }
     }
 
+    func testChapterOneClassesHaveThreeValidInitialSkillsAndEquipment() throws {
+        let catalog = try ContentLoader.load(from: projectDataDirectory())
+
+        try ContentValidator.validate(catalog)
+
+        let expectedClassIDs = Set(["warrior", "archer", "mage", "rogue"])
+        XCTAssertEqual(Set(catalog.classes.map(\.id)), expectedClassIDs)
+
+        let skillsByID = Dictionary(uniqueKeysWithValues: catalog.skills.map { ($0.id, $0) })
+        let itemsByID = Dictionary(uniqueKeysWithValues: catalog.items.map { ($0.id, $0) })
+
+        for classDefinition in catalog.classes {
+            XCTAssertEqual(classDefinition.initialSkillIDs.count, 3, classDefinition.id)
+            XCTAssertEqual(Set(classDefinition.initialSkillIDs).count, 3, classDefinition.id)
+
+            for skillID in classDefinition.initialSkillIDs {
+                let skill = try XCTUnwrap(skillsByID[skillID], skillID)
+                XCTAssertGreaterThan(skill.actionPointCost, 0, skillID)
+                XCTAssertLessThanOrEqual(skill.actionPointCost, 4, skillID)
+                XCTAssertGreaterThanOrEqual(skill.range, 0, skillID)
+                XCTAssertFalse(skill.displayName.isEmpty, skillID)
+            }
+
+            try assertEquipment(classDefinition.defaultEquipment.weaponID, slot: .weapon, itemsByID: itemsByID)
+            try assertEquipment(classDefinition.defaultEquipment.armorID, slot: .armor, itemsByID: itemsByID)
+            try assertEquipment(classDefinition.defaultEquipment.accessoryID, slot: .accessory, itemsByID: itemsByID)
+        }
+    }
+
+    func testStartingBalanceDocumentCoversClassAndAPValues() throws {
+        let balanceURL = projectRoot().appending(path: "Docs/balance-starting-values.md")
+        let text = try String(contentsOf: balanceURL, encoding: .utf8)
+
+        for requiredText in ["战士", "弓箭手", "法师", "刺客", "AP", "调参方向"] {
+            XCTAssertTrue(text.contains(requiredText), requiredText)
+        }
+    }
+
     private func fixtureDirectory(_ name: String) throws -> URL {
         try XCTUnwrap(Bundle.module.resourceURL?.appending(path: "Fixtures/\(name)"))
+    }
+
+    private func projectDataDirectory() -> URL {
+        projectRoot().appending(path: "RiftExpedition/Resources/Data")
+    }
+
+    private func projectRoot() -> URL {
+        URL(filePath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+    }
+
+    private func assertEquipment(
+        _ itemID: String?,
+        slot: EquipmentSlot,
+        itemsByID: [String: ItemDefinition],
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let itemID = try XCTUnwrap(itemID, "missing \(slot) item", file: file, line: line)
+        let item = try XCTUnwrap(itemsByID[itemID], itemID, file: file, line: line)
+        XCTAssertEqual(item.kind, .equipment, file: file, line: line)
+        XCTAssertEqual(item.equipment?.slot, slot, file: file, line: line)
     }
 }
