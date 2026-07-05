@@ -12,6 +12,7 @@ enum BattleActionChoice: Equatable {
 @Observable
 final class BattleViewModel {
     private var engine: BattleEngine
+    private let skillDefinitions: [SkillDefinition]
     private let skillsByID: [String: SkillDefinition]
     var selectedAction: BattleActionChoice = .move
     var statusText = "战斗开始。"
@@ -19,7 +20,12 @@ final class BattleViewModel {
 
     init(state: BattleState, skills: [SkillDefinition]) {
         engine = BattleEngine(state: state)
-        skillsByID = Dictionary(uniqueKeysWithValues: skills.map { ($0.id, $0) })
+        skillDefinitions = skills
+        var indexedSkills: [String: SkillDefinition] = [:]
+        for skill in skills where indexedSkills[skill.id] == nil {
+            indexedSkills[skill.id] = skill
+        }
+        skillsByID = indexedSkills
     }
 
     var state: BattleState {
@@ -125,7 +131,9 @@ final class BattleViewModel {
     func endTurn() {
         do {
             try engine.endTurn()
-            if let activeActor {
+            if let enemyStatus = performEnemyTurnsIfNeeded() {
+                statusText = enemyStatus
+            } else if let activeActor {
                 statusText = "轮到 \(activeActor.displayName)。"
             } else {
                 statusText = "回合结束。"
@@ -133,6 +141,55 @@ final class BattleViewModel {
             targetPrompt = "选择行动。"
         } catch {
             statusText = readableError(error)
+        }
+    }
+
+    private func performEnemyTurnsIfNeeded() -> String? {
+        var lastStatus: String?
+        for _ in 0..<max(state.actors.count, 1) {
+            guard state.outcome == .ongoing,
+                  let actor = activeActor,
+                  actor.faction != .player
+            else {
+                break
+            }
+
+            let action = EnemyAI.chooseAction(
+                for: actor,
+                in: state,
+                context: EnemyAIContext(skills: skillDefinitions)
+            )
+            lastStatus = performEnemyAction(action, actor: actor)
+
+            do {
+                try engine.endTurn()
+            } catch {
+                return readableError(error)
+            }
+        }
+        return lastStatus
+    }
+
+    private func performEnemyAction(_ action: EnemyAIAction, actor: Actor) -> String {
+        do {
+            switch action {
+            case let .moveToward(targetID, distance):
+                try engine.move(actorID: actor.id, distance: distance)
+                return "\(actor.displayName) 逼近 \(actorName(targetID))。"
+            case let .moveAway(targetID, distance):
+                try engine.move(actorID: actor.id, distance: distance)
+                return "\(actor.displayName) 与 \(actorName(targetID)) 拉开距离。"
+            case let .useSkill(skillID, targetID):
+                guard let skill = skillsByID[skillID] else {
+                    return "\(actor.displayName) 没有找到可用技能。"
+                }
+                try engine.useSkill(actorID: actor.id, skill: skill)
+                return "\(actor.displayName) 对 \(actorName(targetID)) 使用\(skill.displayName)。"
+            case .endTurn:
+                return "\(actor.displayName) 结束回合。"
+            }
+        } catch {
+            return readableError(error)
         }
     }
 
@@ -152,6 +209,10 @@ final class BattleViewModel {
         } catch {
             statusText = readableError(error)
         }
+    }
+
+    private func actorName(_ actorID: String) -> String {
+        state.actor(id: actorID)?.displayName ?? actorID
     }
 
     private func canSpend(actionPointCost: Int) -> Bool {

@@ -25,15 +25,15 @@ final class BattleViewModelTests: XCTestCase {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
                 actor(id: "player", faction: .player, actionPoints: 0, skillIDs: []),
-                actor(id: "boar", faction: .animal, actionPoints: 0, skillIDs: [])
+                actor(id: "ally", faction: .player, actionPoints: 0, skillIDs: [])
             ]),
             skills: []
         )
 
         viewModel.endTurn()
 
-        XCTAssertEqual(viewModel.state.activeActorID, "boar")
-        XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.actionPoints, 4)
+        XCTAssertEqual(viewModel.state.activeActorID, "ally")
+        XCTAssertEqual(viewModel.state.actor(id: "ally")?.stats.actionPoints, 4)
     }
 
     func testPlayerActionDoesNotSpendPointsDuringEnemyTurn() {
@@ -51,6 +51,22 @@ final class BattleViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.actionPoints, 4)
         XCTAssertEqual(viewModel.statusText, "当前不是玩家回合。")
+    }
+
+    func testEndTurnRunsEnemyAIAndReturnsToPlayerTurn() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: ["heavy_slash"])
+            ]),
+            skills: [heavySlash]
+        )
+
+        viewModel.endTurn()
+
+        XCTAssertEqual(viewModel.state.activeActorID, "player")
+        XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.actionPoints, 3)
+        XCTAssertEqual(viewModel.statusText, "boar 逼近 player。")
     }
 
     private var heavySlash: SkillDefinition {
