@@ -16,6 +16,7 @@ public struct Actor: Codable, Equatable, Identifiable, Sendable {
     public var classID: String?
     public var skillIDs: [String]
     public var equipment: EquipmentLoadout
+    public var statuses: [StatusEffect]
 
     public init(
         id: String,
@@ -26,7 +27,8 @@ public struct Actor: Codable, Equatable, Identifiable, Sendable {
         stats: Stats,
         classID: String? = nil,
         skillIDs: [String],
-        equipment: EquipmentLoadout = EquipmentLoadout()
+        equipment: EquipmentLoadout = EquipmentLoadout(),
+        statuses: [StatusEffect] = []
     ) {
         self.id = id
         self.displayName = displayName
@@ -37,5 +39,6 @@ public struct Actor: Codable, Equatable, Identifiable, Sendable {
         self.classID = classID
         self.skillIDs = skillIDs
         self.equipment = equipment
+        self.statuses = statuses
     }
 }
