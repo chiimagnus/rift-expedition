@@ -96,6 +96,7 @@ do {
         ? try AssetValidator.validate(resourcesRoot: arguments.resourcesRoot)
         : nil
     let worldResults = try WorldGraphValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
+    let mapReferenceResult = try MapReferenceValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
 
     if let previewDirectory = arguments.previewDirectory {
         for result in results {
@@ -105,6 +106,9 @@ do {
 
     var reportSections = results.map { $0.reportMarkdown() }
     reportSections.append(contentsOf: worldResults.map { $0.reportMarkdown() })
+    if let mapReferenceResult {
+        reportSections.append(mapReferenceResult.reportMarkdown())
+    }
     if let assetResult {
         reportSections.append(assetResult.reportMarkdown())
     }
@@ -118,6 +122,7 @@ do {
 
     let issueCount = results.reduce(0) { $0 + $1.issues.count }
         + worldResults.reduce(0) { $0 + $1.issues.count }
+        + (mapReferenceResult?.issues.count ?? 0)
         + (assetResult?.issues.count ?? 0)
     if issueCount > 0 {
         exit(EXIT_FAILURE)

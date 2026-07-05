@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="13">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="15">
   <properties>
     <property name="areaName" value="断塔野路"/>
     <property name="assetId" value="tileset.chapter1_wilds"/>
@@ -51,6 +51,12 @@
   <objectgroup id="3" name="npc">
   </objectgroup>
   <objectgroup id="4" name="encounter">
+    <object id="13" name="断塔盗匪" x="640" y="288" width="160" height="128">
+      <properties>
+        <property name="encounterId" value="road_bandit_ambush"/>
+        <property name="radius" value="104"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="5" name="trigger">
   </objectgroup>
@@ -115,5 +121,10 @@
   <objectgroup id="8" name="surface">
   </objectgroup>
   <objectgroup id="9" name="item">
+    <object id="14" name="撕裂的婚纱缎带" x="544" y="224">
+      <properties>
+        <property name="itemId" value="torn_bridal_ribbon"/>
+      </properties>
+    </object>
   </objectgroup>
 </map>

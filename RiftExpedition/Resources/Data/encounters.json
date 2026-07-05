@@ -50,5 +50,57 @@
         "statuses": []
       }
     ]
+  },
+  {
+    "id": "road_bandit_ambush",
+    "displayName": "断塔盗匪",
+    "enemies": [
+      {
+        "id": "road_bandit_1",
+        "displayName": "持刀盗匪",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 2,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 22,
+          "health": 22,
+          "attack": 6,
+          "defense": 3,
+          "evasion": 3,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "warrior",
+        "skillIDs": ["slash"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "road_bandit_2",
+        "displayName": "断塔弓手",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 2,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 18,
+          "health": 18,
+          "attack": 6,
+          "defense": 2,
+          "evasion": 5,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "archer",
+        "skillIDs": ["poacher_shot"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
   }
 ]

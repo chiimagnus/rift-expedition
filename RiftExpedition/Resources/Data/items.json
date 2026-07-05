@@ -102,6 +102,11 @@
     }
   },
   {
+    "id": "torn_bridal_ribbon",
+    "displayName": "撕裂的婚纱缎带",
+    "kind": "quest"
+  },
+  {
     "id": "minor_healing_draught",
     "displayName": "止血药剂",
     "kind": "consumable",

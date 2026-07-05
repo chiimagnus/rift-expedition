@@ -52,6 +52,41 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(result.reportMarkdown().contains("World area is disconnected from start: c"))
     }
 
+    func testMapReferenceValidationCatchesMissingItem() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        let dataRoot = root.appending(path: "Data")
+        try FileManager.default.createDirectory(at: dataRoot, withIntermediateDirectories: true)
+        try "[]".write(to: dataRoot.appending(path: "encounters.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "items.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "dialogs.json"), atomically: true, encoding: .utf8)
+        let map = TiledMap(
+            areaID: "test",
+            width: 320,
+            height: 320,
+            objectGroups: [
+                "item": [
+                    TiledObject(
+                        tiledID: 1,
+                        name: nil,
+                        type: nil,
+                        x: 32,
+                        y: 32,
+                        width: 0,
+                        height: 0,
+                        properties: ["itemId": "missing_item"]
+                    )
+                ]
+            ]
+        )
+
+        let result = try XCTUnwrap(try MapReferenceValidator.validateIfPresent(resourcesRoot: root, maps: [map]))
+
+        XCTAssertFalse(result.isValid)
+        XCTAssertTrue(result.reportMarkdown().contains("references missing item: missing_item"))
+    }
+
     private func fixture(_ name: String) throws -> URL {
         try XCTUnwrap(Bundle.module.url(forResource: name, withExtension: "tmx", subdirectory: "Fixtures"))
     }
