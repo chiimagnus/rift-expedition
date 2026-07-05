@@ -61,6 +61,9 @@ final class GameSessionViewModelTests: XCTestCase {
         session.explorationController.configureParty(session.party, at: CGPoint(x: 40, y: 512))
         session.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(session.currentAreaID, "village_riverside")
+        if session.appState == .dialogue {
+            session.closePanel()
+        }
 
         session.explorationController.configureParty(session.party, at: CGPoint(x: 736, y: 320))
         session.gameScene(scene, didClickWorld: CGPoint(x: 736, y: 320))

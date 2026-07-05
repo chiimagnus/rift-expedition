@@ -29,6 +29,7 @@ final class GameSessionViewModel {
     private let questDefinitions: [QuestDefinition]
     private var currentMapMetadata: TiledMapMetadata?
     private var collectedMapItemKeys: Set<String> = []
+    private var firedMapTriggerKeys: Set<String> = []
     private let saveGameStore: SaveGameStore
     private let contentBundle: Bundle
     let partyCreationViewModel: PartyCreationViewModel
@@ -169,6 +170,17 @@ final class GameSessionViewModel {
 
         let rewardNames = (quest.rewardItemIDs.map(itemName) + quest.rewardSkillIDs.map(skillName)).joined(separator: "、")
         statusText = rewardNames.isEmpty ? "任务已完成。" : "任务完成，获得：\(rewardNames)。"
+        if questID == "blood_debt" {
+            completeChapter()
+        }
+    }
+
+    func completeChapter() {
+        performSafeAutosave()
+        audioService.play(.click)
+        battleViewModel = nil
+        appState = .chapterComplete
+        statusText = "第一章完成：村长的谎言已经被揭穿。"
     }
 
     func finishBattle() {
@@ -420,6 +432,18 @@ final class GameSessionViewModel {
         return true
     }
 
+    private func interactWithTrigger(at point: CGPoint) -> Bool {
+        guard let trigger = nearestTrigger(to: point) else { return false }
+
+        if isLeaderNear(trigger.frame.center, radius: 96) {
+            perform(trigger)
+        } else {
+            explorationController.setLeaderDestination(trigger.frame.center)
+            statusText = "队长正靠近 \(trigger.triggerID)。"
+        }
+        return true
+    }
+
     private func nearestNPC(to point: CGPoint) -> MapNPC? {
         currentMapMetadata?.npcs
             .filter { distance(from: $0.position, to: point) <= 38 }
@@ -430,6 +454,12 @@ final class GameSessionViewModel {
         currentMapMetadata?.items
             .filter { distance(from: $0.position, to: point) <= 38 }
             .min { distance(from: $0.position, to: point) < distance(from: $1.position, to: point) }
+    }
+
+    private func nearestTrigger(to point: CGPoint) -> MapTrigger? {
+        currentMapMetadata?.triggers.first { trigger in
+            trigger.contains(point) || distance(from: trigger.frame.center, to: point) <= 38
+        }
     }
 
     private func dialogID(for npc: MapNPC) -> String {
@@ -458,6 +488,30 @@ final class GameSessionViewModel {
         "\(currentAreaID):\(item.tiledID)"
     }
 
+    private func mapTriggerKey(_ trigger: MapTrigger) -> String {
+        "\(currentAreaID):\(trigger.tiledID)"
+    }
+
+    private func perform(_ trigger: MapTrigger) {
+        let key = mapTriggerKey(trigger)
+        guard !firedMapTriggerKeys.contains(key) else { return }
+
+        firedMapTriggerKeys.insert(key)
+        if let dialogID = dialogID(fromTriggerAction: trigger.action) {
+            openDialog(dialogID)
+        } else if trigger.action == "chapterComplete" {
+            completeChapter()
+        } else {
+            statusText = "未知地图触发：\(trigger.triggerID)。"
+        }
+    }
+
+    private func dialogID(fromTriggerAction action: String) -> String? {
+        let prefix = "dialogue:"
+        guard action.hasPrefix(prefix) else { return nil }
+        return String(action.dropFirst(prefix.count))
+    }
+
     private func distance(from start: CGPoint, to end: CGPoint) -> CGFloat {
         hypot(start.x - end.x, start.y - end.y)
     }
@@ -471,7 +525,7 @@ extension GameSessionViewModel: GameSceneEventHandling {
     func gameScene(_ scene: GameScene, didClickWorld point: CGPoint) {
         lastWorldClick = point
         if appState == .exploration {
-            if interactWithNPC(at: point) || collectItem(at: point) {
+            if interactWithNPC(at: point) || collectItem(at: point) || interactWithTrigger(at: point) {
                 return
             }
             explorationController.setLeaderDestination(point)
@@ -498,10 +552,11 @@ extension GameSessionViewModel: GameSceneEventHandling {
     func gameScene(_ scene: GameScene, didAdvance deltaTime: TimeInterval) {
         guard appState == .exploration else { return }
 
-        explorationController.advance(deltaTime: deltaTime)
-        checkExitTransition()
-        checkEncounterTrigger()
-    }
+            explorationController.advance(deltaTime: deltaTime)
+            checkExitTransition()
+            checkEncounterTrigger()
+            checkMapTrigger()
+        }
 
     private func checkExitTransition() {
         guard appState == .exploration,
@@ -524,5 +579,22 @@ extension GameSessionViewModel: GameSceneEventHandling {
         }
 
         startBattle(triggeredEncounter.definition, trigger: triggeredEncounter.trigger)
+    }
+
+    private func checkMapTrigger() {
+        guard appState == .exploration,
+              let leaderPosition,
+              let trigger = currentMapMetadata?.triggers.first(where: { $0.contains(leaderPosition) })
+        else {
+            return
+        }
+
+        perform(trigger)
+    }
+}
+
+private extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: midX, y: midY)
     }
 }

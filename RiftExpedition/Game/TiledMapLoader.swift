@@ -15,6 +15,7 @@ struct TiledMapMetadata: Equatable {
     var npcs: [MapNPC]
     var navObstacles: [NavigationObstacle]
     var encounterTriggers: [MapEncounterTrigger]
+    var triggers: [MapTrigger]
     var exits: [MapExit]
     var surfaces: [MapSurface]
     var items: [MapItem]
@@ -52,6 +53,17 @@ struct MapEncounterTrigger: Equatable {
 
     func contains(_ point: CGPoint) -> Bool {
         frame.contains(point) || hypot(point.x - center.x, point.y - center.y) <= radius
+    }
+}
+
+struct MapTrigger: Equatable {
+    var tiledID: Int
+    var triggerID: String
+    var action: String
+    var frame: CGRect
+
+    func contains(_ point: CGPoint) -> Bool {
+        frame.contains(point)
     }
 }
 
@@ -136,6 +148,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
     private var npcs: [MapNPC] = []
     private var navObstacles: [NavigationObstacle] = []
     private var encounterTriggers: [MapEncounterTrigger] = []
+    private var triggers: [MapTrigger] = []
     private var exits: [MapExit] = []
     private var surfaces: [MapSurface] = []
     private var items: [MapItem] = []
@@ -148,6 +161,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
             npcs: npcs,
             navObstacles: navObstacles,
             encounterTriggers: encounterTriggers,
+            triggers: triggers,
             exits: exits,
             surfaces: surfaces,
             items: items
@@ -229,6 +243,16 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
                     encounterID: encounterID,
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
                     radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
+                ))
+            }
+            if currentGroup == "trigger", let object = currentObject,
+               let triggerID = object.properties["triggerId"],
+               let action = object.properties["action"] {
+                triggers.append(MapTrigger(
+                    tiledID: object.tiledID,
+                    triggerID: triggerID,
+                    action: action,
+                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
                 ))
             }
             if currentGroup == "exit", let object = currentObject,

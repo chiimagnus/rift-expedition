@@ -57,7 +57,10 @@ struct GameRootView: View {
                     onClose: viewModel.closePanel
                 )
             case .chapterComplete:
-                simpleStatePanel
+                ChapterCompleteView(
+                    onReturnToMenu: viewModel.returnToMainMenu,
+                    onOpenSaveLoad: viewModel.openSaveLoad
+                )
             }
 
             if viewModel.isDebugOverlayVisible {
