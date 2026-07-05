@@ -1,0 +1,31 @@
+enum AppState: Equatable {
+    case mainMenu
+    case partyCreation
+    case exploration
+    case dialogue
+    case battle
+    case inventory
+    case saveLoad
+    case chapterComplete
+
+    var title: String {
+        switch self {
+        case .mainMenu:
+            "主菜单"
+        case .partyCreation:
+            "创建队伍"
+        case .exploration:
+            "探索"
+        case .dialogue:
+            "对话"
+        case .battle:
+            "战斗"
+        case .inventory:
+            "背包"
+        case .saveLoad:
+            "存档"
+        case .chapterComplete:
+            "章节完成"
+        }
+    }
+}

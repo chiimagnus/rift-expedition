@@ -3,17 +3,21 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
 		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
+		4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E20289D96B7086117044C4B /* AppState.swift */; };
 		578732DC3C52AB58C25A427E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16878055CA8AAE8E6F1D52DF /* ContentView.swift */; };
+		75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E228968FC56BB933A3CABE /* GameLog.swift */; };
 		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
+		7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */; };
 		A3CC69DA628AF017095209CF /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A59363E369752C0EBF6B922 /* GameScene.swift */; };
 		C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD21D61B804614283239218 /* RiftExpeditionApp.swift */; };
 		D8515217F7C286DD42149DC7 /* SKTiled in Frameworks */ = {isa = PBXBuildFile; productRef = 144D526509E751239A80D9D5 /* SKTiled */; };
+		EA26E71CCD073F770F867A1E /* GameRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D9C87993ED01E0C345D4D1 /* GameRootView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,11 +34,15 @@
 		0B17603B09208858E2CBF0AF /* RiftExpedition.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RiftExpedition.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		16878055CA8AAE8E6F1D52DF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		178952F0342DDAB252E026EA /* RiftCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RiftCore; path = Packages/RiftCore; sourceTree = SOURCE_ROOT; };
+		26E228968FC56BB933A3CABE /* GameLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLog.swift; sourceTree = "<group>"; };
+		2E20289D96B7086117044C4B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		62D9C87993ED01E0C345D4D1 /* GameRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRootView.swift; sourceTree = "<group>"; };
 		8A59363E369752C0EBF6B922 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
 		BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSmoke.swift; sourceTree = "<group>"; };
+		D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionViewModel.swift; sourceTree = "<group>"; };
 		FDD21D61B804614283239218 /* RiftExpeditionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiftExpeditionApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -57,6 +65,8 @@
 				96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */,
 				B739B4055280D63B63A7CC7E /* App */,
 				C4BE167B9FC3C9C579982340 /* Game */,
+				5D2FF07076F465E2FBB25BE9 /* Support */,
+				95C2CCA170465F36D5AFF4BE /* ViewModels */,
 			);
 			path = RiftExpedition;
 			sourceTree = "<group>";
@@ -70,6 +80,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		5D2FF07076F465E2FBB25BE9 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				26E228968FC56BB933A3CABE /* GameLog.swift */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		95C2CCA170465F36D5AFF4BE /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
 		9798658D7C0C8A661087A924 /* RiftExpeditionTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -81,7 +107,9 @@
 		B739B4055280D63B63A7CC7E /* App */ = {
 			isa = PBXGroup;
 			children = (
+				2E20289D96B7086117044C4B /* AppState.swift */,
 				16878055CA8AAE8E6F1D52DF /* ContentView.swift */,
+				62D9C87993ED01E0C345D4D1 /* GameRootView.swift */,
 				FDD21D61B804614283239218 /* RiftExpeditionApp.swift */,
 			);
 			path = App;
@@ -170,7 +198,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					7F125E9A933BCA4AAC245B6B = {
 						ProvisioningStyle = Automatic;
@@ -191,6 +219,7 @@
 				C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */,
 				47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -205,8 +234,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */,
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
+				75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */,
+				EA26E71CCD073F770F867A1E /* GameRootView.swift in Sources */,
 				A3CC69DA628AF017095209CF /* GameScene.swift in Sources */,
+				7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */,
 				C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */,
 				7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */,
 			);
@@ -235,7 +268,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -266,11 +298,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -291,7 +321,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
@@ -304,7 +333,6 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -322,7 +350,6 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -342,8 +369,6 @@
 				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = RDQHYSDFFG;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -365,8 +390,6 @@
 				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = RDQHYSDFFG;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -385,7 +408,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -416,11 +438,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -434,7 +454,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = complete;
