@@ -12,6 +12,7 @@ struct TiledMapMetadata: Equatable {
     var areaID: String
     var size: CGSize
     var navObstacles: [NavigationObstacle]
+    var encounterTriggers: [MapEncounterTrigger]
 }
 
 struct NavigationObstacle: Equatable {
@@ -19,6 +20,21 @@ struct NavigationObstacle: Equatable {
     var frame: CGRect
     var blocksMovement: Bool
     var blocksSight: Bool
+}
+
+struct MapEncounterTrigger: Equatable {
+    var tiledID: Int
+    var encounterID: String
+    var frame: CGRect
+    var radius: CGFloat
+
+    var center: CGPoint {
+        CGPoint(x: frame.midX, y: frame.midY)
+    }
+
+    func contains(_ point: CGPoint) -> Bool {
+        frame.contains(point) || hypot(point.x - center.x, point.y - center.y) <= radius
+    }
 }
 
 enum TiledMapLoader {
@@ -73,12 +89,14 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
     private var currentGroup: String?
     private var currentObject: ParsedObject?
     private var navObstacles: [NavigationObstacle] = []
+    private var encounterTriggers: [MapEncounterTrigger] = []
 
     var metadata: TiledMapMetadata {
         TiledMapMetadata(
             areaID: areaID,
             size: CGSize(width: mapWidth * tileWidth, height: mapHeight * tileHeight),
-            navObstacles: navObstacles
+            navObstacles: navObstacles,
+            encounterTriggers: encounterTriggers
         )
     }
 
@@ -132,6 +150,14 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
                     blocksMovement: object.properties["blocksMovement"] == "true",
                     blocksSight: object.properties["blocksSight"] == "true"
+                ))
+            }
+            if currentGroup == "encounter", let object = currentObject, let encounterID = object.properties["encounterId"] {
+                encounterTriggers.append(MapEncounterTrigger(
+                    tiledID: object.tiledID,
+                    encounterID: encounterID,
+                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
+                    radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
                 ))
             }
             currentObject = nil

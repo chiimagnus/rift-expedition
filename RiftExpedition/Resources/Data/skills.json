@@ -34,5 +34,14 @@
     "target": "enemy",
     "affectsAllies": false,
     "canBeDodged": true
+  },
+  {
+    "id": "boar_bite",
+    "displayName": "撕咬",
+    "actionPointCost": 2,
+    "range": 1.1,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true
   }
 ]

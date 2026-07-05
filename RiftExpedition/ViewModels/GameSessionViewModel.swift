@@ -11,11 +11,17 @@ final class GameSessionViewModel {
     var lastWorldClick: CGPoint?
     var party: [Actor] = []
     var explorationController = ExplorationController()
+    var battleState: BattleState?
+    private var encounterTriggerService: EncounterTriggerService?
+    private let encounterDefinitions: [EncounterDefinition]
+    private let initialMapMetadata: TiledMapMetadata?
     let partyCreationViewModel: PartyCreationViewModel
     let dialogViewModel: DialogViewModel
 
     init(contentBundle: Bundle = .main) {
         let catalog = Self.loadCatalog(from: contentBundle)
+        encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
+        initialMapMetadata = try? TiledMapLoader.loadMetadata(areaID: "vertical_slice", bundle: contentBundle)
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
         dialogViewModel = DialogViewModel(
             scripts: DialogViewModel.loadScripts(from: contentBundle),
@@ -42,6 +48,12 @@ final class GameSessionViewModel {
 
         party = createdParty
         explorationController.configureParty(createdParty, at: CGPoint(x: 96, y: 96))
+        if let metadata = initialMapMetadata {
+            encounterTriggerService = EncounterTriggerService(
+                triggers: metadata.encounterTriggers,
+                encounters: encounterDefinitions
+            )
+        }
         enterExploration()
     }
 
@@ -67,14 +79,23 @@ final class GameSessionViewModel {
     }
 
     func beginBattleFromDialog(encounterID: String) {
-        appState = .battle
-        statusText = "遭遇已触发。"
+        guard let encounter = encounterDefinitions.first(where: { $0.id == encounterID }) else {
+            statusText = "没有找到遭遇。"
+            return
+        }
+        startBattle(encounter)
     }
 
     func returnToMainMenu() {
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
+    }
+
+    private func startBattle(_ encounter: EncounterDefinition) {
+        battleState = BattleState(actors: party + encounter.enemies)
+        appState = .battle
+        statusText = "遭遇已触发。"
     }
 
     private static func loadCatalog(from bundle: Bundle) -> ContentCatalog? {
@@ -99,6 +120,7 @@ extension GameSessionViewModel: GameSceneEventHandling {
         if appState == .exploration {
             explorationController.setLeaderDestination(point)
             statusText = "队长移动到：\(Int(point.x)), \(Int(point.y))"
+            checkEncounterTrigger()
         } else {
             statusText = "目标位置：\(Int(point.x)), \(Int(point.y))"
         }
@@ -115,5 +137,17 @@ extension GameSessionViewModel: GameSceneEventHandling {
         guard appState == .exploration else { return }
 
         explorationController.advance(deltaTime: deltaTime)
+        checkEncounterTrigger()
+    }
+
+    private func checkEncounterTrigger() {
+        guard appState == .exploration,
+              let leaderPosition = explorationController.members.first(where: { $0.actorID == explorationController.leaderID })?.position,
+              let encounter = encounterTriggerService?.encounter(at: leaderPosition)
+        else {
+            return
+        }
+
+        startBattle(encounter)
     }
 }

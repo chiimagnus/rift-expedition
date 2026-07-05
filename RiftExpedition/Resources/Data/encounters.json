@@ -1,0 +1,31 @@
+[
+  {
+    "id": "boar_intro",
+    "displayName": "受惊野猪",
+    "enemies": [
+      {
+        "id": "boar_intro_1",
+        "displayName": "受惊野猪",
+        "kind": "animal",
+        "faction": "animal",
+        "level": 1,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 18,
+          "health": 18,
+          "attack": 5,
+          "defense": 2,
+          "evasion": 2,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
+  }
+]
