@@ -1,3 +1,4 @@
+import CoreGraphics
 import RiftCore
 import XCTest
 @testable import RiftExpedition
@@ -19,6 +20,69 @@ final class BattleViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 1)
         XCTAssertEqual(viewModel.statusText, "AP 不足：需要 3，当前 1。")
+    }
+
+    func testSelectingSkillDoesNotSpendUntilTargetIsClicked() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
+                actor(id: "boar", faction: .animal, health: 12, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 4)
+        XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.health, 12)
+
+        viewModel.performSelectedAction(targetID: "boar")
+
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 1)
+        XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.health, 7)
+    }
+
+    func testMoveToClickedPointSpendsAPAndUpdatesPosition() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 220, y: 100)
+            ]
+        )
+
+        viewModel.performMove(to: CGPoint(x: 156, y: 100))
+
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 3)
+        XCTAssertEqual(viewModel.actorPositions["player"], CGPoint(x: 156, y: 100))
+    }
+
+    func testOutOfRangeTargetDoesNotSpendAP() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 600, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+        viewModel.performSelectedAction(targetID: "boar")
+
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 4)
+        XCTAssertTrue(viewModel.statusText.hasPrefix("距离太远"))
     }
 
     func testEndTurnAdvancesActiveActorAndRefreshesActionPoints() {
@@ -59,7 +123,11 @@ final class BattleViewModelTests: XCTestCase {
                 actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
                 actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: ["heavy_slash"])
             ]),
-            skills: [heavySlash]
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 500, y: 100)
+            ]
         )
 
         viewModel.endTurn()
@@ -82,7 +150,13 @@ final class BattleViewModelTests: XCTestCase {
         )
     }
 
-    private func actor(id: String, faction: Faction, actionPoints: Int, skillIDs: [String]) -> Actor {
+    private func actor(
+        id: String,
+        faction: Faction,
+        health: Int = 12,
+        actionPoints: Int,
+        skillIDs: [String]
+    ) -> Actor {
         Actor(
             id: id,
             displayName: id,
@@ -91,7 +165,7 @@ final class BattleViewModelTests: XCTestCase {
             level: 1,
             stats: Stats(
                 maxHealth: 12,
-                health: 12,
+                health: health,
                 attack: 4,
                 defense: 1,
                 evasion: 0,

@@ -3,25 +3,27 @@ import SwiftUI
 
 struct BattleHUDView: View {
     let viewModel: BattleViewModel
+    let onFinishBattle: () -> Void
     let onReturnToMenu: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             header
 
-            HStack(alignment: .top, spacing: 18) {
-                actorList
-                actionPanel
-            }
+            actionPanel
+            actorList
 
             Text(viewModel.statusText)
                 .font(.callout.bold())
                 .foregroundStyle(Color(red: 0.84, green: 0.73, blue: 0.42))
         }
-        .frame(maxWidth: 980, alignment: .leading)
-        .padding(28)
-        .background(.black.opacity(0.42), in: RoundedRectangle(cornerRadius: 22))
-        .padding(32)
+        .frame(width: 420, alignment: .leading)
+        .padding(20)
+        .background(.black.opacity(0.68), in: RoundedRectangle(cornerRadius: 22))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+        )
     }
 
     private var header: some View {
@@ -36,10 +38,11 @@ struct BattleHUDView: View {
                     .foregroundStyle(.white.opacity(0.72))
             }
 
-            Spacer()
-
-            Button("返回主菜单", action: onReturnToMenu)
-                .buttonStyle(.bordered)
+            if viewModel.state.outcome == .victory {
+                Spacer()
+                Button("返回探索", action: onFinishBattle)
+                    .buttonStyle(.borderedProminent)
+            }
         }
     }
 
@@ -53,7 +56,7 @@ struct BattleHUDView: View {
                 actorRow(actor)
             }
         }
-        .frame(maxWidth: 360, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var actionPanel: some View {
@@ -76,14 +79,18 @@ struct BattleHUDView: View {
                 .font(.callout)
                 .foregroundStyle(.white.opacity(0.66))
 
+            Text("当前意图：\(viewModel.selectedActionText)")
+                .font(.caption.bold())
+                .foregroundStyle(Color(red: 0.84, green: 0.73, blue: 0.42))
+
             HStack {
-                Button("移动 1 AP") {
-                    viewModel.performMove()
+                Button("移动") {
+                    viewModel.selectMove()
                 }
                 .disabled(!viewModel.canMove())
 
                 Button("普攻") {
-                    viewModel.performBasicAttack()
+                    viewModel.selectBasicAttack()
                 }
                 .disabled(!viewModel.canPerformBasicAttack)
 
@@ -107,11 +114,16 @@ struct BattleHUDView: View {
             }
             .buttonStyle(.bordered)
 
-            Button("结束回合") {
-                viewModel.endTurn()
+            HStack {
+                Button("结束回合") {
+                    viewModel.endTurn()
+                }
+                .disabled(!viewModel.canEndTurn)
+                .keyboardShortcut(.defaultAction)
+
+                Button("返回主菜单", action: onReturnToMenu)
+                    .buttonStyle(.bordered)
             }
-            .disabled(!viewModel.canEndTurn)
-            .keyboardShortcut(.defaultAction)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)

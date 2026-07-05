@@ -1,3 +1,5 @@
+import AppKit
+import RiftCore
 import SpriteKit
 
 @MainActor
@@ -18,6 +20,9 @@ final class GameScene: SKScene {
     private var tilemap: SKNode?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKShapeNode] = [:]
+    private var staticObjectLayer: SKNode?
+    private var battleLayer: SKNode?
+    private var textureCache: [String: SKTexture] = [:]
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -85,6 +90,32 @@ final class GameScene: SKScene {
         }
     }
 
+    func renderBattle(_ snapshot: BattleSceneSnapshot?) {
+        battleLayer?.removeFromParent()
+        battleLayer = nil
+        guard let snapshot else { return }
+
+        let layer = SKNode()
+        layer.name = "battleLayer"
+        layer.zPosition = 30
+        addChild(layer)
+        battleLayer = layer
+
+        // ponytail: P2 battles contain only a few actors, so rebuilding the overlay is clearer than keyed diffing.
+        for surface in snapshot.surfaces {
+            layer.addChild(makeSurfaceNode(surface))
+        }
+        if let activeActor = snapshot.actors.first(where: { $0.id == snapshot.activeActorID }) {
+            layer.addChild(makeMoveRangeNode(center: activeActor.position, radius: snapshot.moveRadius))
+        }
+        for actor in snapshot.actors {
+            layer.addChild(makeBattleActorNode(actor))
+        }
+        if let point = snapshot.lastEffectPoint {
+            layer.addChild(makeEffectNode(at: point))
+        }
+    }
+
     private func drawGround() {
         guard childNode(withName: "ground") == nil else { return }
 
@@ -128,8 +159,190 @@ final class GameScene: SKScene {
             loadedMap.zPosition = 1
             addChild(loadedMap)
             tilemap = loadedMap
+            renderStaticObjects()
         } catch {
             GameLog.map.error("vertical_slice.tmx 加载失败")
+        }
+    }
+
+    private func renderStaticObjects() {
+        staticObjectLayer?.removeFromParent()
+        let layer = SKNode()
+        layer.name = "staticObjectLayer"
+        layer.zPosition = 12
+        addChild(layer)
+        staticObjectLayer = layer
+
+        guard let metadata = try? TiledMapLoader.loadMetadata(areaID: "vertical_slice") else { return }
+        for surface in metadata.surfaces {
+            guard let type = SurfaceTypeColor(rawValue: surface.surfaceType) else { continue }
+            layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))
+        }
+        for obstacle in metadata.navObstacles where obstacle.blocksMovement {
+            layer.addChild(makeObstacleNode(frame: obstacle.frame))
+        }
+        for npc in metadata.npcs {
+            layer.addChild(makeMapSprite(name: "npc_elder", position: npc.position, size: CGSize(width: 52, height: 52)))
+        }
+        for item in metadata.items {
+            layer.addChild(makeMapSprite(name: item.itemID == "rusted_sword" ? "prop_chest" : "prop_chest", position: item.position, size: CGSize(width: 48, height: 48)))
+        }
+    }
+
+    private func makeBattleActorNode(_ actor: BattleActorMarker) -> SKNode {
+        let container = SKNode()
+        container.name = "battleActor_\(actor.id)"
+        container.position = actor.position
+        container.alpha = actor.isDefeated ? 0.42 : 1
+
+        let ring = SKShapeNode(circleOfRadius: actor.isActive ? 34 : 30)
+        ring.fillColor = actor.isActive
+            ? SKColor(red: 0.84, green: 0.73, blue: 0.42, alpha: 0.20)
+            : SKColor.black.withAlphaComponent(0.28)
+        ring.strokeColor = actor.isTargetable
+            ? SKColor(red: 0.92, green: 0.24, blue: 0.18, alpha: 1)
+            : actor.isActive ? SKColor(red: 0.84, green: 0.73, blue: 0.42, alpha: 1) : .white.withAlphaComponent(0.35)
+        ring.lineWidth = actor.isTargetable || actor.isActive ? 4 : 2
+        ring.zPosition = -1
+        container.addChild(ring)
+
+        let sprite = SKSpriteNode(texture: texture(named: actor.spriteName))
+        sprite.size = CGSize(width: 58, height: 58)
+        sprite.zPosition = 1
+        container.addChild(sprite)
+
+        let healthBack = SKShapeNode(rectOf: CGSize(width: 52, height: 6), cornerRadius: 3)
+        healthBack.position = CGPoint(x: 0, y: -40)
+        healthBack.fillColor = SKColor.black.withAlphaComponent(0.65)
+        healthBack.strokeColor = .clear
+        container.addChild(healthBack)
+
+        let healthRatio = CGFloat(max(0, actor.health)) / CGFloat(max(actor.maxHealth, 1))
+        let health = SKShapeNode(rect: CGRect(x: -26, y: -43, width: 52 * healthRatio, height: 6), cornerRadius: 3)
+        health.fillColor = SKColor(red: 0.76, green: 0.18, blue: 0.16, alpha: 1)
+        health.strokeColor = .clear
+        container.addChild(health)
+
+        let label = SKLabelNode(text: actor.displayName)
+        label.fontName = "PingFangSC-Semibold"
+        label.fontSize = 12
+        label.fontColor = .white
+        label.position = CGPoint(x: 0, y: 42)
+        label.verticalAlignmentMode = .center
+        container.addChild(label)
+        return container
+    }
+
+    private func makeMoveRangeNode(center: CGPoint, radius: CGFloat) -> SKNode {
+        let node = SKShapeNode(circleOfRadius: max(0, radius))
+        node.name = "moveRange"
+        node.position = center
+        node.fillColor = SKColor(red: 0.25, green: 0.72, blue: 0.52, alpha: 0.08)
+        node.strokeColor = SKColor(red: 0.42, green: 0.95, blue: 0.64, alpha: 0.42)
+        node.lineWidth = 2
+        node.zPosition = -4
+        return node
+    }
+
+    private func makeEffectNode(at point: CGPoint) -> SKNode {
+        let node = SKShapeNode(circleOfRadius: 18)
+        node.name = "battleEffect"
+        node.position = point
+        node.fillColor = SKColor(red: 1.0, green: 0.46, blue: 0.14, alpha: 0.42)
+        node.strokeColor = SKColor(red: 1.0, green: 0.86, blue: 0.38, alpha: 0.9)
+        node.lineWidth = 3
+        node.run(.sequence([
+            .group([
+                .scale(to: 2.0, duration: 0.18),
+                .fadeOut(withDuration: 0.18)
+            ]),
+            .removeFromParent()
+        ]))
+        return node
+    }
+
+    private func makeSurfaceNode(_ surface: BattleSurfaceMarker) -> SKNode {
+        makeStaticSurfaceNode(frame: surface.frame, color: SurfaceTypeColor(surface.surfaceType).color)
+    }
+
+    private func makeStaticSurfaceNode(frame: CGRect, color: SKColor) -> SKNode {
+        let node = SKShapeNode(rect: frame, cornerRadius: 8)
+        node.fillColor = color.withAlphaComponent(0.42)
+        node.strokeColor = color.withAlphaComponent(0.82)
+        node.lineWidth = 2
+        node.zPosition = -5
+        return node
+    }
+
+    private func makeObstacleNode(frame: CGRect) -> SKNode {
+        guard frame.width <= 128, frame.height <= 128 else {
+            let node = SKShapeNode(rect: frame, cornerRadius: 4)
+            node.fillColor = SKColor(red: 0.18, green: 0.16, blue: 0.12, alpha: 0.34)
+            node.strokeColor = SKColor(red: 0.44, green: 0.32, blue: 0.19, alpha: 0.62)
+            node.lineWidth = 2
+            return node
+        }
+
+        let sprite = SKSpriteNode(texture: texture(named: "prop_woodpile"))
+        sprite.size = CGSize(width: max(frame.width, 42), height: max(frame.height, 42))
+        sprite.position = CGPoint(x: frame.midX, y: frame.midY)
+        return sprite
+    }
+
+    private func makeMapSprite(name: String, position: CGPoint, size: CGSize) -> SKNode {
+        let sprite = SKSpriteNode(texture: texture(named: name))
+        sprite.name = name
+        sprite.position = position
+        sprite.size = size
+        return sprite
+    }
+
+    private func texture(named name: String) -> SKTexture? {
+        if let texture = textureCache[name] {
+            return texture
+        }
+        guard let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Sprites"),
+              let image = NSImage(contentsOf: url)
+        else {
+            return nil
+        }
+
+        let texture = SKTexture(image: image)
+        texture.filteringMode = .nearest
+        textureCache[name] = texture
+        return texture
+    }
+}
+
+private enum SurfaceTypeColor: String {
+    case water
+    case oil
+    case poison
+    case fire
+
+    init(_ surfaceType: SurfaceType) {
+        switch surfaceType {
+        case .water:
+            self = .water
+        case .oil:
+            self = .oil
+        case .poison:
+            self = .poison
+        case .fire:
+            self = .fire
+        }
+    }
+
+    var color: SKColor {
+        switch self {
+        case .water:
+            SKColor(red: 0.20, green: 0.58, blue: 0.72, alpha: 1)
+        case .oil:
+            SKColor(red: 0.11, green: 0.10, blue: 0.08, alpha: 1)
+        case .poison:
+            SKColor(red: 0.42, green: 0.78, blue: 0.22, alpha: 1)
+        case .fire:
+            SKColor(red: 0.95, green: 0.28, blue: 0.08, alpha: 1)
         }
     }
 }

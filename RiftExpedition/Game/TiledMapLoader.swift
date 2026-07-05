@@ -11,8 +11,18 @@ enum TiledMapLoaderError: Error, Equatable {
 struct TiledMapMetadata: Equatable {
     var areaID: String
     var size: CGSize
+    var npcs: [MapNPC]
     var navObstacles: [NavigationObstacle]
     var encounterTriggers: [MapEncounterTrigger]
+    var surfaces: [MapSurface]
+    var items: [MapItem]
+}
+
+struct MapNPC: Equatable {
+    var tiledID: Int
+    var actorID: String
+    var dialogID: String
+    var position: CGPoint
 }
 
 struct NavigationObstacle: Equatable {
@@ -35,6 +45,18 @@ struct MapEncounterTrigger: Equatable {
     func contains(_ point: CGPoint) -> Bool {
         frame.contains(point) || hypot(point.x - center.x, point.y - center.y) <= radius
     }
+}
+
+struct MapSurface: Equatable {
+    var tiledID: Int
+    var surfaceType: String
+    var frame: CGRect
+}
+
+struct MapItem: Equatable {
+    var tiledID: Int
+    var itemID: String
+    var position: CGPoint
 }
 
 enum TiledMapLoader {
@@ -88,15 +110,21 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
     private var tileHeight = 1.0
     private var currentGroup: String?
     private var currentObject: ParsedObject?
+    private var npcs: [MapNPC] = []
     private var navObstacles: [NavigationObstacle] = []
     private var encounterTriggers: [MapEncounterTrigger] = []
+    private var surfaces: [MapSurface] = []
+    private var items: [MapItem] = []
 
     var metadata: TiledMapMetadata {
         TiledMapMetadata(
             areaID: areaID,
             size: CGSize(width: mapWidth * tileWidth, height: mapHeight * tileHeight),
+            npcs: npcs,
             navObstacles: navObstacles,
-            encounterTriggers: encounterTriggers
+            encounterTriggers: encounterTriggers,
+            surfaces: surfaces,
+            items: items
         )
     }
 
@@ -144,6 +172,16 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
     ) {
         switch elementName {
         case "object":
+            if currentGroup == "npc", let object = currentObject,
+               let actorID = object.properties["actorId"],
+               let dialogID = object.properties["dialogId"] {
+                npcs.append(MapNPC(
+                    tiledID: object.tiledID,
+                    actorID: actorID,
+                    dialogID: dialogID,
+                    position: CGPoint(x: object.x, y: object.y)
+                ))
+            }
             if currentGroup == "navObstacle", let object = currentObject {
                 navObstacles.append(NavigationObstacle(
                     tiledID: object.tiledID,
@@ -158,6 +196,20 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
                     encounterID: encounterID,
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
                     radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
+                ))
+            }
+            if currentGroup == "surface", let object = currentObject, let surfaceType = object.properties["surfaceType"] {
+                surfaces.append(MapSurface(
+                    tiledID: object.tiledID,
+                    surfaceType: surfaceType,
+                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
+                ))
+            }
+            if currentGroup == "item", let object = currentObject, let itemID = object.properties["itemId"] {
+                items.append(MapItem(
+                    tiledID: object.tiledID,
+                    itemID: itemID,
+                    position: CGPoint(x: object.x, y: object.y)
                 ))
             }
             currentObject = nil

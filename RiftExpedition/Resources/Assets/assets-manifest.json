@@ -1,9 +1,99 @@
 [
   {
-    "id": "tileset.vertical_slice_palette",
-    "path": "Assets/Tilesets/vertical_slice_palette.svg",
+    "id": "tileset.vertical_slice_tileset",
+    "path": "Assets/Tilesets/vertical_slice_tileset.png",
     "type": "tileset",
-    "source": "local self-made SVG for vertical_slice map",
+    "source": "local self-made procedural pixel tileset for vertical_slice map",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.actor_warrior",
+    "path": "Assets/Sprites/actor_warrior.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.actor_archer",
+    "path": "Assets/Sprites/actor_archer.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.actor_mage",
+    "path": "Assets/Sprites/actor_mage.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.actor_rogue",
+    "path": "Assets/Sprites/actor_rogue.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.enemy_boar",
+    "path": "Assets/Sprites/enemy_boar.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.enemy_raider",
+    "path": "Assets/Sprites/enemy_raider.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.enemy_spider",
+    "path": "Assets/Sprites/enemy_spider.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.npc_elder",
+    "path": "Assets/Sprites/npc_elder.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.prop_chest",
+    "path": "Assets/Sprites/prop_chest.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
+    "license": "self-made",
+    "downloadedAt": "2026-07-06",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "sprite.prop_woodpile",
+    "path": "Assets/Sprites/prop_woodpile.png",
+    "type": "sprite",
+    "source": "local self-made procedural pixel sprite",
     "license": "self-made",
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"

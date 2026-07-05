@@ -133,7 +133,32 @@ final class GameSessionViewModel {
             statusText = "没有找到遭遇。"
             return
         }
-        startBattle(encounter)
+        startBattle(encounter, trigger: nil)
+    }
+
+    func finishBattle() {
+        guard let battleViewModel else { return }
+        switch battleViewModel.state.outcome {
+        case .victory:
+            let survivingParty = battleViewModel.state.actors
+                .filter { $0.faction == .player }
+                .map { actor in
+                    var revived = actor
+                    if revived.stats.health <= 0 {
+                        revived.stats.health = max(1, revived.stats.maxHealth / 2)
+                    }
+                    return revived
+                }
+            party = survivingParty
+            inventoryViewModel?.party = survivingParty
+            self.battleViewModel = nil
+            appState = .exploration
+            statusText = "战斗胜利。倒下的队友已在战后复活。"
+        case .defeat:
+            statusText = "全队倒下。后续会读取最近安全自动存档。"
+        case .ongoing:
+            statusText = "战斗尚未结束。"
+        }
     }
 
     func returnToMainMenu() {
@@ -146,11 +171,14 @@ final class GameSessionViewModel {
         saveLoadViewModel = nil
     }
 
-    private func startBattle(_ encounter: EncounterDefinition) {
+    private func startBattle(_ encounter: EncounterDefinition, trigger: MapEncounterTrigger?) {
         audioService.play(.attack)
         battleViewModel = BattleViewModel(
             state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
-            skills: skillDefinitions
+            skills: skillDefinitions,
+            initialPositions: battleInitialPositions(for: encounter, trigger: trigger),
+            surfaces: battleSurfaces(),
+            hasLineOfSight: battleLineOfSight
         )
         appState = .battle
         statusText = "遭遇已触发。"
@@ -220,6 +248,42 @@ final class GameSessionViewModel {
             )
         }
     }
+
+    private func battleInitialPositions(for encounter: EncounterDefinition, trigger: MapEncounterTrigger?) -> [String: CGPoint] {
+        var positions: [String: CGPoint] = [:]
+        for member in explorationController.members {
+            positions[member.actorID] = member.position
+        }
+
+        let center = trigger?.center ?? CGPoint(x: 560, y: 320)
+        let enemyOffsets = [
+            CGPoint(x: 34, y: -22),
+            CGPoint(x: 92, y: 42),
+            CGPoint(x: 120, y: -64),
+            CGPoint(x: 170, y: 18)
+        ]
+        for (index, enemy) in encounter.enemies.enumerated() {
+            let offset = enemyOffsets[index % enemyOffsets.count]
+            positions[enemy.id] = CGPoint(x: center.x + offset.x, y: center.y + offset.y)
+        }
+        return positions
+    }
+
+    private func battleSurfaces() -> [BattleSurfaceMarker] {
+        initialMapMetadata?.surfaces.compactMap { surface in
+            guard let type = SurfaceType(rawValue: surface.surfaceType) else { return nil }
+            return BattleSurfaceMarker(
+                id: "surface_\(surface.tiledID)",
+                frame: surface.frame,
+                surfaceType: type
+            )
+        } ?? []
+    }
+
+    private func battleLineOfSight(from start: CGPoint, to end: CGPoint) -> Bool {
+        LineOfSightService(obstacles: initialMapMetadata?.navObstacles ?? [])
+            .hasLineOfSight(from: start, to: end)
+    }
 }
 
 extension GameSessionViewModel: GameSceneEventHandling {
@@ -233,6 +297,8 @@ extension GameSessionViewModel: GameSceneEventHandling {
             explorationController.setLeaderDestination(point)
             statusText = "队长移动到：\(Int(point.x)), \(Int(point.y))"
             checkEncounterTrigger()
+        } else if appState == .battle {
+            battleViewModel?.handleWorldClick(point)
         } else {
             statusText = "目标位置：\(Int(point.x)), \(Int(point.y))"
         }
@@ -259,11 +325,11 @@ extension GameSessionViewModel: GameSceneEventHandling {
     private func checkEncounterTrigger() {
         guard appState == .exploration,
               let leaderPosition = explorationController.members.first(where: { $0.actorID == explorationController.leaderID })?.position,
-              let encounter = encounterTriggerService?.encounter(at: leaderPosition)
+              let triggeredEncounter = encounterTriggerService?.triggeredEncounter(at: leaderPosition)
         else {
             return
         }
 
-        startBattle(encounter)
+        startBattle(triggeredEncounter.definition, trigger: triggeredEncounter.trigger)
     }
 }

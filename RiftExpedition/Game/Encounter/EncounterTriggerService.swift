@@ -8,6 +8,11 @@ struct EncounterDefinition: Codable, Equatable, Identifiable {
     var enemies: [Actor]
 }
 
+struct TriggeredEncounter: Equatable {
+    var definition: EncounterDefinition
+    var trigger: MapEncounterTrigger
+}
+
 struct EncounterTriggerService: Equatable {
     private let triggers: [MapEncounterTrigger]
     private let encountersByID: [String: EncounterDefinition]
@@ -23,6 +28,10 @@ struct EncounterTriggerService: Equatable {
     }
 
     mutating func encounter(at position: CGPoint) -> EncounterDefinition? {
+        triggeredEncounter(at: position)?.definition
+    }
+
+    mutating func triggeredEncounter(at position: CGPoint) -> TriggeredEncounter? {
         guard let trigger = triggers.first(where: { trigger in
             !triggeredEncounterIDs.contains(trigger.encounterID) && trigger.contains(position)
         }) else {
@@ -30,7 +39,8 @@ struct EncounterTriggerService: Equatable {
         }
 
         triggeredEncounterIDs.insert(trigger.encounterID)
-        return encountersByID[trigger.encounterID]
+        guard let encounter = encountersByID[trigger.encounterID] else { return nil }
+        return TriggeredEncounter(definition: encounter, trigger: trigger)
     }
 
     static func loadDefinitions(from bundle: Bundle = .main) -> [EncounterDefinition] {

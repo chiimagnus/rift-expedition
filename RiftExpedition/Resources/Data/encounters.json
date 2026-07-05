@@ -25,6 +25,29 @@
         "skillIDs": ["boar_bite"],
         "equipment": {},
         "statuses": []
+      },
+      {
+        "id": "poacher_intro_1",
+        "displayName": "偷猎者",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 1,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 16,
+          "health": 16,
+          "attack": 5,
+          "defense": 1,
+          "evasion": 4,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "archer",
+        "skillIDs": ["poacher_shot"],
+        "equipment": {},
+        "statuses": []
       }
     ]
   }

@@ -40,14 +40,7 @@ struct GameRootView: View {
                     simpleStatePanel
                 }
             case .battle:
-                if let battleViewModel = viewModel.battleViewModel {
-                    BattleHUDView(
-                        viewModel: battleViewModel,
-                        onReturnToMenu: viewModel.returnToMainMenu
-                    )
-                } else {
-                    simpleStatePanel
-                }
+                battle
             case .saveLoad:
                 if let saveLoadViewModel = viewModel.saveLoadViewModel {
                     SaveLoadView(
@@ -130,7 +123,7 @@ struct GameRootView: View {
 
     private var exploration: some View {
         ZStack(alignment: .topLeading) {
-            ExplorationSceneView(viewModel: viewModel)
+            GameSceneView(viewModel: viewModel)
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 8) {
@@ -163,6 +156,24 @@ struct GameRootView: View {
         }
     }
 
+    private var battle: some View {
+        ZStack(alignment: .topLeading) {
+            GameSceneView(viewModel: viewModel)
+                .ignoresSafeArea()
+
+            if let battleViewModel = viewModel.battleViewModel {
+                BattleHUDView(
+                    viewModel: battleViewModel,
+                    onFinishBattle: viewModel.finishBattle,
+                    onReturnToMenu: viewModel.returnToMainMenu
+                )
+                .padding()
+            } else {
+                simpleStatePanel
+            }
+        }
+    }
+
     private var simpleStatePanel: some View {
         VStack(spacing: 16) {
             Text(viewModel.appState.title)
@@ -183,29 +194,44 @@ struct GameRootView: View {
     }
 }
 
-private struct ExplorationSceneView: View {
+private struct GameSceneView: View {
     let viewModel: GameSessionViewModel
     @State private var scene = GameScene.makeScene()
 
     var body: some View {
         SpriteView(scene: scene)
             .onAppear {
-                scene.isWorldInputEnabled = viewModel.appState == .exploration
                 scene.eventHandler = viewModel
-                scene.renderParty(
-                    viewModel.explorationController.members,
-                    leaderID: viewModel.explorationController.leaderID
-                )
+                renderSceneState()
             }
             .onDisappear {
                 scene.isWorldInputEnabled = false
                 scene.eventHandler = nil
             }
             .onChange(of: viewModel.appState) { _, appState in
-                scene.isWorldInputEnabled = appState == .exploration
+                scene.isWorldInputEnabled = appState == .exploration || appState == .battle
+                renderSceneState()
             }
             .onChange(of: viewModel.explorationController) { _, controller in
+                guard viewModel.appState == .exploration else { return }
                 scene.renderParty(controller.members, leaderID: controller.leaderID)
             }
+            .onChange(of: viewModel.battleViewModel?.sceneSnapshot) { _, snapshot in
+                scene.renderBattle(snapshot)
+            }
+    }
+
+    private func renderSceneState() {
+        scene.isWorldInputEnabled = viewModel.appState == .exploration || viewModel.appState == .battle
+        if viewModel.appState == .exploration {
+            scene.renderParty(
+                viewModel.explorationController.members,
+                leaderID: viewModel.explorationController.leaderID
+            )
+            scene.renderBattle(nil)
+        } else if viewModel.appState == .battle {
+            scene.renderParty([], leaderID: nil)
+            scene.renderBattle(viewModel.battleViewModel?.sceneSnapshot)
+        }
     }
 }

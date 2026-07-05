@@ -21,6 +21,32 @@ public struct BattleEngine: Sendable {
         try spendActionPoints(actorID: actorID, cost: skill.actionPointCost)
     }
 
+    public mutating func useSkill<R: RandomSource>(
+        actorID: String,
+        targetID: String,
+        skill: SkillDefinition,
+        context: TargetingContext,
+        random: inout R
+    ) throws -> SkillResolution {
+        try ensureBattleIsOngoing()
+        guard state.actor(id: actorID) != nil else {
+            throw BattleActionError.actorNotFound(actorID)
+        }
+        guard state.actor(id: targetID) != nil else {
+            throw BattleActionError.actorNotFound(targetID)
+        }
+        try TargetingRules.validate(skill: skill, context: context)
+        try spendActionPoints(actorID: actorID, cost: skill.actionPointCost)
+        return try SkillResolver.resolve(
+            skill: skill,
+            casterID: actorID,
+            targetID: targetID,
+            context: context,
+            in: &state,
+            random: &random
+        )
+    }
+
     public mutating func endTurn() throws {
         try ensureBattleIsOngoing()
         guard state.activeActorID != nil else {

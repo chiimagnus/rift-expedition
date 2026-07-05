@@ -6,7 +6,10 @@
     "range": 1.5,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": true
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 8 } }
+    ]
   },
   {
     "id": "aimed_shot",
@@ -15,7 +18,10 @@
     "range": 6.0,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": true
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 7 } }
+    ]
   },
   {
     "id": "spark",
@@ -24,7 +30,11 @@
     "range": 5.0,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": false
+    "canBeDodged": false,
+    "effects": [
+      { "damage": { "_0": 6 } },
+      { "createSurface": { "surfaceID": "fire", "durationTurns": 2 } }
+    ]
   },
   {
     "id": "backstab",
@@ -33,7 +43,10 @@
     "range": 1.2,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": true
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 11 } }
+    ]
   },
   {
     "id": "boar_bite",
@@ -42,6 +55,21 @@
     "range": 1.1,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": true
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 6 } }
+    ]
+  },
+  {
+    "id": "poacher_shot",
+    "displayName": "偷猎箭",
+    "actionPointCost": 2,
+    "range": 5.5,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 5 } }
+    ]
   }
 ]
