@@ -71,6 +71,10 @@ do {
     let results = try mapURLs(resourcesRoot: arguments.resourcesRoot, areaID: arguments.areaID).map { url in
         try MapValidator.validate(url: url, areaID: arguments.areaID)
     }
+    let assetManifest = arguments.resourcesRoot.appending(path: "Assets/assets-manifest.json")
+    let assetResult = FileManager.default.fileExists(atPath: assetManifest.path)
+        ? try AssetValidator.validate(resourcesRoot: arguments.resourcesRoot)
+        : nil
 
     if let previewDirectory = arguments.previewDirectory {
         for result in results {
@@ -78,7 +82,11 @@ do {
         }
     }
 
-    let report = results.map { $0.reportMarkdown() }.joined(separator: "\n")
+    var reportSections = results.map { $0.reportMarkdown() }
+    if let assetResult {
+        reportSections.append(assetResult.reportMarkdown())
+    }
+    let report = reportSections.joined(separator: "\n")
     if let reportPath = arguments.reportPath {
         try FileManager.default.createDirectory(at: reportPath.deletingLastPathComponent(), withIntermediateDirectories: true)
         try report.write(to: reportPath, atomically: true, encoding: .utf8)
@@ -86,7 +94,7 @@ do {
         print(report)
     }
 
-    let issueCount = results.reduce(0) { $0 + $1.issues.count }
+    let issueCount = results.reduce(0) { $0 + $1.issues.count } + (assetResult?.issues.count ?? 0)
     if issueCount > 0 {
         exit(EXIT_FAILURE)
     }

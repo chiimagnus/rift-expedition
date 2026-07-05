@@ -1,0 +1,11 @@
+[
+  {
+    "id": "grass_tileset",
+    "path": "Assets/grass.png",
+    "type": "tileset",
+    "source": "test fixture",
+    "license": "CC0",
+    "downloadedAt": "2026-07-05",
+    "author": "fixture"
+  }
+]
