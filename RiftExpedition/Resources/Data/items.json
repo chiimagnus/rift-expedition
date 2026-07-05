@@ -112,6 +112,11 @@
     "kind": "quest"
   },
   {
+    "id": "element_ore_ledger",
+    "displayName": "元素矿账册",
+    "kind": "quest"
+  },
+  {
     "id": "scorched_ring",
     "displayName": "烧黑的银戒",
     "kind": "equipment",

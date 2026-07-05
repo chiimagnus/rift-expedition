@@ -62,6 +62,14 @@
     ]
   },
   {
+    "id": "mine_evidence",
+    "speakerName": "元素矿账册",
+    "lines": [
+      "账册私印属于村长，封矿后仍有人把元素矿运出村。",
+      "污染不是天灾，而是长期偷采挖穿了封层。"
+    ]
+  },
+  {
     "id": "elder_return",
     "speakerName": "村长顾怀恩",
     "lines": [
