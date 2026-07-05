@@ -45,7 +45,7 @@
           "actionPoints": 4
         },
         "classID": "archer",
-        "skillIDs": ["poacher_shot"],
+        "skillIDs": ["poacher_shot", "throwing_knife"],
         "equipment": {},
         "statuses": []
       }
@@ -74,7 +74,7 @@
           "actionPoints": 4
         },
         "classID": "warrior",
-        "skillIDs": ["slash"],
+        "skillIDs": ["slash", "shield_bash"],
         "equipment": {},
         "statuses": []
       },
@@ -97,59 +97,7 @@
           "actionPoints": 4
         },
         "classID": "archer",
-        "skillIDs": ["poacher_shot"],
-        "equipment": {},
-        "statuses": []
-      }
-    ]
-  },
-  {
-    "id": "ruins_element_raiders",
-    "displayName": "废墟纵火者",
-    "enemies": [
-      {
-        "id": "ruins_raider_1",
-        "displayName": "纵火盗匪",
-        "kind": "humanEnemy",
-        "faction": "hostile",
-        "level": 2,
-        "experience": 0,
-        "unspentAttributePoints": 0,
-        "stats": {
-          "maxHealth": 18,
-          "health": 18,
-          "attack": 3,
-          "defense": 2,
-          "evasion": 4,
-          "magic": 6,
-          "maxActionPoints": 4,
-          "actionPoints": 4
-        },
-        "classID": "mage",
-        "skillIDs": ["spark"],
-        "equipment": {},
-        "statuses": []
-      },
-      {
-        "id": "ruins_raider_2",
-        "displayName": "废墟刀手",
-        "kind": "humanEnemy",
-        "faction": "hostile",
-        "level": 2,
-        "experience": 0,
-        "unspentAttributePoints": 0,
-        "stats": {
-          "maxHealth": 24,
-          "health": 24,
-          "attack": 7,
-          "defense": 3,
-          "evasion": 3,
-          "magic": 0,
-          "maxActionPoints": 4,
-          "actionPoints": 4
-        },
-        "classID": "warrior",
-        "skillIDs": ["slash"],
+        "skillIDs": ["poacher_shot", "hamstring_shot"],
         "equipment": {},
         "statuses": []
       }
@@ -178,7 +126,7 @@
           "actionPoints": 4
         },
         "classID": null,
-        "skillIDs": ["boar_bite"],
+        "skillIDs": ["boar_bite", "venom_edge"],
         "equipment": {},
         "statuses": []
       },
@@ -230,7 +178,7 @@
           "actionPoints": 4
         },
         "classID": "warrior",
-        "skillIDs": ["slash"],
+        "skillIDs": ["slash", "shield_bash"],
         "equipment": {},
         "statuses": []
       },
@@ -253,7 +201,7 @@
           "actionPoints": 4
         },
         "classID": "archer",
-        "skillIDs": ["poacher_shot"],
+        "skillIDs": ["poacher_shot", "hamstring_shot"],
         "equipment": {},
         "statuses": []
       }
@@ -282,7 +230,7 @@
           "actionPoints": 4
         },
         "classID": "warrior",
-        "skillIDs": ["slash", "spark"],
+        "skillIDs": ["slash", "shield_bash", "spark"],
         "equipment": {},
         "statuses": []
       },
@@ -305,7 +253,7 @@
           "actionPoints": 4
         },
         "classID": null,
-        "skillIDs": ["boar_bite"],
+        "skillIDs": ["boar_bite", "venom_edge"],
         "equipment": {},
         "statuses": []
       }

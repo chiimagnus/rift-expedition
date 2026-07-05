@@ -8,8 +8,6 @@
 <rect x="608.0" y="352.0" width="128.0" height="96.0" fill="#5b3a29" opacity="0.8"/>
 <rect x="496.0" y="320.0" width="128.0" height="96.0" fill="#18181b" opacity="0.55"/>
 <rect x="656.0" y="288.0" width="96.0" height="96.0" fill="#f97316" opacity="0.55"/>
-<rect x="544.0" y="256.0" width="160.0" height="128.0" fill="none" stroke="#ef4444" stroke-width="3"/>
-<text x="544.0" y="250.0" font-size="14" fill="#fecaca">ruins_element_raiders</text>
 <rect x="762.0" y="442.0" width="12" height="12" fill="#f59e0b"/>
 <circle cx="96.0" cy="512.0" r="6" fill="#6ee7b7"/>
 <circle cx="896.0" cy="160.0" r="6" fill="#6ee7b7"/>
