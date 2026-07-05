@@ -12,6 +12,8 @@ public struct Actor: Codable, Equatable, Identifiable, Sendable {
     public var kind: ActorKind
     public var faction: Faction
     public var level: Int
+    public var experience: Int
+    public var unspentAttributePoints: Int
     public var stats: Stats
     public var classID: String?
     public var skillIDs: [String]
@@ -24,6 +26,8 @@ public struct Actor: Codable, Equatable, Identifiable, Sendable {
         kind: ActorKind,
         faction: Faction,
         level: Int,
+        experience: Int = 0,
+        unspentAttributePoints: Int = 0,
         stats: Stats,
         classID: String? = nil,
         skillIDs: [String],
@@ -35,6 +39,8 @@ public struct Actor: Codable, Equatable, Identifiable, Sendable {
         self.kind = kind
         self.faction = faction
         self.level = level
+        self.experience = experience
+        self.unspentAttributePoints = unspentAttributePoints
         self.stats = stats
         self.classID = classID
         self.skillIDs = skillIDs
