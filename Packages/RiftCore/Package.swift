@@ -11,6 +11,12 @@ let package = Package(
     ],
     targets: [
         .target(name: "RiftCore"),
-        .testTarget(name: "RiftCoreTests", dependencies: ["RiftCore"])
+        .testTarget(
+            name: "RiftCoreTests",
+            dependencies: ["RiftCore"],
+            resources: [
+                .copy("Fixtures")
+            ]
+        )
     ]
 )

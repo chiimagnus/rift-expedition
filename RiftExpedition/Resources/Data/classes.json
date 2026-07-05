@@ -1,0 +1,21 @@
+[
+  {
+    "id": "warrior",
+    "displayName": "战士",
+    "initialStats": {
+      "maxHealth": 36,
+      "health": 36,
+      "attack": 8,
+      "defense": 6,
+      "evasion": 2,
+      "magic": 1,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["slash"],
+    "defaultEquipment": {
+      "weaponID": "rusted_sword",
+      "armorID": "padded_armor"
+    }
+  }
+]

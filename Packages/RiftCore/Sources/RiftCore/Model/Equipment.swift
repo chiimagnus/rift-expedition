@@ -56,3 +56,23 @@ public struct EquipmentLoadout: Codable, Equatable, Sendable {
         }
     }
 }
+
+public enum ItemKind: String, Codable, CaseIterable, Sendable {
+    case equipment
+    case consumable
+    case quest
+}
+
+public struct ItemDefinition: Codable, Equatable, Identifiable, Sendable {
+    public var id: String
+    public var displayName: String
+    public var kind: ItemKind
+    public var equipment: EquipmentDefinition?
+
+    public init(id: String, displayName: String, kind: ItemKind, equipment: EquipmentDefinition? = nil) {
+        self.id = id
+        self.displayName = displayName
+        self.kind = kind
+        self.equipment = equipment
+    }
+}

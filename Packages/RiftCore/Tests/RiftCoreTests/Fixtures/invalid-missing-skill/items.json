@@ -1,0 +1,36 @@
+[
+  {
+    "id": "rusted_sword",
+    "displayName": "锈剑",
+    "kind": "equipment",
+    "equipment": {
+      "id": "rusted_sword",
+      "displayName": "锈剑",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 2,
+        "defense": 0,
+        "evasion": 0,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "padded_armor",
+    "displayName": "旧棉甲",
+    "kind": "equipment",
+    "equipment": {
+      "id": "padded_armor",
+      "displayName": "旧棉甲",
+      "slot": "armor",
+      "modifiers": {
+        "maxHealth": 4,
+        "attack": 0,
+        "defense": 2,
+        "evasion": 0,
+        "magic": 0
+      }
+    }
+  }
+]
