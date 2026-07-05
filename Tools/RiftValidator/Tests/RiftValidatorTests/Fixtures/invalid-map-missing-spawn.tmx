@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="10" height="10" tilewidth="32" tileheight="32">
+  <objectgroup name="npc"/>
+  <objectgroup name="encounter"/>
+  <objectgroup name="trigger"/>
+  <objectgroup name="exit"/>
+  <objectgroup name="navObstacle"/>
+  <objectgroup name="surface"/>
+  <objectgroup name="item"/>
+</map>
