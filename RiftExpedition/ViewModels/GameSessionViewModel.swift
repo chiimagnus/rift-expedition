@@ -26,7 +26,9 @@ final class GameSessionViewModel {
     private let encounterDefinitions: [EncounterDefinition]
     private let skillDefinitions: [SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
+    private let questDefinitions: [QuestDefinition]
     private var currentMapMetadata: TiledMapMetadata?
+    private var collectedMapItemKeys: Set<String> = []
     private let saveGameStore: SaveGameStore
     private let contentBundle: Bundle
     let partyCreationViewModel: PartyCreationViewModel
@@ -44,12 +46,14 @@ final class GameSessionViewModel {
         encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
         skillDefinitions = catalog?.skills ?? []
         itemDefinitions = catalog?.items ?? []
+        let loadedQuestDefinitions = catalog?.quests ?? []
+        questDefinitions = loadedQuestDefinitions
         let startAreaID = "village_square"
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: startAreaID, bundle: contentBundle)
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
         dialogViewModel = DialogViewModel(
             scripts: DialogViewModel.loadScripts(from: contentBundle),
-            questDefinitions: catalog?.quests ?? []
+            questDefinitions: loadedQuestDefinitions
         )
     }
 
@@ -139,6 +143,32 @@ final class GameSessionViewModel {
             return
         }
         startBattle(encounter, trigger: nil)
+    }
+
+    func applyQuestRewards(questID: String) {
+        guard let quest = questDefinitions.first(where: { $0.id == questID }) else {
+            statusText = "没有找到任务奖励配置。"
+            return
+        }
+
+        var inventory = inventoryViewModel?.inventory ?? PartyInventory()
+        for itemID in questTurnInItemIDs(for: questID) {
+            try? inventory.removeItem(id: itemID)
+        }
+        for itemID in quest.rewardItemIDs {
+            inventory.addItem(id: itemID)
+        }
+
+        let rewardedParty = learnSkills(quest.rewardSkillIDs, for: inventoryViewModel?.party ?? party)
+        party = rewardedParty
+        inventoryViewModel = InventoryViewModel(
+            party: rewardedParty,
+            inventory: inventory,
+            itemDefinitions: itemDefinitions
+        )
+
+        let rewardNames = (quest.rewardItemIDs.map(itemName) + quest.rewardSkillIDs.map(skillName)).joined(separator: "、")
+        statusText = rewardNames.isEmpty ? "任务已完成。" : "任务完成，获得：\(rewardNames)。"
     }
 
     func finishBattle() {
@@ -254,6 +284,36 @@ final class GameSessionViewModel {
         return inventory
     }
 
+    private func learnSkills(_ skillIDs: [String], for party: [Actor]) -> [Actor] {
+        party.map { actor in
+            var next = actor
+            for skillID in skillIDs where !next.skillIDs.contains(skillID) {
+                next.skillIDs.append(skillID)
+            }
+            return next
+        }
+    }
+
+    private func questTurnInItemIDs(for questID: String) -> [String] {
+        // ponytail: first chapter has two hand-authored turn-ins; move this to quest data once requirements grow.
+        switch questID {
+        case "blood_debt":
+            return ["element_ore_ledger"]
+        case "bitterroot_medicine":
+            return ["bitterroot_herb"]
+        default:
+            return []
+        }
+    }
+
+    private func itemName(_ itemID: String) -> String {
+        itemDefinitions.first(where: { $0.id == itemID })?.displayName ?? itemID
+    }
+
+    private func skillName(_ skillID: String) -> String {
+        skillDefinitions.first(where: { $0.id == skillID })?.displayName ?? skillID
+    }
+
     var debugObstacleCount: Int {
         currentMapMetadata?.navObstacles.count ?? 0
     }
@@ -320,6 +380,87 @@ final class GameSessionViewModel {
         LineOfSightService(obstacles: currentMapMetadata?.navObstacles ?? [])
             .hasLineOfSight(from: start, to: end)
     }
+
+    private func interactWithNPC(at point: CGPoint) -> Bool {
+        guard let npc = nearestNPC(to: point) else { return false }
+
+        if isLeaderNear(npc.position, radius: 96) {
+            openDialog(dialogID(for: npc))
+        } else {
+            explorationController.setLeaderDestination(npc.position)
+            statusText = "队长正靠近 \(npc.actorID)。"
+        }
+        return true
+    }
+
+    private func collectItem(at point: CGPoint) -> Bool {
+        guard let item = nearestItem(to: point) else { return false }
+
+        let key = mapItemKey(item)
+        guard !collectedMapItemKeys.contains(key) else {
+            statusText = "这里已经搜刮过了。"
+            return true
+        }
+
+        if isLeaderNear(item.position, radius: 96) {
+            var inventory = inventoryViewModel?.inventory ?? PartyInventory()
+            inventory.addItem(id: item.itemID)
+            let currentParty = inventoryViewModel?.party ?? party
+            inventoryViewModel = InventoryViewModel(
+                party: currentParty,
+                inventory: inventory,
+                itemDefinitions: itemDefinitions
+            )
+            collectedMapItemKeys.insert(key)
+            statusText = "拾取了 \(itemName(item.itemID))。"
+        } else {
+            explorationController.setLeaderDestination(item.position)
+            statusText = "队长正靠近 \(itemName(item.itemID))。"
+        }
+        return true
+    }
+
+    private func nearestNPC(to point: CGPoint) -> MapNPC? {
+        currentMapMetadata?.npcs
+            .filter { distance(from: $0.position, to: point) <= 38 }
+            .min { distance(from: $0.position, to: point) < distance(from: $1.position, to: point) }
+    }
+
+    private func nearestItem(to point: CGPoint) -> MapItem? {
+        currentMapMetadata?.items
+            .filter { distance(from: $0.position, to: point) <= 38 }
+            .min { distance(from: $0.position, to: point) < distance(from: $1.position, to: point) }
+    }
+
+    private func dialogID(for npc: MapNPC) -> String {
+        switch npc.actorID {
+        case "healer" where dialogViewModel.questState.statuses["bitterroot_medicine"] == .active
+            && (inventoryViewModel?.inventory.count(of: "bitterroot_herb") ?? 0) > 0:
+            return "healer_return"
+        case "mayor" where dialogViewModel.questState.statuses["blood_debt"] == .active
+            && (inventoryViewModel?.inventory.count(of: "element_ore_ledger") ?? 0) > 0:
+            return "elder_return"
+        default:
+            return npc.dialogID
+        }
+    }
+
+    private func isLeaderNear(_ position: CGPoint, radius: CGFloat) -> Bool {
+        guard let leaderPosition else { return false }
+        return distance(from: leaderPosition, to: position) <= radius
+    }
+
+    private var leaderPosition: CGPoint? {
+        explorationController.members.first(where: { $0.actorID == explorationController.leaderID })?.position
+    }
+
+    private func mapItemKey(_ item: MapItem) -> String {
+        "\(currentAreaID):\(item.tiledID)"
+    }
+
+    private func distance(from start: CGPoint, to end: CGPoint) -> CGFloat {
+        hypot(start.x - end.x, start.y - end.y)
+    }
 }
 
 extension GameSessionViewModel: GameSceneEventHandling {
@@ -330,6 +471,9 @@ extension GameSessionViewModel: GameSceneEventHandling {
     func gameScene(_ scene: GameScene, didClickWorld point: CGPoint) {
         lastWorldClick = point
         if appState == .exploration {
+            if interactWithNPC(at: point) || collectItem(at: point) {
+                return
+            }
             explorationController.setLeaderDestination(point)
             statusText = "队长移动到：\(Int(point.x)), \(Int(point.y))"
             checkEncounterTrigger()

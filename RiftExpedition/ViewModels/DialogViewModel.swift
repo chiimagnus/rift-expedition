@@ -27,6 +27,7 @@ enum DialogAction: String, Codable, Equatable {
 enum DialogOutcome: Equatable {
     case none
     case close
+    case completedQuest(String)
     case startBattle(String)
 }
 
@@ -76,6 +77,7 @@ final class DialogViewModel {
                 if let questID = option.questID {
                     questState = try QuestEngine.complete(questID: questID, in: questState, definitions: questDefinitions)
                     message = "任务已完成。"
+                    return .completedQuest(questID)
                 }
                 return .none
             case .startBattle:

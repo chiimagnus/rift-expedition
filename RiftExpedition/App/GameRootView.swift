@@ -23,6 +23,7 @@ struct GameRootView: View {
                 DialogView(
                     viewModel: viewModel.dialogViewModel,
                     onClose: viewModel.closePanel,
+                    onCompleteQuest: viewModel.applyQuestRewards,
                     onStartBattle: viewModel.beginBattleFromDialog
                 )
             case .questLog:
