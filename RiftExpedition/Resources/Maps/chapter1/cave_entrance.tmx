@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="13">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="17">
   <properties>
     <property name="areaName" value="旧矿洞入口"/>
     <property name="assetId" value="tileset.chapter1_cave"/>
@@ -51,8 +51,20 @@
   <objectgroup id="3" name="npc">
   </objectgroup>
   <objectgroup id="4" name="encounter">
+    <object id="13" name="污染洞兽" x="576" y="256" width="160" height="128">
+      <properties>
+        <property name="encounterId" value="cave_vermin"/>
+        <property name="radius" value="96"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="5" name="trigger">
+    <object id="14" name="发簪与血迹" x="352" y="352" width="96" height="64">
+      <properties>
+        <property name="triggerId" value="cave_entrance_trace"/>
+        <property name="action" value="dialogue:cave_entrance_trace"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="6" name="exit">
     <object id="4" name="回废墟" x="32" y="128" width="32" height="64">
@@ -113,6 +125,16 @@
     </object>
   </objectgroup>
   <objectgroup id="8" name="surface">
+    <object id="15" name="毒水" x="608" y="384" width="160" height="96">
+      <properties>
+        <property name="surfaceType" value="poison"/>
+      </properties>
+    </object>
+    <object id="16" name="余火" x="480" y="288" width="96" height="96">
+      <properties>
+        <property name="surfaceType" value="fire"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="9" name="item">
   </objectgroup>

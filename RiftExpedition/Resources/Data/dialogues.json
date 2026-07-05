@@ -54,6 +54,14 @@
     ]
   },
   {
+    "id": "cave_entrance_trace",
+    "speakerName": "洞口痕迹",
+    "lines": [
+      "碎石旁压着一枚刻着“砚”字的银发簪。",
+      "血迹一路往矿道深处拖去，旁边有细小幼兽爪印。"
+    ]
+  },
+  {
     "id": "elder_return",
     "speakerName": "村长顾怀恩",
     "lines": [

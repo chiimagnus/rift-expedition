@@ -154,5 +154,57 @@
         "statuses": []
       }
     ]
+  },
+  {
+    "id": "cave_vermin",
+    "displayName": "污染洞兽",
+    "enemies": [
+      {
+        "id": "cave_vermin_1",
+        "displayName": "污染洞兽",
+        "kind": "monster",
+        "faction": "monster",
+        "level": 2,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 24,
+          "health": 24,
+          "attack": 7,
+          "defense": 3,
+          "evasion": 3,
+          "magic": 1,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "cave_vermin_2",
+        "displayName": "小污染兽",
+        "kind": "monster",
+        "faction": "monster",
+        "level": 1,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 16,
+          "health": 16,
+          "attack": 5,
+          "defense": 2,
+          "evasion": 4,
+          "magic": 1,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
   }
 ]
