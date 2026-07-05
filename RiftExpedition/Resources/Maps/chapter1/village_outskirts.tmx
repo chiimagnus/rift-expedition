@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="11">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="13">
   <properties>
     <property name="areaName" value="裂隙村外缘"/>
     <property name="assetId" value="tileset.chapter1_village"/>
@@ -46,6 +46,12 @@
   <objectgroup id="3" name="npc">
   </objectgroup>
   <objectgroup id="4" name="encounter">
+    <object id="11" name="野猪与偷猎者" x="584" y="272" width="128" height="128">
+      <properties>
+        <property name="encounterId" value="boar_intro"/>
+        <property name="radius" value="96"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="5" name="trigger">
   </objectgroup>
@@ -104,5 +110,10 @@
   <objectgroup id="8" name="surface">
   </objectgroup>
   <objectgroup id="9" name="item">
+    <object id="12" name="散落的止血药剂" x="736" y="448">
+      <properties>
+        <property name="itemId" value="minor_healing_draught"/>
+      </properties>
+    </object>
   </objectgroup>
 </map>

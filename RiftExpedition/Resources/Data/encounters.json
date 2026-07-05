@@ -1,7 +1,7 @@
 [
   {
     "id": "boar_intro",
-    "displayName": "受惊野猪",
+    "displayName": "村外小冲突",
     "enemies": [
       {
         "id": "boar_intro_1",
