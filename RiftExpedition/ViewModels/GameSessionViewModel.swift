@@ -9,6 +9,8 @@ final class GameSessionViewModel {
     var appState: AppState = .mainMenu
     var statusText = "裂隙正在沉睡。"
     var lastWorldClick: CGPoint?
+    var currentAreaID = "village_square"
+    var currentSpawnID = "start"
     var party: [Actor] = []
     var explorationController = ExplorationController()
     var battleViewModel: BattleViewModel?
@@ -24,8 +26,9 @@ final class GameSessionViewModel {
     private let encounterDefinitions: [EncounterDefinition]
     private let skillDefinitions: [SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
-    private let initialMapMetadata: TiledMapMetadata?
+    private var currentMapMetadata: TiledMapMetadata?
     private let saveGameStore: SaveGameStore
+    private let contentBundle: Bundle
     let partyCreationViewModel: PartyCreationViewModel
     let dialogViewModel: DialogViewModel
 
@@ -34,13 +37,15 @@ final class GameSessionViewModel {
         saveGameStore: SaveGameStore = SaveGameStore(),
         audioService: AudioService = AudioService()
     ) {
+        self.contentBundle = contentBundle
         self.saveGameStore = saveGameStore
         self.audioService = audioService
         let catalog = Self.loadCatalog(from: contentBundle)
         encounterDefinitions = EncounterTriggerService.loadDefinitions(from: contentBundle)
         skillDefinitions = catalog?.skills ?? []
         itemDefinitions = catalog?.items ?? []
-        initialMapMetadata = try? TiledMapLoader.loadMetadata(areaID: "vertical_slice", bundle: contentBundle)
+        let startAreaID = "village_square"
+        currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: startAreaID, bundle: contentBundle)
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
         dialogViewModel = DialogViewModel(
             scripts: DialogViewModel.loadScripts(from: contentBundle),
@@ -68,13 +73,12 @@ final class GameSessionViewModel {
         }
 
         party = createdParty
+        loadArea("village_square", spawnID: "start")
         inventoryViewModel = InventoryViewModel(
             party: createdParty,
             inventory: Self.makeStartingInventory(for: createdParty),
             itemDefinitions: itemDefinitions
         )
-        explorationController.configureParty(createdParty, at: CGPoint(x: 96, y: 96))
-        configureEncounterTriggers()
         enterExploration()
         performSafeAutosave()
     }
@@ -197,8 +201,8 @@ final class GameSessionViewModel {
         guard !currentParty.isEmpty else { return nil }
 
         return SaveGame(
-            currentAreaID: "vertical_slice",
-            currentSpawnID: "start",
+            currentAreaID: currentAreaID,
+            currentSpawnID: currentSpawnID,
             party: currentParty,
             inventory: inventoryViewModel?.inventory ?? PartyInventory()
         )
@@ -211,8 +215,7 @@ final class GameSessionViewModel {
             inventory: save.inventory,
             itemDefinitions: itemDefinitions
         )
-        explorationController.configureParty(save.party, at: CGPoint(x: 96, y: 96))
-        configureEncounterTriggers()
+        loadArea(save.currentAreaID, spawnID: save.currentSpawnID)
         battleViewModel = nil
         appState = .exploration
         statusText = "已读取存档。"
@@ -252,19 +255,33 @@ final class GameSessionViewModel {
     }
 
     var debugObstacleCount: Int {
-        initialMapMetadata?.navObstacles.count ?? 0
+        currentMapMetadata?.navObstacles.count ?? 0
     }
 
     var debugEncounterTriggerCount: Int {
-        initialMapMetadata?.encounterTriggers.count ?? 0
+        currentMapMetadata?.encounterTriggers.count ?? 0
     }
 
     private func configureEncounterTriggers() {
-        if let metadata = initialMapMetadata {
+        if let metadata = currentMapMetadata {
             encounterTriggerService = EncounterTriggerService(
                 triggers: metadata.encounterTriggers,
                 encounters: encounterDefinitions
             )
+        } else {
+            encounterTriggerService = nil
+        }
+    }
+
+    private func loadArea(_ areaID: String, spawnID: String) {
+        currentAreaID = areaID
+        currentSpawnID = spawnID
+        currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: areaID, bundle: contentBundle)
+        configureEncounterTriggers()
+
+        let spawn = currentMapMetadata?.spawns.first { $0.id == spawnID }?.position ?? CGPoint(x: 160, y: 320)
+        if !party.isEmpty {
+            explorationController.configureParty(party, at: spawn)
         }
     }
 
@@ -289,7 +306,7 @@ final class GameSessionViewModel {
     }
 
     private func battleSurfaces() -> [BattleSurfaceMarker] {
-        initialMapMetadata?.surfaces.compactMap { surface in
+        currentMapMetadata?.surfaces.compactMap { surface in
             guard let type = SurfaceType(rawValue: surface.surfaceType) else { return nil }
             return BattleSurfaceMarker(
                 id: "surface_\(surface.tiledID)",
@@ -300,7 +317,7 @@ final class GameSessionViewModel {
     }
 
     private func battleLineOfSight(from start: CGPoint, to end: CGPoint) -> Bool {
-        LineOfSightService(obstacles: initialMapMetadata?.navObstacles ?? [])
+        LineOfSightService(obstacles: currentMapMetadata?.navObstacles ?? [])
             .hasLineOfSight(from: start, to: end)
     }
 }
@@ -338,7 +355,20 @@ extension GameSessionViewModel: GameSceneEventHandling {
         guard appState == .exploration else { return }
 
         explorationController.advance(deltaTime: deltaTime)
+        checkExitTransition()
         checkEncounterTrigger()
+    }
+
+    private func checkExitTransition() {
+        guard appState == .exploration,
+              let leaderPosition = explorationController.members.first(where: { $0.actorID == explorationController.leaderID })?.position,
+              let exit = currentMapMetadata?.exits.first(where: { $0.contains(leaderPosition) })
+        else {
+            return
+        }
+
+        loadArea(exit.targetAreaID, spawnID: exit.targetSpawnID)
+        statusText = "进入区域：\(exit.targetAreaID)"
     }
 
     private func checkEncounterTrigger() {

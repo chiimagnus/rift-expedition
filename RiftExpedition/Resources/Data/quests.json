@@ -1,8 +1,8 @@
 [
   {
     "id": "blood_debt",
-    "title": "血债",
-    "summary": "村长说你的失踪与旧矿洞有关。",
+    "title": "血债：失踪的新娘",
+    "summary": "沈砚在婚宴前失踪，未婚夫指控外来法师，村长要求你们先从村外脚印查起。",
     "startDialogID": "elder_intro",
     "turnInDialogID": "elder_return",
     "rewardItemIDs": ["rusted_sword"],

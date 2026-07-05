@@ -1,0 +1,30 @@
+[
+  {
+    "id": "mayor",
+    "displayName": "村长顾怀恩",
+    "role": "村长",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "elder_intro"
+  },
+  {
+    "id": "fiance",
+    "displayName": "未婚夫梁铮",
+    "role": "失踪新娘的未婚夫",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "fiance_accuse"
+  },
+  {
+    "id": "gate_guard",
+    "displayName": "守卫阿砾",
+    "role": "村口守卫",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "guard_gate"
+  },
+  {
+    "id": "notice_board",
+    "displayName": "旧公告板",
+    "role": "地标",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "notice_board"
+  }
+]

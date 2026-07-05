@@ -202,6 +202,7 @@ private struct GameSceneView: View {
         SpriteView(scene: scene)
             .onAppear {
                 scene.eventHandler = viewModel
+                scene.loadMap(areaID: viewModel.currentAreaID)
                 renderSceneState()
             }
             .onDisappear {
@@ -210,6 +211,11 @@ private struct GameSceneView: View {
             }
             .onChange(of: viewModel.appState) { _, appState in
                 scene.isWorldInputEnabled = appState == .exploration || appState == .battle
+                scene.loadMap(areaID: viewModel.currentAreaID)
+                renderSceneState()
+            }
+            .onChange(of: viewModel.currentAreaID) { _, areaID in
+                scene.loadMap(areaID: areaID)
                 renderSceneState()
             }
             .onChange(of: viewModel.explorationController) { _, controller in

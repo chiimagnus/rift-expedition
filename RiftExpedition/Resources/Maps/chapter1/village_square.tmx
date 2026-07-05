@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="12">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="16">
   <properties>
     <property name="areaName" value="裂隙村广场"/>
     <property name="assetId" value="tileset.chapter1_village"/>
@@ -49,10 +49,34 @@
     </object>
   </objectgroup>
   <objectgroup id="3" name="npc">
+    <object id="12" name="村长" x="512" y="176">
+      <properties>
+        <property name="actorId" value="mayor"/>
+        <property name="dialogId" value="elder_intro"/>
+      </properties>
+    </object>
+    <object id="13" name="未婚夫" x="640" y="320">
+      <properties>
+        <property name="actorId" value="fiance"/>
+        <property name="dialogId" value="fiance_accuse"/>
+      </properties>
+    </object>
+    <object id="14" name="守卫" x="896" y="384">
+      <properties>
+        <property name="actorId" value="gate_guard"/>
+        <property name="dialogId" value="guard_gate"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="4" name="encounter">
   </objectgroup>
   <objectgroup id="5" name="trigger">
+    <object id="15" name="公告板" x="400" y="128" width="128" height="64">
+      <properties>
+        <property name="triggerId" value="village_square_notice"/>
+        <property name="action" value="dialogue:notice_board"/>
+      </properties>
+    </object>
   </objectgroup>
   <objectgroup id="6" name="exit">
     <object id="4" name="去河岸" x="32" y="288" width="32" height="64">

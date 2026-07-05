@@ -18,6 +18,7 @@ final class GameScene: SKScene {
     weak var eventHandler: (any GameSceneEventHandling)?
     var isWorldInputEnabled = true
     private var tilemap: SKNode?
+    private var loadedAreaID: String?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKShapeNode] = [:]
     private var staticObjectLayer: SKNode?
@@ -34,7 +35,6 @@ final class GameScene: SKScene {
         view.window?.makeFirstResponder(view)
         backgroundColor = SKColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1)
         drawGround()
-        loadInitialMap()
         eventHandler?.gameSceneDidLoad(self)
     }
 
@@ -116,6 +116,28 @@ final class GameScene: SKScene {
         }
     }
 
+    func loadMap(areaID: String) {
+        guard loadedAreaID != areaID else { return }
+
+        tilemap?.removeFromParent()
+        tilemap = nil
+        staticObjectLayer?.removeFromParent()
+        staticObjectLayer = nil
+
+        do {
+            let loadedMap = try TiledMapLoader.load(areaID: areaID)
+            loadedMap.position = .zero
+            loadedMap.zPosition = 1
+            addChild(loadedMap)
+            tilemap = loadedMap
+            loadedAreaID = areaID
+            renderStaticObjects(areaID: areaID)
+        } catch {
+            loadedAreaID = nil
+            GameLog.map.error("\(areaID, privacy: .public).tmx 加载失败")
+        }
+    }
+
     private func drawGround() {
         guard childNode(withName: "ground") == nil else { return }
 
@@ -150,22 +172,7 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func loadInitialMap() {
-        guard tilemap == nil else { return }
-
-        do {
-            let loadedMap = try TiledMapLoader.load(areaID: "vertical_slice")
-            loadedMap.position = .zero
-            loadedMap.zPosition = 1
-            addChild(loadedMap)
-            tilemap = loadedMap
-            renderStaticObjects()
-        } catch {
-            GameLog.map.error("vertical_slice.tmx 加载失败")
-        }
-    }
-
-    private func renderStaticObjects() {
+    private func renderStaticObjects(areaID: String) {
         staticObjectLayer?.removeFromParent()
         let layer = SKNode()
         layer.name = "staticObjectLayer"
@@ -173,7 +180,7 @@ final class GameScene: SKScene {
         addChild(layer)
         staticObjectLayer = layer
 
-        guard let metadata = try? TiledMapLoader.loadMetadata(areaID: "vertical_slice") else { return }
+        guard let metadata = try? TiledMapLoader.loadMetadata(areaID: areaID) else { return }
         for surface in metadata.surfaces {
             guard let type = SurfaceTypeColor(rawValue: surface.surfaceType) else { continue }
             layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))
@@ -182,7 +189,7 @@ final class GameScene: SKScene {
             layer.addChild(makeObstacleNode(frame: obstacle.frame))
         }
         for npc in metadata.npcs {
-            layer.addChild(makeMapSprite(name: "npc_elder", position: npc.position, size: CGSize(width: 52, height: 52)))
+            layer.addChild(makeMapSprite(name: spriteName(forNPC: npc), position: npc.position, size: CGSize(width: 52, height: 52)))
         }
         for item in metadata.items {
             layer.addChild(makeMapSprite(name: item.itemID == "rusted_sword" ? "prop_chest" : "prop_chest", position: item.position, size: CGSize(width: 48, height: 48)))
@@ -301,9 +308,10 @@ final class GameScene: SKScene {
         if let texture = textureCache[name] {
             return texture
         }
-        guard let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Sprites"),
-              let image = NSImage(contentsOf: url)
-        else {
+        let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Sprites")
+            ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Characters")
+            ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Icons")
+        guard let url, let image = NSImage(contentsOf: url) else {
             return nil
         }
 
@@ -311,6 +319,15 @@ final class GameScene: SKScene {
         texture.filteringMode = .nearest
         textureCache[name] = texture
         return texture
+    }
+
+    private func spriteName(forNPC npc: MapNPC) -> String {
+        switch npc.actorID {
+        case "elder", "mayor":
+            "npc_elder"
+        default:
+            "npc_elder"
+        }
     }
 }
 

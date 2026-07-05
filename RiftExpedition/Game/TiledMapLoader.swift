@@ -11,11 +11,19 @@ enum TiledMapLoaderError: Error, Equatable {
 struct TiledMapMetadata: Equatable {
     var areaID: String
     var size: CGSize
+    var spawns: [MapSpawn]
     var npcs: [MapNPC]
     var navObstacles: [NavigationObstacle]
     var encounterTriggers: [MapEncounterTrigger]
+    var exits: [MapExit]
     var surfaces: [MapSurface]
     var items: [MapItem]
+}
+
+struct MapSpawn: Equatable {
+    var tiledID: Int
+    var id: String
+    var position: CGPoint
 }
 
 struct MapNPC: Equatable {
@@ -44,6 +52,17 @@ struct MapEncounterTrigger: Equatable {
 
     func contains(_ point: CGPoint) -> Bool {
         frame.contains(point) || hypot(point.x - center.x, point.y - center.y) <= radius
+    }
+}
+
+struct MapExit: Equatable {
+    var tiledID: Int
+    var targetAreaID: String
+    var targetSpawnID: String
+    var frame: CGRect
+
+    func contains(_ point: CGPoint) -> Bool {
+        frame.contains(point)
     }
 }
 
@@ -113,9 +132,11 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
     private var tileHeight = 1.0
     private var currentGroup: String?
     private var currentObject: ParsedObject?
+    private var spawns: [MapSpawn] = []
     private var npcs: [MapNPC] = []
     private var navObstacles: [NavigationObstacle] = []
     private var encounterTriggers: [MapEncounterTrigger] = []
+    private var exits: [MapExit] = []
     private var surfaces: [MapSurface] = []
     private var items: [MapItem] = []
 
@@ -123,9 +144,11 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
         TiledMapMetadata(
             areaID: areaID,
             size: CGSize(width: mapWidth * tileWidth, height: mapHeight * tileHeight),
+            spawns: spawns,
             npcs: npcs,
             navObstacles: navObstacles,
             encounterTriggers: encounterTriggers,
+            exits: exits,
             surfaces: surfaces,
             items: items
         )
@@ -175,6 +198,13 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
     ) {
         switch elementName {
         case "object":
+            if currentGroup == "spawn", let object = currentObject, let id = object.properties["id"] {
+                spawns.append(MapSpawn(
+                    tiledID: object.tiledID,
+                    id: id,
+                    position: CGPoint(x: object.x, y: object.y)
+                ))
+            }
             if currentGroup == "npc", let object = currentObject,
                let actorID = object.properties["actorId"],
                let dialogID = object.properties["dialogId"] {
@@ -199,6 +229,16 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
                     encounterID: encounterID,
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
                     radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
+                ))
+            }
+            if currentGroup == "exit", let object = currentObject,
+               let targetAreaID = object.properties["targetAreaId"],
+               let targetSpawnID = object.properties["targetSpawnId"] {
+                exits.append(MapExit(
+                    tiledID: object.tiledID,
+                    targetAreaID: targetAreaID,
+                    targetSpawnID: targetSpawnID,
+                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
                 ))
             }
             if currentGroup == "surface", let object = currentObject, let surfaceType = object.properties["surfaceType"] {
