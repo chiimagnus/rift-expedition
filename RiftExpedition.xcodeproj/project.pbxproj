@@ -10,8 +10,10 @@
 		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
 		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
 		578732DC3C52AB58C25A427E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16878055CA8AAE8E6F1D52DF /* ContentView.swift */; };
+		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
 		A3CC69DA628AF017095209CF /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A59363E369752C0EBF6B922 /* GameScene.swift */; };
 		C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD21D61B804614283239218 /* RiftExpeditionApp.swift */; };
+		D8515217F7C286DD42149DC7 /* SKTiled in Frameworks */ = {isa = PBXBuildFile; productRef = 144D526509E751239A80D9D5 /* SKTiled */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,6 +34,7 @@
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A59363E369752C0EBF6B922 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
+		BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSmoke.swift; sourceTree = "<group>"; };
 		FDD21D61B804614283239218 /* RiftExpeditionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiftExpeditionApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -41,6 +44,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */,
+				D8515217F7C286DD42149DC7 /* SKTiled in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,8 +109,17 @@
 			isa = PBXGroup;
 			children = (
 				8A59363E369752C0EBF6B922 /* GameScene.swift */,
+				F0CF89C5CC5AAB2C2E43DE04 /* Tiled */,
 			);
 			path = Game;
+			sourceTree = "<group>";
+		};
+		F0CF89C5CC5AAB2C2E43DE04 /* Tiled */ = {
+			isa = PBXGroup;
+			children = (
+				BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */,
+			);
+			path = Tiled;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -144,6 +157,7 @@
 			name = RiftExpedition;
 			packageProductDependencies = (
 				66F68254A710BE031FA3C538 /* RiftCore */,
+				144D526509E751239A80D9D5 /* SKTiled */,
 			);
 			productName = RiftExpedition;
 			productReference = 0B17603B09208858E2CBF0AF /* RiftExpedition.app */;
@@ -174,6 +188,7 @@
 			mainGroup = B82E909A30D8F496A328F7AA;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */,
 				47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -194,6 +209,7 @@
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
 				A3CC69DA628AF017095209CF /* GameScene.swift in Sources */,
 				C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */,
+				7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -452,7 +468,23 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mfessenden/SKTiled.git";
+			requirement = {
+				kind = revision;
+				revision = 9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		144D526509E751239A80D9D5 /* SKTiled */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */;
+			productName = SKTiled;
+		};
 		66F68254A710BE031FA3C538 /* RiftCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RiftCore;

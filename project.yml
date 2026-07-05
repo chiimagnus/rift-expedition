@@ -10,6 +10,9 @@ settings:
 packages:
   RiftCore:
     path: Packages/RiftCore
+  SKTiled:
+    url: https://github.com/mfessenden/SKTiled.git
+    revision: 9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe
 targets:
   RiftExpedition:
     type: application
@@ -23,6 +26,7 @@ targets:
       - path: RiftExpedition/Resources
     dependencies:
       - package: RiftCore
+      - package: SKTiled
     entitlements:
       path: RiftExpedition/RiftExpedition.entitlements
     settings:

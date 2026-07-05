@@ -1,0 +1,14 @@
+{
+  "originHash" : "a596ba1315d1abe606e99e523f163c9b43e667fd977d3599dcc8b0b0334f76d0",
+  "pins" : [
+    {
+      "identity" : "sktiled",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mfessenden/SKTiled.git",
+      "state" : {
+        "revision" : "9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe"
+      }
+    }
+  ],
+  "version" : 3
+}
