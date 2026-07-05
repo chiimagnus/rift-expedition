@@ -64,6 +64,15 @@ public enum ContentValidator {
         for item in catalog.items where item.kind == .equipment && item.equipment == nil {
             errors.append(.invalidItem(owner: "item:\(item.id)", id: item.id, reason: "equipment item requires equipment definition"))
         }
+        for item in catalog.items where item.kind == .consumable {
+            guard let skillID = item.skillID else {
+                errors.append(.invalidItem(owner: "item:\(item.id)", id: item.id, reason: "consumable item requires skillID"))
+                continue
+            }
+            if !skillIDs.contains(skillID) {
+                errors.append(.missingReference(owner: "item:\(item.id)", field: "skillID", id: skillID))
+            }
+        }
 
         for quest in catalog.quests {
             if !dialogueIDs.contains(quest.startDialogID) {

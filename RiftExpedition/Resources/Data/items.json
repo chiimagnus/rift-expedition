@@ -83,5 +83,11 @@
         "magic": 0
       }
     }
+  },
+  {
+    "id": "minor_healing_draught",
+    "displayName": "止血药剂",
+    "kind": "consumable",
+    "skillID": "minor_healing_draught"
   }
 ]

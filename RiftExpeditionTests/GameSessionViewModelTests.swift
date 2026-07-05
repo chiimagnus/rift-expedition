@@ -1,4 +1,5 @@
 import CoreGraphics
+import RiftCore
 import XCTest
 @testable import RiftExpedition
 
@@ -16,5 +17,21 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.appState, .battle)
         XCTAssertEqual(session.statusText, "遭遇已触发。")
         XCTAssertNotNil(session.battleState)
+    }
+
+    func testStartingChapterWritesSafeAutosave() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store)
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+
+        session.startChapterWithSelectedParty()
+
+        let save = try store.read(.auto(1))
+        XCTAssertEqual(save.currentAreaID, "vertical_slice")
+        XCTAssertEqual(save.party.count, 2)
     }
 }

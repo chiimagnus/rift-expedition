@@ -76,6 +76,7 @@ final class GameSessionViewModel {
         explorationController.configureParty(createdParty, at: CGPoint(x: 96, y: 96))
         configureEncounterTriggers()
         enterExploration()
+        performSafeAutosave()
     }
 
     func openSaveLoad() {
@@ -150,7 +151,12 @@ final class GameSessionViewModel {
                     return revived
                 }
             party = survivingParty
-            inventoryViewModel?.party = survivingParty
+            inventoryViewModel = InventoryViewModel(
+                party: survivingParty,
+                inventory: battleViewModel.inventory,
+                itemDefinitions: itemDefinitions
+            )
+            performSafeAutosave()
             self.battleViewModel = nil
             appState = .exploration
             statusText = "战斗胜利。倒下的队友已在战后复活。"
@@ -176,6 +182,8 @@ final class GameSessionViewModel {
         battleViewModel = BattleViewModel(
             state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
             skills: skillDefinitions,
+            inventory: inventoryViewModel?.inventory ?? PartyInventory(),
+            itemDefinitions: itemDefinitions,
             initialPositions: battleInitialPositions(for: encounter, trigger: trigger),
             surfaces: battleSurfaces(),
             hasLineOfSight: battleLineOfSight
@@ -210,6 +218,16 @@ final class GameSessionViewModel {
         statusText = "已读取存档。"
     }
 
+    private func performSafeAutosave() {
+        guard let save = makeCurrentSave() else { return }
+        do {
+            try saveGameStore.write(save, to: .auto(1), safety: .safe)
+            saveLoadViewModel?.refresh()
+        } catch {
+            GameLog.save.error("安全自动存档失败")
+        }
+    }
+
     private static func loadCatalog(from bundle: Bundle) -> ContentCatalog? {
         guard let dataDirectory = bundle.resourceURL?.appending(path: "Data") else { return nil }
         return try? ContentLoader.load(from: dataDirectory)
@@ -229,6 +247,7 @@ final class GameSessionViewModel {
                 inventory.addItem(id: itemID)
             }
         }
+        inventory.addItem(id: "minor_healing_draught", quantity: 2)
         return inventory
     }
 

@@ -71,5 +71,17 @@
     "effects": [
       { "damage": { "_0": 5 } }
     ]
+  },
+  {
+    "id": "minor_healing_draught",
+    "displayName": "止血药剂",
+    "actionPointCost": 1,
+    "range": 2.5,
+    "target": "ally",
+    "affectsAllies": true,
+    "canBeDodged": false,
+    "effects": [
+      { "heal": { "_0": 8 } }
+    ]
   }
 ]

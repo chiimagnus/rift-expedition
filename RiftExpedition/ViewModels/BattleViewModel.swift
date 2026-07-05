@@ -6,7 +6,14 @@ enum BattleActionChoice: Equatable {
     case move
     case basicAttack
     case skill(String)
-    case consumable
+    case consumable(String)
+}
+
+struct BattleConsumableRow: Equatable, Identifiable {
+    var id: String
+    var displayName: String
+    var count: Int
+    var actionPointCost: Int
 }
 
 struct BattleSurfaceMarker: Equatable, Identifiable {
@@ -48,6 +55,7 @@ final class BattleViewModel {
     private var engine: BattleEngine
     private let skillDefinitions: [SkillDefinition]
     private let skillsByID: [String: SkillDefinition]
+    private let itemDefinitions: [ItemDefinition]
     private let hasLineOfSight: (CGPoint, CGPoint) -> Bool
     private var random = SeededRandomSource(seed: 20260706)
 
@@ -56,11 +64,14 @@ final class BattleViewModel {
     var targetPrompt = "选择移动位置，或先选择技能再点敌人。"
     var actorPositions: [String: CGPoint]
     var surfaces: [BattleSurfaceMarker]
+    var inventory: PartyInventory
     var lastEffectPoint: CGPoint?
 
     init(
         state: BattleState,
         skills: [SkillDefinition],
+        inventory: PartyInventory = PartyInventory(),
+        itemDefinitions: [ItemDefinition] = [],
         initialPositions: [String: CGPoint] = [:],
         surfaces: [BattleSurfaceMarker] = [],
         hasLineOfSight: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true }
@@ -72,7 +83,9 @@ final class BattleViewModel {
             indexedSkills[skill.id] = skill
         }
         skillsByID = indexedSkills
+        self.itemDefinitions = itemDefinitions
         actorPositions = Self.makeInitialPositions(for: state.actors, overrides: initialPositions)
+        self.inventory = inventory
         self.surfaces = surfaces
         self.hasLineOfSight = hasLineOfSight
     }
@@ -108,8 +121,8 @@ final class BattleViewModel {
             "普攻"
         case let .skill(id):
             skillsByID[id]?.displayName ?? "技能"
-        case .consumable:
-            "消耗品"
+        case let .consumable(id):
+            consumableItem(id: id)?.displayName ?? "消耗品"
         }
     }
 
@@ -148,6 +161,20 @@ final class BattleViewModel {
             moveRadius: moveRadius,
             lastEffectPoint: lastEffectPoint
         )
+    }
+
+    var consumableRows: [BattleConsumableRow] {
+        itemDefinitions
+            .filter { $0.kind == .consumable && inventory.count(of: $0.id) > 0 }
+            .compactMap { item in
+                guard let skillID = item.skillID, let skill = skillsByID[skillID] else { return nil }
+                return BattleConsumableRow(
+                    id: item.id,
+                    displayName: item.displayName,
+                    count: inventory.count(of: item.id),
+                    actionPointCost: skill.actionPointCost
+                )
+            }
     }
 
     func canMove(distance: Double = APRules.movementDistancePerAPStartingValue) -> Bool {
@@ -237,10 +264,29 @@ final class BattleViewModel {
         targetPrompt = "点击目标释放「\(skill.displayName)」。"
     }
 
-    func selectConsumable() {
-        selectedAction = .consumable
-        targetPrompt = "选择消耗品目标。"
-        statusText = "首版尚未配置战斗消耗品。"
+    func selectConsumable(id: String) {
+        guard let item = consumableItem(id: id), let skillID = item.skillID, let skill = skillsByID[skillID] else {
+            statusText = "没有找到消耗品配置。"
+            return
+        }
+        guard inventory.count(of: id) > 0 else {
+            statusText = "背包中没有该消耗品。"
+            return
+        }
+        guard let actor = activeActor, actor.faction == .player else {
+            statusText = "当前不是玩家回合。"
+            return
+        }
+        guard actor.stats.actionPoints >= skill.actionPointCost else {
+            statusText = readableError(BattleActionError.insufficientActionPoints(
+                required: skill.actionPointCost,
+                available: actor.stats.actionPoints
+            ))
+            return
+        }
+
+        selectedAction = .consumable(id)
+        targetPrompt = "点击队友使用「\(item.displayName)」。"
     }
 
     func handleWorldClick(_ point: CGPoint) {
@@ -285,12 +331,14 @@ final class BattleViewModel {
 
     private var selectedSkill: SkillDefinition? {
         switch selectedAction {
-        case .move, .consumable:
+        case .move:
             nil
         case .basicAttack:
             activeSkills.first
         case let .skill(id):
             skillsByID[id]
+        case let .consumable(id):
+            consumableItem(id: id)?.skillID.flatMap { skillsByID[$0] }
         }
     }
 
@@ -367,6 +415,10 @@ final class BattleViewModel {
             statusText = "没有找到目标。"
             return statusText
         }
+        if case let .consumable(itemID) = selectedAction, inventory.count(of: itemID) <= 0 {
+            statusText = "背包中没有该消耗品。"
+            return statusText
+        }
         guard isAllowedTarget(target, for: skill, caster: actor) else {
             statusText = "该目标不能被当前行动影响。"
             return statusText
@@ -395,6 +447,7 @@ final class BattleViewModel {
             let afterHealth = state.actor(id: targetID)?.stats.health ?? beforeHealth
             let damage = max(0, beforeHealth - afterHealth)
             let surfaceText = applyCreatedSurfaces(resolution.createdSurfaces, at: targetPosition, targetID: targetID)
+            consumeSelectedItemIfNeeded()
 
             if resolution.didDodge {
                 statusText = "\(target.displayName) 闪避了 \(label)。"
@@ -431,6 +484,19 @@ final class BattleViewModel {
             }
         }
         return messages.joined(separator: "")
+    }
+
+    private func consumeSelectedItemIfNeeded() {
+        guard case let .consumable(itemID) = selectedAction else { return }
+        do {
+            try inventory.removeItem(id: itemID)
+            if inventory.count(of: itemID) == 0 {
+                selectedAction = .move
+                targetPrompt = "消耗品已用完，选择下一步行动。"
+            }
+        } catch {
+            statusText = readableError(error)
+        }
     }
 
     private func applySurface(_ surface: SurfaceType, to actorID: String) {
@@ -480,6 +546,10 @@ final class BattleViewModel {
             return false
         }
         return activeActor.stats.actionPoints >= actionPointCost
+    }
+
+    private func consumableItem(id: String) -> ItemDefinition? {
+        itemDefinitions.first { $0.id == id && $0.kind == .consumable }
     }
 
     private func distances(from actor: Actor) -> [String: Double] {
@@ -558,6 +628,8 @@ final class BattleViewModel {
             return readableBattleError(battleError)
         case let targetingError as TargetingError:
             return readableTargetingError(targetingError)
+        case let inventoryError as InventoryError:
+            return readableInventoryError(inventoryError)
         default:
             return "行动失败。"
         }
@@ -586,6 +658,13 @@ final class BattleViewModel {
             return "视线被障碍挡住。"
         case .allyNotAllowed:
             return "该技能不能影响队友。"
+        }
+    }
+
+    private func readableInventoryError(_ error: InventoryError) -> String {
+        switch error {
+        case let .insufficientQuantity(_, _, available):
+            return "消耗品不足：当前 \(available)。"
         }
     }
 

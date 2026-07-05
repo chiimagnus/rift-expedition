@@ -94,8 +94,16 @@ struct BattleHUDView: View {
                 }
                 .disabled(!viewModel.canPerformBasicAttack)
 
-                Button("消耗品") {
-                    viewModel.selectConsumable()
+                Menu("消耗品") {
+                    if viewModel.consumableRows.isEmpty {
+                        Text("背包中没有可用消耗品")
+                    } else {
+                        ForEach(viewModel.consumableRows) { item in
+                            Button("\(item.displayName) x\(item.count) · \(item.actionPointCost) AP") {
+                                viewModel.selectConsumable(id: item.id)
+                            }
+                        }
+                    }
                 }
             }
             .buttonStyle(.borderedProminent)

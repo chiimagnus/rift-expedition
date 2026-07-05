@@ -85,6 +85,36 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertTrue(viewModel.statusText.hasPrefix("距离太远"))
     }
 
+    func testConsumableUsesSkillEffectAndDecrementsInventory() {
+        let potion = ItemDefinition(
+            id: "minor_healing_draught",
+            displayName: "止血药剂",
+            kind: .consumable,
+            skillID: "minor_healing_draught"
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, health: 4, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [healingDraught],
+            inventory: PartyInventory(itemCounts: ["minor_healing_draught": 1]),
+            itemDefinitions: [potion],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 220, y: 100)
+            ]
+        )
+
+        viewModel.selectConsumable(id: "minor_healing_draught")
+        viewModel.performSelectedAction(targetID: "player")
+
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.health, 12)
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 3)
+        XCTAssertEqual(viewModel.inventory.count(of: "minor_healing_draught"), 0)
+        XCTAssertEqual(viewModel.selectedAction, .move)
+    }
+
     func testEndTurnAdvancesActiveActorAndRefreshesActionPoints() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
@@ -147,6 +177,19 @@ final class BattleViewModelTests: XCTestCase {
             affectsAllies: false,
             canBeDodged: true,
             effects: [.damage(6)]
+        )
+    }
+
+    private var healingDraught: SkillDefinition {
+        SkillDefinition(
+            id: "minor_healing_draught",
+            displayName: "止血药剂",
+            actionPointCost: 1,
+            range: 2.5,
+            target: .ally,
+            affectsAllies: true,
+            canBeDodged: false,
+            effects: [.heal(8)]
         )
     }
 
