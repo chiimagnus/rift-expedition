@@ -23,8 +23,8 @@
 
 ## 签名与分发状态
 
-- 当前 App 为 ad-hoc 签名，Mach-O universal：`x86_64 arm64`。
-- `spctl --assess` 结果：未通过，因为当前没有 Developer ID 签名和 notarization。
+- 当前 App 为 Apple Development 签名，Mach-O universal：`x86_64 arm64`。
+- `spctl --assess` 结果：未通过，因为当前不是 Developer ID 签名且没有 notarization。
 - 本 task 只交付本机可运行包；站外发给其他机器前必须补 Developer ID 签名、hardened runtime、notarytool notarization、staple，并重新跑 `spctl --assess`。
 
 ## 后续正式发布步骤
