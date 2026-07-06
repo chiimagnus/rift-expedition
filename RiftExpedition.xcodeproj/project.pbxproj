@@ -3,19 +3,19 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0246E914ED83246EA311D898 /* InventoryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */; };
 		07A9D3403701FF8FA75EAE88 /* GameSessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */; };
+		0A1B2C3D4E5F60718293A4B5 /* ChapterCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F60718293A4B7 /* ChapterCompleteView.swift */; };
+		0A1B2C3D4E5F60718293A4B6 /* ChapterCompleteViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F60718293A4B8 /* ChapterCompleteViewModelTests.swift */; };
 		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
 		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
 		165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */; };
 		1848CFC49F32B6EF6667BE62 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 88DF543C5A5385E21EDF8CFD /* Data */; };
 		1D86B4BB78F507A4FF4DCBBC /* PartyCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6489FE796C584D033A572F3 /* PartyCreationView.swift */; };
-		0A1B2C3D4E5F60718293A4B5 /* ChapterCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F60718293A4B7 /* ChapterCompleteView.swift */; };
-		0A1B2C3D4E5F60718293A4B6 /* ChapterCompleteViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F60718293A4B8 /* ChapterCompleteViewModelTests.swift */; };
 		25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */; };
 		2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */; };
 		3611029602000DC07423A95F /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 9378BAD0E4B3DC7D9AF2FBCD /* Assets */; };
@@ -384,7 +384,6 @@
 				C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */,
 				47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -580,6 +579,7 @@
 				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = RDQHYSDFFG;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -601,6 +601,7 @@
 				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = RDQHYSDFFG;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
