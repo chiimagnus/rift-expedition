@@ -297,6 +297,31 @@ struct RiftHumanoidSilhouette: View {
     }
 }
 
+// MARK: - 对话选项按钮（全宽行式，用于对话框/剧情选择列表）
+
+struct RiftDialogOptionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "chevron.right")
+                .font(.callout.weight(.bold))
+                .foregroundStyle(RiftPalette.bannerRed)
+            configuration.label
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(RiftPalette.textBrown)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(RiftPalette.parchmentShade)
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(RiftPalette.outline.opacity(0.6), lineWidth: 1.5))
+        )
+        .opacity(configuration.isPressed ? 0.75 : 1)
+        .scaleEffect(configuration.isPressed ? 0.99 : 1)
+    }
+}
+
 // MARK: - 图标映射（职业 / 装备槽 / 物品）
 
 enum RiftClassIconography {

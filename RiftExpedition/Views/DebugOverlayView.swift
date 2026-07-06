@@ -6,8 +6,8 @@ struct DebugOverlayView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("调试")
-                .font(.caption.bold())
-                .foregroundStyle(Color(red: 0.84, green: 0.73, blue: 0.42))
+                .font(.caption.weight(.bold))
+                .foregroundStyle(RiftPalette.bannerRed)
 
             debugRow("状态", viewModel.appState.title)
             debugRow("最后坐标", lastClickText)
@@ -19,11 +19,14 @@ struct DebugOverlayView: View {
         }
         .font(.caption.monospaced())
         .padding(12)
-        .foregroundStyle(.white)
-        .background(.black.opacity(0.72), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.16), lineWidth: 1)
+        .foregroundStyle(RiftPalette.textBrown)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(RiftPalette.parchment.opacity(0.92))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(RiftPalette.outline.opacity(0.5), lineWidth: 1.5)
+                )
         )
     }
 
@@ -35,7 +38,7 @@ struct DebugOverlayView: View {
     private func debugRow(_ title: String, _ value: String) -> some View {
         HStack {
             Text(title)
-                .foregroundStyle(.white.opacity(0.62))
+                .foregroundStyle(RiftPalette.textBrownLight)
             Spacer()
             Text(value)
         }

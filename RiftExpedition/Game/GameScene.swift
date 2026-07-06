@@ -291,7 +291,7 @@ final class GameScene: SKScene {
         }
         // 遭遇触发区（伏击点）必须始终显示，没有例外。这个项目的设计里没有「隐藏伏击」这种
         // 玩法（所有遭遇战都是地图上固定安排好的，不是随机出现的——见 Docs/chapter1-worldgraph.md），
-        // 所以如果触发区完全看不见，那是渲染上��� bug，不是故意藏起来防剧透。
+        // 所以如果触发区完全看不见，那是渲染上的 bug，不是故意藏起来防剧透。
         for encounter in metadata.encounterTriggers {
             layer.addChild(makeEncounterMarker(encounter))
         }
@@ -403,7 +403,7 @@ final class GameScene: SKScene {
 
     // 这是第一章所有 .tmx 地图里出现过的真实障碍物名字（搜索所有 navObstacle 对象组得到），
     // 不包含每张地图都有的四面边界墙（北/南/西/东边界/村墙/浅河边界/河岸护栏）——
-    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，���管在不在这个名单里，
+    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，不管在不在这个名单里，
     // 都会被下面的尺寸判断规则排除掉。
     private static let obstaclePropNameFragments = [
         "倒木", "木料", "篱笆", "货车", "废木堆",

@@ -7,55 +7,48 @@ struct DialogView: View {
     let onStartBattle: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        RiftPanelScaffold(
+            title: viewModel.activeDialog?.speakerName ?? "对话",
+            onClose: viewModel.activeDialog == nil ? onClose : nil,
+            maxWidth: 760
+        ) {
             if let dialog = viewModel.activeDialog {
-                Text(dialog.speakerName)
-                    .font(.system(size: 36, weight: .black, design: .serif))
-                    .foregroundStyle(.white)
+                VStack(alignment: .leading, spacing: 14) {
+                    ForEach(dialog.lines, id: \.self) { line in
+                        Text(line)
+                            .font(.title3)
+                            .foregroundStyle(RiftPalette.textBrown.opacity(0.88))
+                    }
 
-                ForEach(dialog.lines, id: \.self) { line in
-                    Text(line)
-                        .font(.title3)
-                        .foregroundStyle(.white.opacity(0.82))
-                }
+                    if !viewModel.message.isEmpty {
+                        Text(viewModel.message)
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(RiftPalette.bannerRed)
+                    }
 
-                if !viewModel.message.isEmpty {
-                    Text(viewModel.message)
-                        .font(.callout.bold())
-                        .foregroundStyle(Color(red: 0.84, green: 0.73, blue: 0.42))
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(dialog.options) { option in
-                        Button(option.title) {
-                            switch viewModel.choose(option) {
-                            case .none:
-                                break
-                            case .close:
-                                onClose()
-                            case let .completedQuest(questID):
-                                onCompleteQuest(questID)
-                            case let .startBattle(encounterID):
-                                onStartBattle(encounterID)
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(dialog.options) { option in
+                            Button(option.title) {
+                                switch viewModel.choose(option) {
+                                case .none:
+                                    break
+                                case .close:
+                                    onClose()
+                                case let .completedQuest(questID):
+                                    onCompleteQuest(questID)
+                                case let .startBattle(encounterID):
+                                    onStartBattle(encounterID)
+                                }
                             }
+                            .buttonStyle(RiftDialogOptionButtonStyle())
+                            .accessibilityLabel("对话选项：\(option.title)")
                         }
-                        .accessibilityLabel("对话选项：\(option.title)")
                     }
                 }
-                .buttonStyle(.borderedProminent)
             } else {
                 Text(viewModel.message)
-                    .foregroundStyle(.white)
-                Button("返回") {
-                    onClose()
-                }
-                .buttonStyle(.borderedProminent)
-                .accessibilityLabel("返回探索")
+                    .foregroundStyle(RiftPalette.textBrown)
             }
         }
-        .frame(maxWidth: 760, alignment: .leading)
-        .padding(36)
-        .background(.black.opacity(0.42), in: RoundedRectangle(cornerRadius: 22))
-        .padding(32)
     }
 }
