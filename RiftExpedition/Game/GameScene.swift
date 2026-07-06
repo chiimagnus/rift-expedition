@@ -215,7 +215,19 @@ final class GameScene: SKScene {
         node.lineWidth = 2
         node.zPosition = 10
         worldLayer.addChild(node)
+
+        let sprite = SKSpriteNode(texture: texture(named: partySpriteName(for: member)))
+        sprite.name = "partySprite_\(member.actorID)"
+        sprite.size = CGSize(width: 30, height: 30)
+        sprite.zPosition = 1
+        node.addChild(sprite)
+
         return node
+    }
+
+    private func partySpriteName(for member: PartyMemberPosition) -> String {
+        guard let classID = member.classID else { return "actor_warrior" }
+        return "actor_\(classID)"
     }
 
     private func renderStaticObjects(metadata: TiledMapMetadata) {
@@ -245,7 +257,7 @@ final class GameScene: SKScene {
             layer.addChild(makeMapSprite(name: spriteName(forNPC: npc), position: npc.position, size: CGSize(width: 52, height: 52)))
         }
         for item in metadata.items {
-            layer.addChild(makeMapSprite(name: item.itemID == "rusted_sword" ? "prop_chest" : "prop_chest", position: item.position, size: CGSize(width: 48, height: 48)))
+            layer.addChild(makeMapSprite(name: spriteName(forMapItem: item), position: item.position, size: CGSize(width: 48, height: 48)))
         }
     }
 
@@ -429,6 +441,10 @@ final class GameScene: SKScene {
         if let texture = textureCache[name] {
             return texture
         }
+        if let texture = villageNPCTexture(named: name) {
+            textureCache[name] = texture
+            return texture
+        }
         let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Sprites")
             ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Characters")
             ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Icons")
@@ -442,12 +458,49 @@ final class GameScene: SKScene {
         return texture
     }
 
+    /// `Assets/Characters/village_npcs.png` is a registered 3-frame horizontal strip
+    /// (elder / resident / guard) meant for chapter village NPCs. `spriteName(forNPC:)`
+    /// resolves a frame name below; this slices the matching rect out of the shared sheet
+    /// instead of requiring a dedicated PNG per NPC.
+    private static let villageNPCFrames: [String: Int] = [
+        "npc_village_resident": 1,
+        "npc_village_guard": 2
+    ]
+
+    private func villageNPCTexture(named name: String) -> SKTexture? {
+        guard let frameIndex = Self.villageNPCFrames[name] else { return nil }
+        guard let sheetURL = Bundle.main.url(forResource: "village_npcs", withExtension: "png", subdirectory: "Assets/Characters"),
+              let sheetImage = NSImage(contentsOf: sheetURL) else {
+            return nil
+        }
+
+        let sheetTexture = SKTexture(image: sheetImage)
+        let frameCount: CGFloat = 3
+        let rect = CGRect(x: CGFloat(frameIndex) / frameCount, y: 0, width: 1 / frameCount, height: 1)
+        let texture = SKTexture(rect: rect, in: sheetTexture)
+        texture.filteringMode = .nearest
+        return texture
+    }
+
     private func spriteName(forNPC npc: MapNPC) -> String {
         switch npc.actorID {
         case "elder", "mayor":
             "npc_elder"
+        case "gate_guard":
+            "npc_village_guard"
         default:
-            "npc_elder"
+            "npc_village_resident"
+        }
+    }
+
+    private func spriteName(forMapItem item: MapItem) -> String {
+        switch item.itemID {
+        case "minor_healing_draught":
+            "icon_potion"
+        case "element_ore_ledger", "rift_shard_amulet":
+            "icon_element_ore"
+        default:
+            "prop_chest"
         }
     }
 }

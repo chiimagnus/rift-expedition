@@ -49,4 +49,29 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_8"))
         XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_9"))
     }
+
+    func testExplorationPartyMembersRenderWithClassSprites() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+        scene.loadMap(areaID: "village_square")
+
+        scene.renderParty(
+            [
+                PartyMemberPosition(
+                    actorID: "player_1",
+                    displayName: "战士1",
+                    classID: "warrior",
+                    position: CGPoint(x: 160, y: 320),
+                    target: nil
+                )
+            ],
+            leaderID: "player_1"
+        )
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let partyNode = try XCTUnwrap(worldLayer.childNode(withName: "party_player_1"))
+        // Regression guard for the "exploration party has no art" bug: the party marker must
+        // carry an actual class sprite child, not just a bare colored circle.
+        XCTAssertNotNil(partyNode.childNode(withName: "partySprite_player_1"))
+    }
 }
