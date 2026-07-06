@@ -40,6 +40,29 @@ struct SaveGameStore {
         })
     }
 
+    func latestReadableAutosave() -> (slot: SaveSlot, save: SaveGame)? {
+        let candidates = SaveSlotPolicy.autoSlots.compactMap { slot -> (slot: SaveSlot, save: SaveGame, modifiedAt: Date)? in
+            let url = fileURL(for: slot)
+            guard FileManager.default.fileExists(atPath: url.path), let save = try? read(slot) else {
+                return nil
+            }
+
+            let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+            let modifiedAt = attributes?[.modificationDate] as? Date ?? .distantPast
+            return (slot, save, modifiedAt)
+        }
+
+        return candidates
+            .sorted { lhs, rhs in
+                if lhs.modifiedAt == rhs.modifiedAt {
+                    return lhs.slot.index < rhs.slot.index
+                }
+                return lhs.modifiedAt > rhs.modifiedAt
+            }
+            .first
+            .map { (slot: $0.slot, save: $0.save) }
+    }
+
     func writeRawData(_ data: Data, to slot: SaveSlot) throws {
         try SaveSlotPolicy.validate(slot)
         try createDirectoryIfNeeded()

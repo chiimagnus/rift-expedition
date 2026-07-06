@@ -35,6 +35,21 @@ final class SaveLoadViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.rows.first { $0.slot == .auto(1) }?.canLoad == true)
     }
 
+    func testRejectedAutosavePreservesExistingSlot() throws {
+        let store = makeStore()
+        try store.write(makeSave(areaID: "old_safe_area"), to: .auto(1), safety: .safe)
+        let viewModel = SaveLoadViewModel(
+            store: store,
+            makeSave: { self.makeSave(areaID: "new_unsafe_area") },
+            applySave: { _ in }
+        )
+
+        viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
+
+        XCTAssertEqual(try store.read(.auto(1)).currentAreaID, "old_safe_area")
+        XCTAssertEqual(viewModel.message, "自动存档被拒绝：当前不是安全点。")
+    }
+
     func testCorruptSlotShowsChineseError() throws {
         let store = makeStore()
         try store.writeRawData(Data("{".utf8), to: .manual(2))

@@ -27,6 +27,7 @@
 		6347CEA63EB39C695173C2CB /* ExplorationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5A0519DE22D34D64B8042B /* ExplorationController.swift */; };
 		6802995F9D5D42B766DFD4D6 /* BattleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C293E92E0C61C83BC23C3D8 /* BattleViewModel.swift */; };
 		6B6AA44F5BF0D3257C309ECF /* DialogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */; };
+		70C4603FB3C84E4291582401 /* GameOverRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */; };
 		75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E228968FC56BB933A3CABE /* GameLog.swift */; };
 		762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD76F051C6CC030C6D0731 /* SettingsView.swift */; };
 		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
@@ -81,6 +82,7 @@
 		3A5A0519DE22D34D64B8042B /* ExplorationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationController.swift; sourceTree = "<group>"; };
 		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverRecoveryTests.swift; sourceTree = "<group>"; };
 		53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterTriggerService.swift; sourceTree = "<group>"; };
 		5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlayView.swift; sourceTree = "<group>"; };
 		5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleHUDView.swift; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 				CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */,
 				13ADCD02CE1DDCFC52A3C22E /* EncounterTriggerServiceTests.swift */,
 				B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */,
+				4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */,
 				13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */,
 				3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */,
 				30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */,
@@ -452,6 +455,7 @@
 				6B6AA44F5BF0D3257C309ECF /* DialogViewModelTests.swift in Sources */,
 				FFA0837788C20216C0548B5E /* EncounterTriggerServiceTests.swift in Sources */,
 				165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */,
+				70C4603FB3C84E4291582401 /* GameOverRecoveryTests.swift in Sources */,
 				07A9D3403701FF8FA75EAE88 /* GameSessionViewModelTests.swift in Sources */,
 				0246E914ED83246EA311D898 /* InventoryViewModelTests.swift in Sources */,
 				25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */,

@@ -176,11 +176,13 @@ final class GameSessionViewModel {
     }
 
     func completeChapter() {
-        performSafeAutosave()
+        let didAutosave = performSafeAutosave()
         audioService.play(.click)
         battleViewModel = nil
         appState = .chapterComplete
-        statusText = "第一章完成：村长的谎言已经被揭穿。"
+        statusText = didAutosave
+            ? "第一章完成：村长的谎言已经被揭穿。"
+            : "第一章完成，但自动存档失败；已保留上一个安全存档。"
     }
 
     func finishBattle() {
@@ -202,12 +204,14 @@ final class GameSessionViewModel {
                 inventory: battleViewModel.inventory,
                 itemDefinitions: itemDefinitions
             )
-            performSafeAutosave()
+            let didAutosave = performSafeAutosave()
             self.battleViewModel = nil
             appState = .exploration
-            statusText = "战斗胜利。倒下的队友已在战后复活。"
+            statusText = didAutosave
+                ? "战斗胜利。倒下的队友已在战后复活。"
+                : "战斗胜利，倒下的队友已复活；自动存档失败，已保留上一个安全存档。"
         case .defeat:
-            statusText = "全队倒下。后续会读取最近安全自动存档。"
+            recoverFromLatestAutosave()
         case .ongoing:
             statusText = "战斗尚未结束。"
         }
@@ -263,14 +267,31 @@ final class GameSessionViewModel {
         statusText = "已读取存档。"
     }
 
-    private func performSafeAutosave() {
-        guard let save = makeCurrentSave() else { return }
+    @discardableResult
+    private func performSafeAutosave() -> Bool {
+        guard let save = makeCurrentSave() else { return false }
         do {
             try saveGameStore.write(save, to: .auto(1), safety: .safe)
             saveLoadViewModel?.refresh()
+            return true
         } catch {
             GameLog.save.error("安全自动存档失败")
+            statusText = "自动存档失败；已保留上一个安全存档。"
+            return false
         }
+    }
+
+    private func recoverFromLatestAutosave() {
+        battleViewModel = nil
+        guard let recovery = saveGameStore.latestReadableAutosave() else {
+            returnToMainMenu()
+            statusText = "全队倒下，但没有可用自动存档；已返回主菜单。"
+            return
+        }
+
+        apply(recovery.save)
+        saveLoadViewModel?.refresh()
+        statusText = "全队倒下，已读取自动槽 \(recovery.slot.index) 的安全自动存档。"
     }
 
     private static func loadCatalog(from bundle: Bundle) -> ContentCatalog? {
