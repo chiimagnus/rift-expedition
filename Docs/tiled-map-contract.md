@@ -1,25 +1,25 @@
-# Tiled Map Contract
+# Tiled 地图契约
 
-`.tmx` is the canonical map source. Generated summaries, SVG previews, and markdown reports are review artifacts, not hand-edited source.
+`.tmx` 是标准地图源。生成的摘要、SVG 预览、Markdown 报告都是评审产物，不是手写源。
 
-## Required Object Layers
+## 必需对象层
 
-- `spawn`: requires `id`
-- `npc`: requires `actorId`, `dialogId`
-- `encounter`: requires `encounterId`, `radius`
-- `trigger`: requires `triggerId`, `action`
-- `exit`: requires `targetAreaId`, `targetSpawnId`
-- `navObstacle`: requires `blocksMovement`, `blocksSight`
-- `surface`: requires `surfaceType`
-- `item`: requires `itemId`
+- `spawn`：需要 `id`
+- `npc`：需要 `actorId`、`dialogId`
+- `encounter`：需要 `encounterId`、`radius`
+- `trigger`：需要 `triggerId`、`action`
+- `exit`：需要 `targetAreaId`、`targetSpawnId`
+- `navObstacle`：需要 `blocksMovement`、`blocksSight`
+- `surface`：需要 `surfaceType`
+- `item`：需要 `itemId`
 
-## Validation Rules
+## 校验规则
 
-- All required layers must exist, even if empty.
-- Tiled numeric object ids must be unique per map.
-- Required properties must be present.
-- `exit.targetSpawnId` must reference an existing `spawn.id` in the validated map.
-- `spawn` points must not be inside `navObstacle` objects with `blocksMovement = true`.
+- 所有必需层都必须存在，即使为空。
+- Tiled 数字对象 id 在每张地图内必须唯一。
+- 必需属性必须存在。
+- `exit.targetSpawnId` 必须引用被校验地图中存在的 `spawn.id`。
+- `spawn` 点不得位于 `blocksMovement = true` 的 `navObstacle` 对象内。
 
 ## CLI
 
@@ -27,4 +27,4 @@
 rtk swift run --package-path Tools/RiftValidator RiftValidator RiftExpedition/Resources --area village_square --write-preview Docs/Reports/map-previews/chapter1/village_square --write-report Docs/Reports/map-previews/chapter1/village_square/report.md
 ```
 
-`--write-preview` writes SVG previews. `--write-report` writes a markdown report.
+`--write-preview` 写入 SVG 预览。`--write-report` 写入 Markdown 报告。

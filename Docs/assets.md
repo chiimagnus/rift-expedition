@@ -73,5 +73,5 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 ## 4. 如何审查
 
 - 资源清单：检查 `assets-manifest.json` 每个条目的 `license`、`source`、`path`。
-- 地图预览 / 校验：运行 validator（预览与报告为生成产物，不入库，见 `tiled-map-contract.md`）。
+- 地图预览 / 校验：运行 validator（预览与报告为生成产物，不入库，见 [`tiled-map-contract.md`](tiled-map-contract.md)）。
 - 禁止提交文件名或 id 含 `placeholder`、`temp`、`graybox` 的正式资源。
