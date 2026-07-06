@@ -3,6 +3,7 @@ import RiftCore
 import XCTest
 @testable import RiftExpedition
 
+@MainActor
 final class EncounterTriggerServiceTests: XCTestCase {
     func testBundledEncounterDefinitionsDecode() {
         let encounters = EncounterTriggerService.loadDefinitions()

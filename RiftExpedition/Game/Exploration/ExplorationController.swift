@@ -5,6 +5,7 @@ import RiftCore
 struct PartyMemberPosition: Equatable {
     var actorID: String
     var displayName: String
+    var classID: String?
     var position: CGPoint
     var target: CGPoint?
 }
@@ -25,6 +26,7 @@ struct ExplorationController: Equatable {
             PartyMemberPosition(
                 actorID: actor.id,
                 displayName: actor.displayName,
+                classID: actor.classID,
                 position: CGPoint(x: start.x - CGFloat(index) * followDistance, y: start.y),
                 target: nil
             )

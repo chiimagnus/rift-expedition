@@ -217,7 +217,14 @@ private struct GameSceneView: View {
     @State private var scene = GameScene.makeScene()
 
     var body: some View {
-        SpriteView(scene: scene)
+        // 打开 `ignoresSiblingOrder: true` 之后，SpriteKit 会按每个节点的 zPosition（图层高低）
+        // 做全局排序，而不是按父子层级一层层排。
+        // 地图插件 SKTiled 的 `SKTilemap` 会给它解析出来的每个地图图层自己分配一个内部的
+        // zPosition；如果不开这个开关，我们直接挂在 worldLayer 下面的内容（队伍标记、NPC、
+        // 物品、出口、遭遇点——具体见 GameScene）就可能被 SpriteKit 排到地图图层「看不见」的
+        // 位置，表现出来就是「只看到地图，别的都不显示」。这是 SKTiled 官方推荐的 SKView
+        // 设置方式，这里再配合把我们自己图层的 zPosition 调得高一些，双重保险。
+        SpriteView(scene: scene, options: [.ignoresSiblingOrder])
             .accessibilityLabel("游戏地图")
             .accessibilityHint("点击地面移动，点击角色、物品或触发点互动。")
             .onAppear {

@@ -2,6 +2,7 @@ import CoreGraphics
 import XCTest
 @testable import RiftExpedition
 
+@MainActor
 final class NavigationServiceTests: XCTestCase {
     func testVerticalSliceMetadataReadsNavigationObstacles() throws {
         let metadata = try TiledMapLoader.loadMetadata(url: verticalSliceURL(), areaID: "vertical_slice")

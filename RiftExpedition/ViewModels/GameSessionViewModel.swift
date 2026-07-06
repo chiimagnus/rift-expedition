@@ -372,7 +372,8 @@ final class GameSessionViewModel {
     }
 
     private func questTurnInItemIDs(for questID: String) -> [String] {
-        // ponytail: first chapter has two hand-authored turn-ins; move this to quest data once requirements grow.
+        // ponytail（有意为之的技术债）：第一章目前只有两个手写好的任务提交逻辑；
+        // 如果以后任务变多、需求变复杂，再把这部分挪到统一的任务数据里管理。
         switch questID {
         case "blood_debt":
             return ["element_ore_ledger"]

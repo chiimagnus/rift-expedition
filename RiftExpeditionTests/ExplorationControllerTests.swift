@@ -35,6 +35,22 @@ final class ExplorationControllerTests: XCTestCase {
         XCTAssertLessThan(leader.position.x, 300)
     }
 
+    func testConfigurePartyCarriesClassIDForRendering() throws {
+        var controller = ExplorationController()
+        controller.configureParty(
+            [
+                actor(id: "player_1", displayName: "战士1", classID: "warrior"),
+                actor(id: "player_2", displayName: "法师2", classID: "mage")
+            ],
+            at: CGPoint(x: 100, y: 100)
+        )
+
+        let leader = try XCTUnwrap(controller.members.first { $0.actorID == "player_1" })
+        let follower = try XCTUnwrap(controller.members.first { $0.actorID == "player_2" })
+        XCTAssertEqual(leader.classID, "warrior")
+        XCTAssertEqual(follower.classID, "mage")
+    }
+
     private var actorFixtures: [Actor] {
         [
             actor(id: "player_1", displayName: "战士1"),
@@ -42,7 +58,7 @@ final class ExplorationControllerTests: XCTestCase {
         ]
     }
 
-    private func actor(id: String, displayName: String) -> Actor {
+    private func actor(id: String, displayName: String, classID: String? = nil) -> Actor {
         Actor(
             id: id,
             displayName: displayName,
@@ -59,6 +75,7 @@ final class ExplorationControllerTests: XCTestCase {
                 maxActionPoints: 4,
                 actionPoints: 4
             ),
+            classID: classID,
             skillIDs: []
         )
     }

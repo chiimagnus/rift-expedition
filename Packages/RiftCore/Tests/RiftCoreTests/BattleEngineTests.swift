@@ -35,8 +35,8 @@ final class BattleEngineTests: XCTestCase {
     }
 
     func testMovementUsesStartingDistancePerAPValue() throws {
-        // Micro test plan: in the vertical slice, one turn should reach an adjacent tactical point.
-        // If movement is too strong, lower movementDistancePerAPStartingValue; if too weak, raise it.
+        // 小范围测试计划：在这个最小可玩版本里，一个回合应该刚好能走到相邻的一个战术点位。
+        // 如果移动距离太大，就调低 movementDistancePerAPStartingValue；太小就调高。
         XCTAssertEqual(APRules.movementCost(forDistance: APRules.movementDistancePerAPStartingValue), 1)
         XCTAssertEqual(APRules.movementCost(forDistance: APRules.movementDistancePerAPStartingValue + 0.1), 2)
     }

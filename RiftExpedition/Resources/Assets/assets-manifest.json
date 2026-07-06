@@ -126,15 +126,6 @@
     "author": "Rift Expedition project"
   },
   {
-    "id": "spritesheet.party_classes",
-    "path": "Assets/Characters/party_classes.png",
-    "type": "spritesheet",
-    "source": "local self-made procedural pixel spritesheet for player class silhouettes",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
     "id": "spritesheet.village_npcs",
     "path": "Assets/Characters/village_npcs.png",
     "type": "spritesheet",
