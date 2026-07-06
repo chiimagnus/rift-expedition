@@ -452,16 +452,13 @@ final class GameSessionViewModel {
         guard let metadata else { return [] }
 
         let npcBlockers = metadata.npcs.map { npc in
-            // 碰撞箱大小优先直接用地图作者在 Tiled 里给这个 npc 对象画的宽高（数据驱动，
-            // 改地图不用改代码）；旧地图数据没画宽高时 npc.frame 是个 0 大小的点对象，
-            // 这里才兜底成一个默认的小方块，保证旧地图不会变成完全没有碰撞体积。
-            let hitbox = npc.frame.width > 0 && npc.frame.height > 0
-                ? npc.frame
-                : CGRect(x: npc.position.x - 18, y: npc.position.y - 18, width: 36, height: 36)
-            return NavigationObstacle(
+            // 碰撞箱大小直接用地图作者在 Tiled 里给这个 npc 对象画的宽高（数据驱动，改地图不用改代码）。
+            // RiftValidator 在启动/发布校验时会强制要求每个 npc 对象都有非零宽高，
+            // 所以这里不再需要兜底默认值。
+            NavigationObstacle(
                 tiledID: -(1000 + npc.tiledID),
                 name: "npc_\(npc.actorID)",
-                frame: hitbox,
+                frame: npc.frame,
                 blocksMovement: true,
                 blocksSight: false
             )

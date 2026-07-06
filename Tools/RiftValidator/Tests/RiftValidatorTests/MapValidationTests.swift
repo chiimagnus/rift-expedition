@@ -15,6 +15,13 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(result.reportMarkdown().contains("Missing object layer: spawn"))
     }
 
+    func testMissingNpcSizeFailsWithReadableError() throws {
+        let result = try MapValidator.validate(url: fixture("invalid-map-missing-npc-size"))
+
+        XCTAssertFalse(result.isValid)
+        XCTAssertTrue(result.reportMarkdown().contains("npc object 2 missing hitbox size"))
+    }
+
     func testCrossAreaExitCanTargetSpawnInAnotherMap() throws {
         let results = try MapValidator.validate(urls: [
             fixture("cross-a"),

@@ -31,9 +31,9 @@ struct MapNPC: Equatable {
     var actorID: String
     var dialogID: String
     var position: CGPoint
-    /// NPC 在 Tiled 里的实际包围盒。地图作者可以直接在 Tiled 里把这个对象画成一个有宽高的矩形（而不是
-    /// 只标一个点）来控制碰撞箱大小；如果没画宽高（旧地图数据）就是宽高为 0 的点对象，
-    /// 调用方需自己处理回退情况。
+    /// NPC 在 Tiled 里的实际包围盒。地图作者必须在 Tiled 里把这个对象画成一个有宽高的矩形（而不是
+    /// 只标一个点）来控制碰撞箱大小；RiftValidator 会在启动/发布校验时拒绝宽高为 0 的 npc 对象，
+    /// 因此这里读到的 frame 总是有效的非零尺寸，调用方无需再做回退处理。
     var frame: CGRect
 }
 
