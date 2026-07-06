@@ -44,10 +44,31 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_4"))
         XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_5"))
         XCTAssertNotNil(staticLayer.childNode(withName: "triggerMarker_15"))
+        // village_square's navObstacle ids 6-9 are the four screen-edge boundary walls
+        // (北/南/西/东边界). They are always far larger than any real decorative obstacle
+        // (e.g. 1024x32 or 32x640), so `shouldRenderAsProp`'s size gate always excludes them —
+        // this stays true no matter which obstacle names get whitelisted.
         XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_6"))
         XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_7"))
         XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_8"))
         XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_9"))
+        // ids 10 (石井) and 11 (旧告示墙) are real discrete obstacles that now fall within the
+        // expanded name whitelist and size gate, so they must render as visible props.
+        XCTAssertNotNil(staticLayer.childNode(withName: "obstacleProp_10"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "obstacleProp_11"))
+    }
+
+    func testEncounterTriggersAlwaysRenderVisibleMarkers() throws {
+        // Encounters are fixed, map-authored, never random or hidden (Docs/chapter1-worldgraph.md).
+        // The marker must always be visible — no stealth/ambush spoiler-gating.
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        scene.loadMap(areaID: "village_outskirts")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "encounterMarker_11"))
     }
 
     func testExplorationPartyMembersRenderWithClassSprites() throws {
