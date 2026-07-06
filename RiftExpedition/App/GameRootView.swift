@@ -217,7 +217,15 @@ private struct GameSceneView: View {
     @State private var scene = GameScene.makeScene()
 
     var body: some View {
-        SpriteView(scene: scene)
+        // `ignoresSiblingOrder: true` makes SpriteKit sort every node in the scene by its
+        // cumulative zPosition globally, instead of walking the scene graph parent-by-parent.
+        // SKTiled's `SKTilemap` assigns its own internal zPosition to each tile/object layer it
+        // parses; without this flag, sibling content we add directly under `worldLayer` (party
+        // markers, NPCs, items, exits, encounters — see `GameScene`) can render in an order
+        // SpriteKit considers ambiguous relative to the tilemap's internal layers, matching the
+        // "only the map tiles show, nothing else" symptom. This is SKTiled's own recommended SKView
+        // setup, paired here with generously-raised zPosition values on our overlay layers.
+        SpriteView(scene: scene, options: [.ignoresSiblingOrder])
             .accessibilityLabel("游戏地图")
             .accessibilityHint("点击地面移动，点击角色、物品或触发点互动。")
             .onAppear {
