@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024.0" height="640.0" viewBox="0 0 1024.0 640.0">
+<rect width="100%" height="100%" fill="#1f2a1f"/>
+<text x="16" y="28" font-size="22" fill="#f8fafc">village_riverside</text>
+<text x="16" y="52" font-size="12" fill="#cbd5e1">底色=地形  棕色=障碍  青色=出生点  黄点=NPC  橙色=物品  红框=遭遇  蓝框=出口  紫框=触发器  半透明色块=地表</text>
+<rect x="0.0" y="0.0" width="1024.0" height="32.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="0.0" y="608.0" width="1024.0" height="32.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="0.0" y="0.0" width="32.0" height="640.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="992.0" y="0.0" width="32.0" height="640.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="256.0" y="448.0" width="544.0" height="32.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="64.0" y="480.0" width="256.0" height="96.0" fill="#38bdf8" opacity="0.55"/>
+<rect x="960.0" y="288.0" width="32.0" height="64.0" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="8 5"/>
+<text x="960.0" y="282.0" font-size="14" fill="#bfdbfe">出口 village_square.from_riverside</text>
+<rect x="96.0" y="576.0" width="32.0" height="64.0" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="8 5"/>
+<text x="96.0" y="570.0" font-size="14" fill="#bfdbfe">出口 wilds_riverbank.from_riverside</text>
+<rect x="128.0" y="480.0" width="96.0" height="64.0" fill="none" stroke="#c084fc" stroke-width="3"/>
+<text x="128.0" y="560.0" font-size="13" fill="#e9d5ff">触发器 riverside_bridge_hint</text>
+<circle cx="736.0" cy="320.0" r="8" fill="#facc15"/>
+<text x="746.0" y="324.0" font-size="13" fill="#fef3c7">healer</text>
+<rect x="314.0" y="410.0" width="12" height="12" fill="#f59e0b"/>
+<text x="330.0" y="420.0" font-size="12" fill="#fed7aa">river_charm</text>
+<circle cx="896.0" cy="320.0" r="6" fill="#6ee7b7"/>
+<text x="906.0" y="324.0" font-size="12" fill="#ccfbf1">from_square</text>
+<circle cx="128.0" cy="512.0" r="6" fill="#6ee7b7"/>
+<text x="138.0" y="516.0" font-size="12" fill="#ccfbf1">from_wilds_riverbank</text>
+</svg>

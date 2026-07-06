@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024.0" height="640.0" viewBox="0 0 1024.0 640.0">
+<rect width="100%" height="100%" fill="#1f2a1f"/>
+<text x="16" y="28" font-size="22" fill="#f8fafc">village_square</text>
+<text x="16" y="52" font-size="12" fill="#cbd5e1">底色=地形  棕色=障碍  青色=出生点  黄点=NPC  橙色=物品  红框=遭遇  蓝框=出口  紫框=触发器  半透明色块=地表</text>
+<rect x="0.0" y="0.0" width="1024.0" height="32.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="0.0" y="608.0" width="1024.0" height="32.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="0.0" y="0.0" width="32.0" height="640.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="992.0" y="0.0" width="32.0" height="640.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="456.0" y="264.0" width="112.0" height="112.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="384.0" y="96.0" width="256.0" height="32.0" fill="#5b3a29" opacity="0.8"/>
+<rect x="32.0" y="288.0" width="32.0" height="64.0" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="8 5"/>
+<text x="32.0" y="282.0" font-size="14" fill="#bfdbfe">出口 village_riverside.from_square</text>
+<rect x="960.0" y="288.0" width="32.0" height="64.0" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="8 5"/>
+<text x="960.0" y="282.0" font-size="14" fill="#bfdbfe">出口 village_outskirts.from_square</text>
+<rect x="400.0" y="128.0" width="128.0" height="64.0" fill="none" stroke="#c084fc" stroke-width="3"/>
+<text x="400.0" y="208.0" font-size="13" fill="#e9d5ff">触发器 village_square_notice</text>
+<circle cx="512.0" cy="176.0" r="8" fill="#facc15"/>
+<text x="522.0" y="180.0" font-size="13" fill="#fef3c7">mayor</text>
+<circle cx="640.0" cy="320.0" r="8" fill="#facc15"/>
+<text x="650.0" y="324.0" font-size="13" fill="#fef3c7">fiance</text>
+<circle cx="896.0" cy="384.0" r="8" fill="#facc15"/>
+<text x="906.0" y="388.0" font-size="13" fill="#fef3c7">gate_guard</text>
+<circle cx="160.0" cy="320.0" r="6" fill="#6ee7b7"/>
+<text x="170.0" y="324.0" font-size="12" fill="#ccfbf1">start</text>
+<circle cx="96.0" cy="320.0" r="6" fill="#6ee7b7"/>
+<text x="106.0" y="324.0" font-size="12" fill="#ccfbf1">from_riverside</text>
+<circle cx="896.0" cy="320.0" r="6" fill="#6ee7b7"/>
+<text x="906.0" y="324.0" font-size="12" fill="#ccfbf1">from_outskirts</text>
+</svg>
