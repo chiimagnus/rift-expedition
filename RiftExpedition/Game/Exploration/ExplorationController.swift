@@ -78,7 +78,17 @@ struct ExplorationController: Equatable {
     mutating func switchToNextLeader() {
         guard !members.isEmpty else { return }
 
+        // waypoints 只对“当前队长”有意义（由 setLeaderDestination 的寻路结果填充）。
+        // 卸任的队长如果还有没走完的转折点，必须在这里清空，否则它变成跟随者之后，
+        // 一旦恰好走到当前的跟随目标点，会把这些过期的转折点当成新目标再消费一次
+        // （虽然本帧末尾 refreshFollowerTargets 会立刻覆盖掉，但这是一个容易在后续
+        // 改动里踩中的隐患，所以直接清空更安全、更清晰）。
+        let previousLeaderIndex = leaderIndex
         leaderIndex = (leaderIndex + 1) % members.count
+        if members.indices.contains(previousLeaderIndex) {
+            members[previousLeaderIndex].waypoints = []
+        }
+
         if let destination = members[leaderIndex].target {
             refreshFollowerTargets(leaderDestination: destination)
         } else {

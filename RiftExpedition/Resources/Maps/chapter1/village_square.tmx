@@ -49,19 +49,19 @@
     </object>
   </objectgroup>
   <objectgroup id="3" name="npc">
-    <object id="12" name="村长" x="512" y="176">
+    <object id="12" name="村长" x="512" y="176" width="36" height="36">
       <properties>
         <property name="actorId" value="mayor"/>
         <property name="dialogId" value="elder_intro"/>
       </properties>
     </object>
-    <object id="13" name="未婚夫" x="640" y="320">
+    <object id="13" name="未婚夫" x="640" y="320" width="36" height="36">
       <properties>
         <property name="actorId" value="fiance"/>
         <property name="dialogId" value="fiance_accuse"/>
       </properties>
     </object>
-    <object id="14" name="守卫" x="896" y="384">
+    <object id="14" name="守卫" x="896" y="384" width="36" height="36">
       <properties>
         <property name="actorId" value="gate_guard"/>
         <property name="dialogId" value="guard_gate"/>

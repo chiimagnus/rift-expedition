@@ -44,7 +44,7 @@
     </object>
   </objectgroup>
   <objectgroup id="3" name="npc">
-    <object id="10" name="药师" x="736" y="320">
+    <object id="10" name="药师" x="736" y="320" width="36" height="36">
       <properties>
         <property name="actorId" value="healer"/>
         <property name="dialogId" value="healer_request"/>
