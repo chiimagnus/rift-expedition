@@ -155,13 +155,25 @@ private extension TiledMapMetadata {
             tilemap.objectGroups(named: groupName).flatMap { $0.getObjects() }
         }
 
-        // ponytail: 这批第一章地图都是正交图，直接把 SKTiled 内部的翻转坐标还原回 TMX 坐标系就够了。
+        // 每个对象的 .position 已经是它所在对象组自己的局部坐标了
+        // （SKTiled 在把对象加进对象组的时候，就已经把 Tiled 坐标转换成了 SpriteKit 的
+        // 上下翻转坐标）。这里再用 tilemap.convert(_:from:) 转换一次，是为了把它统一换算成
+        // tilemap 自己的坐标系——也就是渲染出来的瓦片图层实际使用的那个坐标系。
         func point(for object: SKTileObject) -> CGPoint {
-            object.position.invertedY
+            guard let group = object.layer else { return object.position }
+            return tilemap.convert(object.position, from: group)
         }
 
         func frame(for object: SKTileObject) -> CGRect {
-            CGRect(origin: object.position.invertedY, size: object.size)
+            guard let group = object.layer else {
+                return CGRect(origin: object.position, size: object.size)
+            }
+            // SKTileObject 自己的局部包围盒是 (0, 0, 宽, -高)：.position 是这个对象
+            // 经过上下翻转之后的「左上角」坐标，所以按 CGRect 「原点在左下角」的惯例，
+            // 矩形真正的左下角坐标要在 .position 基础上再往下移动 size.height。
+            let bottomLeftInGroup = CGPoint(x: object.position.x, y: object.position.y - object.size.height)
+            let bottomLeftInTilemap = tilemap.convert(bottomLeftInGroup, from: group)
+            return CGRect(origin: bottomLeftInTilemap, size: object.size)
         }
 
         self.areaID = areaID
