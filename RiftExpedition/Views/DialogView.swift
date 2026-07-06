@@ -39,6 +39,7 @@ struct DialogView: View {
                                 onStartBattle(encounterID)
                             }
                         }
+                        .accessibilityLabel("对话选项：\(option.title)")
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -49,6 +50,7 @@ struct DialogView: View {
                     onClose()
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityLabel("返回探索")
             }
         }
         .frame(maxWidth: 760, alignment: .leading)

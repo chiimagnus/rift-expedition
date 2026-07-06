@@ -40,6 +40,7 @@ struct SaveLoadView: View {
 
             Button("返回", action: onClose)
                 .buttonStyle(.borderedProminent)
+                .accessibilityLabel("返回探索")
         }
     }
 
@@ -71,20 +72,22 @@ struct SaveLoadView: View {
 
                 Spacer()
 
-                if row.slot.kind == .manual {
-                    Button("保存") {
-                        viewModel.saveManual(slot: row.slot)
+                    if row.slot.kind == .manual {
+                        Button("保存") {
+                            viewModel.saveManual(slot: row.slot)
+                        }
+                        .accessibilityLabel("保存到\(row.title)")
                     }
-                }
 
-                Button("读取") {
-                    viewModel.load(slot: row.slot)
+                    Button("读取") {
+                        viewModel.load(slot: row.slot)
+                    }
+                    .disabled(!row.canLoad)
+                    .accessibilityLabel("读取\(row.title)")
                 }
-                .disabled(!row.canLoad)
             }
-        }
-        .foregroundStyle(.white)
-        .padding(10)
-        .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+            .foregroundStyle(.white)
+            .padding(10)
+            .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
     }
 }

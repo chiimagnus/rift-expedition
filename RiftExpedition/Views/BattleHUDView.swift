@@ -42,6 +42,7 @@ struct BattleHUDView: View {
                 Spacer()
                 Button("返回探索", action: onFinishBattle)
                     .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("返回探索")
             }
         }
     }
@@ -88,11 +89,13 @@ struct BattleHUDView: View {
                     viewModel.selectMove()
                 }
                 .disabled(!viewModel.canMove())
+                .accessibilityLabel("选择移动行动")
 
                 Button("普攻") {
                     viewModel.selectBasicAttack()
                 }
                 .disabled(!viewModel.canPerformBasicAttack)
+                .accessibilityLabel("选择普通攻击")
 
                 Menu("消耗品") {
                     if viewModel.consumableRows.isEmpty {
@@ -102,9 +105,11 @@ struct BattleHUDView: View {
                             Button("\(item.displayName) x\(item.count) · \(item.actionPointCost) AP") {
                                 viewModel.selectConsumable(id: item.id)
                             }
+                            .accessibilityLabel("选择消耗品 \(item.displayName)，需要 \(item.actionPointCost) AP")
                         }
                     }
                 }
+                .accessibilityLabel("选择战斗消耗品")
             }
             .buttonStyle(.borderedProminent)
 
@@ -118,6 +123,7 @@ struct BattleHUDView: View {
                         viewModel.performSkill(id: skill.id)
                     }
                     .disabled(!viewModel.canUseSkill(skill))
+                    .accessibilityLabel("使用技能 \(skill.displayName)，需要 \(skill.actionPointCost) AP")
                 }
             }
             .buttonStyle(.bordered)
@@ -128,9 +134,11 @@ struct BattleHUDView: View {
                 }
                 .disabled(!viewModel.canEndTurn)
                 .keyboardShortcut(.defaultAction)
+                .accessibilityLabel("结束当前角色回合")
 
                 Button("返回主菜单", action: onReturnToMenu)
                     .buttonStyle(.bordered)
+                    .accessibilityLabel("返回主菜单")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -152,7 +160,7 @@ struct BattleHUDView: View {
 
             Spacer()
 
-            Text("HP \(actor.stats.health)/\(actor.stats.maxHealth)")
+            Text("生命 \(actor.stats.health)/\(actor.stats.maxHealth)")
                 .font(.caption.monospacedDigit())
 
             Text("AP \(actor.stats.actionPoints)")
@@ -165,6 +173,8 @@ struct BattleHUDView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isActive ? Color(red: 0.84, green: 0.73, blue: 0.42) : Color.white.opacity(0.12), lineWidth: isActive ? 2 : 1)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(actor.displayName)，\(factionName(actor.faction))，生命 \(actor.stats.health)/\(actor.stats.maxHealth)，AP \(actor.stats.actionPoints)")
     }
 
     private func factionName(_ faction: Faction) -> String {

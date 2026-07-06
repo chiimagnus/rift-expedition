@@ -28,6 +28,8 @@ struct QuestLogView: View {
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("\(entry.title)，\(entry.status == .completed ? "已完成" : "进行中")，目标：\(entry.objective)")
                 }
             }
 
@@ -35,6 +37,7 @@ struct QuestLogView: View {
                 onClose()
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityLabel("返回探索")
         }
         .frame(maxWidth: 760, alignment: .leading)
         .padding(36)

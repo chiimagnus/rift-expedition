@@ -17,8 +17,10 @@ final class GameScene: SKScene {
 
     weak var eventHandler: (any GameSceneEventHandling)?
     var isWorldInputEnabled = true
+    private let worldLayer = SKNode()
     private var tilemap: SKNode?
     private var loadedAreaID: String?
+    private var currentMapSize: CGSize?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKShapeNode] = [:]
     private var staticObjectLayer: SKNode?
@@ -34,14 +36,26 @@ final class GameScene: SKScene {
     override func didMove(to view: SKView) {
         view.window?.makeFirstResponder(view)
         backgroundColor = SKColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1)
+        if worldLayer.parent == nil {
+            worldLayer.name = "worldLayer"
+            worldLayer.zPosition = 0
+            addChild(worldLayer)
+        }
         drawGround()
+        layoutWorld()
         eventHandler?.gameSceneDidLoad(self)
+    }
+
+    override func didChangeSize(_ oldSize: CGSize) {
+        drawGround()
+        layoutWorld()
     }
 
     override func mouseDown(with event: NSEvent) {
         guard isWorldInputEnabled else { return }
 
-        let point = event.location(in: self)
+        let scenePoint = event.location(in: self)
+        let point = worldLayer.convert(scenePoint, from: self)
         eventHandler?.gameScene(self, didClickWorld: point)
         markClick(at: point)
     }
@@ -98,7 +112,7 @@ final class GameScene: SKScene {
         let layer = SKNode()
         layer.name = "battleLayer"
         layer.zPosition = 30
-        addChild(layer)
+        worldLayer.addChild(layer)
         battleLayer = layer
 
         // ponytail: P2 battles contain only a few actors, so rebuilding the overlay is clearer than keyed diffing.
@@ -125,21 +139,26 @@ final class GameScene: SKScene {
         staticObjectLayer = nil
 
         do {
+            let metadata = try TiledMapLoader.loadMetadata(areaID: areaID)
             let loadedMap = try TiledMapLoader.load(areaID: areaID)
             loadedMap.position = .zero
             loadedMap.zPosition = 1
-            addChild(loadedMap)
+            worldLayer.addChild(loadedMap)
             tilemap = loadedMap
+            currentMapSize = metadata.size
             loadedAreaID = areaID
-            renderStaticObjects(areaID: areaID)
+            renderStaticObjects(metadata: metadata)
+            layoutWorld()
         } catch {
             loadedAreaID = nil
+            currentMapSize = nil
+            layoutWorld()
             GameLog.map.error("\(areaID, privacy: .public).tmx 加载失败")
         }
     }
 
     private func drawGround() {
-        guard childNode(withName: "ground") == nil else { return }
+        childNode(withName: "ground")?.removeFromParent()
 
         let ground = SKShapeNode(rectOf: size)
         ground.name = "ground"
@@ -147,11 +166,28 @@ final class GameScene: SKScene {
         ground.strokeColor = SKColor(red: 0.38, green: 0.32, blue: 0.20, alpha: 1)
         ground.lineWidth = 6
         ground.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        ground.zPosition = -100
         addChild(ground)
     }
 
+    private func layoutWorld() {
+        guard let currentMapSize, currentMapSize.width > 0, currentMapSize.height > 0 else {
+            worldLayer.setScale(1)
+            worldLayer.position = .zero
+            return
+        }
+
+        let fitScale = min(size.width / currentMapSize.width, size.height / currentMapSize.height) * 0.94
+        let scale = min(max(fitScale, 0.35), 2.0)
+        worldLayer.setScale(scale)
+        worldLayer.position = CGPoint(
+            x: (size.width - currentMapSize.width * scale) / 2,
+            y: (size.height - currentMapSize.height * scale) / 2
+        )
+    }
+
     private func markClick(at point: CGPoint) {
-        childNode(withName: "clickMarker")?.removeFromParent()
+        worldLayer.childNode(withName: "clickMarker")?.removeFromParent()
 
         let marker = SKShapeNode(circleOfRadius: 10)
         marker.name = "clickMarker"
@@ -159,7 +195,7 @@ final class GameScene: SKScene {
         marker.fillColor = SKColor(red: 0.86, green: 0.73, blue: 0.34, alpha: 0.85)
         marker.strokeColor = .white
         marker.lineWidth = 2
-        addChild(marker)
+        worldLayer.addChild(marker)
     }
 
     private func makePartyNode(for member: PartyMemberPosition) -> SKShapeNode {
@@ -168,19 +204,18 @@ final class GameScene: SKScene {
         node.strokeColor = .white
         node.lineWidth = 2
         node.zPosition = 10
-        addChild(node)
+        worldLayer.addChild(node)
         return node
     }
 
-    private func renderStaticObjects(areaID: String) {
+    private func renderStaticObjects(metadata: TiledMapMetadata) {
         staticObjectLayer?.removeFromParent()
         let layer = SKNode()
         layer.name = "staticObjectLayer"
         layer.zPosition = 12
-        addChild(layer)
+        worldLayer.addChild(layer)
         staticObjectLayer = layer
 
-        guard let metadata = try? TiledMapLoader.loadMetadata(areaID: areaID) else { return }
         for surface in metadata.surfaces {
             guard let type = SurfaceTypeColor(rawValue: surface.surfaceType) else { continue }
             layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))

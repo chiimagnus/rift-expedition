@@ -21,7 +21,9 @@ struct ChapterCompleteView: View {
 
             HStack(spacing: 14) {
                 Button("读取 / 管理存档", action: onOpenSaveLoad)
+                    .accessibilityLabel("读取或管理存档")
                 Button("返回主菜单", action: onReturnToMenu)
+                    .accessibilityLabel("返回主菜单")
             }
             .buttonStyle(.borderedProminent)
         }

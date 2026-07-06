@@ -18,10 +18,12 @@ struct PartyCreationView: View {
 
             HStack(spacing: 12) {
                 Button("返回主菜单", action: onBack)
+                    .accessibilityLabel("返回主菜单")
 
                 Button("开始第一章", action: onConfirm)
                     .disabled(!viewModel.canStart)
                     .keyboardShortcut(.defaultAction)
+                    .accessibilityLabel("开始第一章")
             }
             .buttonStyle(.borderedProminent)
         }
@@ -86,6 +88,8 @@ struct PartyCreationView: View {
         }
         .buttonStyle(.plain)
         .disabled(!selected && viewModel.selectedClassIDs.count >= 2)
+        .accessibilityLabel("\(classDefinition.displayName)，\(selected ? "已选择" : "未选择")，生命 \(classDefinition.initialStats.maxHealth)，攻击 \(classDefinition.initialStats.attack)，防御 \(classDefinition.initialStats.defense)，闪避 \(classDefinition.initialStats.evasion)，魔法 \(classDefinition.initialStats.magic)")
+        .accessibilityHint("点击选择或取消该职业。")
     }
 
     private func statRow(_ title: String, _ value: Int) -> some View {

@@ -5,7 +5,7 @@ struct DebugOverlayView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("DEBUG")
+            Text("调试")
                 .font(.caption.bold())
                 .foregroundStyle(Color(red: 0.84, green: 0.73, blue: 0.42))
 

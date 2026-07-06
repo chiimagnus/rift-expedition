@@ -39,6 +39,7 @@ struct InventoryView: View {
 
             Button("返回探索", action: onClose)
                 .buttonStyle(.borderedProminent)
+                .accessibilityLabel("返回探索")
         }
     }
 
@@ -55,6 +56,7 @@ struct InventoryView: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(viewModel.selectedActorID == actor.id ? Color.green : Color.gray)
+                    .accessibilityLabel("查看角色 \(actor.displayName)")
                 }
             }
 
@@ -101,7 +103,7 @@ struct InventoryView: View {
 
             Spacer()
 
-            Text("x\(row.count)")
+            Text("数量 \(row.count)")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.white.opacity(0.72))
 
@@ -109,6 +111,7 @@ struct InventoryView: View {
                 viewModel.equip(itemID: row.id)
             }
             .disabled(row.slotName == nil)
+            .accessibilityLabel("装备 \(row.displayName)")
         }
         .padding(10)
         .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))

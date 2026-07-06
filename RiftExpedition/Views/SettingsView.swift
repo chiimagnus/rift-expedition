@@ -13,6 +13,7 @@ struct SettingsView: View {
                     get: { viewModel.audioService.isMuted },
                     set: { viewModel.audioService.isMuted = $0 }
                 ))
+                .accessibilityLabel("静音开关")
 
                 HStack {
                     Text("主音量")
@@ -20,16 +21,18 @@ struct SettingsView: View {
                         get: { viewModel.audioService.masterVolume },
                         set: { viewModel.audioService.masterVolume = $0 }
                     ), in: 0...1)
+                    .accessibilityLabel("主音量")
                     Text(viewModel.audioService.masterVolume, format: .number.precision(.fractionLength(2)))
                         .monospacedDigit()
                 }
 
                 HStack {
-                    Text("UI 缩放")
+                    Text("界面缩放")
                     Slider(value: Binding(
                         get: { viewModel.uiScale },
                         set: { viewModel.uiScale = $0 }
                     ), in: 0.85...1.15)
+                    .accessibilityLabel("界面缩放")
                     Text(viewModel.uiScale, format: .number.precision(.fractionLength(2)))
                         .monospacedDigit()
                 }
@@ -43,6 +46,7 @@ struct SettingsView: View {
                 set: { viewModel.isDebugOverlayVisible = $0 }
             ))
             .foregroundStyle(.white)
+            .accessibilityLabel("显示调试叠层")
         }
         .frame(maxWidth: 760, alignment: .leading)
         .padding(36)
@@ -66,6 +70,7 @@ struct SettingsView: View {
 
             Button("返回", action: onClose)
                 .buttonStyle(.borderedProminent)
+                .accessibilityLabel("返回探索")
         }
     }
 

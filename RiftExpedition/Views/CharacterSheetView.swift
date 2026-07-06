@@ -47,6 +47,7 @@ struct CharacterSheetView: View {
                 viewModel.allocate(attribute)
             }
             .disabled(actor.unspentAttributePoints <= 0)
+            .accessibilityLabel("提升\(title)")
         }
         .font(.callout)
         .foregroundStyle(.white.opacity(0.82))

@@ -106,14 +106,17 @@ struct GameRootView: View {
                     viewModel.startNewGame()
                 }
                 .keyboardShortcut(.defaultAction)
+                .accessibilityLabel("开始新游戏")
 
                 Button("读取存档") {
                     viewModel.openSaveLoad()
                 }
+                .accessibilityLabel("读取或管理存档")
 
                 Button("设置") {
                     viewModel.openSettings()
                 }
+                .accessibilityLabel("打开设置")
             }
             .buttonStyle(.borderedProminent)
 
@@ -135,28 +138,38 @@ struct GameRootView: View {
                     .font(.headline)
                 Text(viewModel.statusText)
                     .font(.callout)
-                HStack {
-                    Button("和村长交谈") {
-                        viewModel.openDialog("elder_intro")
-                    }
+                Text("点击地图移动；点击角色、线索、宝箱或草药互动；Tab 切换队长。")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.72))
+                HStack(spacing: 8) {
                     Button("背包") {
                         viewModel.openInventory()
                     }
+                    .accessibilityLabel("打开共享背包和角色面板")
+
                     Button("存档") {
                         viewModel.openSaveLoad()
                     }
+                    .accessibilityLabel("打开存档面板")
+
                     Button("任务日志") {
                         viewModel.openQuestLog()
                     }
+                    .accessibilityLabel("打开任务日志")
+
                     Button("设置") {
                         viewModel.openSettings()
                     }
+                    .accessibilityLabel("打开设置")
                 }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.regular)
             }
             .padding(14)
             .foregroundStyle(.white)
             .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 12))
             .padding()
+            .accessibilityElement(children: .contain)
         }
     }
 
@@ -191,6 +204,7 @@ struct GameRootView: View {
                 viewModel.returnToMainMenu()
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityLabel("返回主菜单")
         }
         .frame(maxWidth: 520)
         .padding(40)
@@ -204,6 +218,8 @@ private struct GameSceneView: View {
 
     var body: some View {
         SpriteView(scene: scene)
+            .accessibilityLabel("游戏地图")
+            .accessibilityHint("点击地面移动，点击角色、物品或触发点互动。")
             .onAppear {
                 scene.eventHandler = viewModel
                 scene.loadMap(areaID: viewModel.currentAreaID)
