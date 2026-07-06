@@ -1,5 +1,6 @@
 import AppKit
 import RiftCore
+import SKTiled
 import SpriteKit
 
 @MainActor
@@ -18,9 +19,8 @@ final class GameScene: SKScene {
     weak var eventHandler: (any GameSceneEventHandling)?
     var isWorldInputEnabled = true
     private let worldLayer = SKNode()
-    private var tilemap: SKNode?
+    private var tilemap: SKTilemap?
     private var loadedAreaID: String?
-    private var currentMapSize: CGSize?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKShapeNode] = [:]
     private var staticObjectLayer: SKNode?
@@ -139,19 +139,16 @@ final class GameScene: SKScene {
         staticObjectLayer = nil
 
         do {
-            let metadata = try TiledMapLoader.loadMetadata(areaID: areaID)
-            let loadedMap = try TiledMapLoader.load(areaID: areaID)
+            let (loadedMap, metadata) = try TiledMapLoader.load(areaID: areaID)
             loadedMap.position = .zero
             loadedMap.zPosition = 1
             worldLayer.addChild(loadedMap)
             tilemap = loadedMap
-            currentMapSize = metadata.size
             loadedAreaID = areaID
             renderStaticObjects(metadata: metadata)
             layoutWorld()
         } catch {
             loadedAreaID = nil
-            currentMapSize = nil
             layoutWorld()
             GameLog.map.error("\(areaID, privacy: .public).tmx 加载失败")
         }
@@ -171,18 +168,31 @@ final class GameScene: SKScene {
     }
 
     private func layoutWorld() {
-        guard let currentMapSize, currentMapSize.width > 0, currentMapSize.height > 0 else {
+        // `tilemap.position == .zero` inside `worldLayer`, so `tilemap.boundingRect` is already
+        // expressed in `worldLayer`'s local space. Center on its actual mid-point rather than an
+        // assumed bottom-left (0,0) origin, because SKTiled's default `.center` layer alignment
+        // lays the map out around the tilemap's own origin, not its bottom-left corner.
+        guard let tilemap else {
             worldLayer.setScale(1)
             worldLayer.position = .zero
             return
         }
 
-        let fitScale = min(size.width / currentMapSize.width, size.height / currentMapSize.height) * 0.94
+        let mapRect = tilemap.boundingRect
+        let mapWidth = abs(mapRect.width)
+        let mapHeight = abs(mapRect.height)
+        guard mapWidth > 0, mapHeight > 0 else {
+            worldLayer.setScale(1)
+            worldLayer.position = .zero
+            return
+        }
+
+        let fitScale = min(size.width / mapWidth, size.height / mapHeight) * 0.94
         let scale = min(max(fitScale, 0.35), 2.0)
         worldLayer.setScale(scale)
         worldLayer.position = CGPoint(
-            x: (size.width - currentMapSize.width * scale) / 2,
-            y: (size.height - currentMapSize.height * scale) / 2
+            x: size.width / 2 - mapRect.midX * scale,
+            y: size.height / 2 - mapRect.midY * scale
         )
     }
 
@@ -396,11 +406,14 @@ final class GameScene: SKScene {
     }
 
     private func arrowText(for frame: CGRect) -> String {
-        guard let currentMapSize else { return "→" }
-        if frame.midX <= currentMapSize.width * 0.2 { return "←" }
-        if frame.midX >= currentMapSize.width * 0.8 { return "→" }
-        if frame.midY <= currentMapSize.height * 0.2 { return "↑" }
-        if frame.midY >= currentMapSize.height * 0.8 { return "↓" }
+        guard let tilemap else { return "→" }
+        let mapRect = tilemap.boundingRect
+        let mapWidth = mapRect.maxX - mapRect.minX
+        let mapHeight = mapRect.maxY - mapRect.minY
+        if frame.midX <= mapRect.minX + mapWidth * 0.2 { return "←" }
+        if frame.midX >= mapRect.maxX - mapWidth * 0.2 { return "→" }
+        if frame.midY <= mapRect.minY + mapHeight * 0.2 { return "↑" }
+        if frame.midY >= mapRect.maxY - mapHeight * 0.2 { return "↓" }
         return "→"
     }
 

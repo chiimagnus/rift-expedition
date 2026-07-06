@@ -10,7 +10,6 @@ enum TiledMapLoaderError: Error, Equatable {
 
 struct TiledMapMetadata: Equatable {
     var areaID: String
-    var size: CGSize
     var spawns: [MapSpawn]
     var npcs: [MapNPC]
     var navObstacles: [NavigationObstacle]
@@ -94,35 +93,37 @@ struct MapItem: Equatable {
 }
 
 enum TiledMapLoader {
+    /// Loads a Tiled map and derives all gameplay metadata (spawn/npc/exit/...) from the
+    /// SAME parsed `SKTilemap` that renders it, so rendering and gameplay logic always agree
+    /// on one coordinate space. This replaces the old approach of hand-parsing the .tmx XML
+    /// a second time (which never matched SKTiled's Y-flip / anchor-centered layout).
     @MainActor
-    static func load(areaID: String, bundle: Bundle = .main) throws -> SKTilemap {
-        let url = try mapURL(areaID: areaID, bundle: bundle)
+    static func load(areaID: String, bundle: Bundle = .main) throws -> (tilemap: SKTilemap, metadata: TiledMapMetadata) {
+        try load(url: mapURL(areaID: areaID, bundle: bundle), areaID: areaID)
+    }
 
+    @MainActor
+    static func load(url: URL, areaID: String) throws -> (tilemap: SKTilemap, metadata: TiledMapMetadata) {
         guard let tilemap = SKTilemap.load(tmxFile: url.path, loggingLevel: .none) else {
             throw TiledMapLoaderError.parseFailed(areaID: areaID)
         }
 
         tilemap.name = areaID
-        return tilemap
+        return (tilemap, TiledMapMetadata(areaID: areaID, tilemap: tilemap))
     }
 
+    /// Convenience for callers that only need gameplay positions (e.g. the session view model),
+    /// not the rendered node tree.
+    // ponytail: this parses a throwaway SKTilemap just to read metadata; fine at this project's
+    // 10-map scale, revisit (e.g. cache by areaID) if map count or load frequency grows.
+    @MainActor
     static func loadMetadata(areaID: String, bundle: Bundle = .main) throws -> TiledMapMetadata {
-        try loadMetadata(url: mapURL(areaID: areaID, bundle: bundle), areaID: areaID)
+        try load(areaID: areaID, bundle: bundle).metadata
     }
 
+    @MainActor
     static func loadMetadata(url: URL, areaID: String) throws -> TiledMapMetadata {
-        guard let parser = XMLParser(contentsOf: url) else {
-            throw TiledMapLoaderError.unreadableMetadata(areaID: areaID)
-        }
-
-        let delegate = TiledMetadataParser(areaID: areaID)
-        parser.delegate = delegate
-
-        guard parser.parse() else {
-            throw TiledMapLoaderError.invalidMetadata(areaID: areaID)
-        }
-
-        return delegate.metadata
+        try load(url: url, areaID: areaID).metadata
     }
 
     private static func mapURL(areaID: String, bundle: Bundle) throws -> URL {
@@ -139,168 +140,107 @@ enum TiledMapLoader {
     }
 }
 
-private final class TiledMetadataParser: NSObject, XMLParserDelegate {
-    private let areaID: String
-    private var mapWidth = 0.0
-    private var mapHeight = 0.0
-    private var tileWidth = 1.0
-    private var tileHeight = 1.0
-    private var currentGroup: String?
-    private var currentObject: ParsedObject?
-    private var spawns: [MapSpawn] = []
-    private var npcs: [MapNPC] = []
-    private var navObstacles: [NavigationObstacle] = []
-    private var encounterTriggers: [MapEncounterTrigger] = []
-    private var triggers: [MapTrigger] = []
-    private var exits: [MapExit] = []
-    private var surfaces: [MapSurface] = []
-    private var items: [MapItem] = []
+private extension TiledMapMetadata {
+    /// Builds metadata straight from SKTiled's own parsed object layers/objects, reusing
+    /// SKTiled's coordinate conversion instead of re-deriving Tiled's top-left/Y-down
+    /// convention by hand (that hand-rolled math was the root cause of the map/object
+    /// misalignment: it never matched SKTiled's Y-flip or its center-anchored tilemap layout).
+    @MainActor
+    init(areaID: String, tilemap: SKTilemap) {
+        // Not just `.first`: aggregate every object group with this name, matching the old
+        // hand-rolled XML parser's behavior of collecting objects from every `<objectgroup>`
+        // with a given name (current maps only ever have one per name, but nothing guarantees
+        // that stays true as more maps are authored).
+        func objects(in groupName: String) -> [SKTileObject] {
+            tilemap.objectGroups(named: groupName).flatMap { $0.getObjects() }
+        }
 
-    var metadata: TiledMapMetadata {
-        TiledMapMetadata(
-            areaID: areaID,
-            size: CGSize(width: mapWidth * tileWidth, height: mapHeight * tileHeight),
-            spawns: spawns,
-            npcs: npcs,
-            navObstacles: navObstacles,
-            encounterTriggers: encounterTriggers,
-            triggers: triggers,
-            exits: exits,
-            surfaces: surfaces,
-            items: items
-        )
-    }
+        // Every object's `.position` is already in its owning object-group's local space
+        // (SKTiled applies the Tiled -> SpriteKit Y-flip when it adds the object to the group).
+        // Converting through `tilemap.convert(_:from:)` normalizes it into the tilemap's own
+        // space, which is exactly the space the rendered tile layers live in.
+        func point(for object: SKTileObject) -> CGPoint {
+            guard let group = object.layer else { return object.position }
+            return tilemap.convert(object.position, from: group)
+        }
 
-    init(areaID: String) {
+        func frame(for object: SKTileObject) -> CGRect {
+            guard let group = object.layer else {
+                return CGRect(origin: object.position, size: object.size)
+            }
+            // SKTileObject's local bounding box is (0, 0, width, -height): `.position` is the
+            // object's top-left corner post Y-flip, so the rect's bottom-left corner (the CGRect
+            // origin convention) sits `size.height` below it.
+            let bottomLeftInGroup = CGPoint(x: object.position.x, y: object.position.y - object.size.height)
+            let bottomLeftInTilemap = tilemap.convert(bottomLeftInGroup, from: group)
+            return CGRect(origin: bottomLeftInTilemap, size: object.size)
+        }
+
         self.areaID = areaID
-    }
 
-    func parser(
-        _ parser: XMLParser,
-        didStartElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName qName: String?,
-        attributes attributeDict: [String: String] = [:]
-    ) {
-        switch elementName {
-        case "map":
-            mapWidth = Double(attributeDict["width"] ?? "") ?? 0
-            mapHeight = Double(attributeDict["height"] ?? "") ?? 0
-            tileWidth = Double(attributeDict["tilewidth"] ?? "") ?? 1
-            tileHeight = Double(attributeDict["tileheight"] ?? "") ?? 1
-        case "objectgroup":
-            currentGroup = attributeDict["name"]
-        case "object":
-            currentObject = ParsedObject(
-                tiledID: Int(attributeDict["id"] ?? "") ?? -1,
-                name: attributeDict["name"],
-                x: Double(attributeDict["x"] ?? "") ?? 0,
-                y: Double(attributeDict["y"] ?? "") ?? 0,
-                width: Double(attributeDict["width"] ?? "") ?? 0,
-                height: Double(attributeDict["height"] ?? "") ?? 0,
-                properties: [:]
+        spawns = objects(in: "spawn").compactMap { object in
+            guard let id = object.properties["id"] else { return nil }
+            return MapSpawn(tiledID: Int(object.id), id: id, position: point(for: object))
+        }
+
+        npcs = objects(in: "npc").compactMap { object in
+            guard let actorID = object.properties["actorId"],
+                  let dialogID = object.properties["dialogId"] else { return nil }
+            return MapNPC(tiledID: Int(object.id), actorID: actorID, dialogID: dialogID, position: point(for: object))
+        }
+
+        navObstacles = objects(in: "navObstacle").map { object in
+            NavigationObstacle(
+                tiledID: Int(object.id),
+                name: object.name,
+                frame: frame(for: object),
+                blocksMovement: object.properties["blocksMovement"] == "true",
+                blocksSight: object.properties["blocksSight"] == "true"
             )
-        case "property":
-            guard currentObject != nil, let name = attributeDict["name"] else { return }
-            currentObject?.properties[name] = attributeDict["value"] ?? ""
-        default:
-            break
+        }
+
+        encounterTriggers = objects(in: "encounter").compactMap { object in
+            guard let encounterID = object.properties["encounterId"] else { return nil }
+            return MapEncounterTrigger(
+                tiledID: Int(object.id),
+                encounterID: encounterID,
+                frame: frame(for: object),
+                radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
+            )
+        }
+
+        triggers = objects(in: "trigger").compactMap { object in
+            guard let triggerID = object.properties["triggerId"],
+                  let action = object.properties["action"] else { return nil }
+            return MapTrigger(
+                tiledID: Int(object.id),
+                name: object.name,
+                triggerID: triggerID,
+                action: action,
+                frame: frame(for: object)
+            )
+        }
+
+        exits = objects(in: "exit").compactMap { object in
+            guard let targetAreaID = object.properties["targetAreaId"],
+                  let targetSpawnID = object.properties["targetSpawnId"] else { return nil }
+            return MapExit(
+                tiledID: Int(object.id),
+                name: object.name,
+                targetAreaID: targetAreaID,
+                targetSpawnID: targetSpawnID,
+                frame: frame(for: object)
+            )
+        }
+
+        surfaces = objects(in: "surface").compactMap { object in
+            guard let surfaceType = object.properties["surfaceType"] else { return nil }
+            return MapSurface(tiledID: Int(object.id), surfaceType: surfaceType, frame: frame(for: object))
+        }
+
+        items = objects(in: "item").compactMap { object in
+            guard let itemID = object.properties["itemId"] else { return nil }
+            return MapItem(tiledID: Int(object.id), itemID: itemID, position: point(for: object))
         }
     }
-
-    func parser(
-        _ parser: XMLParser,
-        didEndElement elementName: String,
-        namespaceURI: String?,
-        qualifiedName qName: String?
-    ) {
-        switch elementName {
-        case "object":
-            if currentGroup == "spawn", let object = currentObject, let id = object.properties["id"] {
-                spawns.append(MapSpawn(
-                    tiledID: object.tiledID,
-                    id: id,
-                    position: CGPoint(x: object.x, y: object.y)
-                ))
-            }
-            if currentGroup == "npc", let object = currentObject,
-               let actorID = object.properties["actorId"],
-               let dialogID = object.properties["dialogId"] {
-                npcs.append(MapNPC(
-                    tiledID: object.tiledID,
-                    actorID: actorID,
-                    dialogID: dialogID,
-                    position: CGPoint(x: object.x, y: object.y)
-                ))
-            }
-            if currentGroup == "navObstacle", let object = currentObject {
-                navObstacles.append(NavigationObstacle(
-                    tiledID: object.tiledID,
-                    name: object.name,
-                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
-                    blocksMovement: object.properties["blocksMovement"] == "true",
-                    blocksSight: object.properties["blocksSight"] == "true"
-                ))
-            }
-            if currentGroup == "encounter", let object = currentObject, let encounterID = object.properties["encounterId"] {
-                encounterTriggers.append(MapEncounterTrigger(
-                    tiledID: object.tiledID,
-                    encounterID: encounterID,
-                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
-                    radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
-                ))
-            }
-            if currentGroup == "trigger", let object = currentObject,
-               let triggerID = object.properties["triggerId"],
-               let action = object.properties["action"] {
-                triggers.append(MapTrigger(
-                    tiledID: object.tiledID,
-                    name: object.name,
-                    triggerID: triggerID,
-                    action: action,
-                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
-                ))
-            }
-            if currentGroup == "exit", let object = currentObject,
-               let targetAreaID = object.properties["targetAreaId"],
-               let targetSpawnID = object.properties["targetSpawnId"] {
-                exits.append(MapExit(
-                    tiledID: object.tiledID,
-                    name: object.name,
-                    targetAreaID: targetAreaID,
-                    targetSpawnID: targetSpawnID,
-                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
-                ))
-            }
-            if currentGroup == "surface", let object = currentObject, let surfaceType = object.properties["surfaceType"] {
-                surfaces.append(MapSurface(
-                    tiledID: object.tiledID,
-                    surfaceType: surfaceType,
-                    frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
-                ))
-            }
-            if currentGroup == "item", let object = currentObject, let itemID = object.properties["itemId"] {
-                items.append(MapItem(
-                    tiledID: object.tiledID,
-                    itemID: itemID,
-                    position: CGPoint(x: object.x, y: object.y)
-                ))
-            }
-            currentObject = nil
-        case "objectgroup":
-            currentGroup = nil
-        default:
-            break
-        }
-    }
-}
-
-private struct ParsedObject {
-    var tiledID: Int
-    var name: String?
-    var x: Double
-    var y: Double
-    var width: Double
-    var height: Double
-    var properties: [String: String]
 }
