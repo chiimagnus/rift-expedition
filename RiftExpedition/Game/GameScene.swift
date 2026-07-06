@@ -111,7 +111,9 @@ final class GameScene: SKScene {
 
         let layer = SKNode()
         layer.name = "battleLayer"
-        layer.zPosition = 30
+        // Raised well above any zPosition SKTiled could plausibly assign its own internal
+        // tile/object layers (see the `staticObjectLayer`/party-node comments below for why).
+        layer.zPosition = 700
         worldLayer.addChild(layer)
         battleLayer = layer
 
@@ -205,6 +207,7 @@ final class GameScene: SKScene {
         marker.fillColor = SKColor(red: 0.86, green: 0.73, blue: 0.34, alpha: 0.85)
         marker.strokeColor = .white
         marker.lineWidth = 2
+        marker.zPosition = 560
         worldLayer.addChild(marker)
     }
 
@@ -213,7 +216,9 @@ final class GameScene: SKScene {
         node.name = "party_\(member.actorID)"
         node.strokeColor = .white
         node.lineWidth = 2
-        node.zPosition = 10
+        // See `renderStaticObjects`' `staticObjectLayer.zPosition` comment: raised from 10 to a
+        // generous headroom value so the party marker can never be occluded by the tilemap.
+        node.zPosition = 550
         worldLayer.addChild(node)
 
         let sprite = SKSpriteNode(texture: texture(named: partySpriteName(for: member)))
@@ -234,7 +239,14 @@ final class GameScene: SKScene {
         staticObjectLayer?.removeFromParent()
         let layer = SKNode()
         layer.name = "staticObjectLayer"
-        layer.zPosition = 12
+        // `SKTilemap` (SKTiled) assigns its own internal zPosition to each tile/object layer it
+        // parses from the .tmx file, stacked in file order. That scheme is undocumented/private to
+        // the vendored SKTiled package, so rather than assume a small headroom is enough, this is
+        // raised generously above any plausible internal value so `staticObjectLayer` (and sibling
+        // overlays: party markers, click marker, battle layer) can never be occluded by map tiles.
+        // Paired with `ignoresSiblingOrder` on the hosting `SpriteView` in `GameRootView`, which
+        // makes zPosition-based sorting global instead of a per-parent tree walk.
+        layer.zPosition = 500
         worldLayer.addChild(layer)
         staticObjectLayer = layer
 
@@ -252,6 +264,13 @@ final class GameScene: SKScene {
         }
         for trigger in metadata.triggers {
             layer.addChild(makeTriggerMarker(trigger))
+        }
+        // Encounter triggers (ambush zones) must always render, unconditionally. This project's
+        // design has no stealth/hidden-ambush mechanic (encounters are fixed, map-authored, never
+        // random — see Docs/chapter1-worldgraph.md), so a completely invisible trigger zone is a
+        // rendering bug, not an intentional spoiler-avoidance behavior.
+        for encounter in metadata.encounterTriggers {
+            layer.addChild(makeEncounterMarker(encounter))
         }
         for npc in metadata.npcs {
             layer.addChild(makeMapSprite(name: spriteName(forNPC: npc), position: npc.position, size: CGSize(width: 52, height: 52)))
@@ -349,6 +368,9 @@ final class GameScene: SKScene {
     private func makeVisibleObstacleNode(_ obstacle: NavigationObstacle) -> SKNode? {
         guard shouldRenderAsProp(obstacle) else { return nil }
 
+        // ponytail: only `prop_chest`/`prop_woodpile` art exists today, so every discrete
+        // obstacle (well, rubble, ore pile, wall stub, etc.) reuses the same placeholder texture.
+        // Revisit once per-obstacle-type art is registered in assets-manifest.json.
         let sprite = SKSpriteNode(texture: texture(named: "prop_woodpile"))
         sprite.name = "obstacleProp_\(obstacle.tiledID)"
         sprite.size = CGSize(width: max(obstacle.frame.width, 42), height: max(obstacle.frame.height, 42))
@@ -356,13 +378,23 @@ final class GameScene: SKScene {
         return sprite
     }
 
+    // Real obstacle names across every chapter1 .tmx (grep of all `navObstacle` object groups),
+    // excluding the four screen-edge boundary walls every map has (北/南/西/东边界/村墙/浅河边界/
+    // 河岸护栏), which are always far larger than any decorative obstacle and stay excluded by the
+    // size gate below regardless of this list.
+    private static let obstaclePropNameFragments = [
+        "倒木", "木料", "篱笆", "货车", "废木堆",
+        "石井", "旧告示墙", "裂隙核心", "塌陷石带", "坍塌矿架",
+        "毒雾裂缝", "矿车轨道断口", "元素矿堆", "断塔石影", "塌墙", "旧炉台"
+    ]
+
     private func shouldRenderAsProp(_ obstacle: NavigationObstacle) -> Bool {
-        guard obstacle.frame.width <= 192, obstacle.frame.height <= 96 else { return false }
+        // Raised from 192x96 so taller/wider real obstacles (e.g. 坍塌矿架 128x192, 裂隙核心
+        // 160x160) still qualify, while staying well below every map's boundary-wall dimensions
+        // (always >= 480 on at least one axis), so boundaries remain excluded either way.
+        guard obstacle.frame.width <= 280, obstacle.frame.height <= 220 else { return false }
         guard let name = obstacle.name else { return false }
-        return name.localizedStandardContains("倒木")
-            || name.localizedStandardContains("木料")
-            || name.localizedStandardContains("篱笆")
-            || name.localizedStandardContains("货车")
+        return Self.obstaclePropNameFragments.contains { name.localizedStandardContains($0) }
     }
 
     private func makeExitMarker(_ exit: MapExit) -> SKNode {
@@ -414,6 +446,28 @@ final class GameScene: SKScene {
         label.verticalAlignmentMode = .center
         label.position = CGPoint(x: 0, y: -24)
         node.addChild(label)
+        return node
+    }
+
+    private func makeEncounterMarker(_ encounter: MapEncounterTrigger) -> SKNode {
+        // Always visible — this project has no stealth/ambush design, so an encounter zone must
+        // read as clearly as an exit or a lore trigger, not hide until the player walks into it.
+        let node = SKNode()
+        node.name = "encounterMarker_\(encounter.tiledID)"
+        node.position = encounter.center
+        node.zPosition = 7
+
+        let pin = SKShapeNode(circleOfRadius: 14)
+        pin.fillColor = SKColor(red: 0.82, green: 0.20, blue: 0.16, alpha: 0.78)
+        pin.strokeColor = .white
+        pin.lineWidth = 2
+        node.addChild(pin)
+
+        let glyph = SKLabelNode(text: "⚔")
+        glyph.fontSize = 14
+        glyph.verticalAlignmentMode = .center
+        node.addChild(glyph)
+
         return node
     }
 
