@@ -111,13 +111,14 @@ final class GameScene: SKScene {
 
         let layer = SKNode()
         layer.name = "battleLayer"
-        // Raised well above any zPosition SKTiled could plausibly assign its own internal
-        // tile/object layers (see the `staticObjectLayer`/party-node comments below for why).
+        // 这里把数值调得比 SKTiled 内部图层可能用到的 zPosition 都高很多
+        // （具体原因见下面 staticObjectLayer / 队伍节点相关的注释）。
         layer.zPosition = 700
         worldLayer.addChild(layer)
         battleLayer = layer
 
-        // ponytail: P2 battles contain only a few actors, so rebuilding the overlay is clearer than keyed diffing.
+        // ponytail（有意为之的技术债）：目前战斗里角色很少，每次整体重建这层显示内容
+        // 比费劲做「按 key 找差异只更新变化部分」更简单清楚。
         for surface in snapshot.surfaces {
             layer.addChild(makeSurfaceNode(surface))
         }
@@ -170,10 +171,10 @@ final class GameScene: SKScene {
     }
 
     private func layoutWorld() {
-        // `tilemap.position == .zero` inside `worldLayer`, so `tilemap.boundingRect` is already
-        // expressed in `worldLayer`'s local space. Center on its actual mid-point rather than an
-        // assumed bottom-left (0,0) origin, because SKTiled's default `.center` layer alignment
-        // lays the map out around the tilemap's own origin, not its bottom-left corner.
+        // tilemap 在 worldLayer 里的坐标是 (0, 0)，所以 tilemap.boundingRect 用的
+        // 已经是 worldLayer 自己的坐标系。这里用地图的「实际中心点」来居中，
+        // 而不是假设左下角是 (0, 0)，因为 SKTiled 默认的 `.center` 对齐方式是
+        // 以地图自己的原点为中心铺开，而不是以左下角为准。
         guard let tilemap else {
             worldLayer.setScale(1)
             worldLayer.position = .zero
@@ -216,8 +217,8 @@ final class GameScene: SKScene {
         node.name = "party_\(member.actorID)"
         node.strokeColor = .white
         node.lineWidth = 2
-        // See `renderStaticObjects`' `staticObjectLayer.zPosition` comment: raised from 10 to a
-        // generous headroom value so the party marker can never be occluded by the tilemap.
+        // 参考 renderStaticObjects 里 staticObjectLayer.zPosition 的注释：这里把数值从
+        // 10 调高了不少，确保队伍标记不会被地图图层挡住。
         node.zPosition = 550
         worldLayer.addChild(node)
 
@@ -239,13 +240,12 @@ final class GameScene: SKScene {
         staticObjectLayer?.removeFromParent()
         let layer = SKNode()
         layer.name = "staticObjectLayer"
-        // `SKTilemap` (SKTiled) assigns its own internal zPosition to each tile/object layer it
-        // parses from the .tmx file, stacked in file order. That scheme is undocumented/private to
-        // the vendored SKTiled package, so rather than assume a small headroom is enough, this is
-        // raised generously above any plausible internal value so `staticObjectLayer` (and sibling
-        // overlays: party markers, click marker, battle layer) can never be occluded by map tiles.
-        // Paired with `ignoresSiblingOrder` on the hosting `SpriteView` in `GameRootView`, which
-        // makes zPosition-based sorting global instead of a per-parent tree walk.
+        // SKTiled 的 `SKTilemap` 会给它从 .tmx 文件里解析出来的每个图层自己分配一个内部
+        // zPosition，按文件里出现的顺序往上叠。这套机制 SKTiled 官方没有公开说明、属于它内部
+        // 实现细节，所以与其猜一个「应该够用」的数值，这里干脆调得比它内部可能用到的任何数值
+        // 都高很多，确保 staticObjectLayer（以及同级的队伍标记、点击标记、战斗层）
+        // 不会被地图瓦片挡住。同时配合 GameRootView 里 SpriteView 的 `ignoresSiblingOrder`
+        // 开关，让 zPosition 变成全局排序，而不是一层层按父子关系排。
         layer.zPosition = 500
         worldLayer.addChild(layer)
         staticObjectLayer = layer
@@ -265,10 +265,9 @@ final class GameScene: SKScene {
         for trigger in metadata.triggers {
             layer.addChild(makeTriggerMarker(trigger))
         }
-        // Encounter triggers (ambush zones) must always render, unconditionally. This project's
-        // design has no stealth/hidden-ambush mechanic (encounters are fixed, map-authored, never
-        // random — see Docs/chapter1-worldgraph.md), so a completely invisible trigger zone is a
-        // rendering bug, not an intentional spoiler-avoidance behavior.
+        // 遭遇触发区（伏击点）必须始终显示，没有例外。这个项目的设计里没有「隐藏伏击」这种
+        // 玩法（所有遭遇战都是地图上固定安排好的，不是随机出现的——见 Docs/chapter1-worldgraph.md），
+        // 所以如果触发区完全看不见，那是渲染上的 bug，不是故意藏起来防剧透。
         for encounter in metadata.encounterTriggers {
             layer.addChild(makeEncounterMarker(encounter))
         }
@@ -368,9 +367,9 @@ final class GameScene: SKScene {
     private func makeVisibleObstacleNode(_ obstacle: NavigationObstacle) -> SKNode? {
         guard shouldRenderAsProp(obstacle) else { return nil }
 
-        // ponytail: only `prop_chest`/`prop_woodpile` art exists today, so every discrete
-        // obstacle (well, rubble, ore pile, wall stub, etc.) reuses the same placeholder texture.
-        // Revisit once per-obstacle-type art is registered in assets-manifest.json.
+        // ponytail（有意为之的技术债）：目前只画好了 prop_chest（箱子）/prop_woodpile（木堆）
+        // 两张图，所以像水井、碎石堆、矿堆、残墙之类的独立障碍物暂时都先借用同一张占位贴图。
+        // 等以后 assets-manifest.json 里给每种障碍物都登记了专属美术资源，再回来换掉。
         let sprite = SKSpriteNode(texture: texture(named: "prop_woodpile"))
         sprite.name = "obstacleProp_\(obstacle.tiledID)"
         sprite.size = CGSize(width: max(obstacle.frame.width, 42), height: max(obstacle.frame.height, 42))
@@ -378,10 +377,10 @@ final class GameScene: SKScene {
         return sprite
     }
 
-    // Real obstacle names across every chapter1 .tmx (grep of all `navObstacle` object groups),
-    // excluding the four screen-edge boundary walls every map has (北/南/西/东边界/村墙/浅河边界/
-    // 河岸护栏), which are always far larger than any decorative obstacle and stay excluded by the
-    // size gate below regardless of this list.
+    // 这是第一章所有 .tmx 地图里出现过的真实障碍物名字（搜索所有 navObstacle 对象组得到），
+    // 不包含每张地图都有的四面边界墙（北/南/西/东边界/村墙/浅河边界/河岸护栏）——
+    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，不管在不在这个名单里，
+    // 都会被下面的尺寸判断规则排除掉。
     private static let obstaclePropNameFragments = [
         "倒木", "木料", "篱笆", "货车", "废木堆",
         "石井", "旧告示墙", "裂隙核心", "塌陷石带", "坍塌矿架",
@@ -389,9 +388,9 @@ final class GameScene: SKScene {
     ]
 
     private func shouldRenderAsProp(_ obstacle: NavigationObstacle) -> Bool {
-        // Raised from 192x96 so taller/wider real obstacles (e.g. 坍塌矿架 128x192, 裂隙核心
-        // 160x160) still qualify, while staying well below every map's boundary-wall dimensions
-        // (always >= 480 on at least one axis), so boundaries remain excluded either way.
+        // 尺寸上限从 192x96 调大了，这样比较高/比较宽的真实障碍物（比如坍塌矿架 128x192、
+        // 裂隙核心 160x160）也能算进来；同时又远小于每张地图边界墙的尺寸（边界墙至少有一边
+        // 大于等于 480），所以边界墙无论如何都还是会被排除掉。
         guard obstacle.frame.width <= 280, obstacle.frame.height <= 220 else { return false }
         guard let name = obstacle.name else { return false }
         return Self.obstaclePropNameFragments.contains { name.localizedStandardContains($0) }
@@ -450,8 +449,8 @@ final class GameScene: SKScene {
     }
 
     private func makeEncounterMarker(_ encounter: MapEncounterTrigger) -> SKNode {
-        // Always visible — this project has no stealth/ambush design, so an encounter zone must
-        // read as clearly as an exit or a lore trigger, not hide until the player walks into it.
+        // 始终可见——这个项目没有隐藏伏击的设计，所以遭遇区域要和出口、剧情触发点一样清楚地
+        // 显示出来，不能等玩家走进去才突然出现。
         let node = SKNode()
         node.name = "encounterMarker_\(encounter.tiledID)"
         node.position = encounter.center
@@ -514,10 +513,10 @@ final class GameScene: SKScene {
         return texture
     }
 
-    /// Slices frame `frameIndex` out of a `frameCount`-frame horizontal spritesheet strip
-    /// named `sheetName` under `Assets/Characters`. Shared by every multi-frame character
-    /// sheet (village NPCs, human enemies, beasts/monsters) so each new roster only needs a
-    /// name -> frame-index table instead of a bespoke slicing function.
+    /// 从 `Assets/Characters` 目录下名为 `sheetName`、总共有 `frameCount` 帧的横向长条
+    /// 拼接图里，切出第 `frameIndex` 帧。这个函数是所有「多帧角色立绘图」共用的
+    /// （村民 NPC、人类敌人、动物/怪物都在用），这样以后新增一批角色立绘，
+    /// 只需要写一张「名字 -> 第几帧」的对照表就行，不用再单独写切图逻辑。
     private func slicedTexture(sheetName: String, frameIndex: Int, frameCount: Int) -> SKTexture? {
         guard let sheetURL = Bundle.main.url(forResource: sheetName, withExtension: "png", subdirectory: "Assets/Characters"),
               let sheetImage = NSImage(contentsOf: sheetURL) else {
@@ -532,10 +531,9 @@ final class GameScene: SKScene {
         return texture
     }
 
-    /// `Assets/Characters/village_npcs.png` is a registered 3-frame horizontal strip
-    /// (elder / resident / guard) meant for chapter village NPCs. `spriteName(forNPC:)`
-    /// resolves a frame name below; this slices the matching rect out of the shared sheet
-    /// instead of requiring a dedicated PNG per NPC.
+    /// `Assets/Characters/village_npcs.png` 是一张已登记的 3 帧横向拼接图（长者/村民/守卫），
+    /// 用于村庄里的 NPC。下面的 `spriteName(forNPC:)` 会先算出该用第几帧，
+    /// 这里再从这张公用大图里切出对应的一小块，而不用给每个 NPC 都单独画一张 PNG。
     private static let villageNPCFrames: [String: Int] = [
         "npc_village_resident": 1,
         "npc_village_guard": 2
@@ -546,9 +544,9 @@ final class GameScene: SKScene {
         return slicedTexture(sheetName: "village_npcs", frameIndex: frameIndex, frameCount: 3)
     }
 
-    /// `Assets/Characters/human_enemies.png` is a registered 3-frame strip (ranged / melee /
-    /// elite) so human enemies (`BattleViewModel.spriteName(forHumanEnemy:)`) read as distinct
-    /// foes instead of reusing the player party's class portraits.
+    /// `Assets/Characters/human_enemies.png` 是一张已登记的 3 帧拼接图（远程/近战/精英），
+    /// 这样人类敌人（对应 `BattleViewModel.spriteName(forHumanEnemy:)`）能有自己独立的
+    /// 立绘，而不是直接借用玩家队伍的职业立绘。
     private static let humanEnemyFrames: [String: Int] = [
         "enemy_human_ranged": 0,
         "enemy_human_melee": 1,
@@ -560,10 +558,9 @@ final class GameScene: SKScene {
         return slicedTexture(sheetName: "human_enemies", frameIndex: frameIndex, frameCount: 3)
     }
 
-    /// `Assets/Characters/beasts_and_monsters.png` is a registered 3-frame strip (plain
-    /// animal / tainted cave creature / rift-corrupted creature) so cave vermin and rift
-    /// hatchlings (`BattleViewModel.spriteName(forBeast:)`) no longer share one generic
-    /// monster sprite.
+    /// `Assets/Characters/beasts_and_monsters.png` 是一张已登记的 3 帧拼接图（普通动物/
+    /// 受污染洞穴生物/裂隙腐化生物），这样洞穴里的小怪和裂隙幼体
+    /// （对应 `BattleViewModel.spriteName(forBeast:)`）就不用再全部共用同一张通用怪物立绘了。
     private static let beastMonsterFrames: [String: Int] = [
         "enemy_beast_animal": 0,
         "enemy_beast_tainted": 1,

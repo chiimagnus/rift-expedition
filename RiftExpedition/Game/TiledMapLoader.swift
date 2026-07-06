@@ -93,10 +93,10 @@ struct MapItem: Equatable {
 }
 
 enum TiledMapLoader {
-    /// Loads a Tiled map and derives all gameplay metadata (spawn/npc/exit/...) from the
-    /// SAME parsed `SKTilemap` that renders it, so rendering and gameplay logic always agree
-    /// on one coordinate space. This replaces the old approach of hand-parsing the .tmx XML
-    /// a second time (which never matched SKTiled's Y-flip / anchor-centered layout).
+    /// 加载一张 Tiled 编辑器做的地图，并且所有玩法用的元数据（出生点/NPC/出口……）都是从
+    /// 「用来渲染画面的同一份」`SKTilemap` 解析结果里读出来的，这样画面和玩法逻辑用的坐标
+    /// 系统才能始终对得上。这替换掉了之前那种「再手写代码把 .tmx 的 XML 解析一遍」的老办法
+    /// （老办法算出来的坐标，一直对不上 SKTiled 自己的上下翻转/居中对齐方式）。
     @MainActor
     static func load(areaID: String, bundle: Bundle = .main) throws -> (tilemap: SKTilemap, metadata: TiledMapMetadata) {
         try load(url: mapURL(areaID: areaID, bundle: bundle), areaID: areaID)
@@ -112,10 +112,11 @@ enum TiledMapLoader {
         return (tilemap, TiledMapMetadata(areaID: areaID, tilemap: tilemap))
     }
 
-    /// Convenience for callers that only need gameplay positions (e.g. the session view model),
-    /// not the rendered node tree.
-    // ponytail: this parses a throwaway SKTilemap just to read metadata; fine at this project's
-    // 10-map scale, revisit (e.g. cache by areaID) if map count or load frequency grows.
+    /// 给那些只需要「玩法用的坐标信息」（比如 session 的 view model），
+    /// 不需要整个渲染节点树的调用方，提供一个简便方法。
+    // ponytail（有意为之的技术债）：这里为了读元数据，临时解析了一份用完就扔的 SKTilemap；
+    // 在这个项目目前 10 张地图的规模下开销可以忽略。如果以后地图数量变多、
+    // 或者这个方法被频繁调用，可以考虑按 areaID 加缓存。
     @MainActor
     static func loadMetadata(areaID: String, bundle: Bundle = .main) throws -> TiledMapMetadata {
         try load(areaID: areaID, bundle: bundle).metadata
@@ -141,24 +142,23 @@ enum TiledMapLoader {
 }
 
 private extension TiledMapMetadata {
-    /// Builds metadata straight from SKTiled's own parsed object layers/objects, reusing
-    /// SKTiled's coordinate conversion instead of re-deriving Tiled's top-left/Y-down
-    /// convention by hand (that hand-rolled math was the root cause of the map/object
-    /// misalignment: it never matched SKTiled's Y-flip or its center-anchored tilemap layout).
+    /// 直接基于 SKTiled 自己解析出来的图层/对象来生成元数据，复用 SKTiled 自带的坐标转换，
+    /// 而不是自己再手写一套 Tiled「左上角为原点、Y 轴向下」的换算规则（之前手写的那套换算
+    /// 正是「地图和物体对不上」这个 bug 的根源：它一直没对上 SKTiled 自己的上下翻转
+    /// 和居中对齐布局方式）。
     @MainActor
     init(areaID: String, tilemap: SKTilemap) {
-        // Not just `.first`: aggregate every object group with this name, matching the old
-        // hand-rolled XML parser's behavior of collecting objects from every `<objectgroup>`
-        // with a given name (current maps only ever have one per name, but nothing guarantees
-        // that stays true as more maps are authored).
+        // 这里不是只取第一个（.first），而是把所有同名的对象组都汇总起来，这是为了保持和
+        // 之前手写 XML 解析器一样的行为——把每一个同名 `<objectgroup>` 里的对象都收集进来
+        // （目前每张地图每个名字只有一个对象组，但不能保证以后新做的地图也一定是这样）。
         func objects(in groupName: String) -> [SKTileObject] {
             tilemap.objectGroups(named: groupName).flatMap { $0.getObjects() }
         }
 
-        // Every object's `.position` is already in its owning object-group's local space
-        // (SKTiled applies the Tiled -> SpriteKit Y-flip when it adds the object to the group).
-        // Converting through `tilemap.convert(_:from:)` normalizes it into the tilemap's own
-        // space, which is exactly the space the rendered tile layers live in.
+        // 每个对象的 .position 已经是它所在对象组自己的局部坐标了
+        // （SKTiled 在把对象加进对象组的时候，就已经把 Tiled 坐标转换成了 SpriteKit 的
+        // 上下翻转坐标）。这里再用 tilemap.convert(_:from:) 转换一次，是为了把它统一换算成
+        // tilemap 自己的坐标系——也就是渲染出来的瓦片图层实际使用的那个坐标系。
         func point(for object: SKTileObject) -> CGPoint {
             guard let group = object.layer else { return object.position }
             return tilemap.convert(object.position, from: group)
@@ -168,9 +168,9 @@ private extension TiledMapMetadata {
             guard let group = object.layer else {
                 return CGRect(origin: object.position, size: object.size)
             }
-            // SKTileObject's local bounding box is (0, 0, width, -height): `.position` is the
-            // object's top-left corner post Y-flip, so the rect's bottom-left corner (the CGRect
-            // origin convention) sits `size.height` below it.
+            // SKTileObject 自己的局部包围盒是 (0, 0, 宽, -高)：.position 是这个对象
+            // 经过上下翻转之后的「左上角」坐标，所以按 CGRect 「原点在左下角」的惯例，
+            // 矩形真正的左下角坐标要在 .position 基础上再往下移动 size.height。
             let bottomLeftInGroup = CGPoint(x: object.position.x, y: object.position.y - object.size.height)
             let bottomLeftInTilemap = tilemap.convert(bottomLeftInGroup, from: group)
             return CGRect(origin: bottomLeftInTilemap, size: object.size)

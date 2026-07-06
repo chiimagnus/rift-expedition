@@ -5,9 +5,9 @@ import XCTest
 
 @MainActor
 final class BattleViewModelTests: XCTestCase {
-    // Enemy sprite diversification: human enemies and beasts/monsters must no longer
-    // collapse onto a single reused texture (player class art or one generic monster
-    // sprite). See `BattleViewModel.spriteName(forHumanEnemy:)` / `spriteName(forBeast:)`.
+    // 敌人立绘多样化：人类敌人、动物/怪物不能再全部挤成一张复用的贴图
+    // （不管是玩家职业立绘，还是同一张通用怪物立绘）。
+    // 具体逻辑见 BattleViewModel.spriteName(forHumanEnemy:) / spriteName(forBeast:)。
     func testHumanEnemySpriteVariesByClassAndLevel() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
@@ -24,8 +24,8 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(sprites["player"], "actor_warrior")
         XCTAssertEqual(sprites["grunt_archer"], "enemy_human_ranged")
         XCTAssertEqual(sprites["grunt_warrior"], "enemy_human_melee")
-        // A level-4 guard reads as elite regardless of combat class, distinguishing the
-        // chapter climax fight even though it shares the `warrior` classID with an earlier grunt.
+        // 4 级的守卫不管战斗职业是什么，都应该读成「精英」立绘，这样即使它和前面的杂兵
+        // 共用同一个 warrior 职业 ID，章节高潮战也能明显区分开来。
         XCTAssertEqual(sprites["elite_guard"], "enemy_human_elite")
         XCTAssertNotEqual(sprites["grunt_warrior"], sprites["player"])
     }
@@ -44,7 +44,7 @@ final class BattleViewModelTests: XCTestCase {
 
         XCTAssertEqual(sprites["boar"], "enemy_beast_animal")
         XCTAssertEqual(sprites["cave_vermin"], "enemy_beast_tainted")
-        // The higher-level rift hatchling should read as more corrupted than the cave vermin.
+        // 等级更高的裂隙幼体应该比洞穴小怪显得更「腐化」。
         XCTAssertEqual(sprites["rift_hatchling"], "enemy_beast_rift")
         XCTAssertNotEqual(sprites["cave_vermin"], sprites["rift_hatchling"])
     }
