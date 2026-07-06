@@ -221,7 +221,15 @@ final class GameScene: SKScene {
             layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))
         }
         for obstacle in metadata.navObstacles where obstacle.blocksMovement {
-            layer.addChild(makeObstacleNode(frame: obstacle.frame))
+            if let node = makeVisibleObstacleNode(obstacle) {
+                layer.addChild(node)
+            }
+        }
+        for exit in metadata.exits {
+            layer.addChild(makeExitMarker(exit))
+        }
+        for trigger in metadata.triggers {
+            layer.addChild(makeTriggerMarker(trigger))
         }
         for npc in metadata.npcs {
             layer.addChild(makeMapSprite(name: spriteName(forNPC: npc), position: npc.position, size: CGSize(width: 52, height: 52)))
@@ -316,19 +324,84 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func makeObstacleNode(frame: CGRect) -> SKNode {
-        guard frame.width <= 128, frame.height <= 128 else {
-            let node = SKShapeNode(rect: frame, cornerRadius: 4)
-            node.fillColor = SKColor(red: 0.18, green: 0.16, blue: 0.12, alpha: 0.34)
-            node.strokeColor = SKColor(red: 0.44, green: 0.32, blue: 0.19, alpha: 0.62)
-            node.lineWidth = 2
-            return node
-        }
+    private func makeVisibleObstacleNode(_ obstacle: NavigationObstacle) -> SKNode? {
+        guard shouldRenderAsProp(obstacle) else { return nil }
 
         let sprite = SKSpriteNode(texture: texture(named: "prop_woodpile"))
-        sprite.size = CGSize(width: max(frame.width, 42), height: max(frame.height, 42))
-        sprite.position = CGPoint(x: frame.midX, y: frame.midY)
+        sprite.name = "obstacleProp_\(obstacle.tiledID)"
+        sprite.size = CGSize(width: max(obstacle.frame.width, 42), height: max(obstacle.frame.height, 42))
+        sprite.position = CGPoint(x: obstacle.frame.midX, y: obstacle.frame.midY)
         return sprite
+    }
+
+    private func shouldRenderAsProp(_ obstacle: NavigationObstacle) -> Bool {
+        guard obstacle.frame.width <= 192, obstacle.frame.height <= 96 else { return false }
+        guard let name = obstacle.name else { return false }
+        return name.localizedStandardContains("倒木")
+            || name.localizedStandardContains("木料")
+            || name.localizedStandardContains("篱笆")
+            || name.localizedStandardContains("货车")
+    }
+
+    private func makeExitMarker(_ exit: MapExit) -> SKNode {
+        let node = SKNode()
+        node.name = "exitMarker_\(exit.tiledID)"
+        node.position = CGPoint(x: exit.frame.midX, y: exit.frame.midY)
+        node.zPosition = 8
+
+        let plate = SKShapeNode(rectOf: CGSize(width: max(exit.frame.width + 28, 72), height: max(exit.frame.height + 20, 64)), cornerRadius: 12)
+        plate.fillColor = SKColor(red: 0.93, green: 0.62, blue: 0.18, alpha: 0.20)
+        plate.strokeColor = SKColor(red: 0.97, green: 0.75, blue: 0.30, alpha: 0.92)
+        plate.lineWidth = 3
+        node.addChild(plate)
+
+        let arrow = SKLabelNode(text: arrowText(for: exit.frame))
+        arrow.fontName = "PingFangSC-Semibold"
+        arrow.fontSize = 22
+        arrow.fontColor = SKColor(red: 1.0, green: 0.86, blue: 0.42, alpha: 1)
+        arrow.verticalAlignmentMode = .center
+        arrow.position = CGPoint(x: 0, y: 13)
+        node.addChild(arrow)
+
+        let label = SKLabelNode(text: exit.name ?? "出口")
+        label.fontName = "PingFangSC-Semibold"
+        label.fontSize = 12
+        label.fontColor = .white
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: 0, y: -15)
+        node.addChild(label)
+        return node
+    }
+
+    private func makeTriggerMarker(_ trigger: MapTrigger) -> SKNode {
+        let node = SKNode()
+        node.name = "triggerMarker_\(trigger.tiledID)"
+        node.position = CGPoint(x: trigger.frame.midX, y: trigger.frame.midY)
+        node.zPosition = 7
+
+        let pin = SKShapeNode(circleOfRadius: 12)
+        pin.fillColor = SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 0.72)
+        pin.strokeColor = .white
+        pin.lineWidth = 2
+        node.addChild(pin)
+
+        let label = SKLabelNode(text: trigger.name ?? "线索")
+        label.fontName = "PingFangSC-Semibold"
+        label.fontSize = 11
+        label.fontColor = .white
+        label.verticalAlignmentMode = .center
+        label.position = CGPoint(x: 0, y: -24)
+        node.addChild(label)
+        return node
+    }
+
+    private func arrowText(for frame: CGRect) -> String {
+        guard let currentMapSize else { return "→" }
+        if frame.midX <= currentMapSize.width * 0.2 { return "←" }
+        if frame.midX >= currentMapSize.width * 0.8 { return "→" }
+        if frame.midY <= currentMapSize.height * 0.2 { return "↑" }
+        if frame.midY >= currentMapSize.height * 0.8 { return "↓" }
+        return "→"
     }
 
     private func makeMapSprite(name: String, position: CGPoint, size: CGSize) -> SKNode {

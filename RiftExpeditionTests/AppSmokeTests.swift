@@ -25,4 +25,21 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(worldLayer.position.x, -0.5)
         XCTAssertGreaterThanOrEqual(worldLayer.position.y, -0.5)
     }
+
+    func testLoadedMapShowsPlayerMarkersWithoutCollisionDebugFrames() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        scene.loadMap(areaID: "village_square")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_4"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_5"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "triggerMarker_15"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_6"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_7"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_8"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_9"))
+    }
 }

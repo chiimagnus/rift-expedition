@@ -36,6 +36,7 @@ struct MapNPC: Equatable {
 
 struct NavigationObstacle: Equatable {
     var tiledID: Int
+    var name: String? = nil
     var frame: CGRect
     var blocksMovement: Bool
     var blocksSight: Bool
@@ -58,6 +59,7 @@ struct MapEncounterTrigger: Equatable {
 
 struct MapTrigger: Equatable {
     var tiledID: Int
+    var name: String? = nil
     var triggerID: String
     var action: String
     var frame: CGRect
@@ -69,6 +71,7 @@ struct MapTrigger: Equatable {
 
 struct MapExit: Equatable {
     var tiledID: Int
+    var name: String? = nil
     var targetAreaID: String
     var targetSpawnID: String
     var frame: CGRect
@@ -190,6 +193,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
         case "object":
             currentObject = ParsedObject(
                 tiledID: Int(attributeDict["id"] ?? "") ?? -1,
+                name: attributeDict["name"],
                 x: Double(attributeDict["x"] ?? "") ?? 0,
                 y: Double(attributeDict["y"] ?? "") ?? 0,
                 width: Double(attributeDict["width"] ?? "") ?? 0,
@@ -232,6 +236,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
             if currentGroup == "navObstacle", let object = currentObject {
                 navObstacles.append(NavigationObstacle(
                     tiledID: object.tiledID,
+                    name: object.name,
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height),
                     blocksMovement: object.properties["blocksMovement"] == "true",
                     blocksSight: object.properties["blocksSight"] == "true"
@@ -250,6 +255,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
                let action = object.properties["action"] {
                 triggers.append(MapTrigger(
                     tiledID: object.tiledID,
+                    name: object.name,
                     triggerID: triggerID,
                     action: action,
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
@@ -260,6 +266,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
                let targetSpawnID = object.properties["targetSpawnId"] {
                 exits.append(MapExit(
                     tiledID: object.tiledID,
+                    name: object.name,
                     targetAreaID: targetAreaID,
                     targetSpawnID: targetSpawnID,
                     frame: CGRect(x: object.x, y: object.y, width: object.width, height: object.height)
@@ -290,6 +297,7 @@ private final class TiledMetadataParser: NSObject, XMLParserDelegate {
 
 private struct ParsedObject {
     var tiledID: Int
+    var name: String?
     var x: Double
     var y: Double
     var width: Double
