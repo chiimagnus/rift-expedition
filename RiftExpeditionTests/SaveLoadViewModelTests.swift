@@ -50,6 +50,22 @@ final class SaveLoadViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.message, "自动存档被拒绝：当前不是安全点。")
     }
 
+    func testRowsUseInjectedAreaDisplayName() throws {
+        let store = makeStore()
+        try store.write(makeSave(areaID: "village_square"), to: .manual(1), safety: .safe)
+        let viewModel = SaveLoadViewModel(
+            store: store,
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { _ in },
+            areaDisplayName: { areaID in areaID == "village_square" ? "裂隙村广场" : areaID }
+        )
+
+        let row = try XCTUnwrap(viewModel.rows.first { $0.slot == .manual(1) })
+
+        XCTAssertTrue(row.detail.contains("裂隙村广场"))
+        XCTAssertFalse(row.detail.contains("village_square"))
+    }
+
     func testCorruptSlotShowsChineseError() throws {
         let store = makeStore()
         try store.writeRawData(Data("{".utf8), to: .manual(2))

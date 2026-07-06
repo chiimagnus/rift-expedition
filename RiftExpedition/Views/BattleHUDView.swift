@@ -102,7 +102,7 @@ struct BattleHUDView: View {
                         Text("背包中没有可用消耗品")
                     } else {
                         ForEach(viewModel.consumableRows) { item in
-                            Button("\(item.displayName) x\(item.count) · \(item.actionPointCost) AP") {
+                            Button("\(item.displayName) 数量 \(item.count) · \(item.actionPointCost) AP") {
                                 viewModel.selectConsumable(id: item.id)
                             }
                             .accessibilityLabel("选择消耗品 \(item.displayName)，需要 \(item.actionPointCost) AP")

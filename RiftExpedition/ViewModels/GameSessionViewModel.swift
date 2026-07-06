@@ -27,6 +27,8 @@ final class GameSessionViewModel {
     private let skillDefinitions: [SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
     private let questDefinitions: [QuestDefinition]
+    private let areaNamesByID: [String: String]
+    private let npcNamesByID: [String: String]
     private var currentMapMetadata: TiledMapMetadata?
     private var collectedMapItemKeys: Set<String> = []
     private var firedMapTriggerKeys: Set<String> = []
@@ -49,6 +51,8 @@ final class GameSessionViewModel {
         itemDefinitions = catalog?.items ?? []
         let loadedQuestDefinitions = catalog?.quests ?? []
         questDefinitions = loadedQuestDefinitions
+        areaNamesByID = Self.loadAreaDisplayNames(from: contentBundle)
+        npcNamesByID = Self.loadNPCDisplayNames(from: contentBundle)
         let startAreaID = "village_square"
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: startAreaID, bundle: contentBundle)
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
@@ -94,7 +98,8 @@ final class GameSessionViewModel {
             saveLoadViewModel = SaveLoadViewModel(
                 store: saveGameStore,
                 makeSave: { [weak self] in self?.makeCurrentSave() },
-                applySave: { [weak self] save in self?.apply(save) }
+                applySave: { [weak self] save in self?.apply(save) },
+                areaDisplayName: { [weak self] areaID in self?.areaDisplayName(for: areaID) ?? areaID }
             )
         } else {
             saveLoadViewModel?.refresh()
@@ -305,6 +310,45 @@ final class GameSessionViewModel {
         return PartyCreationViewModel(classes: catalog.classes, skillNamesByID: skillNames)
     }
 
+    private static func loadAreaDisplayNames(from bundle: Bundle) -> [String: String] {
+        guard
+            let url = bundle.url(forResource: "chapter1", withExtension: "json", subdirectory: "Data/worlds"),
+            let data = try? Data(contentsOf: url),
+            let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let areas = root["areas"] as? [[String: Any]]
+        else {
+            return [:]
+        }
+
+        return Dictionary(uniqueKeysWithValues: areas.compactMap { area in
+            guard let id = area["id"] as? String,
+                  let displayName = area["displayName"] as? String
+            else {
+                return nil
+            }
+            return (id, displayName)
+        })
+    }
+
+    private static func loadNPCDisplayNames(from bundle: Bundle) -> [String: String] {
+        guard
+            let url = bundle.url(forResource: "npcs", withExtension: "json", subdirectory: "Data"),
+            let data = try? Data(contentsOf: url),
+            let npcs = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        else {
+            return [:]
+        }
+
+        return Dictionary(uniqueKeysWithValues: npcs.compactMap { npc in
+            guard let id = npc["id"] as? String,
+                  let displayName = npc["displayName"] as? String
+            else {
+                return nil
+            }
+            return (id, displayName)
+        })
+    }
+
     private static func makeStartingInventory(for party: [Actor]) -> PartyInventory {
         var inventory = PartyInventory()
         for actor in party {
@@ -345,6 +389,24 @@ final class GameSessionViewModel {
 
     private func skillName(_ skillID: String) -> String {
         skillDefinitions.first(where: { $0.id == skillID })?.displayName ?? skillID
+    }
+
+    private func areaDisplayName(for areaID: String) -> String {
+        areaNamesByID[areaID] ?? areaID
+    }
+
+    private func npcDisplayName(for npc: MapNPC) -> String {
+        npcNamesByID[npc.actorID] ?? "角色"
+    }
+
+    private func triggerDisplayName(for trigger: MapTrigger) -> String {
+        if trigger.action == "chapterComplete" {
+            return "裂隙出口"
+        }
+        if dialogID(fromTriggerAction: trigger.action) != nil {
+            return "线索"
+        }
+        return "触发点"
     }
 
     var debugObstacleCount: Int {
@@ -421,7 +483,7 @@ final class GameSessionViewModel {
             openDialog(dialogID(for: npc))
         } else {
             explorationController.setLeaderDestination(npc.position)
-            statusText = "队长正靠近 \(npc.actorID)。"
+            statusText = "队长正靠近 \(npcDisplayName(for: npc))。"
         }
         return true
     }
@@ -460,7 +522,7 @@ final class GameSessionViewModel {
             perform(trigger)
         } else {
             explorationController.setLeaderDestination(trigger.frame.center)
-            statusText = "队长正靠近 \(trigger.triggerID)。"
+            statusText = "队长正靠近 \(triggerDisplayName(for: trigger))。"
         }
         return true
     }
@@ -523,7 +585,7 @@ final class GameSessionViewModel {
         } else if trigger.action == "chapterComplete" {
             completeChapter()
         } else {
-            statusText = "未知地图触发：\(trigger.triggerID)。"
+            statusText = "未知地图触发。"
         }
     }
 
@@ -588,7 +650,7 @@ extension GameSessionViewModel: GameSceneEventHandling {
         }
 
         loadArea(exit.targetAreaID, spawnID: exit.targetSpawnID)
-        statusText = "进入区域：\(exit.targetAreaID)"
+        statusText = "进入区域：\(areaDisplayName(for: exit.targetAreaID))"
     }
 
     private func checkEncounterTrigger() {

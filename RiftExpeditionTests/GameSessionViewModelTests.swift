@@ -17,6 +17,7 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.currentAreaID, "village_riverside")
         XCTAssertEqual(session.currentSpawnID, "from_square")
         XCTAssertEqual(session.appState, .exploration)
+        XCTAssertEqual(session.statusText, "进入区域：裂隙村河岸")
     }
 
     func testStartingChapterWritesSafeAutosave() throws {

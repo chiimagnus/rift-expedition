@@ -19,17 +19,20 @@ final class SaveLoadViewModel {
     private let store: SaveGameStore
     @ObservationIgnored private let makeSave: @MainActor () -> SaveGame?
     @ObservationIgnored private let applySave: @MainActor (SaveGame) -> Void
+    @ObservationIgnored private let areaDisplayName: @MainActor (String) -> String
     var rows: [SaveSlotRow] = []
     var message = "选择存档槽。"
 
     init(
         store: SaveGameStore,
         makeSave: @escaping @MainActor () -> SaveGame?,
-        applySave: @escaping @MainActor (SaveGame) -> Void
+        applySave: @escaping @MainActor (SaveGame) -> Void,
+        areaDisplayName: @escaping @MainActor (String) -> String = { $0 }
     ) {
         self.store = store
         self.makeSave = makeSave
         self.applySave = applySave
+        self.areaDisplayName = areaDisplayName
         refresh()
     }
 
@@ -100,7 +103,7 @@ final class SaveLoadViewModel {
             return SaveSlotRow(
                 slot: slot,
                 title: slotTitle(slot),
-                detail: "区域 \(save.currentAreaID) · 队伍 \(save.party.count) 人 · v\(save.schemaVersion)",
+                detail: "区域 \(areaDisplayName(save.currentAreaID)) · 队伍 \(save.party.count) 人 · 版本 \(save.schemaVersion)",
                 canLoad: true,
                 isCorrupt: false
             )
