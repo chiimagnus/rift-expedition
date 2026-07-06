@@ -9,7 +9,7 @@
 ## 如何审查
 
 - 地图源文件：`RiftExpedition/Resources/Maps/vertical_slice.tmx`。
-- 地图预览：运行 validator 生成到 `Docs/map-previews/vertical_slice/`。
+- 地图预览：运行 validator 生成到 `Docs/Reports/map-previews/vertical_slice/`。
 - 资源清单：检查 `RiftExpedition/Resources/Assets/assets-manifest.json` 中每个条目的 `license`、`source`、`path`。
 - 禁止提交文件名或 id 含 `placeholder`、`temp`、`graybox` 的正式资源。
 
