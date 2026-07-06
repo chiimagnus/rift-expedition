@@ -100,8 +100,32 @@ final class GameScene: SKScene {
             node.fillColor = member.actorID == leaderID
                 ? SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
                 : SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 1)
+            // 之前这里只更新了 node.position，人物贴图完全没有任何动画，也不会根据朝向左右镜像，
+            // 看起来就是一个图标在平移。现在朝 target 移动时播放一个简单的“走路上下弹跳”动画，
+            // 并根据 facingRight 左右翻转贴图，静止时把动画和翻转都还原。
+            if let sprite = node.childNode(withName: "partySprite_\(member.actorID)") as? SKSpriteNode {
+                sprite.xScale = member.facingRight ? abs(sprite.xScale) : -abs(sprite.xScale)
+                let isMoving = member.target != nil
+                if isMoving {
+                    if sprite.action(forKey: "walkBob") == nil {
+                        sprite.run(.repeatForever(walkBobAction()), withKey: "walkBob")
+                    }
+                } else if sprite.action(forKey: "walkBob") != nil {
+                    sprite.removeAction(forKey: "walkBob")
+                    sprite.position = .zero
+                }
+            }
             partyNodes[member.actorID] = node
         }
+    }
+
+    /// 简单的“走路弹跳”动画：贴图相对自己原点小幅上下移动，配合 `renderParty` 里的
+    /// 移动状态判断循环播放。做法参考了 `makeEffectNode` 里命中特效用到的 `SKAction` 序列。
+    private func walkBobAction() -> SKAction {
+        let up = SKAction.moveBy(x: 0, y: 3, duration: 0.15)
+        up.timingMode = .easeInEaseOut
+        let down = up.reversed()
+        return .sequence([up, down])
     }
 
     func renderBattle(_ snapshot: BattleSceneSnapshot?) {
@@ -267,7 +291,7 @@ final class GameScene: SKScene {
         }
         // 遭遇触发区（伏击点）必须始终显示，没有例外。这个项目的设计里没有「隐藏伏击」这种
         // 玩法（所有遭遇战都是地图上固定安排好的，不是随机出现的——见 Docs/chapter1-worldgraph.md），
-        // 所以如果触发区完全看不见，那是渲染上的 bug，不是故意藏起来防剧透。
+        // 所以如果触发区完全看不见，那是渲染上��� bug，不是故意藏起来防剧透。
         for encounter in metadata.encounterTriggers {
             layer.addChild(makeEncounterMarker(encounter))
         }
@@ -379,7 +403,7 @@ final class GameScene: SKScene {
 
     // 这是第一章所有 .tmx 地图里出现过的真实障碍物名字（搜索所有 navObstacle 对象组得到），
     // 不包含每张地图都有的四面边界墙（北/南/西/东边界/村墙/浅河边界/河岸护栏）——
-    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，不管在不在这个名单里，
+    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，���管在不在这个名单里，
     // 都会被下面的尺寸判断规则排除掉。
     private static let obstaclePropNameFragments = [
         "倒木", "木料", "篱笆", "货车", "废木堆",
