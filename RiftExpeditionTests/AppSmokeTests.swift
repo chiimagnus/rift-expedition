@@ -24,13 +24,19 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertGreaterThan(worldLayer.xScale, 0)
         XCTAssertEqual(worldLayer.xScale, worldLayer.yScale)
 
-        // 这是为了防止「地图和物体对不上」这个 bug 再次出现的回归测试：不管 SKTiled 内部把
-        // (0,0) 原点定在地图的哪个位置，渲染出来的地图本身的视觉中心，都必须落在整个场景的
-        // 视觉中心上。这个测试和 GameScene 自己算居中的那套逻辑是各自独立验证的。
-        let mapFrame = tilemap.calculateAccumulatedFrame()
-        let mapCenterInScene = worldLayer.convert(CGPoint(x: mapFrame.midX, y: mapFrame.midY), to: scene)
-        XCTAssertEqual(mapCenterInScene.x, scene.size.width / 2, accuracy: 2.0)
-        XCTAssertEqual(mapCenterInScene.y, scene.size.height / 2, accuracy: 2.0)
+        // 这是为了防止「地图和物体对不上」这个 bug 再次出现的回归测试：居中逻辑必须
+        // 基于 SKTiled 解析后的真实 boundingRect，而不是某个额外计算出来的 frame。
+        let mapRect = tilemap.boundingRect
+        XCTAssertEqual(
+            worldLayer.position.x + mapRect.midX * worldLayer.xScale,
+            scene.size.width / 2,
+            accuracy: 2.0
+        )
+        XCTAssertEqual(
+            worldLayer.position.y + mapRect.midY * worldLayer.yScale,
+            scene.size.height / 2,
+            accuracy: 2.0
+        )
     }
 
     func testLoadedMapShowsPlayerMarkersWithoutCollisionDebugFrames() throws {
