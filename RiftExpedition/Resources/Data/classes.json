@@ -12,10 +12,71 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["slash"],
+    "initialSkillIDs": ["slash", "shield_bash", "rallying_guard"],
     "defaultEquipment": {
       "weaponID": "rusted_sword",
-      "armorID": "padded_armor"
+      "armorID": "padded_armor",
+      "accessoryID": "training_buckle"
+    }
+  },
+  {
+    "id": "archer",
+    "displayName": "弓箭手",
+    "initialStats": {
+      "maxHealth": 28,
+      "health": 28,
+      "attack": 7,
+      "defense": 3,
+      "evasion": 5,
+      "magic": 1,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["aimed_shot", "hamstring_shot", "oil_arrow"],
+    "defaultEquipment": {
+      "weaponID": "worn_bow",
+      "armorID": "scout_jacket",
+      "accessoryID": "fletching_ring"
+    }
+  },
+  {
+    "id": "mage",
+    "displayName": "法师",
+    "initialStats": {
+      "maxHealth": 24,
+      "health": 24,
+      "attack": 3,
+      "defense": 2,
+      "evasion": 3,
+      "magic": 8,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["spark", "water_orb", "mending_light"],
+    "defaultEquipment": {
+      "weaponID": "cracked_staff",
+      "armorID": "apprentice_robe",
+      "accessoryID": "ember_focus"
+    }
+  },
+  {
+    "id": "rogue",
+    "displayName": "刺客",
+    "initialStats": {
+      "maxHealth": 26,
+      "health": 26,
+      "attack": 6,
+      "defense": 3,
+      "evasion": 7,
+      "magic": 2,
+      "maxActionPoints": 4,
+      "actionPoints": 4
+    },
+    "initialSkillIDs": ["backstab", "throwing_knife", "venom_edge"],
+    "defaultEquipment": {
+      "weaponID": "chipped_dagger",
+      "armorID": "shadow_cloak",
+      "accessoryID": "lucky_thread"
     }
   }
 ]

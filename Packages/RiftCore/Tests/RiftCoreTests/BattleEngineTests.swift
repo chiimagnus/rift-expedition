@@ -41,6 +41,35 @@ final class BattleEngineTests: XCTestCase {
         XCTAssertEqual(APRules.movementCost(forDistance: APRules.movementDistancePerAPStartingValue + 0.1), 2)
     }
 
+    func testTargetedSkillSpendsAPAndAppliesEffects() throws {
+        var engine = BattleEngine(state: BattleState(actors: [
+            makeActor(id: "hero", faction: .player, actionPoints: 4),
+            makeActor(id: "wolf", faction: .animal, health: 20)
+        ]))
+        var random = SeededRandomSource(seed: 7)
+        let skill = SkillDefinition(
+            id: "slash",
+            displayName: "劈砍",
+            actionPointCost: 2,
+            range: 1.5,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.damage(8)]
+        )
+
+        _ = try engine.useSkill(
+            actorID: "hero",
+            targetID: "wolf",
+            skill: skill,
+            context: TargetingContext(distance: 1, hasLineOfSight: true, isAlly: false),
+            random: &random
+        )
+
+        XCTAssertEqual(engine.state.actor(id: "hero")?.stats.actionPoints, 2)
+        XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.health, 14)
+    }
+
     func testAllPlayerActorsDownMeansDefeat() {
         let state = BattleState(actors: [
             makeActor(id: "hero", faction: .player, health: 0),

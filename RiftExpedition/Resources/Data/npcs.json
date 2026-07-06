@@ -1,0 +1,44 @@
+[
+  {
+    "id": "elder",
+    "displayName": "村长",
+    "role": "旧竖切兼容 NPC",
+    "homeAreaID": "vertical_slice",
+    "defaultDialogID": "elder_intro"
+  },
+  {
+    "id": "mayor",
+    "displayName": "村长顾怀恩",
+    "role": "村长",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "elder_intro"
+  },
+  {
+    "id": "fiance",
+    "displayName": "未婚夫梁铮",
+    "role": "失踪新娘的未婚夫",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "fiance_accuse"
+  },
+  {
+    "id": "gate_guard",
+    "displayName": "守卫阿砾",
+    "role": "村口守卫",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "guard_gate"
+  },
+  {
+    "id": "notice_board",
+    "displayName": "旧公告板",
+    "role": "地标",
+    "homeAreaID": "village_square",
+    "defaultDialogID": "notice_board"
+  },
+  {
+    "id": "healer",
+    "displayName": "药师林婆",
+    "role": "村庄药师",
+    "homeAreaID": "village_riverside",
+    "defaultDialogID": "healer_request"
+  }
+]

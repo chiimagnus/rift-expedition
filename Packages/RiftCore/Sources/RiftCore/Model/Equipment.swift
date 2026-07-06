@@ -68,11 +68,19 @@ public struct ItemDefinition: Codable, Equatable, Identifiable, Sendable {
     public var displayName: String
     public var kind: ItemKind
     public var equipment: EquipmentDefinition?
+    public var skillID: String?
 
-    public init(id: String, displayName: String, kind: ItemKind, equipment: EquipmentDefinition? = nil) {
+    public init(
+        id: String,
+        displayName: String,
+        kind: ItemKind,
+        equipment: EquipmentDefinition? = nil,
+        skillID: String? = nil
+    ) {
         self.id = id
         self.displayName = displayName
         self.kind = kind
         self.equipment = equipment
+        self.skillID = skillID
     }
 }

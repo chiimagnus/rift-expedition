@@ -24,7 +24,7 @@
 ## CLI
 
 ```sh
-rtk swift run --package-path Tools/RiftValidator RiftValidator RiftExpedition/Resources --area village_square --write-preview Docs/map-previews/chapter1/village_square --write-report Docs/map-previews/chapter1/village_square/report.md
+rtk swift run --package-path Tools/RiftValidator RiftValidator RiftExpedition/Resources --area village_square --write-preview Docs/Reports/map-previews/chapter1/village_square --write-report Docs/Reports/map-previews/chapter1/village_square/report.md
 ```
 
 `--write-preview` writes SVG previews. `--write-report` writes a markdown report.

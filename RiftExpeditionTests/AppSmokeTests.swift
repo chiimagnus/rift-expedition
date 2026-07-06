@@ -1,4 +1,5 @@
 import XCTest
+import SpriteKit
 @testable import RiftExpedition
 
 @MainActor
@@ -8,5 +9,37 @@ final class AppSmokeTests: XCTestCase {
 
         let scene = GameScene.makeScene()
         XCTAssertEqual(scene.size, GameScene.sceneSize)
+    }
+
+    func testSceneCentersLoadedMapInWorldLayer() throws {
+        let scene = GameScene(size: CGSize(width: 1600, height: 900))
+        scene.scaleMode = .resizeFill
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        scene.loadMap(areaID: "village_square")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        XCTAssertFalse(worldLayer.children.isEmpty)
+        XCTAssertGreaterThan(worldLayer.xScale, 0)
+        XCTAssertEqual(worldLayer.xScale, worldLayer.yScale)
+        XCTAssertGreaterThanOrEqual(worldLayer.position.x, -0.5)
+        XCTAssertGreaterThanOrEqual(worldLayer.position.y, -0.5)
+    }
+
+    func testLoadedMapShowsPlayerMarkersWithoutCollisionDebugFrames() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        scene.loadMap(areaID: "village_square")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_4"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_5"))
+        XCTAssertNotNil(staticLayer.childNode(withName: "triggerMarker_15"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_6"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_7"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_8"))
+        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_9"))
     }
 }

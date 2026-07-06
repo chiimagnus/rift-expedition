@@ -6,6 +6,181 @@
     "range": 1.5,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": true
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 8 } }
+    ]
+  },
+  {
+    "id": "shield_bash",
+    "displayName": "盾击",
+    "actionPointCost": 2,
+    "range": 1.2,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 6 } }
+    ]
+  },
+  {
+    "id": "rallying_guard",
+    "displayName": "稳固防线",
+    "actionPointCost": 1,
+    "range": 0.0,
+    "target": "selfOnly",
+    "affectsAllies": true,
+    "canBeDodged": false,
+    "effects": [
+      { "heal": { "_0": 5 } }
+    ]
+  },
+  {
+    "id": "aimed_shot",
+    "displayName": "瞄准射击",
+    "actionPointCost": 2,
+    "range": 6.0,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 7 } }
+    ]
+  },
+  {
+    "id": "hamstring_shot",
+    "displayName": "绊索箭",
+    "actionPointCost": 2,
+    "range": 5.5,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 5 } }
+    ]
+  },
+  {
+    "id": "oil_arrow",
+    "displayName": "油瓶箭",
+    "actionPointCost": 2,
+    "range": 5.0,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": false,
+    "effects": [
+      { "damage": { "_0": 3 } },
+      { "createSurface": { "surfaceID": "oil", "durationTurns": 2 } }
+    ]
+  },
+  {
+    "id": "spark",
+    "displayName": "火花",
+    "actionPointCost": 2,
+    "range": 5.0,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": false,
+    "effects": [
+      { "damage": { "_0": 6 } },
+      { "createSurface": { "surfaceID": "fire", "durationTurns": 2 } }
+    ]
+  },
+  {
+    "id": "water_orb",
+    "displayName": "水球术",
+    "actionPointCost": 2,
+    "range": 5.0,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": false,
+    "effects": [
+      { "damage": { "_0": 4 } },
+      { "createSurface": { "surfaceID": "water", "durationTurns": 2 } }
+    ]
+  },
+  {
+    "id": "mending_light",
+    "displayName": "愈合微光",
+    "actionPointCost": 2,
+    "range": 4.0,
+    "target": "ally",
+    "affectsAllies": true,
+    "canBeDodged": false,
+    "effects": [
+      { "heal": { "_0": 10 } }
+    ]
+  },
+  {
+    "id": "backstab",
+    "displayName": "背刺",
+    "actionPointCost": 3,
+    "range": 1.2,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 11 } }
+    ]
+  },
+  {
+    "id": "throwing_knife",
+    "displayName": "飞刀",
+    "actionPointCost": 2,
+    "range": 3.5,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 6 } }
+    ]
+  },
+  {
+    "id": "venom_edge",
+    "displayName": "毒刃",
+    "actionPointCost": 2,
+    "range": 1.2,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 5 } },
+      { "createSurface": { "surfaceID": "poison", "durationTurns": 2 } }
+    ]
+  },
+  {
+    "id": "boar_bite",
+    "displayName": "撕咬",
+    "actionPointCost": 2,
+    "range": 1.1,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 6 } }
+    ]
+  },
+  {
+    "id": "poacher_shot",
+    "displayName": "偷猎箭",
+    "actionPointCost": 2,
+    "range": 5.5,
+    "target": "enemy",
+    "affectsAllies": false,
+    "canBeDodged": true,
+    "effects": [
+      { "damage": { "_0": 5 } }
+    ]
+  },
+  {
+    "id": "minor_healing_draught",
+    "displayName": "止血药剂",
+    "actionPointCost": 1,
+    "range": 2.5,
+    "target": "ally",
+    "affectsAllies": true,
+    "canBeDodged": false,
+    "effects": [
+      { "heal": { "_0": 8 } }
+    ]
   }
 ]

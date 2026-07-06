@@ -32,5 +32,264 @@
         "magic": 0
       }
     }
+  },
+  {
+    "id": "training_buckle",
+    "displayName": "训练腰扣",
+    "kind": "equipment",
+    "equipment": {
+      "id": "training_buckle",
+      "displayName": "训练腰扣",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 4,
+        "attack": 0,
+        "defense": 1,
+        "evasion": 0,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "worn_bow",
+    "displayName": "旧猎弓",
+    "kind": "equipment",
+    "equipment": {
+      "id": "worn_bow",
+      "displayName": "旧猎弓",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 2,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "scout_jacket",
+    "displayName": "斥候短衣",
+    "kind": "equipment",
+    "equipment": {
+      "id": "scout_jacket",
+      "displayName": "斥候短衣",
+      "slot": "armor",
+      "modifiers": {
+        "maxHealth": 2,
+        "attack": 0,
+        "defense": 1,
+        "evasion": 2,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "fletching_ring",
+    "displayName": "羽刻戒",
+    "kind": "equipment",
+    "equipment": {
+      "id": "fletching_ring",
+      "displayName": "羽刻戒",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 1,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "cracked_staff",
+    "displayName": "裂纹法杖",
+    "kind": "equipment",
+    "equipment": {
+      "id": "cracked_staff",
+      "displayName": "裂纹法杖",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 0,
+        "magic": 2
+      }
+    }
+  },
+  {
+    "id": "apprentice_robe",
+    "displayName": "学徒长袍",
+    "kind": "equipment",
+    "equipment": {
+      "id": "apprentice_robe",
+      "displayName": "学徒长袍",
+      "slot": "armor",
+      "modifiers": {
+        "maxHealth": 2,
+        "attack": 0,
+        "defense": 1,
+        "evasion": 0,
+        "magic": 1
+      }
+    }
+  },
+  {
+    "id": "ember_focus",
+    "displayName": "余烬焦镜",
+    "kind": "equipment",
+    "equipment": {
+      "id": "ember_focus",
+      "displayName": "余烬焦镜",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 0,
+        "magic": 2
+      }
+    }
+  },
+  {
+    "id": "chipped_dagger",
+    "displayName": "缺口匕首",
+    "kind": "equipment",
+    "equipment": {
+      "id": "chipped_dagger",
+      "displayName": "缺口匕首",
+      "slot": "weapon",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 1,
+        "defense": 0,
+        "evasion": 2,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "shadow_cloak",
+    "displayName": "暗线披衣",
+    "kind": "equipment",
+    "equipment": {
+      "id": "shadow_cloak",
+      "displayName": "暗线披衣",
+      "slot": "armor",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 1,
+        "evasion": 3,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "lucky_thread",
+    "displayName": "红线结",
+    "kind": "equipment",
+    "equipment": {
+      "id": "lucky_thread",
+      "displayName": "红线结",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 1,
+        "defense": 0,
+        "evasion": 2,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "river_charm",
+    "displayName": "河誓坠饰",
+    "kind": "equipment",
+    "equipment": {
+      "id": "river_charm",
+      "displayName": "河誓坠饰",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 2,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 1
+      }
+    }
+  },
+  {
+    "id": "torn_bridal_ribbon",
+    "displayName": "撕裂的婚纱缎带",
+    "kind": "quest"
+  },
+  {
+    "id": "bitterroot_herb",
+    "displayName": "苦根草",
+    "kind": "quest"
+  },
+  {
+    "id": "element_ore_ledger",
+    "displayName": "元素矿账册",
+    "kind": "quest"
+  },
+  {
+    "id": "scorched_ring",
+    "displayName": "烧黑的银戒",
+    "kind": "equipment",
+    "equipment": {
+      "id": "scorched_ring",
+      "displayName": "烧黑的银戒",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 2
+      }
+    }
+  },
+  {
+    "id": "miner_gauntlets",
+    "displayName": "矿工铁护手",
+    "kind": "equipment",
+    "equipment": {
+      "id": "miner_gauntlets",
+      "displayName": "矿工铁护手",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 2,
+        "attack": 1,
+        "defense": 1,
+        "evasion": 0,
+        "magic": 0
+      }
+    }
+  },
+  {
+    "id": "rift_shard_amulet",
+    "displayName": "裂隙碎晶坠",
+    "kind": "equipment",
+    "equipment": {
+      "id": "rift_shard_amulet",
+      "displayName": "裂隙碎晶坠",
+      "slot": "accessory",
+      "modifiers": {
+        "maxHealth": 0,
+        "attack": 0,
+        "defense": 0,
+        "evasion": 1,
+        "magic": 3
+      }
+    }
+  },
+  {
+    "id": "minor_healing_draught",
+    "displayName": "止血药剂",
+    "kind": "consumable",
+    "skillID": "minor_healing_draught"
   }
 ]

@@ -22,8 +22,15 @@ targets:
       - path: RiftExpedition
         excludes:
           - Resources
-    resources:
-      - path: RiftExpedition/Resources
+      - path: RiftExpedition/Resources/Assets
+        buildPhase: resources
+        type: folder
+      - path: RiftExpedition/Resources/Data
+        buildPhase: resources
+        type: folder
+      - path: RiftExpedition/Resources/Maps
+        buildPhase: resources
+        type: folder
     dependencies:
       - package: RiftCore
       - package: SKTiled

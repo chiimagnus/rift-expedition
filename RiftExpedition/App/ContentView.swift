@@ -1,9 +1,9 @@
-import SpriteKit
 import SwiftUI
 
 struct ContentView: View {
+    @State private var viewModel = GameSessionViewModel()
+
     var body: some View {
-        SpriteView(scene: GameScene.makeScene())
-            .frame(minWidth: 960, minHeight: 540)
+        GameRootView(viewModel: viewModel)
     }
 }

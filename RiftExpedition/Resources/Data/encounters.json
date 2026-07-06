@@ -1,0 +1,262 @@
+[
+  {
+    "id": "boar_intro",
+    "displayName": "村外小冲突",
+    "enemies": [
+      {
+        "id": "boar_intro_1",
+        "displayName": "受惊野猪",
+        "kind": "animal",
+        "faction": "animal",
+        "level": 1,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 18,
+          "health": 18,
+          "attack": 5,
+          "defense": 2,
+          "evasion": 2,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "poacher_intro_1",
+        "displayName": "偷猎者",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 1,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 16,
+          "health": 16,
+          "attack": 5,
+          "defense": 1,
+          "evasion": 4,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "archer",
+        "skillIDs": ["poacher_shot", "throwing_knife"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
+  },
+  {
+    "id": "road_bandit_ambush",
+    "displayName": "断塔盗匪",
+    "enemies": [
+      {
+        "id": "road_bandit_1",
+        "displayName": "持刀盗匪",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 2,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 22,
+          "health": 22,
+          "attack": 6,
+          "defense": 3,
+          "evasion": 3,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "warrior",
+        "skillIDs": ["slash", "shield_bash"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "road_bandit_2",
+        "displayName": "断塔弓手",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 2,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 18,
+          "health": 18,
+          "attack": 6,
+          "defense": 2,
+          "evasion": 5,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "archer",
+        "skillIDs": ["poacher_shot", "hamstring_shot"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
+  },
+  {
+    "id": "cave_vermin",
+    "displayName": "污染洞兽",
+    "enemies": [
+      {
+        "id": "cave_vermin_1",
+        "displayName": "污染洞兽",
+        "kind": "monster",
+        "faction": "monster",
+        "level": 2,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 24,
+          "health": 24,
+          "attack": 7,
+          "defense": 3,
+          "evasion": 3,
+          "magic": 1,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite", "venom_edge"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "cave_vermin_2",
+        "displayName": "小污染兽",
+        "kind": "monster",
+        "faction": "monster",
+        "level": 1,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 16,
+          "health": 16,
+          "attack": 5,
+          "defense": 2,
+          "evasion": 4,
+          "magic": 1,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
+  },
+  {
+    "id": "cave_miners",
+    "displayName": "守矿工人",
+    "enemies": [
+      {
+        "id": "miner_guard_1",
+        "displayName": "守矿工头",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 3,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 28,
+          "health": 28,
+          "attack": 8,
+          "defense": 4,
+          "evasion": 3,
+          "magic": 1,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "warrior",
+        "skillIDs": ["slash", "shield_bash"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "miner_guard_2",
+        "displayName": "矿道弩手",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 3,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 20,
+          "health": 20,
+          "attack": 7,
+          "defense": 2,
+          "evasion": 5,
+          "magic": 0,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "archer",
+        "skillIDs": ["poacher_shot", "hamstring_shot"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
+  },
+  {
+    "id": "rift_custodian",
+    "displayName": "裂隙看守",
+    "enemies": [
+      {
+        "id": "custodian_guard_1",
+        "displayName": "顾家暗卫",
+        "kind": "humanEnemy",
+        "faction": "hostile",
+        "level": 4,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 34,
+          "health": 34,
+          "attack": 9,
+          "defense": 5,
+          "evasion": 4,
+          "magic": 2,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": "warrior",
+        "skillIDs": ["slash", "shield_bash", "spark"],
+        "equipment": {},
+        "statuses": []
+      },
+      {
+        "id": "rift_hatchling_1",
+        "displayName": "受惊裂隙幼体",
+        "kind": "monster",
+        "faction": "monster",
+        "level": 3,
+        "experience": 0,
+        "unspentAttributePoints": 0,
+        "stats": {
+          "maxHealth": 26,
+          "health": 26,
+          "attack": 7,
+          "defense": 3,
+          "evasion": 5,
+          "magic": 3,
+          "maxActionPoints": 4,
+          "actionPoints": 4
+        },
+        "classID": null,
+        "skillIDs": ["boar_bite", "venom_edge"],
+        "equipment": {},
+        "statuses": []
+      }
+    ]
+  }
+]

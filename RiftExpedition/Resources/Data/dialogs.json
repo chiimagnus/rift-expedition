@@ -1,0 +1,213 @@
+[
+  {
+    "id": "elder_intro",
+    "speakerName": "村长顾怀恩",
+    "lines": [
+      "你们来得正好。昨夜新娘沈砚在婚宴前失踪，村里人都听见旧矿洞方向传来兽叫。",
+      "梁铮说是外来的女法师把她带走了。可村子已经够乱，我不能让人擅自冲进矿洞送死。",
+      "先去村外查脚印，再沿野路找线索。若你们能把真相带回来，村里会承认这笔血债。"
+    ],
+    "options": [
+      {
+        "id": "accept_blood_debt",
+        "title": "接下任务：血债",
+        "action": "acceptQuest",
+        "questID": "blood_debt"
+      },
+      {
+        "id": "leave",
+        "title": "先离开",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "fiance_accuse",
+    "speakerName": "未婚夫梁铮",
+    "lines": [
+      "沈砚不是逃婚。她不会丢下我。",
+      "那个外来法师前天还在井边问矿洞的路，昨夜新娘就没了。你们说这不是她干的？",
+      "村长一直拦着大家进矿洞。要么他怕我们死，要么他怕我们看到什么。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "记下他的指控",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "guard_gate",
+    "speakerName": "守卫阿砾",
+    "lines": [
+      "村外的篱笆被野猪撞开了，路上还有陌生人的靴印。",
+      "想去野外就从东门走。河岸那边也能绕出去，但水边最近有怪味。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "明白了",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "notice_board",
+    "speakerName": "旧公告板",
+    "lines": [
+      "褪色告示：旧矿洞封闭，任何人不得私采元素矿。",
+      "新贴纸条：婚宴取消。若见沈砚或外来女法师，立刻报告村长。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "离开公告板",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "healer_request",
+    "speakerName": "药师林婆",
+    "lines": [
+      "别光盯着婚宴那点热闹。昨夜之后，村里三个孩子开始发毒热。",
+      "普通草药压不住，只有野外河湾的苦根草能救急。那地方靠近旧矿洞水脉，你们若路过，替我采一束回来。",
+      "我没有钱，但药柜里还有几瓶止血药剂。拿命换来的草，我不会白收。"
+    ],
+    "options": [
+      {
+        "id": "accept_bitterroot",
+        "title": "接下支线：苦根草药",
+        "action": "acceptQuest",
+        "questID": "bitterroot_medicine"
+      },
+      {
+        "id": "close",
+        "title": "先离开",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "healer_return",
+    "speakerName": "药师林婆",
+    "lines": [
+      "你们身上有苦根草的腥味。快给我，孩子们撑不了太久。",
+      "这些药剂和河誓坠饰带走。别问我为什么会备着它，旧矿洞这些年从没真正安静过。"
+    ],
+    "options": [
+      {
+        "id": "complete_bitterroot",
+        "title": "交付苦根草",
+        "action": "completeQuest",
+        "questID": "bitterroot_medicine"
+      },
+      {
+        "id": "close",
+        "title": "还没找到",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "bridge_warning",
+    "speakerName": "河桥木牌",
+    "lines": [
+      "桥板潮湿发黑，木牌上刻着：过桥去野外河湾，别在夜里回头。",
+      "桥下水面偶尔浮起彩色油膜，像有人把矿洞深处的东西倒进了河里。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "离开木牌",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "cave_entrance_trace",
+    "speakerName": "洞口痕迹",
+    "lines": [
+      "碎石旁压着一枚银发簪，簪尾刻着“砚”字。",
+      "血迹没有流向洞外，而是一路往矿道深处拖去。旁边还有细小的爪印，像某种幼兽一直跟在她身边。",
+      "未婚夫说她被外来法师掳走，可这里的痕迹更像是她主动护着什么东西进了洞。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "记下线索",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "mine_evidence",
+    "speakerName": "元素矿账册",
+    "lines": [
+      "账册上的私印属于村长顾怀恩。矿道封闭后的每一周，仍有人把元素矿运出村。",
+      "最近一页被血抹花，只能看清一句：裂隙幼体还活着，沈砚知道了。",
+      "如果这些记录属实，旧矿洞的污染不是天灾，而是有人长期偷采挖穿了封层。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "收好账册",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "daughter_reveal",
+    "speakerName": "沈砚",
+    "lines": [
+      "别靠近它！它不是怪物，是我从塌洞里拖出来的孩子。",
+      "梁铮说外来法师掳走了我，可我昨夜亲眼看见村长的人把元素矿往洞外运。封层被他们挖穿，毒雾才冲进河里。",
+      "我躲到这里，是怕他们杀了幼体灭口。真正该偿命的人，就在村口等你们把谎话带回去。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "记下真相",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "chapter_end_marker",
+    "speakerName": "裂隙洞心",
+    "lines": [
+      "裂隙幼体缩进石缝，顾家的暗卫倒在毒雾里。矿洞深处只剩下沈砚的哭声和账册上的私印。",
+      "你们已经拿到足够证据。回村揭穿村长，第一章将在血债落地时结束。"
+    ],
+    "options": [
+      {
+        "id": "close",
+        "title": "返回村庄收尾",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "elder_return",
+    "speakerName": "村长顾怀恩",
+    "lines": [
+      "你们真的把账册带回来了。顾怀恩的脸色比矿洞毒雾还难看，梁铮却一句话也说不出来。",
+      "沈砚站在人群后面，指着账册上的私印说：偷采元素矿的是村长，污染河水的是村长，嫁祸外来法师的也是村长。",
+      "顾怀恩被守卫押走时还在喊裂隙幼体会毁了村子。可这一次，村里人终于知道是谁先挖穿了封层。"
+    ],
+    "options": [
+      {
+        "id": "complete_blood_debt",
+        "title": "揭穿村长，完成血债",
+        "action": "completeQuest",
+        "questID": "blood_debt"
+      },
+      {
+        "id": "leave",
+        "title": "先离开",
+        "action": "close"
+      }
+    ]
+  }
+]

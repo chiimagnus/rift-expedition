@@ -1,0 +1,180 @@
+{
+  "id": "chapter1",
+  "title": "第一章：裂隙村的谎言",
+  "startAreaId": "village_square",
+  "startSpawnId": "start",
+  "areas": [
+    {
+      "id": "village_square",
+      "displayName": "裂隙村广场",
+      "biome": "village",
+      "mapPath": "Maps/chapter1/village_square.tmx",
+      "exits": [
+        {
+          "id": "to_riverside",
+          "targetAreaId": "village_riverside",
+          "targetSpawnId": "from_square"
+        },
+        {
+          "id": "to_outskirts",
+          "targetAreaId": "village_outskirts",
+          "targetSpawnId": "from_square"
+        }
+      ]
+    },
+    {
+      "id": "village_riverside",
+      "displayName": "裂隙村河岸",
+      "biome": "village",
+      "mapPath": "Maps/chapter1/village_riverside.tmx",
+      "exits": [
+        {
+          "id": "to_square",
+          "targetAreaId": "village_square",
+          "targetSpawnId": "from_riverside"
+        },
+        {
+          "id": "to_wilds_riverbank",
+          "targetAreaId": "wilds_riverbank",
+          "targetSpawnId": "from_riverside"
+        }
+      ]
+    },
+    {
+      "id": "village_outskirts",
+      "displayName": "裂隙村外缘",
+      "biome": "village",
+      "mapPath": "Maps/chapter1/village_outskirts.tmx",
+      "exits": [
+        {
+          "id": "to_square",
+          "targetAreaId": "village_square",
+          "targetSpawnId": "from_outskirts"
+        },
+        {
+          "id": "to_wilds_road",
+          "targetAreaId": "wilds_road",
+          "targetSpawnId": "from_outskirts"
+        }
+      ]
+    },
+    {
+      "id": "wilds_road",
+      "displayName": "断塔野路",
+      "biome": "wilds",
+      "mapPath": "Maps/chapter1/wilds_road.tmx",
+      "exits": [
+        {
+          "id": "to_outskirts",
+          "targetAreaId": "village_outskirts",
+          "targetSpawnId": "from_wilds_road"
+        },
+        {
+          "id": "to_ruins",
+          "targetAreaId": "wilds_ruins",
+          "targetSpawnId": "from_road"
+        },
+        {
+          "id": "to_riverbank",
+          "targetAreaId": "wilds_riverbank",
+          "targetSpawnId": "from_road"
+        }
+      ]
+    },
+    {
+      "id": "wilds_ruins",
+      "displayName": "旧驿站废墟",
+      "biome": "wilds",
+      "mapPath": "Maps/chapter1/wilds_ruins.tmx",
+      "exits": [
+        {
+          "id": "to_road",
+          "targetAreaId": "wilds_road",
+          "targetSpawnId": "from_ruins"
+        },
+        {
+          "id": "to_cave_entrance",
+          "targetAreaId": "cave_entrance",
+          "targetSpawnId": "from_ruins"
+        }
+      ]
+    },
+    {
+      "id": "wilds_riverbank",
+      "displayName": "苦根河湾",
+      "biome": "wilds",
+      "mapPath": "Maps/chapter1/wilds_riverbank.tmx",
+      "exits": [
+        {
+          "id": "to_riverside",
+          "targetAreaId": "village_riverside",
+          "targetSpawnId": "from_wilds_riverbank"
+        },
+        {
+          "id": "to_road",
+          "targetAreaId": "wilds_road",
+          "targetSpawnId": "from_riverbank"
+        },
+        {
+          "id": "to_cave_entrance",
+          "targetAreaId": "cave_entrance",
+          "targetSpawnId": "from_riverbank"
+        }
+      ]
+    },
+    {
+      "id": "cave_entrance",
+      "displayName": "旧矿洞入口",
+      "biome": "cave",
+      "mapPath": "Maps/chapter1/cave_entrance.tmx",
+      "exits": [
+        {
+          "id": "to_ruins",
+          "targetAreaId": "wilds_ruins",
+          "targetSpawnId": "from_cave_entrance"
+        },
+        {
+          "id": "to_riverbank",
+          "targetAreaId": "wilds_riverbank",
+          "targetSpawnId": "from_cave_entrance"
+        },
+        {
+          "id": "to_mines",
+          "targetAreaId": "cave_mines",
+          "targetSpawnId": "from_entrance"
+        }
+      ]
+    },
+    {
+      "id": "cave_mines",
+      "displayName": "元素矿道",
+      "biome": "cave",
+      "mapPath": "Maps/chapter1/cave_mines.tmx",
+      "exits": [
+        {
+          "id": "to_entrance",
+          "targetAreaId": "cave_entrance",
+          "targetSpawnId": "from_mines"
+        },
+        {
+          "id": "to_depths",
+          "targetAreaId": "cave_depths",
+          "targetSpawnId": "from_mines"
+        }
+      ]
+    },
+    {
+      "id": "cave_depths",
+      "displayName": "裂隙洞心",
+      "biome": "cave",
+      "mapPath": "Maps/chapter1/cave_depths.tmx",
+      "exits": [
+        {
+          "id": "to_mines",
+          "targetAreaId": "cave_mines",
+          "targetSpawnId": "from_depths"
+        }
+      ]
+    }
+  ]
+}
