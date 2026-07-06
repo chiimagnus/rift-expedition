@@ -495,7 +495,9 @@ final class GameScene: SKScene {
         if let texture = textureCache[name] {
             return texture
         }
-        if let texture = villageNPCTexture(named: name) {
+        if let texture = villageNPCTexture(named: name)
+            ?? humanEnemyTexture(named: name)
+            ?? beastMonsterTexture(named: name) {
             textureCache[name] = texture
             return texture
         }
@@ -512,6 +514,24 @@ final class GameScene: SKScene {
         return texture
     }
 
+    /// Slices frame `frameIndex` out of a `frameCount`-frame horizontal spritesheet strip
+    /// named `sheetName` under `Assets/Characters`. Shared by every multi-frame character
+    /// sheet (village NPCs, human enemies, beasts/monsters) so each new roster only needs a
+    /// name -> frame-index table instead of a bespoke slicing function.
+    private func slicedTexture(sheetName: String, frameIndex: Int, frameCount: Int) -> SKTexture? {
+        guard let sheetURL = Bundle.main.url(forResource: sheetName, withExtension: "png", subdirectory: "Assets/Characters"),
+              let sheetImage = NSImage(contentsOf: sheetURL) else {
+            return nil
+        }
+
+        let sheetTexture = SKTexture(image: sheetImage)
+        let count = CGFloat(frameCount)
+        let rect = CGRect(x: CGFloat(frameIndex) / count, y: 0, width: 1 / count, height: 1)
+        let texture = SKTexture(rect: rect, in: sheetTexture)
+        texture.filteringMode = .nearest
+        return texture
+    }
+
     /// `Assets/Characters/village_npcs.png` is a registered 3-frame horizontal strip
     /// (elder / resident / guard) meant for chapter village NPCs. `spriteName(forNPC:)`
     /// resolves a frame name below; this slices the matching rect out of the shared sheet
@@ -523,17 +543,36 @@ final class GameScene: SKScene {
 
     private func villageNPCTexture(named name: String) -> SKTexture? {
         guard let frameIndex = Self.villageNPCFrames[name] else { return nil }
-        guard let sheetURL = Bundle.main.url(forResource: "village_npcs", withExtension: "png", subdirectory: "Assets/Characters"),
-              let sheetImage = NSImage(contentsOf: sheetURL) else {
-            return nil
-        }
+        return slicedTexture(sheetName: "village_npcs", frameIndex: frameIndex, frameCount: 3)
+    }
 
-        let sheetTexture = SKTexture(image: sheetImage)
-        let frameCount: CGFloat = 3
-        let rect = CGRect(x: CGFloat(frameIndex) / frameCount, y: 0, width: 1 / frameCount, height: 1)
-        let texture = SKTexture(rect: rect, in: sheetTexture)
-        texture.filteringMode = .nearest
-        return texture
+    /// `Assets/Characters/human_enemies.png` is a registered 3-frame strip (ranged / melee /
+    /// elite) so human enemies (`BattleViewModel.spriteName(forHumanEnemy:)`) read as distinct
+    /// foes instead of reusing the player party's class portraits.
+    private static let humanEnemyFrames: [String: Int] = [
+        "enemy_human_ranged": 0,
+        "enemy_human_melee": 1,
+        "enemy_human_elite": 2
+    ]
+
+    private func humanEnemyTexture(named name: String) -> SKTexture? {
+        guard let frameIndex = Self.humanEnemyFrames[name] else { return nil }
+        return slicedTexture(sheetName: "human_enemies", frameIndex: frameIndex, frameCount: 3)
+    }
+
+    /// `Assets/Characters/beasts_and_monsters.png` is a registered 3-frame strip (plain
+    /// animal / tainted cave creature / rift-corrupted creature) so cave vermin and rift
+    /// hatchlings (`BattleViewModel.spriteName(forBeast:)`) no longer share one generic
+    /// monster sprite.
+    private static let beastMonsterFrames: [String: Int] = [
+        "enemy_beast_animal": 0,
+        "enemy_beast_tainted": 1,
+        "enemy_beast_rift": 2
+    ]
+
+    private func beastMonsterTexture(named name: String) -> SKTexture? {
+        guard let frameIndex = Self.beastMonsterFrames[name] else { return nil }
+        return slicedTexture(sheetName: "beasts_and_monsters", frameIndex: frameIndex, frameCount: 3)
     }
 
     private func spriteName(forNPC npc: MapNPC) -> String {

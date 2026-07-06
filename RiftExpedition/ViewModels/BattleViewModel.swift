@@ -605,21 +605,42 @@ final class BattleViewModel {
     }
 
     private func spriteName(for actor: Actor) -> String {
-        if let classID = actor.classID {
-            return "actor_\(classID)"
-        }
         switch actor.kind {
         case .player:
-            return "actor_warrior"
+            return actor.classID.map { "actor_\($0)" } ?? "actor_warrior"
         case .npc:
             return "npc_elder"
         case .humanEnemy:
-            return "enemy_raider"
-        case .animal:
-            return "enemy_boar"
-        case .monster:
-            return "enemy_spider"
+            return spriteName(forHumanEnemy: actor)
+        case .animal, .monster:
+            return spriteName(forBeast: actor)
         }
+    }
+
+    /// `human_enemies.png` is a registered 3-frame strip (ranged / melee / elite) so human
+    /// enemies read as distinct foes instead of silently reusing the player party's
+    /// `actor_<classID>` portraits (which made allies and enemies visually identical).
+    /// Level is checked first so the chapter-climax guard reads as an elite threat
+    /// regardless of combat class; otherwise combat class picks ranged vs. melee, matching
+    /// the encounter-design guidance that enemy silhouettes should telegraph role and
+    /// threat tier at a glance.
+    private func spriteName(forHumanEnemy actor: Actor) -> String {
+        if actor.level >= 4 {
+            return "enemy_human_elite"
+        }
+        return actor.classID == "archer" ? "enemy_human_ranged" : "enemy_human_melee"
+    }
+
+    /// `beasts_and_monsters.png` is a registered 3-frame strip (plain animal / tainted cave
+    /// creature / rift-corrupted creature) so cave vermin and rift hatchlings no longer
+    /// share one generic monster sprite. Animals always read as the plain-animal frame;
+    /// monsters tier by level so the chapter-climax rift hatchling reads as more corrupted
+    /// than the earlier, lower-level cave vermin.
+    private func spriteName(forBeast actor: Actor) -> String {
+        guard actor.kind == .monster else {
+            return "enemy_beast_animal"
+        }
+        return actor.level >= 3 ? "enemy_beast_rift" : "enemy_beast_tainted"
     }
 
     private func readableError(_ error: Error) -> String {

@@ -5,6 +5,49 @@ import XCTest
 
 @MainActor
 final class BattleViewModelTests: XCTestCase {
+    // Enemy sprite diversification: human enemies and beasts/monsters must no longer
+    // collapse onto a single reused texture (player class art or one generic monster
+    // sprite). See `BattleViewModel.spriteName(forHumanEnemy:)` / `spriteName(forBeast:)`.
+    func testHumanEnemySpriteVariesByClassAndLevel() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: [], kind: .player, classID: "warrior"),
+                actor(id: "grunt_archer", faction: .hostile, actionPoints: 4, skillIDs: [], kind: .humanEnemy, classID: "archer", level: 2),
+                actor(id: "grunt_warrior", faction: .hostile, actionPoints: 4, skillIDs: [], kind: .humanEnemy, classID: "warrior", level: 2),
+                actor(id: "elite_guard", faction: .hostile, actionPoints: 4, skillIDs: [], kind: .humanEnemy, classID: "warrior", level: 4)
+            ]),
+            skills: []
+        )
+
+        let sprites = Dictionary(uniqueKeysWithValues: viewModel.sceneSnapshot.actors.map { ($0.id, $0.spriteName) })
+
+        XCTAssertEqual(sprites["player"], "actor_warrior")
+        XCTAssertEqual(sprites["grunt_archer"], "enemy_human_ranged")
+        XCTAssertEqual(sprites["grunt_warrior"], "enemy_human_melee")
+        // A level-4 guard reads as elite regardless of combat class, distinguishing the
+        // chapter climax fight even though it shares the `warrior` classID with an earlier grunt.
+        XCTAssertEqual(sprites["elite_guard"], "enemy_human_elite")
+        XCTAssertNotEqual(sprites["grunt_warrior"], sprites["player"])
+    }
+
+    func testBeastAndMonsterSpriteVariesByKindAndLevel() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [], kind: .animal, level: 1),
+                actor(id: "cave_vermin", faction: .monster, actionPoints: 4, skillIDs: [], kind: .monster, level: 2),
+                actor(id: "rift_hatchling", faction: .monster, actionPoints: 4, skillIDs: [], kind: .monster, level: 3)
+            ]),
+            skills: []
+        )
+
+        let sprites = Dictionary(uniqueKeysWithValues: viewModel.sceneSnapshot.actors.map { ($0.id, $0.spriteName) })
+
+        XCTAssertEqual(sprites["boar"], "enemy_beast_animal")
+        XCTAssertEqual(sprites["cave_vermin"], "enemy_beast_tainted")
+        // The higher-level rift hatchling should read as more corrupted than the cave vermin.
+        XCTAssertEqual(sprites["rift_hatchling"], "enemy_beast_rift")
+        XCTAssertNotEqual(sprites["cave_vermin"], sprites["rift_hatchling"])
+    }
     func testAPInsufficientDisablesSkillAndDoesNotSpendPoints() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
@@ -198,14 +241,17 @@ final class BattleViewModelTests: XCTestCase {
         faction: Faction,
         health: Int = 12,
         actionPoints: Int,
-        skillIDs: [String]
+        skillIDs: [String],
+        kind: ActorKind? = nil,
+        classID: String? = nil,
+        level: Int = 1
     ) -> Actor {
         Actor(
             id: id,
             displayName: id,
-            kind: faction == .player ? .player : .animal,
+            kind: kind ?? (faction == .player ? .player : .animal),
             faction: faction,
-            level: 1,
+            level: level,
             stats: Stats(
                 maxHealth: 12,
                 health: health,
@@ -216,6 +262,7 @@ final class BattleViewModelTests: XCTestCase {
                 maxActionPoints: 4,
                 actionPoints: actionPoints
             ),
+            classID: classID,
             skillIDs: skillIDs
         )
     }
