@@ -5,7 +5,7 @@
 ## 必需对象层
 
 - `spawn`：需要 `id`
-- `npc`：需要 `actorId`、`dialogId`
+- `npc`：需要 `actorId`、`dialogId`；可选把对象画成有宽高的矩形来控制碰撞箱大小（不画宽高就是点对象，运行时回退为默认 36x36）
 - `encounter`：需要 `encounterId`、`radius`
 - `trigger`：需要 `triggerId`、`action`
 - `exit`：需要 `targetAreaId`、`targetSpawnId`
