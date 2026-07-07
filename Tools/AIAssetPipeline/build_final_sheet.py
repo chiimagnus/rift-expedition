@@ -10,24 +10,78 @@ asked for grid lines), so sampling the key color from the full image's outer
 corners grabs black, not the green background. Instead we sample from the
 corners of each cell's own interior (inside the grid lines)."""
 import argparse
+from pathlib import Path
+
 import numpy as np
 from PIL import Image
 
-COL_RANGES = [(21, 251), (258, 485), (492, 712), (719, 937), (944, 1161), (1168, 1385)]
-ROW_RANGES = [(21, 380), (387, 746)]
-
 CELL_SIZE = 96
 PADDING = 4
+BLACK_THRESHOLD = 60
+LINE_MIN_FRACTION = 0.5
+LINE_GAP = 3
+LINE_INSET = 2
+
+
+def find_line_groups(frac, min_frac=LINE_MIN_FRACTION):
+    idx = np.where(frac >= min_frac)[0]
+    if len(idx) == 0:
+        return []
+    groups = []
+    cur = [idx[0]]
+    for value in idx[1:]:
+        if value - cur[-1] <= LINE_GAP:
+            cur.append(value)
+        else:
+            groups.append(cur)
+            cur = [value]
+    groups.append(cur)
+    return [(int(group[0]), int(group[-1])) for group in groups]
+
+
+def ranges_between_lines(lines):
+    ranges = []
+    for left, right in zip(lines, lines[1:]):
+        start = left[1] + 1 + LINE_INSET
+        end = right[0] - LINE_INSET
+        if end <= start:
+            raise ValueError(f"invalid grid range from lines {left} and {right}")
+        ranges.append((start, end))
+    return ranges
+
+
+def detect_grid_ranges(arr):
+    is_black = (
+        (arr[..., 0] < BLACK_THRESHOLD)
+        & (arr[..., 1] < BLACK_THRESHOLD)
+        & (arr[..., 2] < BLACK_THRESHOLD)
+    )
+    col_lines = find_line_groups(is_black.mean(axis=0))
+    row_lines = find_line_groups(is_black.mean(axis=1))
+    if len(col_lines) < 2 or len(row_lines) < 2:
+        raise ValueError(f"could not detect sprite grid: col_lines={col_lines}, row_lines={row_lines}")
+
+    col_ranges = ranges_between_lines(col_lines)
+    row_ranges = ranges_between_lines(row_lines)
+    tile_count = len(col_ranges) * len(row_ranges)
+    if tile_count != 12:
+        raise ValueError(
+            f"expected 12 grid cells, got {tile_count}: "
+            f"columns={len(col_ranges)}, rows={len(row_ranges)}, "
+            f"col_lines={col_lines}, row_lines={row_lines}"
+        )
+    return col_ranges, row_ranges
 
 
 def compute_global_key(arr, col_ranges, row_ranges, patch=10):
     samples = []
     for (ry0, ry1) in row_ranges:
         for (cx0, cx1) in col_ranges:
-            samples.append(arr[ry0:ry0 + patch, cx0:cx0 + patch].reshape(-1, 3))
-            samples.append(arr[ry0:ry0 + patch, cx1 - patch:cx1].reshape(-1, 3))
-            samples.append(arr[ry1 - patch:ry1, cx0:cx0 + patch].reshape(-1, 3))
-            samples.append(arr[ry1 - patch:ry1, cx1 - patch:cx1].reshape(-1, 3))
+            sample_size = min(patch, max(1, (cx1 - cx0) // 4), max(1, (ry1 - ry0) // 4))
+            samples.append(arr[ry0:ry0 + sample_size, cx0:cx0 + sample_size].reshape(-1, 3))
+            samples.append(arr[ry0:ry0 + sample_size, cx1 - sample_size:cx1].reshape(-1, 3))
+            samples.append(arr[ry1 - sample_size:ry1, cx0:cx0 + sample_size].reshape(-1, 3))
+            samples.append(arr[ry1 - sample_size:ry1, cx1 - sample_size:cx1].reshape(-1, 3))
     all_samples = np.concatenate(samples, axis=0)
     return np.median(all_samples, axis=0)
 
@@ -77,13 +131,14 @@ def fit_center(img_rgba, cell_size, padding):
 def slice_strip(path, debug_prefix=None):
     src = Image.open(path).convert("RGB")
     arr = np.array(src).astype(np.float32)
-    key = compute_global_key(arr, COL_RANGES, ROW_RANGES)
+    col_ranges, row_ranges = detect_grid_ranges(arr)
+    key = compute_global_key(arr, col_ranges, row_ranges)
     keyed = chroma_key_to_alpha(arr, key)
     keyed_img = Image.fromarray(keyed, mode="RGBA")
 
     tiles = []
-    for (ry0, ry1) in ROW_RANGES:
-        for (cx0, cx1) in COL_RANGES:
+    for (ry0, ry1) in row_ranges:
+        for (cx0, cx1) in col_ranges:
             cell = keyed_img.crop((cx0, ry0, cx1, ry1))
             trimmed = trim_alpha(cell)
             tile = fit_center(trimmed, CELL_SIZE, PADDING)
@@ -91,7 +146,7 @@ def slice_strip(path, debug_prefix=None):
     if debug_prefix:
         for i, t in enumerate(tiles):
             t.save(f"{debug_prefix}_{i:02d}.png")
-    print(f"{path}: key={key} -> {len(tiles)} tiles")
+    print(f"{path}: grid={len(col_ranges)}x{len(row_ranges)} key={key} -> {len(tiles)} tiles")
     return tiles
 
 
@@ -104,6 +159,8 @@ def main():
     ap.add_argument("--output", required=True)
     ap.add_argument("--debug-dir", default=None)
     args = ap.parse_args()
+    if args.debug_dir:
+        Path(args.debug_dir).mkdir(parents=True, exist_ok=True)
 
     direction_order = ["down", "left", "right", "up"]
     strip_paths = {"down": args.down, "left": args.left, "right": args.right, "up": args.up}

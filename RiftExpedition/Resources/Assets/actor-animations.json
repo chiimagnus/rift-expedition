@@ -23,10 +23,14 @@
       "frameCount": 3
     }
   },
-  "sprites": [
-    {
-      "visualID": "actor_warrior",
-      "sheet": "Assets/Characters/actor_warrior_anim.png"
-    }
-  ]
+    "sprites": [
+        {
+            "visualID": "actor_warrior",
+            "sheet": "Assets/Characters/actor_warrior_anim.png"
+        },
+        {
+            "visualID": "actor_archer",
+            "sheet": "Assets/Characters/actor_archer_anim.png"
+        }
+    ]
 }
