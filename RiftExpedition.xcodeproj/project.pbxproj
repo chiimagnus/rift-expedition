@@ -64,6 +64,8 @@
 		9FA8A833859854299DEEFCFB /* PartyCreationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */; };
 		A0A4010107072026A0000001 /* ActorAnimationCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A4010307072026A0000001 /* ActorAnimationCatalog.swift */; };
 		A0A4010207072026A0000001 /* ActorAnimationCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A4010407072026A0000001 /* ActorAnimationCatalogTests.swift */; };
+		A0A4020107072026A0000001 /* ActorVisualIDResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A4020307072026A0000001 /* ActorVisualIDResolver.swift */; };
+		A0A4020207072026A0000001 /* ActorVisualIDResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A4020407072026A0000001 /* ActorVisualIDResolverTests.swift */; };
 		A3CC69DA628AF017095209CF /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A59363E369752C0EBF6B922 /* GameScene.swift */; };
 		A8CCEAD8EEF70AAF3D485948 /* TiledMapLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9690F5B30C8F52EA2944A2B /* TiledMapLoader.swift */; };
 		AD30A74BFA7C28E05D79D3F9 /* TileCollisionShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504B9F7EE49B25EB809440FA /* TileCollisionShape.swift */; };
@@ -204,6 +206,8 @@
 		9EF0EFEDA96BD601506D9B60 /* SKTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTile.swift; sourceTree = "<group>"; };
 		A0A4010307072026A0000001 /* ActorAnimationCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActorAnimationCatalog.swift; sourceTree = "<group>"; };
 		A0A4010407072026A0000001 /* ActorAnimationCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActorAnimationCatalogTests.swift; sourceTree = "<group>"; };
+		A0A4020307072026A0000001 /* ActorVisualIDResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActorVisualIDResolver.swift; sourceTree = "<group>"; };
+		A0A4020407072026A0000001 /* ActorVisualIDResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActorVisualIDResolverTests.swift; sourceTree = "<group>"; };
 		A2B16655338F5A7331D323D9 /* QuestLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestLogView.swift; sourceTree = "<group>"; };
 		A3C59CAF6D81CC5D65B8BDE6 /* SKTileLayerChunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTileLayerChunk.swift; sourceTree = "<group>"; };
 		A8AF8AEA1E9716C31A5090F9 /* TileObjectProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileObjectProxy.swift; sourceTree = "<group>"; };
@@ -400,6 +404,7 @@
 			isa = PBXGroup;
 			children = (
 				A0A4010407072026A0000001 /* ActorAnimationCatalogTests.swift */,
+				A0A4020407072026A0000001 /* ActorVisualIDResolverTests.swift */,
 				3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */,
 				041AA83BB7EE525626254DF3 /* BattleViewModelTests.swift */,
 				B604164BCA87AAE65B19A62F /* ChapterCompleteViewModelTests.swift */,
@@ -519,6 +524,7 @@
 			isa = PBXGroup;
 			children = (
 				A0A4010307072026A0000001 /* ActorAnimationCatalog.swift */,
+				A0A4020307072026A0000001 /* ActorVisualIDResolver.swift */,
 			);
 			path = Animation;
 			sourceTree = "<group>";
@@ -653,6 +659,7 @@
 				F2420693628EF3B13B8CF1EE /* ChapterCompleteView.swift in Sources */,
 				2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */,
 				A0A4010107072026A0000001 /* ActorAnimationCatalog.swift in Sources */,
+				A0A4020107072026A0000001 /* ActorVisualIDResolver.swift in Sources */,
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
 				D875A9994F538C9CA37B297C /* DebugOverlayView.swift in Sources */,
 				CB9CFA9956BA963FF8ECE217 /* DialogView.swift in Sources */,
@@ -742,6 +749,7 @@
 			files = (
 				0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */,
 				A0A4010207072026A0000001 /* ActorAnimationCatalogTests.swift in Sources */,
+				A0A4020207072026A0000001 /* ActorVisualIDResolverTests.swift in Sources */,
 				4FEEBC447E12CF70E826B83A /* BattleViewModelTests.swift in Sources */,
 				2CF2713FFA1BBF37F3BF36E7 /* ChapterCompleteViewModelTests.swift in Sources */,
 				6B6AA44F5BF0D3257C309ECF /* DialogViewModelTests.swift in Sources */,

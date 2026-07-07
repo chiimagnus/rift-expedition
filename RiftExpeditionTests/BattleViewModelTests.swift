@@ -7,7 +7,7 @@ import XCTest
 final class BattleViewModelTests: XCTestCase {
     // 敌人立绘多样化：人类敌人、动物/怪物不能再全部挤成一张复用的贴图
     // （不管是玩家职业立绘，还是同一张通用怪物立绘）。
-    // 具体逻辑见 BattleViewModel.spriteName(forHumanEnemy:) / spriteName(forBeast:)。
+    // 具体逻辑见 ActorVisualIDResolver。
     func testHumanEnemySpriteVariesByClassAndLevel() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
