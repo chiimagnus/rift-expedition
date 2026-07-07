@@ -6,42 +6,60 @@ struct QuestLogView: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Text("任务日志")
-                .font(.system(size: 40, weight: .black, design: .serif))
-                .foregroundStyle(.white)
-
+        RiftPanelScaffold(
+            title: "任务日志",
+            subtitle: "追踪当前接取与已完成的任务。",
+            closeLabel: "返回",
+            onClose: onClose
+        ) {
             if entries.isEmpty {
                 Text("当前没有已接任务。")
-                    .foregroundStyle(.white.opacity(0.72))
+                    .foregroundStyle(RiftPalette.textBrownLight)
             } else {
-                ForEach(entries) { entry in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(entry.title)
-                            .font(.title3.bold())
-                        Text(entry.objective)
-                            .foregroundStyle(.white.opacity(0.72))
-                        Text(entry.status == .completed ? "已完成" : "进行中")
-                            .font(.caption.bold())
-                            .foregroundStyle(entry.status == .completed ? .green : Color(red: 0.84, green: 0.73, blue: 0.42))
+                VStack(spacing: 12) {
+                    ForEach(entries) { entry in
+                        questCard(entry)
                     }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(entry.title)，\(entry.status == .completed ? "已完成" : "进行中")，目标：\(entry.objective)")
                 }
             }
-
-            Button("返回") {
-                onClose()
-            }
-            .buttonStyle(.borderedProminent)
-            .accessibilityLabel("返回探索")
         }
-        .frame(maxWidth: 760, alignment: .leading)
-        .padding(36)
-        .background(.black.opacity(0.42), in: RoundedRectangle(cornerRadius: 22))
-        .padding(32)
+    }
+
+    private func questCard(_ entry: QuestLogEntry) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(entry.status == .completed ? RiftPalette.accentGreen : RiftPalette.goldButton)
+                .frame(width: 6)
+                .padding(.vertical, 10)
+                .padding(.leading, 8)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(entry.title)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(RiftPalette.textBrown)
+                Text(entry.objective)
+                    .font(.callout)
+                    .foregroundStyle(RiftPalette.textBrownLight)
+
+                Text(entry.status == .completed ? "已完成" : "进行中")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        entry.status == .completed ? RiftPalette.accentGreenDark : RiftPalette.goldButtonDark,
+                        in: Capsule()
+                    )
+            }
+            .padding(14)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(RiftPalette.parchmentShade)
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(RiftPalette.outline, lineWidth: 2))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.title)，\(entry.status == .completed ? "已完成" : "进行中")，目标：\(entry.objective)")
     }
 }

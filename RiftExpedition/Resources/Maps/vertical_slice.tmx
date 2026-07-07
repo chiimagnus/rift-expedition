@@ -35,7 +35,7 @@
     </object>
   </objectgroup>
   <objectgroup id="2" name="npc">
-    <object id="2" name="村长" x="192" y="112">
+    <object id="2" name="村长" x="192" y="112" width="36" height="36">
       <properties>
         <property name="actorId" value="elder"/>
         <property name="dialogId" value="elder_intro"/>

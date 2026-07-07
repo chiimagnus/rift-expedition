@@ -434,11 +434,36 @@ final class GameSessionViewModel {
         currentSpawnID = spawnID
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: areaID, bundle: contentBundle)
         configureEncounterTriggers()
+        // 之前这里完全没有把地图的障碍物同步给 explorationController，所以 navObstacle
+        // 图层纯粹是摆设——寻路和移动都只看直线距离，玩家可以直接穿过任何障碍物甚至地图边界墙。
+        // 现在每次切地图都会把「真正挡路」的障碍物（以及 NPC 站位，避免被一脚踩上去）同步进去。
+        explorationController.setObstacles(movementObstacles(for: currentMapMetadata))
 
         let spawn = currentMapMetadata?.spawns.first { $0.id == spawnID }?.position ?? CGPoint(x: 160, y: 320)
         if !party.isEmpty {
             explorationController.configureParty(party, at: spawn)
         }
+    }
+
+    /// NPC 在地图上是站定不动的实体，但之前完全没有任何碰撞体积，队伍可以直接站到 NPC 身上、
+    /// 和 NPC 完全重叠。这里给每个 NPC 站位补一个小的方形碰撞区（和 navObstacle 一样处理），
+    /// 让角色/NPC 之间也有基本的“不能互相穿过”的效果。
+    private func movementObstacles(for metadata: TiledMapMetadata?) -> [NavigationObstacle] {
+        guard let metadata else { return [] }
+
+        let npcBlockers = metadata.npcs.map { npc in
+            // 碰撞箱大小直接用地图作者在 Tiled 里给这个 npc 对象画的宽高（数据驱动，改地图不用改代码）。
+            // RiftValidator 在启动/发布校验时会强制要求每个 npc 对象都有非零宽高，
+            // 所以这里不再需要兜底默认值。
+            NavigationObstacle(
+                tiledID: -(1000 + npc.tiledID),
+                name: "npc_\(npc.actorID)",
+                frame: npc.frame,
+                blocksMovement: true,
+                blocksSight: false
+            )
+        }
+        return metadata.navObstacles + npcBlockers
     }
 
     private func battleInitialPositions(for encounter: EncounterDefinition, trigger: MapEncounterTrigger?) -> [String: CGPoint] {

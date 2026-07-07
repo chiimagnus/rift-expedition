@@ -31,6 +31,10 @@ struct MapNPC: Equatable {
     var actorID: String
     var dialogID: String
     var position: CGPoint
+    /// NPC 在 Tiled 里的实际包围盒。地图作者必须在 Tiled 里把这个对象画成一个有宽高的矩形（而不是
+    /// 只标一个点）来控制碰撞箱大小；RiftValidator 会在启动/发布校验时拒绝宽高为 0 的 npc 对象，
+    /// 因此这里读到的 frame 总是有效的非零尺寸，调用方无需再做回退处理。
+    var frame: CGRect
 }
 
 struct NavigationObstacle: Equatable {
@@ -186,7 +190,13 @@ private extension TiledMapMetadata {
         npcs = objects(in: "npc").compactMap { object in
             guard let actorID = object.properties["actorId"],
                   let dialogID = object.properties["dialogId"] else { return nil }
-            return MapNPC(tiledID: Int(object.id), actorID: actorID, dialogID: dialogID, position: point(for: object))
+            return MapNPC(
+                tiledID: Int(object.id),
+                actorID: actorID,
+                dialogID: dialogID,
+                position: point(for: object),
+                frame: frame(for: object)
+            )
         }
 
         navObstacles = objects(in: "navObstacle").map { object in

@@ -106,6 +106,10 @@ public enum MapValidator {
             }
         }
 
+        for npc in map.objectGroups["npc", default: []] where npc.width <= 0 || npc.height <= 0 {
+            issues.append(MapValidationIssue(message: "npc object \(npc.tiledID) missing hitbox size: draw it as a rectangle with width/height in Tiled"))
+        }
+
         for exit in map.objectGroups["exit", default: []] {
             guard
                 let targetAreaID = exit.properties["targetAreaId"],
