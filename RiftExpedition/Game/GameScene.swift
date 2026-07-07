@@ -18,6 +18,7 @@ final class GameScene: SKScene {
 
     weak var eventHandler: (any GameSceneEventHandling)?
     var isWorldInputEnabled = true
+    var assetBundle: Bundle = .main
     private let worldLayer = SKNode()
     private var tilemap: SKTilemap?
     private var loadedAreaID: String?
@@ -25,7 +26,15 @@ final class GameScene: SKScene {
     private var partyNodes: [String: SKShapeNode] = [:]
     private var staticObjectLayer: SKNode?
     private var battleLayer: SKNode?
+    private var battleActorNodes: [String: SKNode] = [:]
+    private var renderedBattleEffectIDs: Set<Int> = []
+    private var playedBattleAnimationEventIDs: Set<Int> = []
     private var textureCache: [String: SKTexture] = [:]
+    private var animationFrameCache: [String: [SKTexture]] = [:]
+    private var nodeAnimationKeys: [String: String] = [:]
+    private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
+    private var didLogAnimationCatalogFallback = false
+    private var loggedMissingActorAnimations: Set<String> = []
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -36,6 +45,7 @@ final class GameScene: SKScene {
     override func didMove(to view: SKView) {
         view.window?.makeFirstResponder(view)
         backgroundColor = SKColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1)
+        preloadAnimationCatalogIfNeeded()
         if worldLayer.parent == nil {
             worldLayer.name = "worldLayer"
             worldLayer.zPosition = 0
@@ -92,6 +102,7 @@ final class GameScene: SKScene {
         for actorID in staleActorIDs {
             partyNodes[actorID]?.removeFromParent()
             partyNodes[actorID] = nil
+            nodeAnimationKeys["party:\(actorID)"] = nil
         }
 
         for member in members {
@@ -100,39 +111,66 @@ final class GameScene: SKScene {
             node.fillColor = member.actorID == leaderID
                 ? SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
                 : SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 1)
-            // 之前这里只更新了 node.position，人物贴图完全没有任何动画，也不会根据朝向左右镜像，
-            // 看起来就是一个图标在平移。现在朝 target 移动时播放一个简单的“走路上下弹跳”动画，
-            // 并根据 facingRight 左右翻转贴图，静止时把动画和翻转都还原。
             if let sprite = node.childNode(withName: "partySprite_\(member.actorID)") as? SKSpriteNode {
-                sprite.xScale = member.facingRight ? abs(sprite.xScale) : -abs(sprite.xScale)
-                let isMoving = member.target != nil
-                if isMoving {
-                    if sprite.action(forKey: "walkBob") == nil {
-                        sprite.run(.repeatForever(walkBobAction()), withKey: "walkBob")
-                    }
-                } else if sprite.action(forKey: "walkBob") != nil {
-                    sprite.removeAction(forKey: "walkBob")
-                    sprite.position = .zero
-                }
+                let visualID = partyVisualID(for: member)
+                playActorAnimation(
+                    on: sprite,
+                    nodeKey: "party:\(member.actorID)",
+                    visualID: visualID,
+                    action: member.target == nil ? .idle : .walk,
+                    direction: member.facing
+                )
             }
             partyNodes[member.actorID] = node
         }
     }
 
-    /// 简单的“走路弹跳”动画：贴图相对自己原点小幅上下移动，配合 `renderParty` 里的
-    /// 移动状态判断循环播放。做法参考了 `makeEffectNode` 里命中特效用到的 `SKAction` 序列。
-    private func walkBobAction() -> SKAction {
-        let up = SKAction.moveBy(x: 0, y: 3, duration: 0.15)
-        up.timingMode = .easeInEaseOut
-        let down = up.reversed()
-        return .sequence([up, down])
+    func renderBattle(_ snapshot: BattleSceneSnapshot?) {
+        guard let snapshot else {
+            battleLayer?.removeFromParent()
+            battleLayer = nil
+            battleActorNodes.removeAll()
+            renderedBattleEffectIDs.removeAll()
+            playedBattleAnimationEventIDs.removeAll()
+            return
+        }
+
+        let layer = battleLayer ?? makeBattleLayer()
+        for child in layer.children
+        where child.name?.hasPrefix("battleActor_") != true
+            && child.name?.hasPrefix("battleEffect_") != true {
+            child.removeFromParent()
+        }
+
+        for surface in snapshot.surfaces {
+            layer.addChild(makeSurfaceNode(surface))
+        }
+        if let activeActor = snapshot.actors.first(where: { $0.id == snapshot.activeActorID }) {
+            layer.addChild(makeMoveRangeNode(center: activeActor.position, radius: snapshot.moveRadius))
+        }
+
+        let actorIDs = Set(snapshot.actors.map(\.id))
+        for staleID in battleActorNodes.keys where !actorIDs.contains(staleID) {
+            battleActorNodes[staleID]?.removeFromParent()
+            battleActorNodes[staleID] = nil
+        }
+        for actor in snapshot.actors {
+            let node = battleActorNodes[actor.id] ?? makeBattleActorNode(actor)
+            updateBattleActorNode(node, actor: actor)
+            if node.parent == nil {
+                layer.addChild(node)
+            }
+            battleActorNodes[actor.id] = node
+        }
+        for event in snapshot.presentationEvents {
+            playBattlePresentationEvent(event, actors: snapshot.actors)
+            guard let point = event.effectPoint, !renderedBattleEffectIDs.contains(event.id) else { continue }
+            renderedBattleEffectIDs.insert(event.id)
+            layer.addChild(makeEffectNode(at: point, eventID: event.id))
+        }
     }
 
-    func renderBattle(_ snapshot: BattleSceneSnapshot?) {
-        battleLayer?.removeFromParent()
-        battleLayer = nil
-        guard let snapshot else { return }
-
+    private func makeBattleLayer() -> SKNode {
         let layer = SKNode()
         layer.name = "battleLayer"
         // 这里把数值调得比 SKTiled 内部图层可能用到的 zPosition 都高很多
@@ -140,21 +178,7 @@ final class GameScene: SKScene {
         layer.zPosition = 700
         worldLayer.addChild(layer)
         battleLayer = layer
-
-        // ponytail（有意为之的技术债）：目前战斗里角色很少，每次整体重建这层显示内容
-        // 比费劲做「按 key 找差异只更新变化部分」更简单清楚。
-        for surface in snapshot.surfaces {
-            layer.addChild(makeSurfaceNode(surface))
-        }
-        if let activeActor = snapshot.actors.first(where: { $0.id == snapshot.activeActorID }) {
-            layer.addChild(makeMoveRangeNode(center: activeActor.position, radius: snapshot.moveRadius))
-        }
-        for actor in snapshot.actors {
-            layer.addChild(makeBattleActorNode(actor))
-        }
-        if let point = snapshot.lastEffectPoint {
-            layer.addChild(makeEffectNode(at: point))
-        }
+        return layer
     }
 
     func loadMap(areaID: String) {
@@ -246,22 +270,29 @@ final class GameScene: SKScene {
         node.zPosition = 550
         worldLayer.addChild(node)
 
-        let sprite = SKSpriteNode(texture: texture(named: partySpriteName(for: member)))
-        sprite.name = "partySprite_\(member.actorID)"
-        sprite.size = CGSize(width: 30, height: 30)
+        let sprite = makeActorSprite(name: "partySprite_\(member.actorID)", size: CGSize(width: 30, height: 30))
         sprite.zPosition = 1
         node.addChild(sprite)
 
         return node
     }
 
-    private func partySpriteName(for member: PartyMemberPosition) -> String {
-        guard let classID = member.classID else { return "actor_warrior" }
-        return "actor_\(classID)"
+    private func partyVisualID(for member: PartyMemberPosition) -> String {
+        switch member.classID {
+        case "archer":
+            "actor_archer"
+        case "mage":
+            "actor_mage"
+        case "rogue":
+            "actor_rogue"
+        default:
+            "actor_warrior"
+        }
     }
 
     private func renderStaticObjects(metadata: TiledMapMetadata) {
         staticObjectLayer?.removeFromParent()
+        nodeAnimationKeys = nodeAnimationKeys.filter { !$0.key.hasPrefix("npc:") }
         let layer = SKNode()
         layer.name = "staticObjectLayer"
         // SKTiled 的 `SKTilemap` 会给它从 .tmx 文件里解析出来的每个图层自己分配一个内部
@@ -296,7 +327,7 @@ final class GameScene: SKScene {
             layer.addChild(makeEncounterMarker(encounter))
         }
         for npc in metadata.npcs {
-            layer.addChild(makeMapSprite(name: spriteName(forNPC: npc), position: npc.position, size: CGSize(width: 52, height: 52)))
+            layer.addChild(makeNPCSprite(npc))
         }
         for item in metadata.items {
             layer.addChild(makeMapSprite(name: spriteName(forMapItem: item), position: item.position, size: CGSize(width: 48, height: 48)))
@@ -306,10 +337,36 @@ final class GameScene: SKScene {
     private func makeBattleActorNode(_ actor: BattleActorMarker) -> SKNode {
         let container = SKNode()
         container.name = "battleActor_\(actor.id)"
+
+        let sprite = makeActorSprite(name: "battleActorSprite_\(actor.id)", size: CGSize(width: 58, height: 58))
+        sprite.zPosition = 1
+        container.addChild(sprite)
+        return container
+    }
+
+    private func updateBattleActorNode(_ container: SKNode, actor: BattleActorMarker) {
         container.position = actor.position
         container.alpha = actor.isDefeated ? 0.42 : 1
+        for child in container.children where child.name?.hasPrefix("battleActorSprite_") != true {
+            child.removeFromParent()
+        }
+        if let sprite = container.childNode(withName: "battleActorSprite_\(actor.id)") as? SKSpriteNode {
+            sprite.size = CGSize(width: 58, height: 58)
+            sprite.zPosition = 1
+            let nodeKey = "battle:\(actor.id)"
+            if nodeAnimationKeys[nodeKey]?.hasPrefix("event:") != true {
+                playActorAnimation(
+                    on: sprite,
+                    nodeKey: nodeKey,
+                    visualID: actor.visualID,
+                    action: actor.baseAction,
+                    direction: actor.facing
+                )
+            }
+        }
 
         let ring = SKShapeNode(circleOfRadius: actor.isActive ? 34 : 30)
+        ring.name = "battleActorRing_\(actor.id)"
         ring.fillColor = actor.isActive
             ? SKColor(red: 0.84, green: 0.73, blue: 0.42, alpha: 0.20)
             : SKColor.black.withAlphaComponent(0.28)
@@ -320,12 +377,8 @@ final class GameScene: SKScene {
         ring.zPosition = -1
         container.addChild(ring)
 
-        let sprite = SKSpriteNode(texture: texture(named: actor.spriteName))
-        sprite.size = CGSize(width: 58, height: 58)
-        sprite.zPosition = 1
-        container.addChild(sprite)
-
         let healthBack = SKShapeNode(rectOf: CGSize(width: 52, height: 6), cornerRadius: 3)
+        healthBack.name = "battleActorHealthBack_\(actor.id)"
         healthBack.position = CGPoint(x: 0, y: -40)
         healthBack.fillColor = SKColor.black.withAlphaComponent(0.65)
         healthBack.strokeColor = .clear
@@ -333,18 +386,53 @@ final class GameScene: SKScene {
 
         let healthRatio = CGFloat(max(0, actor.health)) / CGFloat(max(actor.maxHealth, 1))
         let health = SKShapeNode(rect: CGRect(x: -26, y: -43, width: 52 * healthRatio, height: 6), cornerRadius: 3)
+        health.name = "battleActorHealth_\(actor.id)"
         health.fillColor = SKColor(red: 0.76, green: 0.18, blue: 0.16, alpha: 1)
         health.strokeColor = .clear
         container.addChild(health)
 
         let label = SKLabelNode(text: actor.displayName)
+        label.name = "battleActorLabel_\(actor.id)"
         label.fontName = "PingFangSC-Semibold"
         label.fontSize = 12
         label.fontColor = .white
         label.position = CGPoint(x: 0, y: 42)
         label.verticalAlignmentMode = .center
         container.addChild(label)
-        return container
+    }
+
+    private func playBattlePresentationEvent(_ event: BattlePresentationEvent, actors: [BattleActorMarker]) {
+        guard !playedBattleAnimationEventIDs.contains(event.id),
+              let actor = actors.first(where: { $0.id == event.actorID }),
+              let node = battleActorNodes[event.actorID],
+              let sprite = node.childNode(withName: "battleActorSprite_\(event.actorID)") as? SKSpriteNode
+        else {
+            return
+        }
+        playedBattleAnimationEventIDs.insert(event.id)
+        let nodeKey = "battle:\(event.actorID)"
+        guard let frames = animationFrames(visualID: actor.visualID, action: event.action, direction: event.direction) else {
+            playActorAnimation(on: sprite, nodeKey: nodeKey, visualID: actor.visualID, action: .idle, direction: actor.facing)
+            return
+        }
+
+        nodeAnimationKeys[nodeKey] = "event:\(event.id)"
+        sprite.xScale = abs(sprite.xScale)
+        sprite.removeAction(forKey: "actorAnimation")
+        sprite.texture = frames.first
+        sprite.run(.sequence([
+            .animate(with: frames, timePerFrame: 0.12),
+            .run { [weak self, weak sprite] in
+                guard let self, let sprite else { return }
+                self.playActorAnimation(
+                    on: sprite,
+                    nodeKey: nodeKey,
+                    visualID: actor.visualID,
+                    action: .idle,
+                    direction: actor.facing
+                )
+            }
+        ]), withKey: "actorAnimation")
     }
 
     private func makeMoveRangeNode(center: CGPoint, radius: CGFloat) -> SKNode {
@@ -358,9 +446,9 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func makeEffectNode(at point: CGPoint) -> SKNode {
+    private func makeEffectNode(at point: CGPoint, eventID: Int? = nil) -> SKNode {
         let node = SKShapeNode(circleOfRadius: 18)
-        node.name = "battleEffect"
+        node.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
         node.position = point
         node.fillColor = SKColor(red: 1.0, green: 0.46, blue: 0.14, alpha: 0.42)
         node.strokeColor = SKColor(red: 1.0, green: 0.86, blue: 0.38, alpha: 0.9)
@@ -514,18 +602,25 @@ final class GameScene: SKScene {
         return sprite
     }
 
+    private func makeNPCSprite(_ npc: MapNPC) -> SKNode {
+        let visualID = ActorVisualIDResolver.npcVisualID(actorID: npc.actorID)
+        let sprite = makeActorSprite(name: "npc_\(npc.actorID)", size: CGSize(width: 52, height: 52))
+        sprite.position = npc.position
+        playActorAnimation(
+            on: sprite,
+            nodeKey: "npc:\(npc.tiledID)",
+            visualID: visualID,
+            action: .idle,
+            direction: .down
+        )
+        return sprite
+    }
+
     private func texture(named name: String) -> SKTexture? {
         if let texture = textureCache[name] {
             return texture
         }
-        if let texture = villageNPCTexture(named: name)
-            ?? humanEnemyTexture(named: name)
-            ?? beastMonsterTexture(named: name) {
-            textureCache[name] = texture
-            return texture
-        }
         let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Sprites")
-            ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Characters")
             ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Icons")
         guard let url, let image = NSImage(contentsOf: url) else {
             return nil
@@ -537,74 +632,110 @@ final class GameScene: SKScene {
         return texture
     }
 
-    /// 从 `Assets/Characters` 目录下名为 `sheetName`、总共有 `frameCount` 帧的横向长条
-    /// 拼接图里，切出第 `frameIndex` 帧。这个函数是所有「多帧角色立绘图」共用的
-    /// （村民 NPC、人类敌人、动物/怪物都在用），这样以后新增一批角色立绘，
-    /// 只需要写一张「名字 -> 第几帧」的对照表就行，不用再单独写切图逻辑。
-    private func slicedTexture(sheetName: String, frameIndex: Int, frameCount: Int) -> SKTexture? {
-        guard let sheetURL = Bundle.main.url(forResource: sheetName, withExtension: "png", subdirectory: "Assets/Characters"),
-              let sheetImage = NSImage(contentsOf: sheetURL) else {
+    private func preloadAnimationCatalogIfNeeded() {
+        guard actorAnimationCatalog == nil, !didLogAnimationCatalogFallback else { return }
+        didLogAnimationCatalogFallback = true
+        GameLog.assets.notice("Actor animation catalog unavailable; using minimal actor placeholders")
+    }
+
+    private func makeActorSprite(name: String, size: CGSize) -> SKSpriteNode {
+        let sprite = SKSpriteNode(
+            color: SKColor(red: 0.72, green: 0.28, blue: 0.72, alpha: 0.85),
+            size: size
+        )
+        sprite.name = name
+        sprite.colorBlendFactor = 1
+        return sprite
+    }
+
+    private func animationFrames(
+        visualID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection
+    ) -> [SKTexture]? {
+        let cacheKey = "\(visualID)/\(action.rawValue)/\(direction.rawValue)"
+        if let frames = animationFrameCache[cacheKey] {
+            return frames
+        }
+        guard
+            let catalog = actorAnimationCatalog,
+            let sheetPath = catalog.sheetPath(for: visualID),
+            let sheetTexture = texture(sheetPath: sheetPath)
+        else {
             return nil
         }
 
-        let sheetTexture = SKTexture(image: sheetImage)
-        let count = CGFloat(frameCount)
-        let rect = CGRect(x: CGFloat(frameIndex) / count, y: 0, width: 1 / count, height: 1)
-        let texture = SKTexture(rect: rect, in: sheetTexture)
-        texture.filteringMode = .nearest
-        return texture
-    }
-
-    /// `Assets/Characters/village_npcs.png` 是一张已登记的 3 帧横向拼接图（长者/村民/守卫），
-    /// 用于村庄里的 NPC。下面的 `spriteName(forNPC:)` 会先算出该用第几帧，
-    /// 这里再从这张公用大图里切出对应的一小块，而不用给每个 NPC 都单独画一张 PNG。
-    private static let villageNPCFrames: [String: Int] = [
-        "npc_village_resident": 1,
-        "npc_village_guard": 2
-    ]
-
-    private func villageNPCTexture(named name: String) -> SKTexture? {
-        guard let frameIndex = Self.villageNPCFrames[name] else { return nil }
-        return slicedTexture(sheetName: "village_npcs", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    /// `Assets/Characters/human_enemies.png` 是一张已登记的 3 帧拼接图（远程/近战/精英），
-    /// 这样人类敌人（对应 `BattleViewModel.spriteName(forHumanEnemy:)`）能有自己独立的
-    /// 立绘，而不是直接借用玩家队伍的职业立绘。
-    private static let humanEnemyFrames: [String: Int] = [
-        "enemy_human_ranged": 0,
-        "enemy_human_melee": 1,
-        "enemy_human_elite": 2
-    ]
-
-    private func humanEnemyTexture(named name: String) -> SKTexture? {
-        guard let frameIndex = Self.humanEnemyFrames[name] else { return nil }
-        return slicedTexture(sheetName: "human_enemies", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    /// `Assets/Characters/beasts_and_monsters.png` 是一张已登记的 3 帧拼接图（普通动物/
-    /// 受污染洞穴生物/裂隙腐化生物），这样洞穴里的小怪和裂隙幼体
-    /// （对应 `BattleViewModel.spriteName(forBeast:)`）就不用再全部共用同一张通用怪物立绘了。
-    private static let beastMonsterFrames: [String: Int] = [
-        "enemy_beast_animal": 0,
-        "enemy_beast_tainted": 1,
-        "enemy_beast_rift": 2
-    ]
-
-    private func beastMonsterTexture(named name: String) -> SKTexture? {
-        guard let frameIndex = Self.beastMonsterFrames[name] else { return nil }
-        return slicedTexture(sheetName: "beasts_and_monsters", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    private func spriteName(forNPC npc: MapNPC) -> String {
-        switch npc.actorID {
-        case "elder", "mayor":
-            "npc_elder"
-        case "gate_guard":
-            "npc_village_guard"
-        default:
-            "npc_village_resident"
+        let frames = catalog.frames(for: visualID, action: action, direction: direction).map { rect in
+            let texture = SKTexture(rect: rect, in: sheetTexture)
+            texture.filteringMode = .nearest
+            return texture
         }
+        guard !frames.isEmpty else {
+            return nil
+        }
+        animationFrameCache[cacheKey] = frames
+        return frames
+    }
+
+    private func playActorAnimation(
+        on sprite: SKSpriteNode,
+        nodeKey: String,
+        visualID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection
+    ) {
+        let animationKey = "\(visualID)/\(action.rawValue)/\(direction.rawValue)"
+        if let frames = animationFrames(visualID: visualID, action: action, direction: direction) {
+            sprite.xScale = abs(sprite.xScale)
+            guard nodeAnimationKeys[nodeKey] != animationKey else { return }
+            nodeAnimationKeys[nodeKey] = animationKey
+            sprite.removeAction(forKey: "actorAnimation")
+            sprite.colorBlendFactor = 0
+            sprite.texture = frames.first
+            sprite.run(.repeatForever(.animate(with: frames, timePerFrame: 0.16)), withKey: "actorAnimation")
+            return
+        }
+
+        nodeAnimationKeys[nodeKey] = nil
+        sprite.removeAction(forKey: "actorAnimation")
+        logMissingActorAnimation(visualID: visualID, action: action, direction: direction)
+        sprite.texture = nil
+        sprite.color = SKColor(red: 0.72, green: 0.28, blue: 0.72, alpha: 0.85)
+        sprite.colorBlendFactor = 1
+        sprite.xScale = direction == .left ? -abs(sprite.xScale) : abs(sprite.xScale)
+        sprite.position = .zero
+    }
+
+    private func logMissingActorAnimation(
+        visualID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection
+    ) {
+        let key = "\(visualID)/\(action.rawValue)/\(direction.rawValue)"
+        guard !loggedMissingActorAnimations.contains(key) else { return }
+        loggedMissingActorAnimations.insert(key)
+        GameLog.assets.warning("Actor animation missing: \(key, privacy: .public)")
+    }
+
+    private func texture(sheetPath: String) -> SKTexture? {
+        let cacheKey = "sheet:\(sheetPath)"
+        if let texture = textureCache[cacheKey] {
+            return texture
+        }
+        let path = NSString(string: sheetPath)
+        let resource = path.deletingPathExtension
+        let ext = path.pathExtension
+        guard
+            let url = assetBundle.url(forResource: resource, withExtension: ext.isEmpty ? nil : ext),
+            let image = NSImage(contentsOf: url)
+        else {
+            return nil
+        }
+
+        let texture = SKTexture(image: image)
+        texture.filteringMode = .nearest
+        textureCache[cacheKey] = texture
+        return texture
     }
 
     private func spriteName(forMapItem item: MapItem) -> String {

@@ -5,6 +5,116 @@ import XCTest
 
 @MainActor
 final class GameSessionViewModelTests: XCTestCase {
+    func testAreaIDsMapToRegionalBGMCues() {
+        XCTAssertEqual(AudioService.bgmCue(for: "village_square"), .villageTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "village_riverside"), .villageTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "wilds_road"), .wildsTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "wilds_riverbank"), .wildsTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "cave_entrance"), .caveTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "cave_depths"), .caveTheme)
+    }
+
+    func testAreaIDsMapToAmbienceCues() {
+        XCTAssertNil(AudioService.ambienceCue(for: "village_square"))
+        XCTAssertNil(AudioService.ambienceCue(for: "wilds_road"))
+        XCTAssertEqual(AudioService.ambienceCue(for: "cave_entrance"), .caveDrip)
+        XCTAssertEqual(AudioService.ambienceCue(for: "cave_depths"), .caveDrip)
+    }
+
+    func testAudioServiceVolumeMuteAndBGMSwitchUseAllPlayers() {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let service = AudioService(
+            makePlayer: { url in
+                let cueID = url.deletingPathExtension().lastPathComponent
+                let cue = try XCTUnwrap(AudioCue(rawValue: cueID))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in
+                URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav")
+            }
+        )
+
+        service.masterVolume = 0.25
+        XCTAssertTrue(playersByCue.values.allSatisfy { abs($0.volume - 0.25) < 0.001 })
+
+        service.isMuted = true
+        XCTAssertTrue(playersByCue.values.allSatisfy { $0.volume == 0 })
+
+        service.isMuted = false
+        service.playBGM(for: "village_square")
+        XCTAssertEqual(playersByCue[.villageTheme]?.numberOfLoops, -1)
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
+
+        service.playBGM(for: "wilds_road")
+        XCTAssertEqual(playersByCue[.villageTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.wildsTheme]?.numberOfLoops, -1)
+        XCTAssertEqual(playersByCue[.wildsTheme]?.playCount, 1)
+    }
+
+    func testAudioServiceMissingCuesDoNotCrash() {
+        let service = AudioService(
+            makePlayer: { _ in
+                XCTFail("No player should be created when every cue URL is missing")
+                return FakeAudioPlayer()
+            },
+            urlForCue: { _ in nil }
+        )
+
+        service.play(.uiClick)
+        service.playBGM(for: "cave_entrance")
+        service.playAmbience(for: "cave_entrance")
+        service.stopBGM()
+    }
+
+    func testSessionAreaTransitionsRouteBGMAndAmbience() throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let audioService = AudioService(
+            makePlayer: { url in
+                let cueID = url.deletingPathExtension().lastPathComponent
+                let cue = try XCTUnwrap(AudioCue(rawValue: cueID))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in
+                URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav")
+            }
+        )
+        let session = GameSessionViewModel(audioService: audioService)
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+
+        session.startChapterWithSelectedParty()
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_square", to: "village_riverside")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_riverside", to: "wilds_riverbank")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(playersByCue[.villageTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.wildsTheme]?.playCount, 1)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "wilds_riverbank", to: "cave_entrance")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(playersByCue[.wildsTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.caveTheme]?.playCount, 1)
+        XCTAssertEqual(playersByCue[.caveDrip]?.playCount, 1)
+    }
+
     func testLeaderEnteringExitChangesArea() throws {
         let session = GameSessionViewModel()
         session.partyCreationViewModel.toggleSelection("warrior")
@@ -114,5 +224,29 @@ final class GameSessionViewModelTests: XCTestCase {
 private extension CGRect {
     var center: CGPoint {
         CGPoint(x: midX, y: midY)
+    }
+}
+
+private final class FakeAudioPlayer: AudioPlaying {
+    var currentTime: TimeInterval = 0
+    var volume: Float = 1
+    var numberOfLoops = 0
+    private(set) var isPlaying = false
+    private(set) var playCount = 0
+    private(set) var stopCount = 0
+
+    func play() -> Bool {
+        playCount += 1
+        isPlaying = true
+        return true
+    }
+
+    func stop() {
+        stopCount += 1
+        isPlaying = false
+    }
+
+    func prepareToPlay() -> Bool {
+        true
     }
 }

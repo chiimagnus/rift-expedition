@@ -26,7 +26,9 @@ struct BattleActorMarker: Equatable, Identifiable {
     var id: String
     var displayName: String
     var factionName: String
-    var spriteName: String
+    var visualID: String
+    var facing: ActorAnimationDirection
+    var baseAction: ActorAnimationKind
     var position: CGPoint
     var health: Int
     var maxHealth: Int
@@ -37,13 +39,22 @@ struct BattleActorMarker: Equatable, Identifiable {
     var isDefeated: Bool
 }
 
+struct BattlePresentationEvent: Equatable, Identifiable {
+    var id: Int
+    var actorID: String
+    var action: ActorAnimationKind
+    var direction: ActorAnimationDirection
+    var targetActorID: String?
+    var effectPoint: CGPoint?
+}
+
 struct BattleSceneSnapshot: Equatable {
     var actors: [BattleActorMarker]
     var surfaces: [BattleSurfaceMarker]
     var activeActorID: String?
     var selectedAction: BattleActionChoice
     var moveRadius: CGFloat
-    var lastEffectPoint: CGPoint?
+    var presentationEvents: [BattlePresentationEvent]
 }
 
 @MainActor
@@ -57,15 +68,18 @@ final class BattleViewModel {
     private let skillsByID: [String: SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
     private let hasLineOfSight: (CGPoint, CGPoint) -> Bool
+    private let onAudioCue: (AudioCue) -> Void
     private var random = SeededRandomSource(seed: 20260706)
 
     var selectedAction: BattleActionChoice = .move
     var statusText = "战斗开始。"
     var targetPrompt = "选择移动位置，或先选择技能再点敌人。"
     var actorPositions: [String: CGPoint]
+    var actorFacings: [String: ActorAnimationDirection]
     var surfaces: [BattleSurfaceMarker]
     var inventory: PartyInventory
-    var lastEffectPoint: CGPoint?
+    private var nextPresentationEventID = 1
+    private var presentationEvents: [BattlePresentationEvent] = []
 
     init(
         state: BattleState,
@@ -74,7 +88,8 @@ final class BattleViewModel {
         itemDefinitions: [ItemDefinition] = [],
         initialPositions: [String: CGPoint] = [:],
         surfaces: [BattleSurfaceMarker] = [],
-        hasLineOfSight: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true }
+        hasLineOfSight: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true },
+        onAudioCue: @escaping (AudioCue) -> Void = { _ in }
     ) {
         engine = BattleEngine(state: state)
         skillDefinitions = skills
@@ -85,9 +100,11 @@ final class BattleViewModel {
         skillsByID = indexedSkills
         self.itemDefinitions = itemDefinitions
         actorPositions = Self.makeInitialPositions(for: state.actors, overrides: initialPositions)
+        actorFacings = Dictionary(uniqueKeysWithValues: state.actors.map { ($0.id, ActorAnimationDirection.down) })
         self.inventory = inventory
         self.surfaces = surfaces
         self.hasLineOfSight = hasLineOfSight
+        self.onAudioCue = onAudioCue
     }
 
     var state: BattleState {
@@ -140,11 +157,14 @@ final class BattleViewModel {
     var sceneSnapshot: BattleSceneSnapshot {
         BattleSceneSnapshot(
             actors: state.actors.map { actor in
-                BattleActorMarker(
+                let visualID = ActorVisualIDResolver.visualID(for: actor)
+                return BattleActorMarker(
                     id: actor.id,
                     displayName: actor.displayName,
                     factionName: factionName(actor.faction),
-                    spriteName: ActorVisualIDResolver.visualID(for: actor),
+                    visualID: visualID,
+                    facing: actorFacings[actor.id] ?? .down,
+                    baseAction: .idle,
                     position: actorPositions[actor.id] ?? .zero,
                     health: actor.stats.health,
                     maxHealth: actor.stats.maxHealth,
@@ -159,7 +179,7 @@ final class BattleViewModel {
             activeActorID: state.activeActorID,
             selectedAction: selectedAction,
             moveRadius: moveRadius,
-            lastEffectPoint: lastEffectPoint
+            presentationEvents: presentationEvents
         )
     }
 
@@ -222,7 +242,7 @@ final class BattleViewModel {
         do {
             try engine.move(actorID: actor.id, distance: distance)
             actorPositions[actor.id] = destination
-            lastEffectPoint = destination
+            emitMovementEvent(actorID: actor.id, from: start, to: destination)
             statusText = "\(actor.displayName) 移动，消耗 \(APRules.movementCost(forDistance: distance)) AP。"
             targetPrompt = "可继续移动、选择技能或结束回合。"
         } catch {
@@ -434,6 +454,7 @@ final class BattleViewModel {
             isAlly: isAlly(target.faction, of: actor.faction)
         )
         let beforeHealth = target.stats.health
+        let actionBeforeResolution = selectedAction
 
         do {
             let resolution = try engine.useSkill(
@@ -443,11 +464,19 @@ final class BattleViewModel {
                 context: context,
                 random: &random
             )
-            lastEffectPoint = targetPosition
             let afterHealth = state.actor(id: targetID)?.stats.health ?? beforeHealth
             let damage = max(0, beforeHealth - afterHealth)
             let surfaceText = applyCreatedSurfaces(resolution.createdSurfaces, at: targetPosition, targetID: targetID)
             consumeSelectedItemIfNeeded()
+            emitSkillEvents(
+                actorID: actor.id,
+                targetID: targetID,
+                casterPosition: casterPosition,
+                targetPosition: targetPosition,
+                didDodge: resolution.didDodge,
+                damage: damage
+            )
+            emitAudioCues(action: actionBeforeResolution, damage: damage)
 
             if resolution.didDodge {
                 statusText = "\(target.displayName) 闪避了 \(label)。"
@@ -562,13 +591,105 @@ final class BattleViewModel {
 
     private func move(actorID: String, toward targetID: String, distance: Double) {
         guard let start = actorPositions[actorID], let target = actorPositions[targetID] else { return }
-        actorPositions[actorID] = movedPoint(from: start, toward: target, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        let destination = movedPoint(from: start, toward: target, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        actorPositions[actorID] = destination
+        emitMovementEvent(actorID: actorID, from: start, to: destination)
     }
 
     private func move(actorID: String, awayFrom targetID: String, distance: Double) {
         guard let start = actorPositions[actorID], let target = actorPositions[targetID] else { return }
         let reflected = CGPoint(x: start.x + (start.x - target.x), y: start.y + (start.y - target.y))
-        actorPositions[actorID] = movedPoint(from: start, toward: reflected, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        let destination = movedPoint(from: start, toward: reflected, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        actorPositions[actorID] = destination
+        emitMovementEvent(actorID: actorID, from: start, to: destination)
+    }
+
+    private func emitMovementEvent(actorID: String, from start: CGPoint, to end: CGPoint) {
+        guard let direction = animationDirection(from: start, to: end) else { return }
+        actorFacings[actorID] = direction
+        appendPresentationEvent(
+            actorID: actorID,
+            action: .walk,
+            direction: direction,
+            targetActorID: nil,
+            effectPoint: end
+        )
+    }
+
+    private func appendPresentationEvent(
+        actorID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection,
+        targetActorID: String?,
+        effectPoint: CGPoint?
+    ) {
+        presentationEvents.append(BattlePresentationEvent(
+            id: nextPresentationEventID,
+            actorID: actorID,
+            action: action,
+            direction: direction,
+            targetActorID: targetActorID,
+            effectPoint: effectPoint
+        ))
+        nextPresentationEventID += 1
+        if presentationEvents.count > 8 {
+            presentationEvents.removeFirst(presentationEvents.count - 8)
+        }
+    }
+
+    private func emitSkillEvents(
+        actorID: String,
+        targetID: String,
+        casterPosition: CGPoint,
+        targetPosition: CGPoint,
+        didDodge: Bool,
+        damage: Int
+    ) {
+        let attackDirection = animationDirection(from: casterPosition, to: targetPosition)
+            ?? actorFacings[actorID]
+            ?? .down
+        actorFacings[actorID] = attackDirection
+        appendPresentationEvent(
+            actorID: actorID,
+            action: .attack,
+            direction: attackDirection,
+            targetActorID: targetID,
+            effectPoint: targetPosition
+        )
+
+        guard !didDodge, damage > 0 else { return }
+        let hurtDirection = animationDirection(from: targetPosition, to: casterPosition)
+            ?? actorFacings[targetID]
+            ?? .down
+        actorFacings[targetID] = hurtDirection
+        appendPresentationEvent(
+            actorID: targetID,
+            action: .hurt,
+            direction: hurtDirection,
+            targetActorID: actorID,
+            effectPoint: targetPosition
+        )
+    }
+
+    private func emitAudioCues(action: BattleActionChoice, damage: Int) {
+        if case .consumable = action {
+            onAudioCue(.healDrink)
+        } else {
+            onAudioCue(.skillCast)
+        }
+        if damage > 0 {
+            onAudioCue(.attackHit)
+        }
+    }
+
+    private func animationDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        guard abs(dx) > 0.01 || abs(dy) > 0.01 else { return nil }
+        if abs(dx) > abs(dy) {
+            return dx >= 0 ? .right : .left
+        }
+        return dy >= 0 ? .up : .down
     }
 
     private func movedPoint(from start: CGPoint, toward end: CGPoint, distance: CGFloat) -> CGPoint {

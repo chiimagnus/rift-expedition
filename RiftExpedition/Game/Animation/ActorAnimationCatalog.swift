@@ -8,8 +8,12 @@ struct ActorAnimationCatalog: Decodable, Equatable, Sendable {
     var actions: [String: ActorAnimationAction]
     var sprites: [ActorAnimationSprite]
 
+    static func resourceURL(bundle: Bundle = .main) -> URL? {
+        bundle.url(forResource: "actor-animations", withExtension: "json", subdirectory: "Assets")
+    }
+
     static func load(bundle: Bundle = .main) -> ActorAnimationCatalog? {
-        guard let url = bundle.url(forResource: "actor-animations", withExtension: "json", subdirectory: "Assets") else {
+        guard let url = resourceURL(bundle: bundle) else {
             return nil
         }
         do {
@@ -26,6 +30,10 @@ struct ActorAnimationCatalog: Decodable, Equatable, Sendable {
 
     func sprite(for visualID: String) -> ActorAnimationSprite? {
         sprites.first { $0.visualID == visualID }
+    }
+
+    func sheetPath(for visualID: String) -> String? {
+        sprite(for: visualID)?.sheet
     }
 
     func frames(

@@ -20,6 +20,14 @@ final class ActorVisualIDResolverTests: XCTestCase {
         XCTAssertEqual(visualID(id: "unknown", kind: .npc), "npc_mayor")
     }
 
+    func testMapNPCIDsResolveWithoutBuildingActors() {
+        XCTAssertEqual(ActorVisualIDResolver.npcVisualID(actorID: "mayor"), "npc_mayor")
+        XCTAssertEqual(ActorVisualIDResolver.npcVisualID(actorID: "elder"), "npc_mayor")
+        XCTAssertEqual(ActorVisualIDResolver.npcVisualID(actorID: "fiance"), "npc_fiance")
+        XCTAssertEqual(ActorVisualIDResolver.npcVisualID(actorID: "gate_guard"), "npc_gate_guard")
+        XCTAssertEqual(ActorVisualIDResolver.npcVisualID(actorID: "healer"), "npc_healer")
+    }
+
     func testEnemyIDsResolveToVisualIDs() {
         XCTAssertEqual(visualID(kind: .humanEnemy, classID: "warrior", level: 1), "enemy_human_melee")
         XCTAssertEqual(visualID(kind: .humanEnemy, classID: "archer", level: 1), "enemy_human_ranged")

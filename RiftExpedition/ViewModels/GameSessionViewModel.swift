@@ -63,13 +63,14 @@ final class GameSessionViewModel {
     }
 
     func startNewGame() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .partyCreation
         statusText = "选择两名冒险者后进入第一章。"
     }
 
     func enterExploration() {
-        audioService.playAreaBGM()
+        audioService.playBGM(for: currentAreaID)
+        audioService.playAmbience(for: currentAreaID)
         appState = .exploration
         statusText = "点击地图移动队长。"
     }
@@ -93,7 +94,7 @@ final class GameSessionViewModel {
     }
 
     func openSaveLoad() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         if saveLoadViewModel == nil {
             saveLoadViewModel = SaveLoadViewModel(
                 store: saveGameStore,
@@ -109,7 +110,7 @@ final class GameSessionViewModel {
     }
 
     func openDialog(_ dialogID: String) {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         if dialogViewModel.start(dialogID: dialogID) {
             appState = .dialogue
         } else {
@@ -118,17 +119,17 @@ final class GameSessionViewModel {
     }
 
     func openQuestLog() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .questLog
     }
 
     func openInventory() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .inventory
     }
 
     func openSettings() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .settings
     }
 
@@ -182,7 +183,7 @@ final class GameSessionViewModel {
 
     func completeChapter() {
         let didAutosave = performSafeAutosave()
-        audioService.play(.click)
+        audioService.play(.uiClick)
         battleViewModel = nil
         appState = .chapterComplete
         statusText = didAutosave
@@ -223,7 +224,7 @@ final class GameSessionViewModel {
     }
 
     func returnToMainMenu() {
-        audioService.stopAreaBGM()
+        audioService.stopBGM()
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
@@ -233,7 +234,7 @@ final class GameSessionViewModel {
     }
 
     private func startBattle(_ encounter: EncounterDefinition, trigger: MapEncounterTrigger?) {
-        audioService.play(.attack)
+        audioService.play(.battleStart)
         battleViewModel = BattleViewModel(
             state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
             skills: skillDefinitions,
@@ -241,7 +242,8 @@ final class GameSessionViewModel {
             itemDefinitions: itemDefinitions,
             initialPositions: battleInitialPositions(for: encounter, trigger: trigger),
             surfaces: battleSurfaces(),
-            hasLineOfSight: battleLineOfSight
+            hasLineOfSight: battleLineOfSight,
+            onAudioCue: { [weak self] cue in self?.audioService.play(cue) }
         )
         appState = .battle
         statusText = "遭遇已触发。"
@@ -432,6 +434,10 @@ final class GameSessionViewModel {
     private func loadArea(_ areaID: String, spawnID: String) {
         currentAreaID = areaID
         currentSpawnID = spawnID
+        if appState == .exploration {
+            audioService.playBGM(for: areaID)
+            audioService.playAmbience(for: areaID)
+        }
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: areaID, bundle: contentBundle)
         configureEncounterTriggers()
         // 之前这里完全没有把地图的障碍物同步给 explorationController，所以 navObstacle
@@ -533,6 +539,7 @@ final class GameSessionViewModel {
                 itemDefinitions: itemDefinitions
             )
             collectedMapItemKeys.insert(key)
+            audioService.play(.chestOpen)
             statusText = "拾取了 \(itemName(item.itemID))。"
         } else {
             explorationController.setLeaderDestination(item.position)

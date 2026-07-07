@@ -11,6 +11,22 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertEqual(scene.size, GameScene.sceneSize)
     }
 
+    func testSceneCanLoadAnimationCatalogOrFallBackToActorPlaceholders() throws {
+        XCTAssertNotNil(ActorAnimationCatalog.resourceURL())
+        XCTAssertNotNil(ActorAnimationCatalog.load())
+
+        let sceneWithCatalog = GameScene(size: GameScene.sceneSize)
+        sceneWithCatalog.didMove(to: SKView(frame: CGRect(origin: .zero, size: sceneWithCatalog.size)))
+        XCTAssertNotNil(sceneWithCatalog.childNode(withName: "worldLayer"))
+
+        let sceneWithoutCatalog = GameScene(size: GameScene.sceneSize)
+        sceneWithoutCatalog.assetBundle = Bundle(for: Self.self)
+        XCTAssertNil(ActorAnimationCatalog.resourceURL(bundle: sceneWithoutCatalog.assetBundle))
+        XCTAssertNil(ActorAnimationCatalog.load(bundle: sceneWithoutCatalog.assetBundle))
+        sceneWithoutCatalog.didMove(to: SKView(frame: CGRect(origin: .zero, size: sceneWithoutCatalog.size)))
+        XCTAssertNotNil(sceneWithoutCatalog.childNode(withName: "worldLayer"))
+    }
+
     func testSceneCentersLoadedMapInWorldLayer() throws {
         let scene = GameScene(size: CGSize(width: 1600, height: 900))
         scene.scaleMode = .resizeFill
@@ -105,5 +121,97 @@ final class AppSmokeTests: XCTestCase {
         // 这是为了防止「探索模式下队伍没有立绘」这个 bug 再次出现的回归测试：队伍标记
         // 必须真的带着一个职业立绘的子节点，而不是光秃秃一个色圈。
         XCTAssertNotNil(partyNode.childNode(withName: "partySprite_player_1"))
+    }
+
+    func testExplorationPartyReusesNodeAndPlaysIdleThenWalkAnimation() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        let idleMember = PartyMemberPosition(
+            actorID: "player_1",
+            displayName: "战士1",
+            classID: "warrior",
+            position: CGPoint(x: 160, y: 320),
+            target: nil,
+            facing: .down
+        )
+        scene.renderParty([idleMember], leaderID: "player_1")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let partyNode = try XCTUnwrap(worldLayer.childNode(withName: "party_player_1"))
+        let idleSprite = try XCTUnwrap(partyNode.childNode(withName: "partySprite_player_1") as? SKSpriteNode)
+        XCTAssertNotNil(idleSprite.action(forKey: "actorAnimation"))
+
+        let movingMember = PartyMemberPosition(
+            actorID: "player_1",
+            displayName: "战士1",
+            classID: "warrior",
+            position: CGPoint(x: 180, y: 320),
+            target: CGPoint(x: 220, y: 320),
+            facing: .right
+        )
+        scene.renderParty([movingMember], leaderID: "player_1")
+
+        let updatedPartyNode = try XCTUnwrap(worldLayer.childNode(withName: "party_player_1"))
+        let walkSprite = try XCTUnwrap(updatedPartyNode.childNode(withName: "partySprite_player_1") as? SKSpriteNode)
+        XCTAssertTrue(partyNode === updatedPartyNode)
+        XCTAssertNotNil(walkSprite.action(forKey: "actorAnimation"))
+    }
+
+    func testBattleRenderReusesActorNodesAndDoesNotDuplicateEffectEvents() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+        let snapshot = BattleSceneSnapshot(
+            actors: [
+                BattleActorMarker(
+                    id: "player",
+                    displayName: "战士",
+                    factionName: "队友",
+                    visualID: "actor_warrior",
+                    facing: .right,
+                    baseAction: .idle,
+                    position: CGPoint(x: 100, y: 100),
+                    health: 10,
+                    maxHealth: 12,
+                    actionPoints: 3,
+                    maxActionPoints: 4,
+                    isActive: true,
+                    isTargetable: false,
+                    isDefeated: false
+                )
+            ],
+            surfaces: [],
+            activeActorID: "player",
+            selectedAction: .move,
+            moveRadius: 84,
+            presentationEvents: [
+                BattlePresentationEvent(
+                    id: 1,
+                    actorID: "player",
+                    action: .walk,
+                    direction: .right,
+                    targetActorID: nil,
+                    effectPoint: CGPoint(x: 128, y: 100)
+                )
+            ]
+        )
+
+        scene.renderBattle(snapshot)
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let battleLayer = try XCTUnwrap(worldLayer.childNode(withName: "battleLayer"))
+        let actorNode = try XCTUnwrap(battleLayer.childNode(withName: "battleActor_player"))
+        let spriteNode = try XCTUnwrap(actorNode.childNode(withName: "battleActorSprite_player"))
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleActor_player" }.count, 1)
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_1" }.count, 1)
+        XCTAssertNotNil(spriteNode.action(forKey: "actorAnimation"))
+
+        scene.renderBattle(snapshot)
+
+        let updatedActorNode = try XCTUnwrap(battleLayer.childNode(withName: "battleActor_player"))
+        let updatedSpriteNode = try XCTUnwrap(updatedActorNode.childNode(withName: "battleActorSprite_player"))
+        XCTAssertTrue(actorNode === updatedActorNode)
+        XCTAssertTrue(spriteNode === updatedSpriteNode)
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleActor_player" }.count, 1)
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_1" }.count, 1)
     }
 }

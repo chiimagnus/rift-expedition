@@ -35,30 +35,21 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 目录：
 
 - `Assets/Tilesets/`：首章村庄、野外、洞穴 tileset。
-- `Assets/Sprites/`：竖切使用的独立角色 / 敌人 / 物件 sprite。
-- `Assets/Characters/`：首章角色 spritesheet（玩家职业、村民、人类敌人、动物、污染怪物）。
+- `Assets/Sprites/`：地图物件 sprite。
+- `Assets/Characters/`：正式角色动画 spritesheet（当前已入库玩家职业 `*_anim.png`）。
 - `Assets/Icons/`：技能、消耗品、宝箱、元素矿图标。
 - `Assets/Audio/`：UI、战斗、探索、洞穴音效与环境循环（加载路径 `Assets/Audio`）。
 
 | 资源组 | 来源 | License | 作者 |
 | --- | --- | --- | --- |
 | chapter1 village/wilds/cave tilesets | 本地程序化绘制 | self-made | Rift Expedition project |
-| village/human/beast character spritesheets | 本地程序化绘制 | self-made | Rift Expedition project |
+| actor animation spritesheets | AI 生成后本地规范化 | ai-static | AI-generated, post-processed by Rift Expedition project |
 | skill/item icons | 本地程序化绘制 | self-made | Rift Expedition project |
 | WAV cues / ambience loops | 本地程序化合成 | self-made | Rift Expedition project |
 
-> 已移除 `spritesheet.party_classes`（`Assets/Characters/party_classes.png`）：与已在用的 `Assets/Sprites/actor_warrior|archer|mage|rogue.png` 表达同一概念（玩家职业立绘）且代码从未引用过，属于被早期草稿资源取代后遗留的冗余登记，非当前正式资源。
+P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cave_theme_loop.wav` 已按 `self-made` 登记为本地程序化合成循环。2026-07-08 核对外部 CC0 候选时未找到比现有资源明显更合适、且授权/免署名口径更稳定的替换项，因此本轮保留现有三条区域 BGM；日后替换必须重新登记具体来源 URL、作者、license 与入库日期。
 
-### 多帧 spritesheet 的帧位约定
-
-`human_enemies.png` 与 `beasts_and_monsters.png` 均为 3 帧横向长条（每帧 64×64），由 `GameScene.slicedTexture` 按帧位切片、由 `BattleViewModel.spriteName(forHumanEnemy:)` / `spriteName(forBeast:)` 选帧，用于让敌人立绘区别于玩家职业立绘、并按威胁分层：
-
-| Spritesheet | 帧 0 | 帧 1 | 帧 2 |
-| --- | --- | --- | --- |
-| `human_enemies.png` | 远程（`classID == archer`，等级 < 4） | 近战（其他人类敌人，等级 < 4） | 精英（等级 ≥ 4，如首章高潮战「顾家暗卫」） |
-| `beasts_and_monsters.png` | 普通动物（`kind == animal`） | 受污染洞穴生物（`kind == monster`，等级 < 3） | 裂隙腐化生物（`kind == monster`，等级 ≥ 3，如「受惊裂隙幼体」） |
-
-新增人类敌人 / 怪物时无需新增 PNG：按 `classID`/`kind`/`level` 落入对应分层即可；只有当分层本身不够用（例如需要第 4 种视觉威胁等级）时才需要扩展 spritesheet 帧数或登记新资源。
+> 已移除旧静态角色资源、旧 3 帧角色 sheet 与旧单曲 BGM；这些资源不再作为正式资源登记。角色视觉运行时以 `actor-animations.json` 和 `Assets/Characters/*_anim.png` 为准；缺动画时只显示最小安全占位并记录 assets 日志。
 
 ### Actor animation spritesheet contract
 
@@ -112,3 +103,4 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 - 资源清单：检查 `assets-manifest.json` 每个条目的 `license`、`source`、`path`。
 - 地图预览 / 校验：运行 validator（预览与报告为生成产物，不入库，见 [`tiled-map-contract.md`](tiled-map-contract.md)）。
 - 禁止提交文件名或 id 含 `placeholder`、`temp`、`graybox` 的正式资源。
+- 最终验收：正式角色动画资源和音频资源必须通过 validator；旧静态角色资源已清理，正式角色视觉以 `actor-animations.json` 为准。

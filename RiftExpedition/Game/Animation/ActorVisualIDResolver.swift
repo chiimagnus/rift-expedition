@@ -29,7 +29,7 @@ enum ActorVisualIDResolver {
         }
     }
 
-    private static func npcVisualID(actorID: String) -> String {
+    static func npcVisualID(actorID: String) -> String {
         switch actorID {
         case "elder", "mayor":
             "npc_mayor"

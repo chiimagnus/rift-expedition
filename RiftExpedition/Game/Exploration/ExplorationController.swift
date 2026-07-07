@@ -8,9 +8,7 @@ struct PartyMemberPosition: Equatable {
     var classID: String?
     var position: CGPoint
     var target: CGPoint?
-    /// 上一次有效水平移动后面朝的方向，GameScene 用它来左右镜像翻转立绘，
-    /// 这样角色向左走时不会看起来像是倒退着走路。
-    var facingRight: Bool = true
+    var facing: ActorAnimationDirection = .right
     /// 领队点击目的地后经由 `NavigationService` 算出的剩余转折点（不包括 `target` 本身）。
     var waypoints: [CGPoint] = []
 }
@@ -97,8 +95,8 @@ struct ExplorationController: Equatable {
             let desired = movedPoint(from: previousPosition, toward: target, maxDistance: step)
             let resolved = resolvedPosition(from: previousPosition, desired: desired)
             members[index].position = resolved
-            if abs(resolved.x - previousPosition.x) > 0.01 {
-                members[index].facingRight = resolved.x >= previousPosition.x
+            if let facing = facingDirection(from: previousPosition, to: resolved) {
+                members[index].facing = facing
             }
 
             if distance(from: members[index].position, to: target) < 1 {
@@ -156,6 +154,16 @@ struct ExplorationController: Equatable {
         if !isBlocked(slideY) { return slideY }
 
         return start
+    }
+
+    private func facingDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        guard abs(dx) > 0.01 || abs(dy) > 0.01 else { return nil }
+        if abs(dx) > abs(dy) {
+            return dx >= 0 ? .right : .left
+        }
+        return dy >= 0 ? .up : .down
     }
 
     private func isBlocked(_ point: CGPoint) -> Bool {
