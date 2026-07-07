@@ -63,7 +63,7 @@ final class GameSessionViewModel {
     }
 
     func startNewGame() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .partyCreation
         statusText = "选择两名冒险者后进入第一章。"
     }
@@ -93,7 +93,7 @@ final class GameSessionViewModel {
     }
 
     func openSaveLoad() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         if saveLoadViewModel == nil {
             saveLoadViewModel = SaveLoadViewModel(
                 store: saveGameStore,
@@ -109,7 +109,7 @@ final class GameSessionViewModel {
     }
 
     func openDialog(_ dialogID: String) {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         if dialogViewModel.start(dialogID: dialogID) {
             appState = .dialogue
         } else {
@@ -118,17 +118,17 @@ final class GameSessionViewModel {
     }
 
     func openQuestLog() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .questLog
     }
 
     func openInventory() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .inventory
     }
 
     func openSettings() {
-        audioService.play(.click)
+        audioService.play(.uiClick)
         appState = .settings
     }
 
@@ -182,7 +182,7 @@ final class GameSessionViewModel {
 
     func completeChapter() {
         let didAutosave = performSafeAutosave()
-        audioService.play(.click)
+        audioService.play(.uiClick)
         battleViewModel = nil
         appState = .chapterComplete
         statusText = didAutosave
@@ -233,7 +233,7 @@ final class GameSessionViewModel {
     }
 
     private func startBattle(_ encounter: EncounterDefinition, trigger: MapEncounterTrigger?) {
-        audioService.play(.attack)
+        audioService.play(.battleStart)
         battleViewModel = BattleViewModel(
             state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
             skills: skillDefinitions,
@@ -241,7 +241,8 @@ final class GameSessionViewModel {
             itemDefinitions: itemDefinitions,
             initialPositions: battleInitialPositions(for: encounter, trigger: trigger),
             surfaces: battleSurfaces(),
-            hasLineOfSight: battleLineOfSight
+            hasLineOfSight: battleLineOfSight,
+            onAudioCue: { [weak self] cue in self?.audioService.play(cue) }
         )
         appState = .battle
         statusText = "遭遇已触发。"
@@ -533,6 +534,7 @@ final class GameSessionViewModel {
                 itemDefinitions: itemDefinitions
             )
             collectedMapItemKeys.insert(key)
+            audioService.play(.chestOpen)
             statusText = "拾取了 \(itemName(item.itemID))。"
         } else {
             explorationController.setLeaderDestination(item.position)

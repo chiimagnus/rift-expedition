@@ -69,6 +69,7 @@ final class BattleViewModel {
     private let skillsByID: [String: SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
     private let hasLineOfSight: (CGPoint, CGPoint) -> Bool
+    private let onAudioCue: (AudioCue) -> Void
     private var random = SeededRandomSource(seed: 20260706)
 
     var selectedAction: BattleActionChoice = .move
@@ -88,7 +89,8 @@ final class BattleViewModel {
         itemDefinitions: [ItemDefinition] = [],
         initialPositions: [String: CGPoint] = [:],
         surfaces: [BattleSurfaceMarker] = [],
-        hasLineOfSight: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true }
+        hasLineOfSight: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true },
+        onAudioCue: @escaping (AudioCue) -> Void = { _ in }
     ) {
         engine = BattleEngine(state: state)
         skillDefinitions = skills
@@ -103,6 +105,7 @@ final class BattleViewModel {
         self.inventory = inventory
         self.surfaces = surfaces
         self.hasLineOfSight = hasLineOfSight
+        self.onAudioCue = onAudioCue
     }
 
     var state: BattleState {
@@ -453,6 +456,7 @@ final class BattleViewModel {
             isAlly: isAlly(target.faction, of: actor.faction)
         )
         let beforeHealth = target.stats.health
+        let actionBeforeResolution = selectedAction
 
         do {
             let resolution = try engine.useSkill(
@@ -474,6 +478,7 @@ final class BattleViewModel {
                 didDodge: resolution.didDodge,
                 damage: damage
             )
+            emitAudioCues(action: actionBeforeResolution, damage: damage)
 
             if resolution.didDodge {
                 statusText = "\(target.displayName) 闪避了 \(label)。"
@@ -666,6 +671,17 @@ final class BattleViewModel {
             targetActorID: actorID,
             effectPoint: targetPosition
         )
+    }
+
+    private func emitAudioCues(action: BattleActionChoice, damage: Int) {
+        if case .consumable = action {
+            onAudioCue(.healDrink)
+        } else {
+            onAudioCue(.skillCast)
+        }
+        if damage > 0 {
+            onAudioCue(.attackHit)
+        }
     }
 
     private func animationDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {

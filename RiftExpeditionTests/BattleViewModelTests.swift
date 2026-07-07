@@ -86,6 +86,7 @@ final class BattleViewModelTests: XCTestCase {
     }
 
     func testSelectingSkillDoesNotSpendUntilTargetIsClicked() {
+        var cues: [AudioCue] = []
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
                 actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
@@ -95,7 +96,8 @@ final class BattleViewModelTests: XCTestCase {
             initialPositions: [
                 "player": CGPoint(x: 100, y: 100),
                 "boar": CGPoint(x: 120, y: 100)
-            ]
+            ],
+            onAudioCue: { cues.append($0) }
         )
 
         viewModel.performSkill(id: "heavy_slash")
@@ -125,6 +127,7 @@ final class BattleViewModelTests: XCTestCase {
                 effectPoint: CGPoint(x: 120, y: 100)
             )
         ])
+        XCTAssertEqual(cues, [.skillCast, .attackHit])
     }
 
     func testMoveToClickedPointSpendsAPAndUpdatesPosition() {
@@ -176,6 +179,7 @@ final class BattleViewModelTests: XCTestCase {
     }
 
     func testConsumableUsesSkillEffectAndDecrementsInventory() {
+        var cues: [AudioCue] = []
         let potion = ItemDefinition(
             id: "minor_healing_draught",
             displayName: "止血药剂",
@@ -193,7 +197,8 @@ final class BattleViewModelTests: XCTestCase {
             initialPositions: [
                 "player": CGPoint(x: 100, y: 100),
                 "boar": CGPoint(x: 220, y: 100)
-            ]
+            ],
+            onAudioCue: { cues.append($0) }
         )
 
         viewModel.selectConsumable(id: "minor_healing_draught")
@@ -213,6 +218,7 @@ final class BattleViewModelTests: XCTestCase {
                 effectPoint: CGPoint(x: 100, y: 100)
             )
         ])
+        XCTAssertEqual(cues, [.healDrink])
     }
 
     func testDodgedPlayerSkillEmitsAttackWithoutHurt() {

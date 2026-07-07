@@ -2,10 +2,14 @@ import AVFoundation
 import Observation
 
 enum AudioCue: String, CaseIterable {
-    case click = "ui_click"
-    case attack = "attack_hit"
-    case skill = "skill_cast"
+    case uiClick = "ui_click"
+    case attackHit = "attack_hit"
+    case skillCast = "skill_cast"
     case areaBGM = "area_bgm_loop"
+    case battleStart = "battle_start"
+    case chestOpen = "chest_open"
+    case healDrink = "heal_drink"
+    case caveDrip = "cave_drip"
 }
 
 @MainActor
