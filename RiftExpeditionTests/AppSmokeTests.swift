@@ -185,7 +185,6 @@ final class AppSmokeTests: XCTestCase {
             activeActorID: "player",
             selectedAction: .move,
             moveRadius: 84,
-            lastEffectPoint: nil,
             presentationEvents: [
                 BattlePresentationEvent(
                     id: 1,

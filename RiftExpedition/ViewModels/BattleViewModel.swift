@@ -55,7 +55,6 @@ struct BattleSceneSnapshot: Equatable {
     var activeActorID: String?
     var selectedAction: BattleActionChoice
     var moveRadius: CGFloat
-    var lastEffectPoint: CGPoint?
     var presentationEvents: [BattlePresentationEvent]
 }
 
@@ -79,7 +78,6 @@ final class BattleViewModel {
     var actorFacings: [String: ActorAnimationDirection]
     var surfaces: [BattleSurfaceMarker]
     var inventory: PartyInventory
-    var lastEffectPoint: CGPoint?
     private var nextPresentationEventID = 1
     private var presentationEvents: [BattlePresentationEvent] = []
 
@@ -180,7 +178,6 @@ final class BattleViewModel {
             activeActorID: state.activeActorID,
             selectedAction: selectedAction,
             moveRadius: moveRadius,
-            lastEffectPoint: lastEffectPoint,
             presentationEvents: presentationEvents
         )
     }
@@ -245,7 +242,6 @@ final class BattleViewModel {
             try engine.move(actorID: actor.id, distance: distance)
             actorPositions[actor.id] = destination
             emitMovementEvent(actorID: actor.id, from: start, to: destination)
-            lastEffectPoint = destination
             statusText = "\(actor.displayName) 移动，消耗 \(APRules.movementCost(forDistance: distance)) AP。"
             targetPrompt = "可继续移动、选择技能或结束回合。"
         } catch {
@@ -466,7 +462,6 @@ final class BattleViewModel {
                 context: context,
                 random: &random
             )
-            lastEffectPoint = targetPosition
             let afterHealth = state.actor(id: targetID)?.stats.health ?? beforeHealth
             let damage = max(0, beforeHealth - afterHealth)
             let surfaceText = applyCreatedSurfaces(resolution.createdSurfaces, at: targetPosition, targetID: targetID)
