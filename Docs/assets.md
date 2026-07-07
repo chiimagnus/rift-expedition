@@ -60,6 +60,30 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 新增人类敌人 / 怪物时无需新增 PNG：按 `classID`/`kind`/`level` 落入对应分层即可；只有当分层本身不够用（例如需要第 4 种视觉威胁等级）时才需要扩展 spritesheet 帧数或登记新资源。
 
+### Actor animation spritesheet contract
+
+角色动画配置写在 `RiftExpedition/Resources/Assets/actor-animations.json`。每个可动画角色登记一个稳定 `visual_id`，对应 sheet 路径固定为 `Assets/Characters/<visual_id>_anim.png`，并且该 PNG 必须同步登记在 `assets-manifest.json`，类型为 `spritesheet`。
+
+每张角色动画 sheet 固定为 `1152x384`，单帧 `96x96`，4 行 12 列。行顺序从上到下固定为：
+
+| Row | Direction |
+| --- | --- |
+| 0 | `down` |
+| 1 | `left` |
+| 2 | `right` |
+| 3 | `up` |
+
+每个动作固定 3 帧，列位为：
+
+| Columns | Action |
+| --- | --- |
+| `0...2` | `idle` |
+| `3...5` | `walk` |
+| `6...8` | `attack` |
+| `9...11` | `hurt` |
+
+`elder` 继续复用 `npc_mayor` 的视觉资源；`notice_board` 是交互物，不进入角色动画表。
+
 ## 3. 替换规则（Guide）
 
 - 可替换为 CC0 或等价可商用免署名资源（例如面向 RPG 的 tileset / spritesheet）。
