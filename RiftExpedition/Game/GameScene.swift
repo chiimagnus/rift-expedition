@@ -26,6 +26,8 @@ final class GameScene: SKScene {
     private var partyNodes: [String: SKShapeNode] = [:]
     private var staticObjectLayer: SKNode?
     private var battleLayer: SKNode?
+    private var battleActorNodes: [String: SKNode] = [:]
+    private var renderedBattleEffectIDs: Set<Int> = []
     private var textureCache: [String: SKTexture] = [:]
     private var animationFrameCache: [String: [SKTexture]] = [:]
     private var nodeAnimationKeys: [String: String] = [:]
@@ -122,10 +124,49 @@ final class GameScene: SKScene {
     }
 
     func renderBattle(_ snapshot: BattleSceneSnapshot?) {
-        battleLayer?.removeFromParent()
-        battleLayer = nil
-        guard let snapshot else { return }
+        guard let snapshot else {
+            battleLayer?.removeFromParent()
+            battleLayer = nil
+            battleActorNodes.removeAll()
+            renderedBattleEffectIDs.removeAll()
+            return
+        }
 
+        let layer = battleLayer ?? makeBattleLayer()
+        for child in layer.children
+        where child.name?.hasPrefix("battleActor_") != true
+            && child.name?.hasPrefix("battleEffect_") != true {
+            child.removeFromParent()
+        }
+
+        for surface in snapshot.surfaces {
+            layer.addChild(makeSurfaceNode(surface))
+        }
+        if let activeActor = snapshot.actors.first(where: { $0.id == snapshot.activeActorID }) {
+            layer.addChild(makeMoveRangeNode(center: activeActor.position, radius: snapshot.moveRadius))
+        }
+
+        let actorIDs = Set(snapshot.actors.map(\.id))
+        for staleID in battleActorNodes.keys where !actorIDs.contains(staleID) {
+            battleActorNodes[staleID]?.removeFromParent()
+            battleActorNodes[staleID] = nil
+        }
+        for actor in snapshot.actors {
+            let node = battleActorNodes[actor.id] ?? makeBattleActorNode(actor)
+            updateBattleActorNode(node, actor: actor)
+            if node.parent == nil {
+                layer.addChild(node)
+            }
+            battleActorNodes[actor.id] = node
+        }
+        for event in snapshot.presentationEvents {
+            guard let point = event.effectPoint, !renderedBattleEffectIDs.contains(event.id) else { continue }
+            renderedBattleEffectIDs.insert(event.id)
+            layer.addChild(makeEffectNode(at: point, eventID: event.id))
+        }
+    }
+
+    private func makeBattleLayer() -> SKNode {
         let layer = SKNode()
         layer.name = "battleLayer"
         // 这里把数值调得比 SKTiled 内部图层可能用到的 zPosition 都高很多
@@ -133,21 +174,7 @@ final class GameScene: SKScene {
         layer.zPosition = 700
         worldLayer.addChild(layer)
         battleLayer = layer
-
-        // ponytail（有意为之的技术债）：目前战斗里角色很少，每次整体重建这层显示内容
-        // 比费劲做「按 key 找差异只更新变化部分」更简单清楚。
-        for surface in snapshot.surfaces {
-            layer.addChild(makeSurfaceNode(surface))
-        }
-        if let activeActor = snapshot.actors.first(where: { $0.id == snapshot.activeActorID }) {
-            layer.addChild(makeMoveRangeNode(center: activeActor.position, radius: snapshot.moveRadius))
-        }
-        for actor in snapshot.actors {
-            layer.addChild(makeBattleActorNode(actor))
-        }
-        if let point = snapshot.lastEffectPoint {
-            layer.addChild(makeEffectNode(at: point))
-        }
+        return layer
     }
 
     func loadMap(areaID: String) {
@@ -309,10 +336,29 @@ final class GameScene: SKScene {
     private func makeBattleActorNode(_ actor: BattleActorMarker) -> SKNode {
         let container = SKNode()
         container.name = "battleActor_\(actor.id)"
+
+        let sprite = SKSpriteNode(texture: texture(named: actor.spriteName))
+        sprite.name = "battleActorSprite_\(actor.id)"
+        sprite.size = CGSize(width: 58, height: 58)
+        sprite.zPosition = 1
+        container.addChild(sprite)
+        return container
+    }
+
+    private func updateBattleActorNode(_ container: SKNode, actor: BattleActorMarker) {
         container.position = actor.position
         container.alpha = actor.isDefeated ? 0.42 : 1
+        for child in container.children where child.name?.hasPrefix("battleActorSprite_") != true {
+            child.removeFromParent()
+        }
+        if let sprite = container.childNode(withName: "battleActorSprite_\(actor.id)") as? SKSpriteNode {
+            sprite.texture = texture(named: actor.spriteName)
+            sprite.size = CGSize(width: 58, height: 58)
+            sprite.zPosition = 1
+        }
 
         let ring = SKShapeNode(circleOfRadius: actor.isActive ? 34 : 30)
+        ring.name = "battleActorRing_\(actor.id)"
         ring.fillColor = actor.isActive
             ? SKColor(red: 0.84, green: 0.73, blue: 0.42, alpha: 0.20)
             : SKColor.black.withAlphaComponent(0.28)
@@ -323,12 +369,8 @@ final class GameScene: SKScene {
         ring.zPosition = -1
         container.addChild(ring)
 
-        let sprite = SKSpriteNode(texture: texture(named: actor.spriteName))
-        sprite.size = CGSize(width: 58, height: 58)
-        sprite.zPosition = 1
-        container.addChild(sprite)
-
         let healthBack = SKShapeNode(rectOf: CGSize(width: 52, height: 6), cornerRadius: 3)
+        healthBack.name = "battleActorHealthBack_\(actor.id)"
         healthBack.position = CGPoint(x: 0, y: -40)
         healthBack.fillColor = SKColor.black.withAlphaComponent(0.65)
         healthBack.strokeColor = .clear
@@ -336,18 +378,19 @@ final class GameScene: SKScene {
 
         let healthRatio = CGFloat(max(0, actor.health)) / CGFloat(max(actor.maxHealth, 1))
         let health = SKShapeNode(rect: CGRect(x: -26, y: -43, width: 52 * healthRatio, height: 6), cornerRadius: 3)
+        health.name = "battleActorHealth_\(actor.id)"
         health.fillColor = SKColor(red: 0.76, green: 0.18, blue: 0.16, alpha: 1)
         health.strokeColor = .clear
         container.addChild(health)
 
         let label = SKLabelNode(text: actor.displayName)
+        label.name = "battleActorLabel_\(actor.id)"
         label.fontName = "PingFangSC-Semibold"
         label.fontSize = 12
         label.fontColor = .white
         label.position = CGPoint(x: 0, y: 42)
         label.verticalAlignmentMode = .center
         container.addChild(label)
-        return container
     }
 
     private func makeMoveRangeNode(center: CGPoint, radius: CGFloat) -> SKNode {
@@ -361,9 +404,9 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func makeEffectNode(at point: CGPoint) -> SKNode {
+    private func makeEffectNode(at point: CGPoint, eventID: Int? = nil) -> SKNode {
         let node = SKShapeNode(circleOfRadius: 18)
-        node.name = "battleEffect"
+        node.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
         node.position = point
         node.fillColor = SKColor(red: 1.0, green: 0.46, blue: 0.14, alpha: 0.42)
         node.strokeColor = SKColor(red: 1.0, green: 0.86, blue: 0.38, alpha: 0.9)

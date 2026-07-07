@@ -157,4 +157,62 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertTrue(partyNode === updatedPartyNode)
         XCTAssertNotNil(walkSprite.action(forKey: "actorAnimation"))
     }
+
+    func testBattleRenderReusesActorNodesAndDoesNotDuplicateEffectEvents() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+        let snapshot = BattleSceneSnapshot(
+            actors: [
+                BattleActorMarker(
+                    id: "player",
+                    displayName: "战士",
+                    factionName: "队友",
+                    spriteName: "actor_warrior",
+                    visualID: "actor_warrior",
+                    facing: .right,
+                    baseAction: .idle,
+                    position: CGPoint(x: 100, y: 100),
+                    health: 10,
+                    maxHealth: 12,
+                    actionPoints: 3,
+                    maxActionPoints: 4,
+                    isActive: true,
+                    isTargetable: false,
+                    isDefeated: false
+                )
+            ],
+            surfaces: [],
+            activeActorID: "player",
+            selectedAction: .move,
+            moveRadius: 84,
+            lastEffectPoint: nil,
+            presentationEvents: [
+                BattlePresentationEvent(
+                    id: 1,
+                    actorID: "player",
+                    action: .walk,
+                    direction: .right,
+                    targetActorID: nil,
+                    effectPoint: CGPoint(x: 128, y: 100)
+                )
+            ]
+        )
+
+        scene.renderBattle(snapshot)
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let battleLayer = try XCTUnwrap(worldLayer.childNode(withName: "battleLayer"))
+        let actorNode = try XCTUnwrap(battleLayer.childNode(withName: "battleActor_player"))
+        let spriteNode = try XCTUnwrap(actorNode.childNode(withName: "battleActorSprite_player"))
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleActor_player" }.count, 1)
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_1" }.count, 1)
+
+        scene.renderBattle(snapshot)
+
+        let updatedActorNode = try XCTUnwrap(battleLayer.childNode(withName: "battleActor_player"))
+        let updatedSpriteNode = try XCTUnwrap(updatedActorNode.childNode(withName: "battleActorSprite_player"))
+        XCTAssertTrue(actorNode === updatedActorNode)
+        XCTAssertTrue(spriteNode === updatedSpriteNode)
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleActor_player" }.count, 1)
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_1" }.count, 1)
+    }
 }
