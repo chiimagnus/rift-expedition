@@ -27,7 +27,7 @@ struct CharacterSheetView: View {
 
                 Spacer(minLength: 4)
 
-                RiftHumanoidSilhouette(tint: RiftClassIconography.tint(for: actor.classID))
+                RiftActorPortrait(classID: actor.classID, size: 96)
 
                 Spacer(minLength: 4)
 
