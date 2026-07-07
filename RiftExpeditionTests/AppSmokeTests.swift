@@ -188,9 +188,9 @@ final class AppSmokeTests: XCTestCase {
                 BattlePresentationEvent(
                     id: 1,
                     actorID: "player",
-                    action: .walk,
+                    action: .attack,
                     direction: .right,
-                    targetActorID: nil,
+                    targetActorID: "player",
                     effectPoint: CGPoint(x: 128, y: 100)
                 )
             ]

@@ -612,7 +612,7 @@ final class BattleViewModel {
             action: .walk,
             direction: direction,
             targetActorID: nil,
-            effectPoint: end
+            effectPoint: nil
         )
     }
 

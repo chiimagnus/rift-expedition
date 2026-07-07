@@ -151,7 +151,7 @@ final class BattleViewModelTests: XCTestCase {
             action: .walk,
             direction: .right,
             targetActorID: nil,
-            effectPoint: CGPoint(x: 156, y: 100)
+            effectPoint: nil
         ))
     }
 
