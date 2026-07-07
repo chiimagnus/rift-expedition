@@ -5,12 +5,15 @@ import XCTest
 
 @MainActor
 final class GameSessionViewModelTests: XCTestCase {
-    func testLeaderEnteringExitChangesArea() {
+    func testLeaderEnteringExitChangesArea() throws {
         let session = GameSessionViewModel()
         session.partyCreationViewModel.toggleSelection("warrior")
         session.partyCreationViewModel.toggleSelection("mage")
         session.startChapterWithSelectedParty()
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 40, y: 320))
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_square", to: "village_riverside")
+        )
 
         session.gameScene(GameScene(size: .init(width: 1, height: 1)), didAdvance: 1.0 / 60.0)
 
@@ -47,27 +50,38 @@ final class GameSessionViewModelTests: XCTestCase {
         let accept = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "bitterroot_medicine" })
         XCTAssertEqual(session.dialogViewModel.choose(accept), .none)
 
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 40, y: 320))
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_square", to: "village_riverside")
+        )
         session.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(session.currentAreaID, "village_riverside")
 
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 112, y: 608))
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_riverside", to: "wilds_riverbank")
+        )
         session.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(session.currentAreaID, "wilds_riverbank")
 
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 736, y: 512))
-        session.gameScene(scene, didClickWorld: CGPoint(x: 736, y: 512))
+        let bitterrootPosition = try itemPosition(in: "wilds_riverbank", itemID: "bitterroot_herb")
+        session.explorationController.configureParty(session.party, at: bitterrootPosition)
+        session.gameScene(scene, didClickWorld: bitterrootPosition)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "bitterroot_herb"), 1)
 
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 40, y: 512))
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "wilds_riverbank", to: "village_riverside")
+        )
         session.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(session.currentAreaID, "village_riverside")
         if session.appState == .dialogue {
             session.closePanel()
         }
 
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 736, y: 320))
-        session.gameScene(scene, didClickWorld: CGPoint(x: 736, y: 320))
+        let healerPosition = try npcPosition(in: "village_riverside", actorID: "healer")
+        session.explorationController.configureParty(session.party, at: healerPosition)
+        session.gameScene(scene, didClickWorld: healerPosition)
         XCTAssertEqual(session.appState, .dialogue)
         XCTAssertEqual(session.dialogViewModel.activeDialog?.id, "healer_return")
 
@@ -78,5 +92,27 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "bitterroot_herb"), 0)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "river_charm"), 1)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "minor_healing_draught"), 3)
+    }
+
+    private func exitCenter(in areaID: String, to targetAreaID: String) throws -> CGPoint {
+        let metadata = try TiledMapLoader.loadMetadata(areaID: areaID)
+        let exit = try XCTUnwrap(metadata.exits.first { $0.targetAreaID == targetAreaID })
+        return exit.frame.center
+    }
+
+    private func itemPosition(in areaID: String, itemID: String) throws -> CGPoint {
+        let metadata = try TiledMapLoader.loadMetadata(areaID: areaID)
+        return try XCTUnwrap(metadata.items.first { $0.itemID == itemID }).position
+    }
+
+    private func npcPosition(in areaID: String, actorID: String) throws -> CGPoint {
+        let metadata = try TiledMapLoader.loadMetadata(areaID: areaID)
+        return try XCTUnwrap(metadata.npcs.first { $0.actorID == actorID }).position
+    }
+}
+
+private extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: midX, y: midY)
     }
 }

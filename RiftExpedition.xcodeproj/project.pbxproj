@@ -7,53 +7,102 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		007C061D1EF95998509BAAF6 /* TiledSelectableType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8257B408D52C85F8A24AE2E6 /* TiledSelectableType.swift */; };
 		0246E914ED83246EA311D898 /* InventoryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */; };
+		0710A3E8239B3E46758DBCD0 /* TiledShadableType.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A148FAD49CA3CC94F2016E /* TiledShadableType.swift */; };
 		07A9D3403701FF8FA75EAE88 /* GameSessionViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */; };
-		0A1B2C3D4E5F60718293A4B5 /* ChapterCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F60718293A4B7 /* ChapterCompleteView.swift */; };
-		0A1B2C3D4E5F60718293A4B6 /* ChapterCompleteViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1B2C3D4E5F60718293A4B8 /* ChapterCompleteViewModelTests.swift */; };
+		0806C9600242994FEDFBE0D3 /* SKTiled+GameplayKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B93408497325F005D5417D /* SKTiled+GameplayKit.swift */; };
+		0AF8F5EC51EBB7FB69184C0D /* SKImageLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C31B10171D970BD3777FF8 /* SKImageLayer.swift */; };
 		0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */; };
 		106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = 66F68254A710BE031FA3C538 /* RiftCore */; };
 		165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */; };
 		1848CFC49F32B6EF6667BE62 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = 88DF543C5A5385E21EDF8CFD /* Data */; };
+		1A54D18C49EF0C8D9ED4311F /* Array2D.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A66F3EC6A730D8B87907658 /* Array2D.swift */; };
+		1CD615E62E249B058319D10D /* SKTiledSceneCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA7F25E190555AEBBBD424E /* SKTiledSceneCamera.swift */; };
 		1D86B4BB78F507A4FF4DCBBC /* PartyCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6489FE796C584D033A572F3 /* PartyCreationView.swift */; };
 		25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */; };
+		290F05730591226FBD77F853 /* DebugDrawableType.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D6060DB5C1510D847AAAA5 /* DebugDrawableType.swift */; };
+		295F57CEA2B096268B685126 /* SKTiled+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488358A1DAF5D78196DBDFB6 /* SKTiled+Extensions.swift */; };
+		2A386072E1C393AA2DD5603D /* TiledObjectType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EC2DF0A298C26AF4AD8B97 /* TiledObjectType.swift */; };
 		2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */; };
+		2CF2713FFA1BBF37F3BF36E7 /* ChapterCompleteViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B604164BCA87AAE65B19A62F /* ChapterCompleteViewModelTests.swift */; };
+		2E088AD978D0557A77A2135D /* TileObjectProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8AF8AEA1E9716C31A5090F9 /* TileObjectProxy.swift */; };
+		35B85A5D2BA695BCA9DE521A /* SKTileLayerChunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3C59CAF6D81CC5D65B8BDE6 /* SKTileLayerChunk.swift */; };
 		3611029602000DC07423A95F /* Assets in Resources */ = {isa = PBXBuildFile; fileRef = 9378BAD0E4B3DC7D9AF2FBCD /* Assets */; };
+		362298F11E9C850C73FFE971 /* TilemapDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881A9C698269EACBD0D97B60 /* TilemapDelegate.swift */; };
 		36F44454EBE9E28B55FB5782 /* SaveLoadViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E21ED1B8BC9A963A07E80AC0 /* SaveLoadViewModelTests.swift */; };
+		3E3291E187F1BEDC0CCBF34D /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = 686C85CF1CFE5EAC90074FAF /* Logging.swift */; };
 		4061D4F404E9C2F39F4252C8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E20289D96B7086117044C4B /* AppState.swift */; };
+		452407E0B6949223512FAC72 /* SKObjectGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C92E0685865038B5E1870D /* SKObjectGroup.swift */; };
+		4B44FCB88DA4755583C038A9 /* TiledBackgroundLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58D455F852D243A95B606745 /* TiledBackgroundLayer.swift */; };
 		4CE2615E38C0F74F8077058B /* BattleHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */; };
 		4FEEBC447E12CF70E826B83A /* BattleViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 041AA83BB7EE525626254DF3 /* BattleViewModelTests.swift */; };
+		51FB66CB89FE12D6F46A3E80 /* TileID.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEEE90F356A9F13FE706EAB7 /* TileID.swift */; };
 		578732DC3C52AB58C25A427E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16878055CA8AAE8E6F1D52DF /* ContentView.swift */; };
+		61F5D585C978594D22A0A4F0 /* TiledGlobals.swift in Sources */ = {isa = PBXBuildFile; fileRef = F945059AD2303B10D8B35E9D /* TiledGlobals.swift */; };
 		6347CEA63EB39C695173C2CB /* ExplorationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A5A0519DE22D34D64B8042B /* ExplorationController.swift */; };
+		6439C21213C6F0AA1A641F18 /* TiledCustomReflectableType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD9F0F58A8CEFEC65AA2DF3 /* TiledCustomReflectableType.swift */; };
+		67E0A9B5ECEFFB854270BA9E /* SKWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056B71A8B14B6CEF4CD68A34 /* SKWorld.swift */; };
 		6802995F9D5D42B766DFD4D6 /* BattleViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C293E92E0C61C83BC23C3D8 /* BattleViewModel.swift */; };
+		6B19A62585B156F1C185EB92 /* SKTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EF0EFEDA96BD601506D9B60 /* SKTile.swift */; };
 		6B6AA44F5BF0D3257C309ECF /* DialogViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */; };
-		70C4603FB3C84E4291582401 /* GameOverRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */; };
+		6E08B9A56FA04B7F857D2BE8 /* TilesetDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E6FAA042352ECB78E08EF7 /* TilesetDataSource.swift */; };
 		75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E228968FC56BB933A3CABE /* GameLog.swift */; };
 		762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD76F051C6CC030C6D0731 /* SettingsView.swift */; };
-		F00DBEEF1234567890ABCDEE /* RiftTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00DBEEF1234567890ABCDEF /* RiftTheme.swift */; };
+		76574D5D0BBBC911A2B33C67 /* TiledGeometryType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD612819D9A6E111CEE1CF04 /* TiledGeometryType.swift */; };
+		76CCBA3EBE9226B3074E3E58 /* SKTilemapParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B98474CC60A67C30AC2AD3C4 /* SKTilemapParser.swift */; };
 		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
+		7D3E7ADC1AE4CAFB317EDC72 /* SKTiled.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44FF983FC1141EA8B080AD61 /* SKTiled.framework */; };
 		7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */; };
+		804EDB0B90835331C9FF6B58 /* SKTileset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7311A10C982DC6EEBE42AEC5 /* SKTileset.swift */; };
+		8A1B7568E20298A97F62DEA7 /* SKTiled.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 44FF983FC1141EA8B080AD61 /* SKTiled.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8DDC8D6B4B9287910A1FA935 /* SKTilemap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C19B0062B4B7981FDC0CCE6 /* SKTilemap.swift */; };
+		8E493544C613B42A661990D6 /* SKGroupLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDC5692A6E836AE70A39F42 /* SKGroupLayer.swift */; };
 		9183538DE747AB36298AB423 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE3322D8EF6763B46BF3C1B /* AudioService.swift */; };
+		940AC52074C7C6D2D15A445D /* AnchorNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AB9D3AC3E13ED718939F1EE /* AnchorNode.swift */; };
 		991189CB683319A94BEAA1A2 /* SaveLoadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78DDEC2D739BDADDB200C294 /* SaveLoadViewModel.swift */; };
 		9FA8A833859854299DEEFCFB /* PartyCreationViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */; };
 		A3CC69DA628AF017095209CF /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A59363E369752C0EBF6B922 /* GameScene.swift */; };
 		A8CCEAD8EEF70AAF3D485948 /* TiledMapLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9690F5B30C8F52EA2944A2B /* TiledMapLoader.swift */; };
+		AD30A74BFA7C28E05D79D3F9 /* TileCollisionShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504B9F7EE49B25EB809440FA /* TileCollisionShape.swift */; };
+		B08D9D79C873028C451C3C3D /* SKTileLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F626DA72D6B5A4DF37EC942 /* SKTileLayer.swift */; };
 		B21B8E81F017A5DA43739B18 /* LineOfSightService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91E145CC57DAABAD58BA948 /* LineOfSightService.swift */; };
+		B7BA0B89CFB7F6154683F20D /* TiledDebugDrawNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4E6898AF0340CF6EA931F6 /* TiledDebugDrawNode.swift */; };
+		B88139003D5EA5488B79951A /* TileContainerType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC8C2706CC36EC30019003A /* TileContainerType.swift */; };
 		B9EB9523CC4829EB2BE7C946 /* QuestLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B16655338F5A7331D323D9 /* QuestLogView.swift */; };
+		BBB076DFE88F7989CB9AB176 /* TiledRasterizableType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE803B8A5CC9A95269BE167 /* TiledRasterizableType.swift */; };
 		C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD21D61B804614283239218 /* RiftExpeditionApp.swift */; };
+		C04106BBD803BA519D4E8160 /* TiledMappableGeometryType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCC380081A97DBC02157B3D /* TiledMappableGeometryType.swift */; };
+		C0CAFAB5DDFF9E5660B65DE0 /* TiledEventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658265575883A22FF864EA3A /* TiledEventHandler.swift */; };
+		C3415127B6C1E5C18BD85C5D /* DebugDrawOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA61F9DFD2618F2AAFD80F2E /* DebugDrawOptions.swift */; };
 		C4AB3902B42AB9F9ACD5E503 /* InventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC8CCE68052376171EBF56FA /* InventoryView.swift */; };
+		C4FF06ECB0DD1DB01FA8F2C8 /* RiftTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62795B06B375D0E14A6F56FF /* RiftTheme.swift */; };
 		C7C1D3A7139B0EAB08203DB5 /* InventoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC223499FD6F98F40939CDB /* InventoryViewModel.swift */; };
+		C9D14CAF8F25B842828A1863 /* TileObjectOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0754A7171D7F60E27FD7B0 /* TileObjectOverlay.swift */; };
 		CB9CFA9956BA963FF8ECE217 /* DialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB40451858A3BC818E7A3E9 /* DialogView.swift */; };
+		CCB0434D9E908CB04A669A2C /* TiledLayerObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = C637D4AFC9E9AB22FD00D631 /* TiledLayerObject.swift */; };
+		CE022450C988A96D0D1095E2 /* TiledSceneCameraDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68105B5B72A4A7D32E108522 /* TiledSceneCameraDelegate.swift */; };
+		D021CABD31C71681A8BABC17 /* SKTiledScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88B3E687A07354E66AE72325 /* SKTiledScene.swift */; };
 		D20908863543301B1459C3A6 /* Maps in Resources */ = {isa = PBXBuildFile; fileRef = 6F7AC4E0DEC480F958D181E4 /* Maps */; };
 		D479EFB7CB00F0F6C5A17847 /* EncounterTriggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */; };
-		D8515217F7C286DD42149DC7 /* SKTiled in Frameworks */ = {isa = PBXBuildFile; productRef = 144D526509E751239A80D9D5 /* SKTiled */; };
 		D875A9994F538C9CA37B297C /* DebugOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */; };
+		DA7CA233ED467BDEB735BC82 /* TextObjectAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394E2B9DB007064E703D5A3C /* TextObjectAttributes.swift */; };
+		E07952485D135AF3E72258B3 /* SKTileObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788F04C8843F1214702151A3 /* SKTileObject.swift */; };
 		E13BE2848D6EE0DB41CA094B /* DialogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19AB8D6F4144C335B1A905D /* DialogViewModel.swift */; };
 		E152D139378F269AE18D4DEA /* NavigationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A6DF617AC4CE8F345CC0AF6 /* NavigationService.swift */; };
+		E23C15A75A6432B25EB50F7B /* TileAnimationFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E409A751957C3586A6F256 /* TileAnimationFrame.swift */; };
+		E24416ED343F495B8B967DD0 /* Stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EBAB99BF9546D4011E83B15 /* Stack.swift */; };
 		E4425829A2497C821875B3A5 /* SaveGameStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FEFAC17CDF2FC399752FBAA /* SaveGameStore.swift */; };
 		E4F1A8A2075A81DCCD66DA54 /* PartyCreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */; };
 		EA26E71CCD073F770F867A1E /* GameRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D9C87993ED01E0C345D4D1 /* GameRootView.swift */; };
 		ED3D5492A209D88E71E23C04 /* SaveLoadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7101425E7A0C85952FE84AFB /* SaveLoadView.swift */; };
+		EE640579D7423D84454E8AD5 /* SKTiled+Properties.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29113CE99A526808D4DD5D4 /* SKTiled+Properties.swift */; };
+		F04A111FD76A45DED9238B9F /* TiledSceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF7593C292926BEBF257EEE3 /* TiledSceneDelegate.swift */; };
+		F2420693628EF3B13B8CF1EE /* ChapterCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCEF474B0E41FB18E85051D /* ChapterCompleteView.swift */; };
+		F3EEF52B50FD894B104C1F11 /* TileDataStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC0E65D83C123F355E2F604 /* TileDataStorage.swift */; };
+		F4625986D43D77742E908C0C /* GameOverRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E291C6E15D7C8AEBEE1B679 /* GameOverRecoveryTests.swift */; };
+		F9735A5B6B55C3CAE2AC3FD0 /* ThreadSafeArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF908E208A213AC8C466CEE /* ThreadSafeArray.swift */; };
+		FC0B2C8B8BBE27B82975F92F /* SKTilesetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51650BDABD0F3DC4549CD800 /* SKTilesetData.swift */; };
 		FFA0837788C20216C0548B5E /* EncounterTriggerServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13ADCD02CE1DDCFC52A3C22E /* EncounterTriggerServiceTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -65,57 +114,127 @@
 			remoteGlobalIDString = 7F125E9A933BCA4AAC245B6B;
 			remoteInfo = RiftExpedition;
 		};
+		F594295A27BD690F3951AB01 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 458DFF6F63C8A0A64A18CBF7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E6F964797281A0918D6222EB;
+			remoteInfo = SKTiled;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AAE657DC4CC91A0D4D0166A4 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				8A1B7568E20298A97F62DEA7 /* SKTiled.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		041AA83BB7EE525626254DF3 /* BattleViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleViewModelTests.swift; sourceTree = "<group>"; };
-		0A1B2C3D4E5F60718293A4B7 /* ChapterCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterCompleteView.swift; sourceTree = "<group>"; };
-		0A1B2C3D4E5F60718293A4B8 /* ChapterCompleteViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterCompleteViewModelTests.swift; sourceTree = "<group>"; };
+		056B71A8B14B6CEF4CD68A34 /* SKWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKWorld.swift; sourceTree = "<group>"; };
 		0B17603B09208858E2CBF0AF /* RiftExpedition.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RiftExpedition.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13ADCD02CE1DDCFC52A3C22E /* EncounterTriggerServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterTriggerServiceTests.swift; sourceTree = "<group>"; };
 		13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionViewModelTests.swift; sourceTree = "<group>"; };
 		16878055CA8AAE8E6F1D52DF /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		178952F0342DDAB252E026EA /* RiftCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = RiftCore; path = Packages/RiftCore; sourceTree = SOURCE_ROOT; };
+		1AC0E65D83C123F355E2F604 /* TileDataStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileDataStorage.swift; sourceTree = "<group>"; };
 		26E228968FC56BB933A3CABE /* GameLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameLog.swift; sourceTree = "<group>"; };
+		2BF908E208A213AC8C466CEE /* ThreadSafeArray.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadSafeArray.swift; sourceTree = "<group>"; };
+		2CCC380081A97DBC02157B3D /* TiledMappableGeometryType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledMappableGeometryType.swift; sourceTree = "<group>"; };
 		2E20289D96B7086117044C4B /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationServiceTests.swift; sourceTree = "<group>"; };
 		3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewModelTests.swift; sourceTree = "<group>"; };
+		36C31B10171D970BD3777FF8 /* SKImageLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKImageLayer.swift; sourceTree = "<group>"; };
+		394E2B9DB007064E703D5A3C /* TextObjectAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextObjectAttributes.swift; sourceTree = "<group>"; };
 		3A5A0519DE22D34D64B8042B /* ExplorationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationController.swift; sourceTree = "<group>"; };
+		3AB9D3AC3E13ED718939F1EE /* AnchorNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorNode.swift; sourceTree = "<group>"; };
 		3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSmokeTests.swift; sourceTree = "<group>"; };
 		3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RiftExpeditionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverRecoveryTests.swift; sourceTree = "<group>"; };
+		3F626DA72D6B5A4DF37EC942 /* SKTileLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTileLayer.swift; sourceTree = "<group>"; };
+		44FF983FC1141EA8B080AD61 /* SKTiled.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SKTiled.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		488358A1DAF5D78196DBDFB6 /* SKTiled+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKTiled+Extensions.swift"; sourceTree = "<group>"; };
+		4E291C6E15D7C8AEBEE1B679 /* GameOverRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverRecoveryTests.swift; sourceTree = "<group>"; };
+		504B9F7EE49B25EB809440FA /* TileCollisionShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileCollisionShape.swift; sourceTree = "<group>"; };
+		51650BDABD0F3DC4549CD800 /* SKTilesetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTilesetData.swift; sourceTree = "<group>"; };
 		53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncounterTriggerService.swift; sourceTree = "<group>"; };
 		5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugOverlayView.swift; sourceTree = "<group>"; };
 		5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleHUDView.swift; sourceTree = "<group>"; };
+		58D455F852D243A95B606745 /* TiledBackgroundLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledBackgroundLayer.swift; sourceTree = "<group>"; };
+		5A66F3EC6A730D8B87907658 /* Array2D.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Array2D.swift; sourceTree = "<group>"; };
+		5CC8C2706CC36EC30019003A /* TileContainerType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileContainerType.swift; sourceTree = "<group>"; };
+		5FD9F0F58A8CEFEC65AA2DF3 /* TiledCustomReflectableType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledCustomReflectableType.swift; sourceTree = "<group>"; };
 		5FEFAC17CDF2FC399752FBAA /* SaveGameStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveGameStore.swift; sourceTree = "<group>"; };
+		60EC2DF0A298C26AF4AD8B97 /* TiledObjectType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledObjectType.swift; sourceTree = "<group>"; };
+		62795B06B375D0E14A6F56FF /* RiftTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiftTheme.swift; sourceTree = "<group>"; };
 		62D9C87993ED01E0C345D4D1 /* GameRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRootView.swift; sourceTree = "<group>"; };
+		658265575883A22FF864EA3A /* TiledEventHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledEventHandler.swift; sourceTree = "<group>"; };
+		68105B5B72A4A7D32E108522 /* TiledSceneCameraDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledSceneCameraDelegate.swift; sourceTree = "<group>"; };
+		686C85CF1CFE5EAC90074FAF /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
+		6A4E6898AF0340CF6EA931F6 /* TiledDebugDrawNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledDebugDrawNode.swift; sourceTree = "<group>"; };
 		6F7AC4E0DEC480F958D181E4 /* Maps */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Maps; path = RiftExpedition/Resources/Maps; sourceTree = SOURCE_ROOT; };
 		7101425E7A0C85952FE84AFB /* SaveLoadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveLoadView.swift; sourceTree = "<group>"; };
+		7311A10C982DC6EEBE42AEC5 /* SKTileset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTileset.swift; sourceTree = "<group>"; };
+		788F04C8843F1214702151A3 /* SKTileObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTileObject.swift; sourceTree = "<group>"; };
 		78DDEC2D739BDADDB200C294 /* SaveLoadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveLoadViewModel.swift; sourceTree = "<group>"; };
 		7A6DF617AC4CE8F345CC0AF6 /* NavigationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationService.swift; sourceTree = "<group>"; };
 		7C293E92E0C61C83BC23C3D8 /* BattleViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BattleViewModel.swift; sourceTree = "<group>"; };
 		7EC223499FD6F98F40939CDB /* InventoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryViewModel.swift; sourceTree = "<group>"; };
+		7FE803B8A5CC9A95269BE167 /* TiledRasterizableType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledRasterizableType.swift; sourceTree = "<group>"; };
+		80E409A751957C3586A6F256 /* TileAnimationFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileAnimationFrame.swift; sourceTree = "<group>"; };
+		8257B408D52C85F8A24AE2E6 /* TiledSelectableType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledSelectableType.swift; sourceTree = "<group>"; };
+		881A9C698269EACBD0D97B60 /* TilemapDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TilemapDelegate.swift; sourceTree = "<group>"; };
+		88B3E687A07354E66AE72325 /* SKTiledScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledScene.swift; sourceTree = "<group>"; };
+		88C92E0685865038B5E1870D /* SKObjectGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKObjectGroup.swift; sourceTree = "<group>"; };
 		88DF543C5A5385E21EDF8CFD /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Data; path = RiftExpedition/Resources/Data; sourceTree = SOURCE_ROOT; };
 		8A59363E369752C0EBF6B922 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		8C19B0062B4B7981FDC0CCE6 /* SKTilemap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTilemap.swift; sourceTree = "<group>"; };
 		9378BAD0E4B3DC7D9AF2FBCD /* Assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Assets; path = RiftExpedition/Resources/Assets; sourceTree = SOURCE_ROOT; };
 		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
+		9EBAB99BF9546D4011E83B15 /* Stack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stack.swift; sourceTree = "<group>"; };
+		9EF0EFEDA96BD601506D9B60 /* SKTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTile.swift; sourceTree = "<group>"; };
 		A2B16655338F5A7331D323D9 /* QuestLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestLogView.swift; sourceTree = "<group>"; };
+		A3C59CAF6D81CC5D65B8BDE6 /* SKTileLayerChunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTileLayerChunk.swift; sourceTree = "<group>"; };
+		A8AF8AEA1E9716C31A5090F9 /* TileObjectProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileObjectProxy.swift; sourceTree = "<group>"; };
 		ABCD76F051C6CC030C6D0731 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		F00DBEEF1234567890ABCDEF /* RiftTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme/RiftTheme.swift; sourceTree = "<group>"; };
+		AD612819D9A6E111CEE1CF04 /* TiledGeometryType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledGeometryType.swift; sourceTree = "<group>"; };
+		B0A148FAD49CA3CC94F2016E /* TiledShadableType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledShadableType.swift; sourceTree = "<group>"; };
+		B1B93408497325F005D5417D /* SKTiled+GameplayKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKTiled+GameplayKit.swift"; sourceTree = "<group>"; };
+		B604164BCA87AAE65B19A62F /* ChapterCompleteViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterCompleteViewModelTests.swift; sourceTree = "<group>"; };
 		B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationControllerTests.swift; sourceTree = "<group>"; };
+		B98474CC60A67C30AC2AD3C4 /* SKTilemapParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTilemapParser.swift; sourceTree = "<group>"; };
+		BA61F9DFD2618F2AAFD80F2E /* DebugDrawOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDrawOptions.swift; sourceTree = "<group>"; };
 		BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationViewModel.swift; sourceTree = "<group>"; };
+		BDCEF474B0E41FB18E85051D /* ChapterCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterCompleteView.swift; sourceTree = "<group>"; };
 		BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSmoke.swift; sourceTree = "<group>"; };
 		BEE3322D8EF6763B46BF3C1B /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		C1D6060DB5C1510D847AAAA5 /* DebugDrawableType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugDrawableType.swift; sourceTree = "<group>"; };
+		C3E6FAA042352ECB78E08EF7 /* TilesetDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TilesetDataSource.swift; sourceTree = "<group>"; };
+		C637D4AFC9E9AB22FD00D631 /* TiledLayerObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledLayerObject.swift; sourceTree = "<group>"; };
 		C6489FE796C584D033A572F3 /* PartyCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationView.swift; sourceTree = "<group>"; };
+		CCA7F25E190555AEBBBD424E /* SKTiledSceneCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSceneCamera.swift; sourceTree = "<group>"; };
 		CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewModelTests.swift; sourceTree = "<group>"; };
+		CF7593C292926BEBF257EEE3 /* TiledSceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledSceneDelegate.swift; sourceTree = "<group>"; };
 		D19AB8D6F4144C335B1A905D /* DialogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogViewModel.swift; sourceTree = "<group>"; };
+		D29113CE99A526808D4DD5D4 /* SKTiled+Properties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKTiled+Properties.swift"; sourceTree = "<group>"; };
 		D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionViewModel.swift; sourceTree = "<group>"; };
 		D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterSheetView.swift; sourceTree = "<group>"; };
 		DC8CCE68052376171EBF56FA /* InventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryView.swift; sourceTree = "<group>"; };
 		DFB40451858A3BC818E7A3E9 /* DialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogView.swift; sourceTree = "<group>"; };
 		E21ED1B8BC9A963A07E80AC0 /* SaveLoadViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveLoadViewModelTests.swift; sourceTree = "<group>"; };
 		E9690F5B30C8F52EA2944A2B /* TiledMapLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledMapLoader.swift; sourceTree = "<group>"; };
+		EB0754A7171D7F60E27FD7B0 /* TileObjectOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileObjectOverlay.swift; sourceTree = "<group>"; };
+		EEEE90F356A9F13FE706EAB7 /* TileID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileID.swift; sourceTree = "<group>"; };
+		EFDC5692A6E836AE70A39F42 /* SKGroupLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKGroupLayer.swift; sourceTree = "<group>"; };
 		F91E145CC57DAABAD58BA948 /* LineOfSightService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineOfSightService.swift; sourceTree = "<group>"; };
+		F945059AD2303B10D8B35E9D /* TiledGlobals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledGlobals.swift; sourceTree = "<group>"; };
 		FDD21D61B804614283239218 /* RiftExpeditionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiftExpeditionApp.swift; sourceTree = "<group>"; };
 		FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationViewModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -126,7 +245,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				106317CA751A736C2CB6D0D6 /* RiftCore in Frameworks */,
-				D8515217F7C286DD42149DC7 /* SKTiled in Frameworks */,
+				7D3E7ADC1AE4CAFB317EDC72 /* SKTiled.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,8 +280,8 @@
 			isa = PBXGroup;
 			children = (
 				5840BCF972C51DF0D4596A46 /* BattleHUDView.swift */,
+				BDCEF474B0E41FB18E85051D /* ChapterCompleteView.swift */,
 				D5DD2421FDEA60AC13A9E11D /* CharacterSheetView.swift */,
-				0A1B2C3D4E5F60718293A4B7 /* ChapterCompleteView.swift */,
 				5773BEE9BC248747C7F77CB9 /* DebugOverlayView.swift */,
 				DFB40451858A3BC818E7A3E9 /* DialogView.swift */,
 				DC8CCE68052376171EBF56FA /* InventoryView.swift */,
@@ -170,7 +289,7 @@
 				A2B16655338F5A7331D323D9 /* QuestLogView.swift */,
 				7101425E7A0C85952FE84AFB /* SaveLoadView.swift */,
 				ABCD76F051C6CC030C6D0731 /* SettingsView.swift */,
-				F00DBEEF1234567890ABCDEF /* RiftTheme.swift */,
+				2F5E64C8E3966F9416490BCC /* Theme */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -190,6 +309,22 @@
 				53D9D13471E3AB31A4040241 /* EncounterTriggerService.swift */,
 			);
 			path = Encounter;
+			sourceTree = "<group>";
+		};
+		103DE0C15FD1F7B63ABF1F91 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				48B1949CBDB5ACA6AB69CDDD /* SKTiled */,
+			);
+			path = Vendor;
+			sourceTree = "<group>";
+		};
+		2F5E64C8E3966F9416490BCC /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				62795B06B375D0E14A6F56FF /* RiftTheme.swift */,
+			);
+			path = Theme;
 			sourceTree = "<group>";
 		};
 		359F95E38BA7DCDFF421AD83 /* Audio */ = {
@@ -213,8 +348,17 @@
 			children = (
 				0B17603B09208858E2CBF0AF /* RiftExpedition.app */,
 				3F2BDC56D41062C0A4A1AEDB /* RiftExpeditionTests.xctest */,
+				44FF983FC1141EA8B080AD61 /* SKTiled.framework */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		48B1949CBDB5ACA6AB69CDDD /* SKTiled */ = {
+			isa = PBXGroup;
+			children = (
+				C143CF3DEB7F287CE6D115A2 /* Sources */,
+			);
+			path = SKTiled;
 			sourceTree = "<group>";
 		};
 		5D2FF07076F465E2FBB25BE9 /* Support */ = {
@@ -253,11 +397,11 @@
 			children = (
 				3BCF3E47745F5BA22664179A /* AppSmokeTests.swift */,
 				041AA83BB7EE525626254DF3 /* BattleViewModelTests.swift */,
-				0A1B2C3D4E5F60718293A4B8 /* ChapterCompleteViewModelTests.swift */,
+				B604164BCA87AAE65B19A62F /* ChapterCompleteViewModelTests.swift */,
 				CED5203573F8304F28AF64DD /* DialogViewModelTests.swift */,
 				13ADCD02CE1DDCFC52A3C22E /* EncounterTriggerServiceTests.swift */,
 				B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */,
-				4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */,
+				4E291C6E15D7C8AEBEE1B679 /* GameOverRecoveryTests.swift */,
 				13DDC311BD14026A508BBF8A /* GameSessionViewModelTests.swift */,
 				3677F0CA387D5D4818040E3C /* InventoryViewModelTests.swift */,
 				30D42B43B5FA4A8DA355A960 /* NavigationServiceTests.swift */,
@@ -292,8 +436,64 @@
 				B7454E688FFA400A079F2AB1 /* Packages */,
 				007FAE374E397CB9050B976B /* RiftExpedition */,
 				9798658D7C0C8A661087A924 /* RiftExpeditionTests */,
+				103DE0C15FD1F7B63ABF1F91 /* Vendor */,
 				41FC92A3B820B2D1FF31BEC0 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		C143CF3DEB7F287CE6D115A2 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				3AB9D3AC3E13ED718939F1EE /* AnchorNode.swift */,
+				5A66F3EC6A730D8B87907658 /* Array2D.swift */,
+				C1D6060DB5C1510D847AAAA5 /* DebugDrawableType.swift */,
+				BA61F9DFD2618F2AAFD80F2E /* DebugDrawOptions.swift */,
+				686C85CF1CFE5EAC90074FAF /* Logging.swift */,
+				EFDC5692A6E836AE70A39F42 /* SKGroupLayer.swift */,
+				36C31B10171D970BD3777FF8 /* SKImageLayer.swift */,
+				88C92E0685865038B5E1870D /* SKObjectGroup.swift */,
+				9EF0EFEDA96BD601506D9B60 /* SKTile.swift */,
+				488358A1DAF5D78196DBDFB6 /* SKTiled+Extensions.swift */,
+				B1B93408497325F005D5417D /* SKTiled+GameplayKit.swift */,
+				D29113CE99A526808D4DD5D4 /* SKTiled+Properties.swift */,
+				88B3E687A07354E66AE72325 /* SKTiledScene.swift */,
+				CCA7F25E190555AEBBBD424E /* SKTiledSceneCamera.swift */,
+				3F626DA72D6B5A4DF37EC942 /* SKTileLayer.swift */,
+				A3C59CAF6D81CC5D65B8BDE6 /* SKTileLayerChunk.swift */,
+				8C19B0062B4B7981FDC0CCE6 /* SKTilemap.swift */,
+				B98474CC60A67C30AC2AD3C4 /* SKTilemapParser.swift */,
+				788F04C8843F1214702151A3 /* SKTileObject.swift */,
+				7311A10C982DC6EEBE42AEC5 /* SKTileset.swift */,
+				51650BDABD0F3DC4549CD800 /* SKTilesetData.swift */,
+				056B71A8B14B6CEF4CD68A34 /* SKWorld.swift */,
+				9EBAB99BF9546D4011E83B15 /* Stack.swift */,
+				394E2B9DB007064E703D5A3C /* TextObjectAttributes.swift */,
+				2BF908E208A213AC8C466CEE /* ThreadSafeArray.swift */,
+				80E409A751957C3586A6F256 /* TileAnimationFrame.swift */,
+				504B9F7EE49B25EB809440FA /* TileCollisionShape.swift */,
+				5CC8C2706CC36EC30019003A /* TileContainerType.swift */,
+				1AC0E65D83C123F355E2F604 /* TileDataStorage.swift */,
+				58D455F852D243A95B606745 /* TiledBackgroundLayer.swift */,
+				5FD9F0F58A8CEFEC65AA2DF3 /* TiledCustomReflectableType.swift */,
+				6A4E6898AF0340CF6EA931F6 /* TiledDebugDrawNode.swift */,
+				658265575883A22FF864EA3A /* TiledEventHandler.swift */,
+				AD612819D9A6E111CEE1CF04 /* TiledGeometryType.swift */,
+				F945059AD2303B10D8B35E9D /* TiledGlobals.swift */,
+				C637D4AFC9E9AB22FD00D631 /* TiledLayerObject.swift */,
+				2CCC380081A97DBC02157B3D /* TiledMappableGeometryType.swift */,
+				60EC2DF0A298C26AF4AD8B97 /* TiledObjectType.swift */,
+				7FE803B8A5CC9A95269BE167 /* TiledRasterizableType.swift */,
+				68105B5B72A4A7D32E108522 /* TiledSceneCameraDelegate.swift */,
+				CF7593C292926BEBF257EEE3 /* TiledSceneDelegate.swift */,
+				8257B408D52C85F8A24AE2E6 /* TiledSelectableType.swift */,
+				B0A148FAD49CA3CC94F2016E /* TiledShadableType.swift */,
+				EEEE90F356A9F13FE706EAB7 /* TileID.swift */,
+				881A9C698269EACBD0D97B60 /* TilemapDelegate.swift */,
+				EB0754A7171D7F60E27FD7B0 /* TileObjectOverlay.swift */,
+				A8AF8AEA1E9716C31A5090F9 /* TileObjectProxy.swift */,
+				C3E6FAA042352ECB78E08EF7 /* TilesetDataSource.swift */,
+			);
+			path = Sources;
 			sourceTree = "<group>";
 		};
 		C4BE167B9FC3C9C579982340 /* Game */ = {
@@ -345,19 +545,37 @@
 				35F6D565A5C7F35569A73BB0 /* Sources */,
 				AAF94D5688E9109179BC1948 /* Resources */,
 				E875758D1151B9D67EA0BB1A /* Frameworks */,
+				AAE657DC4CC91A0D4D0166A4 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				01BE697E4C75B6663B44DF29 /* PBXTargetDependency */,
+			);
+			name = RiftExpedition;
+			packageProductDependencies = (
+				66F68254A710BE031FA3C538 /* RiftCore */,
+			);
+			productName = RiftExpedition;
+			productReference = 0B17603B09208858E2CBF0AF /* RiftExpedition.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E6F964797281A0918D6222EB /* SKTiled */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D2C4BF925624F2894A0BEBBD /* Build configuration list for PBXNativeTarget "SKTiled" */;
+			buildPhases = (
+				56593821F60C261EAA05F3AC /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = RiftExpedition;
+			name = SKTiled;
 			packageProductDependencies = (
-				66F68254A710BE031FA3C538 /* RiftCore */,
-				144D526509E751239A80D9D5 /* SKTiled */,
 			);
-			productName = RiftExpedition;
-			productReference = 0B17603B09208858E2CBF0AF /* RiftExpedition.app */;
-			productType = "com.apple.product-type.application";
+			productName = SKTiled;
+			productReference = 44FF983FC1141EA8B080AD61 /* SKTiled.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
@@ -384,7 +602,6 @@
 			mainGroup = B82E909A30D8F496A328F7AA;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */,
 				47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */,
 			);
 			projectDirPath = "";
@@ -392,6 +609,7 @@
 			targets = (
 				7F125E9A933BCA4AAC245B6B /* RiftExpedition */,
 				376818D0EE0C71553BD29CDD /* RiftExpeditionTests */,
+				E6F964797281A0918D6222EB /* SKTiled */,
 			);
 		};
 /* End PBXProject section */
@@ -418,8 +636,8 @@
 				9183538DE747AB36298AB423 /* AudioService.swift in Sources */,
 				4CE2615E38C0F74F8077058B /* BattleHUDView.swift in Sources */,
 				6802995F9D5D42B766DFD4D6 /* BattleViewModel.swift in Sources */,
+				F2420693628EF3B13B8CF1EE /* ChapterCompleteView.swift in Sources */,
 				2AC8D80CD5D5A613E8ECCF5A /* CharacterSheetView.swift in Sources */,
-				0A1B2C3D4E5F60718293A4B5 /* ChapterCompleteView.swift in Sources */,
 				578732DC3C52AB58C25A427E /* ContentView.swift in Sources */,
 				D875A9994F538C9CA37B297C /* DebugOverlayView.swift in Sources */,
 				CB9CFA9956BA963FF8ECE217 /* DialogView.swift in Sources */,
@@ -438,13 +656,68 @@
 				E4F1A8A2075A81DCCD66DA54 /* PartyCreationViewModel.swift in Sources */,
 				B9EB9523CC4829EB2BE7C946 /* QuestLogView.swift in Sources */,
 				C03B841A7B26D9E7734F62B0 /* RiftExpeditionApp.swift in Sources */,
+				C4FF06ECB0DD1DB01FA8F2C8 /* RiftTheme.swift in Sources */,
 				7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */,
 				E4425829A2497C821875B3A5 /* SaveGameStore.swift in Sources */,
 				ED3D5492A209D88E71E23C04 /* SaveLoadView.swift in Sources */,
 				991189CB683319A94BEAA1A2 /* SaveLoadViewModel.swift in Sources */,
 				762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */,
-				F00DBEEF1234567890ABCDEE /* RiftTheme.swift in Sources */,
 				A8CCEAD8EEF70AAF3D485948 /* TiledMapLoader.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		56593821F60C261EAA05F3AC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				940AC52074C7C6D2D15A445D /* AnchorNode.swift in Sources */,
+				1A54D18C49EF0C8D9ED4311F /* Array2D.swift in Sources */,
+				C3415127B6C1E5C18BD85C5D /* DebugDrawOptions.swift in Sources */,
+				290F05730591226FBD77F853 /* DebugDrawableType.swift in Sources */,
+				3E3291E187F1BEDC0CCBF34D /* Logging.swift in Sources */,
+				8E493544C613B42A661990D6 /* SKGroupLayer.swift in Sources */,
+				0AF8F5EC51EBB7FB69184C0D /* SKImageLayer.swift in Sources */,
+				452407E0B6949223512FAC72 /* SKObjectGroup.swift in Sources */,
+				6B19A62585B156F1C185EB92 /* SKTile.swift in Sources */,
+				B08D9D79C873028C451C3C3D /* SKTileLayer.swift in Sources */,
+				35B85A5D2BA695BCA9DE521A /* SKTileLayerChunk.swift in Sources */,
+				E07952485D135AF3E72258B3 /* SKTileObject.swift in Sources */,
+				295F57CEA2B096268B685126 /* SKTiled+Extensions.swift in Sources */,
+				0806C9600242994FEDFBE0D3 /* SKTiled+GameplayKit.swift in Sources */,
+				EE640579D7423D84454E8AD5 /* SKTiled+Properties.swift in Sources */,
+				D021CABD31C71681A8BABC17 /* SKTiledScene.swift in Sources */,
+				1CD615E62E249B058319D10D /* SKTiledSceneCamera.swift in Sources */,
+				8DDC8D6B4B9287910A1FA935 /* SKTilemap.swift in Sources */,
+				76CCBA3EBE9226B3074E3E58 /* SKTilemapParser.swift in Sources */,
+				804EDB0B90835331C9FF6B58 /* SKTileset.swift in Sources */,
+				FC0B2C8B8BBE27B82975F92F /* SKTilesetData.swift in Sources */,
+				67E0A9B5ECEFFB854270BA9E /* SKWorld.swift in Sources */,
+				E24416ED343F495B8B967DD0 /* Stack.swift in Sources */,
+				DA7CA233ED467BDEB735BC82 /* TextObjectAttributes.swift in Sources */,
+				F9735A5B6B55C3CAE2AC3FD0 /* ThreadSafeArray.swift in Sources */,
+				E23C15A75A6432B25EB50F7B /* TileAnimationFrame.swift in Sources */,
+				AD30A74BFA7C28E05D79D3F9 /* TileCollisionShape.swift in Sources */,
+				B88139003D5EA5488B79951A /* TileContainerType.swift in Sources */,
+				F3EEF52B50FD894B104C1F11 /* TileDataStorage.swift in Sources */,
+				51FB66CB89FE12D6F46A3E80 /* TileID.swift in Sources */,
+				C9D14CAF8F25B842828A1863 /* TileObjectOverlay.swift in Sources */,
+				2E088AD978D0557A77A2135D /* TileObjectProxy.swift in Sources */,
+				4B44FCB88DA4755583C038A9 /* TiledBackgroundLayer.swift in Sources */,
+				6439C21213C6F0AA1A641F18 /* TiledCustomReflectableType.swift in Sources */,
+				B7BA0B89CFB7F6154683F20D /* TiledDebugDrawNode.swift in Sources */,
+				C0CAFAB5DDFF9E5660B65DE0 /* TiledEventHandler.swift in Sources */,
+				76574D5D0BBBC911A2B33C67 /* TiledGeometryType.swift in Sources */,
+				61F5D585C978594D22A0A4F0 /* TiledGlobals.swift in Sources */,
+				CCB0434D9E908CB04A669A2C /* TiledLayerObject.swift in Sources */,
+				C04106BBD803BA519D4E8160 /* TiledMappableGeometryType.swift in Sources */,
+				2A386072E1C393AA2DD5603D /* TiledObjectType.swift in Sources */,
+				BBB076DFE88F7989CB9AB176 /* TiledRasterizableType.swift in Sources */,
+				CE022450C988A96D0D1095E2 /* TiledSceneCameraDelegate.swift in Sources */,
+				F04A111FD76A45DED9238B9F /* TiledSceneDelegate.swift in Sources */,
+				007C061D1EF95998509BAAF6 /* TiledSelectableType.swift in Sources */,
+				0710A3E8239B3E46758DBCD0 /* TiledShadableType.swift in Sources */,
+				362298F11E9C850C73FFE971 /* TilemapDelegate.swift in Sources */,
+				6E08B9A56FA04B7F857D2BE8 /* TilesetDataSource.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -454,11 +727,11 @@
 			files = (
 				0E180D9D2E759F4269AD36D8 /* AppSmokeTests.swift in Sources */,
 				4FEEBC447E12CF70E826B83A /* BattleViewModelTests.swift in Sources */,
-				0A1B2C3D4E5F60718293A4B6 /* ChapterCompleteViewModelTests.swift in Sources */,
+				2CF2713FFA1BBF37F3BF36E7 /* ChapterCompleteViewModelTests.swift in Sources */,
 				6B6AA44F5BF0D3257C309ECF /* DialogViewModelTests.swift in Sources */,
 				FFA0837788C20216C0548B5E /* EncounterTriggerServiceTests.swift in Sources */,
 				165FE173F0612A7C42D11C31 /* ExplorationControllerTests.swift in Sources */,
-				70C4603FB3C84E4291582401 /* GameOverRecoveryTests.swift in Sources */,
+				F4625986D43D77742E908C0C /* GameOverRecoveryTests.swift in Sources */,
 				07A9D3403701FF8FA75EAE88 /* GameSessionViewModelTests.swift in Sources */,
 				0246E914ED83246EA311D898 /* InventoryViewModelTests.swift in Sources */,
 				25BE95F6B1B417258116659A /* NavigationServiceTests.swift in Sources */,
@@ -470,6 +743,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		01BE697E4C75B6663B44DF29 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E6F964797281A0918D6222EB /* SKTiled */;
+			targetProxy = F594295A27BD690F3951AB01 /* PBXContainerItemProxy */;
+		};
 		9AF7D703059714E59BE9387E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7F125E9A933BCA4AAC245B6B /* RiftExpedition */;
@@ -561,6 +839,66 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RiftExpedition.app/Contents/MacOS/RiftExpedition";
+			};
+			name = Release;
+		};
+		88678960F3A8ABD58F8C7486 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Vendor/SKTiled/Sources/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
+				PRODUCT_NAME = SKTiled;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.5;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		959327BCEDD2A544BC318C50 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Vendor/SKTiled/Sources/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
+				PRODUCT_NAME = SKTiled;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.5;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -719,6 +1057,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		D2C4BF925624F2894A0BEBBD /* Build configuration list for PBXNativeTarget "SKTiled" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				88678960F3A8ABD58F8C7486 /* Debug */,
+				959327BCEDD2A544BC318C50 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -728,23 +1075,7 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mfessenden/SKTiled.git";
-			requirement = {
-				kind = revision;
-				revision = 9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
-		144D526509E751239A80D9D5 /* SKTiled */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C43292A3D3A35DFCCD53A503 /* XCRemoteSwiftPackageReference "SKTiled" */;
-			productName = SKTiled;
-		};
 		66F68254A710BE031FA3C538 /* RiftCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RiftCore;

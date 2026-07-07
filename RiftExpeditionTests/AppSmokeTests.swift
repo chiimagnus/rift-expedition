@@ -24,13 +24,24 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertGreaterThan(worldLayer.xScale, 0)
         XCTAssertEqual(worldLayer.xScale, worldLayer.yScale)
 
-        // 这是为了防止「地图和物体对不上」这个 bug 再次出现的回归测试：不管 SKTiled 内部把
-        // (0,0) 原点定在地图的哪个位置，渲染出来的地图本身的视觉中心，都必须落在整个场景的
-        // 视觉中心上。这个测试和 GameScene 自己算居中的那套逻辑是各自独立验证的。
-        let mapFrame = tilemap.calculateAccumulatedFrame()
+        // `calculateAccumulatedFrame()` 会把 SKTiled 的对象层内部节点也算进去，不是瓦片地图本体
+        // 的视觉边界。地图居中必须以 SKTiled 暴露给渲染布局使用的 boundingRect 为准。
+        let mapFrame = tilemap.boundingRect
         let mapCenterInScene = worldLayer.convert(CGPoint(x: mapFrame.midX, y: mapFrame.midY), to: scene)
         XCTAssertEqual(mapCenterInScene.x, scene.size.width / 2, accuracy: 2.0)
         XCTAssertEqual(mapCenterInScene.y, scene.size.height / 2, accuracy: 2.0)
+    }
+
+    func testTiledMetadataUsesRenderedMapCoordinateSpace() throws {
+        let metadata = try TiledMapLoader.loadMetadata(areaID: "village_square")
+        let start = try XCTUnwrap(metadata.spawns.first { $0.id == "start" })
+        let riversideExit = try XCTUnwrap(metadata.exits.first { $0.targetAreaID == "village_riverside" })
+        let notice = try XCTUnwrap(metadata.triggers.first { $0.triggerID == "village_square_notice" })
+
+        // 这些断言故意不是 TMX 原始坐标；它们锁住 SKTiled 渲染坐标，防止逻辑坐标再次和画面错位。
+        XCTAssertEqual(start.position, CGPoint(x: -352, y: 0))
+        XCTAssertEqual(riversideExit.frame, CGRect(x: -480, y: -32, width: 32, height: 64))
+        XCTAssertEqual(notice.frame, CGRect(x: -112, y: 128, width: 128, height: 64))
     }
 
     func testLoadedMapShowsPlayerMarkersWithoutCollisionDebugFrames() throws {

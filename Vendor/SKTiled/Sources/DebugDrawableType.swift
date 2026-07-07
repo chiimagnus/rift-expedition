@@ -1,0 +1,174 @@
+//
+//  DebugDrawableType.swift
+//  SKTiled
+//
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
+//	Web: https://github.com/mfessenden
+//	Email: michael.fessenden@gmail.com
+//
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//
+//	The above copyright notice and this permission notice shall be included in
+//	all copies or substantial portions of the Software.
+//
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//	THE SOFTWARE.
+
+import Foundation
+import SpriteKit
+
+
+/// The `DebugDrawableType` protocol provides an interface to visualizing various object attributes, such as displaying a visual grid over the container, or highlighting object bounds.
+
+/// ### Properties
+///
+/// - `_debugLevel`: debugging visualization level.
+///
+@objc public protocol DebugDrawableType: AnyObject {
+
+    /// Value representing a debug visualization level.
+    @objc var _debugLevel: UInt8 { get set }
+}
+
+
+
+// TODO: implement this
+public struct DebugDrawProperties {
+    
+    /// Object frame color.
+    public var frameColor: SKColor = TiledGlobals.default.debugDisplayOptions.frameColor
+    
+    /// Grid color.
+    public var gridColor: SKColor = TiledGlobals.default.debugDisplayOptions.gridColor
+    
+    /// Highlight color.
+    public var highlightColor: SKColor = TiledGlobals.default.debugDisplayOptions.tileHighlightColor
+}
+
+
+
+// TODO: add frameColor, hightlightColor?
+// TODO: merge this with `highlightNode` function
+// TODO: add draw method?
+
+
+// MARK: - Extensions
+
+
+
+extension DebugDrawableType {
+    
+    /// Default debug draw options for all node types.
+    ///
+    /// ### Usage
+    ///
+    /// - `drawGrid`: visualize the nodes's tile grid.
+    /// - `drawFrame`: visualize the nodes's bounding rect.
+    /// - `drawGraph`: visualize the nodes's pathfinding graph.
+    /// - `drawObjectFrames`: draw object's bounding shapes.
+    /// - `drawAnchor`: draw the layer's anchor point.
+    ///
+    public var debugDrawOptions: DebugDrawOptions {
+        get {
+            return DebugDrawOptions(rawValue: _debugLevel)
+        } set {
+            _debugLevel = newValue.rawValue
+        }
+    }
+
+    // MARK: - Convenience Properties
+
+    /// Property to show/hide all `SKTileObject` objects in this object.
+    public var isShowingObjectBounds: Bool {
+        get {
+            return debugDrawOptions.contains(.drawObjectFrames)
+        } set {
+            if (newValue == true) {
+                debugDrawOptions.insert(.drawObjectFrames)
+            } else {
+                debugDrawOptions = debugDrawOptions.subtracting(.drawObjectFrames)
+            }
+        }
+    }
+    
+    /// Property to show/hide the node's anchor point shape.
+    public var isShowingAnchor: Bool {
+        get {
+            return debugDrawOptions.contains(.drawAnchor)
+        } set {
+            if (newValue == true) {
+                debugDrawOptions.insert(.drawAnchor)
+            } else {
+                debugDrawOptions = debugDrawOptions.subtracting(.drawAnchor)
+            }
+        }
+    }
+
+    /// Property to show/hide container bounds.
+    public var isShowingBounds: Bool {
+        get {
+            return debugDrawOptions.contains(.drawFrame)
+        } set {
+            if (newValue == true) {
+                debugDrawOptions.insert(.drawFrame)
+            } else {
+                debugDrawOptions = debugDrawOptions.subtracting(.drawFrame)
+            }
+        }
+    }
+
+    /// Property to show/hide container tile grid.
+    public var isShowingTileGrid: Bool {
+        get {
+            return debugDrawOptions.contains(.drawGrid)
+        } set {
+            if (newValue == true) {
+                debugDrawOptions.insert(.drawGrid)
+            } else {
+                debugDrawOptions = debugDrawOptions.subtracting(.drawGrid)
+            }
+        }
+    }
+
+    /// Property to show/hide both grid & bounds.
+    public var isShowingTileGridAndBounds: Bool {
+        get {
+            return debugDrawOptions.contains(.drawGrid) && debugDrawOptions.contains(.drawFrame)
+        } set {
+            guard (newValue != isShowingTileGridAndBounds) else {
+                return
+            }
+            
+            if (newValue == true) {
+                debugDrawOptions.insert(.drawFrame)
+                debugDrawOptions.insert(.drawGrid)
+            } else {
+                debugDrawOptions = debugDrawOptions.subtracting(.drawFrame)
+                debugDrawOptions = debugDrawOptions.subtracting(.drawGrid)
+            }
+        }
+    }
+    
+    /// Property to show/hide container pathfinding graph.
+    public var isShowingGridGraph: Bool {
+        get {
+            return debugDrawOptions.contains(.drawGraph)
+        } set {
+            if (newValue == true) {
+                debugDrawOptions.insert(.drawGraph)
+            } else {
+                debugDrawOptions = debugDrawOptions.subtracting(.drawGraph)
+            }
+        }
+    }
+}

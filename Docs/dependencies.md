@@ -3,7 +3,7 @@
 ## 允许的运行时依赖
 
 - Apple 官方框架：SwiftUI、SpriteKit、GameplayKit、Foundation、CoreGraphics、AVFoundation、OSLog。
-- SwiftPM 第三方包：SKTiled，锁定在 commit `9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe`（来自 `https://github.com/mfessenden/SKTiled.git`），用于读取 / 渲染 Tiled 地图。
+- 本地 vendored target：SKTiled，源码原样放在 `Vendor/SKTiled`，基线来自 commit `9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe`（上游 `https://github.com/mfessenden/SKTiled.git`），用于读取 / 渲染 Tiled 地图。
 
 ## 首章明确不允许引入
 
