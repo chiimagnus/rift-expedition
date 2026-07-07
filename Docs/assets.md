@@ -47,6 +47,8 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 | skill/item icons | 本地程序化绘制 | self-made | Rift Expedition project |
 | WAV cues / ambience loops | 本地程序化合成 | self-made | Rift Expedition project |
 
+P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cave_theme_loop.wav` 已按 `self-made` 登记为本地程序化合成循环。2026-07-08 核对外部 CC0 候选时未找到比现有资源明显更合适、且授权/免署名口径更稳定的替换项，因此本轮保留现有三条区域 BGM；日后替换必须重新登记具体来源 URL、作者、license 与入库日期。
+
 > 已移除 `spritesheet.party_classes`（`Assets/Characters/party_classes.png`）：与已在用的 `Assets/Sprites/actor_warrior|archer|mage|rogue.png` 表达同一概念（玩家职业立绘）且代码从未引用过，属于被早期草稿资源取代后遗留的冗余登记，非当前正式资源。
 
 ### 多帧 spritesheet 的帧位约定
