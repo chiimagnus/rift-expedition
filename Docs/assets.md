@@ -49,7 +49,7 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cave_theme_loop.wav` 已按 `self-made` 登记为本地程序化合成循环。2026-07-08 核对外部 CC0 候选时未找到比现有资源明显更合适、且授权/免署名口径更稳定的替换项，因此本轮保留现有三条区域 BGM；日后替换必须重新登记具体来源 URL、作者、license 与入库日期。
 
-> 已移除旧静态角色资源与旧单曲 BGM：`Assets/Sprites/actor_*.png`、`npc_elder.png`、`enemy_*.png`、`Assets/Characters/party_classes.png`、`village_npcs.png`、`human_enemies.png`、`beasts_and_monsters.png`、`Assets/Audio/area_bgm_loop.wav` 均不再作为正式资源登记。角色视觉运行时以 `actor-animations.json` 和 `Assets/Characters/*_anim.png` 为准；缺动画时只显示最小安全占位并记录 assets 日志。
+> 已移除旧静态角色资源、旧 3 帧角色 sheet 与旧单曲 BGM；这些资源不再作为正式资源登记。角色视觉运行时以 `actor-animations.json` 和 `Assets/Characters/*_anim.png` 为准；缺动画时只显示最小安全占位并记录 assets 日志。
 
 ### Actor animation spritesheet contract
 
@@ -103,4 +103,4 @@ P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cav
 - 资源清单：检查 `assets-manifest.json` 每个条目的 `license`、`source`、`path`。
 - 地图预览 / 校验：运行 validator（预览与报告为生成产物，不入库，见 [`tiled-map-contract.md`](tiled-map-contract.md)）。
 - 禁止提交文件名或 id 含 `placeholder`、`temp`、`graybox` 的正式资源。
-- 最终验收：正式角色动画资源和音频资源必须通过 validator；全量旧角色资源清理由 P6 完成。
+- 最终验收：正式角色动画资源和音频资源必须通过 validator；旧静态角色资源已清理，正式角色视觉以 `actor-animations.json` 为准。
