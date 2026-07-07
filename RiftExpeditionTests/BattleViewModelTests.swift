@@ -107,6 +107,24 @@ final class BattleViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 1)
         XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.health, 7)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents, [
+            BattlePresentationEvent(
+                id: 1,
+                actorID: "player",
+                action: .attack,
+                direction: .right,
+                targetActorID: "boar",
+                effectPoint: CGPoint(x: 120, y: 100)
+            ),
+            BattlePresentationEvent(
+                id: 2,
+                actorID: "boar",
+                action: .hurt,
+                direction: .left,
+                targetActorID: "player",
+                effectPoint: CGPoint(x: 120, y: 100)
+            )
+        ])
     }
 
     func testMoveToClickedPointSpendsAPAndUpdatesPosition() {
@@ -185,6 +203,45 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 3)
         XCTAssertEqual(viewModel.inventory.count(of: "minor_healing_draught"), 0)
         XCTAssertEqual(viewModel.selectedAction, .move)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents, [
+            BattlePresentationEvent(
+                id: 1,
+                actorID: "player",
+                action: .attack,
+                direction: .down,
+                targetActorID: "player",
+                effectPoint: CGPoint(x: 100, y: 100)
+            )
+        ])
+    }
+
+    func testDodgedPlayerSkillEmitsAttackWithoutHurt() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
+                actor(id: "rogue", faction: .hostile, actionPoints: 4, skillIDs: [], evasion: 100)
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "rogue": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+        viewModel.performSelectedAction(targetID: "rogue")
+
+        XCTAssertEqual(viewModel.state.actor(id: "rogue")?.stats.health, 12)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents, [
+            BattlePresentationEvent(
+                id: 1,
+                actorID: "player",
+                action: .attack,
+                direction: .right,
+                targetActorID: "rogue",
+                effectPoint: CGPoint(x: 120, y: 100)
+            )
+        ])
     }
 
     func testEndTurnAdvancesActiveActorAndRefreshesActionPoints() {
@@ -277,7 +334,8 @@ final class BattleViewModelTests: XCTestCase {
         skillIDs: [String],
         kind: ActorKind? = nil,
         classID: String? = nil,
-        level: Int = 1
+        level: Int = 1,
+        evasion: Int = 0
     ) -> Actor {
         Actor(
             id: id,
@@ -290,7 +348,7 @@ final class BattleViewModelTests: XCTestCase {
                 health: health,
                 attack: 4,
                 defense: 1,
-                evasion: 0,
+                evasion: evasion,
                 magic: 0,
                 maxActionPoints: 4,
                 actionPoints: actionPoints

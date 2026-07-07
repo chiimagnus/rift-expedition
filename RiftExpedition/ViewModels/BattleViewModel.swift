@@ -471,6 +471,14 @@ final class BattleViewModel {
             let damage = max(0, beforeHealth - afterHealth)
             let surfaceText = applyCreatedSurfaces(resolution.createdSurfaces, at: targetPosition, targetID: targetID)
             consumeSelectedItemIfNeeded()
+            emitSkillEvents(
+                actorID: actor.id,
+                targetID: targetID,
+                casterPosition: casterPosition,
+                targetPosition: targetPosition,
+                didDodge: resolution.didDodge,
+                damage: damage
+            )
 
             if resolution.didDodge {
                 statusText = "\(target.displayName) 闪避了 \(label)。"
@@ -629,6 +637,40 @@ final class BattleViewModel {
         if presentationEvents.count > 8 {
             presentationEvents.removeFirst(presentationEvents.count - 8)
         }
+    }
+
+    private func emitSkillEvents(
+        actorID: String,
+        targetID: String,
+        casterPosition: CGPoint,
+        targetPosition: CGPoint,
+        didDodge: Bool,
+        damage: Int
+    ) {
+        let attackDirection = animationDirection(from: casterPosition, to: targetPosition)
+            ?? actorFacings[actorID]
+            ?? .down
+        actorFacings[actorID] = attackDirection
+        appendPresentationEvent(
+            actorID: actorID,
+            action: .attack,
+            direction: attackDirection,
+            targetActorID: targetID,
+            effectPoint: targetPosition
+        )
+
+        guard !didDodge, damage > 0 else { return }
+        let hurtDirection = animationDirection(from: targetPosition, to: casterPosition)
+            ?? actorFacings[targetID]
+            ?? .down
+        actorFacings[targetID] = hurtDirection
+        appendPresentationEvent(
+            actorID: targetID,
+            action: .hurt,
+            direction: hurtDirection,
+            targetActorID: actorID,
+            effectPoint: targetPosition
+        )
     }
 
     private func animationDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {
