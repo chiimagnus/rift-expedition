@@ -300,6 +300,43 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.last?.direction, .left)
     }
 
+    func testEnemySkillEmitsAttackAndHurtEvents() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: ["heavy_slash"])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.endTurn()
+
+        XCTAssertEqual(viewModel.state.activeActorID, "player")
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.health, 7)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents, [
+            BattlePresentationEvent(
+                id: 1,
+                actorID: "boar",
+                action: .attack,
+                direction: .left,
+                targetActorID: "player",
+                effectPoint: CGPoint(x: 100, y: 100)
+            ),
+            BattlePresentationEvent(
+                id: 2,
+                actorID: "player",
+                action: .hurt,
+                direction: .right,
+                targetActorID: "boar",
+                effectPoint: CGPoint(x: 100, y: 100)
+            )
+        ])
+    }
+
     private var heavySlash: SkillDefinition {
         SkillDefinition(
             id: "heavy_slash",
