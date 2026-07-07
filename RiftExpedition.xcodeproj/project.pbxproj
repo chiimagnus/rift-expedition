@@ -30,7 +30,6 @@
 		70C4603FB3C84E4291582401 /* GameOverRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9E9466292C4C5C9DCD43B1 /* GameOverRecoveryTests.swift */; };
 		75888EDDD89E8D43FB9D8081 /* GameLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E228968FC56BB933A3CABE /* GameLog.swift */; };
 		762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD76F051C6CC030C6D0731 /* SettingsView.swift */; };
-		F00DBEEF1234567890ABCDEE /* RiftTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00DBEEF1234567890ABCDEF /* RiftTheme.swift */; };
 		7A1FAA9933C66689FD577710 /* SKTiledSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */; };
 		7EFE432FF57723A0E6402008 /* GameSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A11D608E5672C4D8E4AFEE /* GameSessionViewModel.swift */; };
 		9183538DE747AB36298AB423 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE3322D8EF6763B46BF3C1B /* AudioService.swift */; };
@@ -54,6 +53,7 @@
 		E4F1A8A2075A81DCCD66DA54 /* PartyCreationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */; };
 		EA26E71CCD073F770F867A1E /* GameRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D9C87993ED01E0C345D4D1 /* GameRootView.swift */; };
 		ED3D5492A209D88E71E23C04 /* SaveLoadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7101425E7A0C85952FE84AFB /* SaveLoadView.swift */; };
+		F00DBEEF1234567890ABCDEE /* Theme/RiftTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00DBEEF1234567890ABCDEF /* Theme/RiftTheme.swift */; };
 		FFA0837788C20216C0548B5E /* EncounterTriggerServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13ADCD02CE1DDCFC52A3C22E /* EncounterTriggerServiceTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -101,7 +101,6 @@
 		96ECC71E1DF84B764C758E8F /* RiftExpedition.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RiftExpedition.entitlements; sourceTree = "<group>"; };
 		A2B16655338F5A7331D323D9 /* QuestLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestLogView.swift; sourceTree = "<group>"; };
 		ABCD76F051C6CC030C6D0731 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		F00DBEEF1234567890ABCDEF /* RiftTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme/RiftTheme.swift; sourceTree = "<group>"; };
 		B8FFB76B3265761E301E9ABE /* ExplorationControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplorationControllerTests.swift; sourceTree = "<group>"; };
 		BCE33441FC0022334EC29321 /* PartyCreationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationViewModel.swift; sourceTree = "<group>"; };
 		BDDC2D82CDF426BA23FE4903 /* SKTiledSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTiledSmoke.swift; sourceTree = "<group>"; };
@@ -115,6 +114,7 @@
 		DFB40451858A3BC818E7A3E9 /* DialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogView.swift; sourceTree = "<group>"; };
 		E21ED1B8BC9A963A07E80AC0 /* SaveLoadViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveLoadViewModelTests.swift; sourceTree = "<group>"; };
 		E9690F5B30C8F52EA2944A2B /* TiledMapLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledMapLoader.swift; sourceTree = "<group>"; };
+		F00DBEEF1234567890ABCDEF /* Theme/RiftTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme/RiftTheme.swift; sourceTree = "<group>"; };
 		F91E145CC57DAABAD58BA948 /* LineOfSightService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineOfSightService.swift; sourceTree = "<group>"; };
 		FDD21D61B804614283239218 /* RiftExpeditionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiftExpeditionApp.swift; sourceTree = "<group>"; };
 		FEA81A8F301589365BBF6754 /* PartyCreationViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyCreationViewModelTests.swift; sourceTree = "<group>"; };
@@ -170,7 +170,7 @@
 				A2B16655338F5A7331D323D9 /* QuestLogView.swift */,
 				7101425E7A0C85952FE84AFB /* SaveLoadView.swift */,
 				ABCD76F051C6CC030C6D0731 /* SettingsView.swift */,
-				F00DBEEF1234567890ABCDEF /* RiftTheme.swift */,
+				F00DBEEF1234567890ABCDEF /* Theme/RiftTheme.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -443,7 +443,7 @@
 				ED3D5492A209D88E71E23C04 /* SaveLoadView.swift in Sources */,
 				991189CB683319A94BEAA1A2 /* SaveLoadViewModel.swift in Sources */,
 				762B7AB18C17309A6B4CC3B5 /* SettingsView.swift in Sources */,
-				F00DBEEF1234567890ABCDEE /* RiftTheme.swift in Sources */,
+				F00DBEEF1234567890ABCDEE /* Theme/RiftTheme.swift in Sources */,
 				A8CCEAD8EEF70AAF3D485948 /* TiledMapLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
