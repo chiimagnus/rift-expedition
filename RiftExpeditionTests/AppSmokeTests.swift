@@ -11,6 +11,22 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertEqual(scene.size, GameScene.sceneSize)
     }
 
+    func testSceneCanLoadAnimationCatalogOrFallBackToStaticTextures() throws {
+        XCTAssertNotNil(ActorAnimationCatalog.resourceURL())
+        XCTAssertNotNil(ActorAnimationCatalog.load())
+
+        let sceneWithCatalog = GameScene(size: GameScene.sceneSize)
+        sceneWithCatalog.didMove(to: SKView(frame: CGRect(origin: .zero, size: sceneWithCatalog.size)))
+        XCTAssertNotNil(sceneWithCatalog.childNode(withName: "worldLayer"))
+
+        let sceneWithoutCatalog = GameScene(size: GameScene.sceneSize)
+        sceneWithoutCatalog.assetBundle = Bundle(for: Self.self)
+        XCTAssertNil(ActorAnimationCatalog.resourceURL(bundle: sceneWithoutCatalog.assetBundle))
+        XCTAssertNil(ActorAnimationCatalog.load(bundle: sceneWithoutCatalog.assetBundle))
+        sceneWithoutCatalog.didMove(to: SKView(frame: CGRect(origin: .zero, size: sceneWithoutCatalog.size)))
+        XCTAssertNotNil(sceneWithoutCatalog.childNode(withName: "worldLayer"))
+    }
+
     func testSceneCentersLoadedMapInWorldLayer() throws {
         let scene = GameScene(size: CGSize(width: 1600, height: 900))
         scene.scaleMode = .resizeFill

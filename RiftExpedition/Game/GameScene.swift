@@ -18,6 +18,7 @@ final class GameScene: SKScene {
 
     weak var eventHandler: (any GameSceneEventHandling)?
     var isWorldInputEnabled = true
+    var assetBundle: Bundle = .main
     private let worldLayer = SKNode()
     private var tilemap: SKTilemap?
     private var loadedAreaID: String?
@@ -26,6 +27,8 @@ final class GameScene: SKScene {
     private var staticObjectLayer: SKNode?
     private var battleLayer: SKNode?
     private var textureCache: [String: SKTexture] = [:]
+    private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
+    private var didLogAnimationCatalogFallback = false
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -36,6 +39,7 @@ final class GameScene: SKScene {
     override func didMove(to view: SKView) {
         view.window?.makeFirstResponder(view)
         backgroundColor = SKColor(red: 0.08, green: 0.10, blue: 0.08, alpha: 1)
+        preloadAnimationCatalogIfNeeded()
         if worldLayer.parent == nil {
             worldLayer.name = "worldLayer"
             worldLayer.zPosition = 0
@@ -256,8 +260,8 @@ final class GameScene: SKScene {
     }
 
     private func partySpriteName(for member: PartyMemberPosition) -> String {
-        guard let classID = member.classID else { return "actor_warrior" }
-        return "actor_\(classID)"
+        guard let classID = member.classID else { return staticTextureName(for: "actor_warrior") }
+        return staticTextureName(for: "actor_\(classID)")
     }
 
     private func renderStaticObjects(metadata: TiledMapMetadata) {
@@ -537,6 +541,12 @@ final class GameScene: SKScene {
         return texture
     }
 
+    private func preloadAnimationCatalogIfNeeded() {
+        guard actorAnimationCatalog == nil, !didLogAnimationCatalogFallback else { return }
+        didLogAnimationCatalogFallback = true
+        GameLog.assets.notice("Actor animation catalog unavailable; using static texture fallback")
+    }
+
     /// 从 `Assets/Characters` 目录下名为 `sheetName`、总共有 `frameCount` 帧的横向长条
     /// 拼接图里，切出第 `frameIndex` 帧。这个函数是所有「多帧角色立绘图」共用的
     /// （村民 NPC、人类敌人、动物/怪物都在用），这样以后新增一批角色立绘，
@@ -599,11 +609,24 @@ final class GameScene: SKScene {
     private func spriteName(forNPC npc: MapNPC) -> String {
         switch npc.actorID {
         case "elder", "mayor":
-            "npc_elder"
+            staticTextureName(for: "npc_mayor")
         case "gate_guard":
+            staticTextureName(for: "npc_gate_guard")
+        default:
+            staticTextureName(for: "npc_fiance")
+        }
+    }
+
+    private func staticTextureName(for visualID: String) -> String {
+        switch visualID {
+        case "npc_mayor":
+            "npc_elder"
+        case "npc_fiance", "npc_healer":
+            "npc_village_resident"
+        case "npc_gate_guard":
             "npc_village_guard"
         default:
-            "npc_village_resident"
+            visualID
         }
     }
 
