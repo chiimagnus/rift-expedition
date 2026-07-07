@@ -27,6 +27,7 @@ final class GameScene: SKScene {
     private var staticObjectLayer: SKNode?
     private var battleLayer: SKNode?
     private var textureCache: [String: SKTexture] = [:]
+    private var animationFrameCache: [String: [SKTexture]] = [:]
     private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
     private var didLogAnimationCatalogFallback = false
 
@@ -545,6 +546,56 @@ final class GameScene: SKScene {
         guard actorAnimationCatalog == nil, !didLogAnimationCatalogFallback else { return }
         didLogAnimationCatalogFallback = true
         GameLog.assets.notice("Actor animation catalog unavailable; using static texture fallback")
+    }
+
+    private func animationFrames(
+        visualID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection
+    ) -> [SKTexture]? {
+        let cacheKey = "\(visualID)/\(action.rawValue)/\(direction.rawValue)"
+        if let frames = animationFrameCache[cacheKey] {
+            return frames
+        }
+        guard
+            let catalog = actorAnimationCatalog,
+            let sheetPath = catalog.sheetPath(for: visualID),
+            let sheetTexture = texture(sheetPath: sheetPath)
+        else {
+            return nil
+        }
+
+        let frames = catalog.frames(for: visualID, action: action, direction: direction).map { rect in
+            let texture = SKTexture(rect: rect, in: sheetTexture)
+            texture.filteringMode = .nearest
+            return texture
+        }
+        guard !frames.isEmpty else {
+            return nil
+        }
+        animationFrameCache[cacheKey] = frames
+        return frames
+    }
+
+    private func texture(sheetPath: String) -> SKTexture? {
+        let cacheKey = "sheet:\(sheetPath)"
+        if let texture = textureCache[cacheKey] {
+            return texture
+        }
+        let path = NSString(string: sheetPath)
+        let resource = path.deletingPathExtension
+        let ext = path.pathExtension
+        guard
+            let url = assetBundle.url(forResource: resource, withExtension: ext.isEmpty ? nil : ext),
+            let image = NSImage(contentsOf: url)
+        else {
+            return nil
+        }
+
+        let texture = SKTexture(image: image)
+        texture.filteringMode = .nearest
+        textureCache[cacheKey] = texture
+        return texture
     }
 
     /// 从 `Assets/Characters` 目录下名为 `sheetName`、总共有 `frameCount` 帧的横向长条
