@@ -19,6 +19,23 @@ final class AssetValidationTests: XCTestCase {
         XCTAssertTrue(report.contains("placeholder"))
     }
 
+    func testAnimationFixturePasses() throws {
+        let result = try AssetValidator.validate(resourcesRoot: fixtureRoot("animation-valid"))
+
+        XCTAssertTrue(result.isValid, "\(result.issues)")
+    }
+
+    func testAnimationInvalidSizeFailsWithReadableIssue() throws {
+        let result = try AssetValidator.validate(resourcesRoot: fixtureRoot("animation-invalid-size"))
+        let report = result.issues.map(\.message).joined(separator: "\n")
+
+        XCTAssertFalse(result.isValid)
+        XCTAssertTrue(report.contains("test_actor"), report)
+        XCTAssertTrue(report.contains("Assets/Characters/test_actor_anim.png"), report)
+        XCTAssertTrue(report.contains("1152x384"), report)
+        XCTAssertTrue(report.contains("96x96"), report)
+    }
+
     private func fixtureRoot(_ name: String) throws -> URL {
         try XCTUnwrap(Bundle.module.resourceURL?.appending(path: "Fixtures/\(name)"))
     }
