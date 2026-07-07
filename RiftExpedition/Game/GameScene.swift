@@ -105,11 +105,8 @@ final class GameScene: SKScene {
             node.fillColor = member.actorID == leaderID
                 ? SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
                 : SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 1)
-            // 之前这里只更新了 node.position，人物贴图完全没有任何动画，也不会根据朝向左右镜像，
-            // 看起来就是一个图标在平移。现在朝 target 移动时播放一个简单的“走路上下弹跳”动画，
-            // 并根据 facingRight 左右翻转贴图，静止时把动画和翻转都还原。
             if let sprite = node.childNode(withName: "partySprite_\(member.actorID)") as? SKSpriteNode {
-                sprite.xScale = member.facingRight ? abs(sprite.xScale) : -abs(sprite.xScale)
+                sprite.xScale = member.facing == .left ? -abs(sprite.xScale) : abs(sprite.xScale)
                 let isMoving = member.target != nil
                 if isMoving {
                     if sprite.action(forKey: "walkBob") == nil {

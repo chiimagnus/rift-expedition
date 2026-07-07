@@ -35,6 +35,49 @@ final class ExplorationControllerTests: XCTestCase {
         XCTAssertLessThan(leader.position.x, 300)
     }
 
+    func testAdvanceUpdatesFacingOnMajorMovementAxis() throws {
+        var controller = ExplorationController()
+        controller.moveSpeed = 100
+        controller.configureParty([actor(id: "player_1", displayName: "战士1")], at: CGPoint(x: 100, y: 100))
+
+        controller.setLeaderDestination(CGPoint(x: 200, y: 100))
+        controller.advance(deltaTime: 0.25)
+        XCTAssertEqual(controller.members[0].facing, .right)
+
+        controller.setLeaderDestination(CGPoint(x: 75, y: 100))
+        controller.advance(deltaTime: 0.25)
+        XCTAssertEqual(controller.members[0].facing, .left)
+
+        controller.setLeaderDestination(CGPoint(x: controller.members[0].position.x, y: 200))
+        controller.advance(deltaTime: 0.25)
+        XCTAssertEqual(controller.members[0].facing, .up)
+
+        controller.setLeaderDestination(CGPoint(x: controller.members[0].position.x, y: 50))
+        controller.advance(deltaTime: 0.25)
+        XCTAssertEqual(controller.members[0].facing, .down)
+    }
+
+    func testAdvanceKeepsFacingWhenMovementIsBlocked() throws {
+        var controller = ExplorationController()
+        controller.moveSpeed = 100
+        controller.agentRadius = 0
+        controller.configureParty([actor(id: "player_1", displayName: "战士1")], at: CGPoint(x: 100, y: 100))
+        controller.setLeaderDestination(CGPoint(x: 140, y: 100))
+        controller.setObstacles([
+            NavigationObstacle(
+                tiledID: 1,
+                frame: CGRect(x: 120, y: 90, width: 30, height: 30),
+                blocksMovement: true,
+                blocksSight: false
+            )
+        ])
+
+        controller.advance(deltaTime: 0.25)
+
+        XCTAssertEqual(controller.members[0].position, CGPoint(x: 100, y: 100))
+        XCTAssertEqual(controller.members[0].facing, .right)
+    }
+
     func testConfigurePartyCarriesClassIDForRendering() throws {
         var controller = ExplorationController()
         controller.configureParty(
