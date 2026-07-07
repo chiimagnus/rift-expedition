@@ -27,6 +27,9 @@ struct BattleActorMarker: Equatable, Identifiable {
     var displayName: String
     var factionName: String
     var spriteName: String
+    var visualID: String
+    var facing: ActorAnimationDirection
+    var baseAction: ActorAnimationKind
     var position: CGPoint
     var health: Int
     var maxHealth: Int
@@ -37,6 +40,15 @@ struct BattleActorMarker: Equatable, Identifiable {
     var isDefeated: Bool
 }
 
+struct BattlePresentationEvent: Equatable, Identifiable {
+    var id: Int
+    var actorID: String
+    var action: ActorAnimationKind
+    var direction: ActorAnimationDirection
+    var targetActorID: String?
+    var effectPoint: CGPoint?
+}
+
 struct BattleSceneSnapshot: Equatable {
     var actors: [BattleActorMarker]
     var surfaces: [BattleSurfaceMarker]
@@ -44,6 +56,7 @@ struct BattleSceneSnapshot: Equatable {
     var selectedAction: BattleActionChoice
     var moveRadius: CGFloat
     var lastEffectPoint: CGPoint?
+    var presentationEvents: [BattlePresentationEvent]
 }
 
 @MainActor
@@ -63,9 +76,12 @@ final class BattleViewModel {
     var statusText = "战斗开始。"
     var targetPrompt = "选择移动位置，或先选择技能再点敌人。"
     var actorPositions: [String: CGPoint]
+    var actorFacings: [String: ActorAnimationDirection]
     var surfaces: [BattleSurfaceMarker]
     var inventory: PartyInventory
     var lastEffectPoint: CGPoint?
+    private var nextPresentationEventID = 1
+    private var presentationEvents: [BattlePresentationEvent] = []
 
     init(
         state: BattleState,
@@ -85,6 +101,7 @@ final class BattleViewModel {
         skillsByID = indexedSkills
         self.itemDefinitions = itemDefinitions
         actorPositions = Self.makeInitialPositions(for: state.actors, overrides: initialPositions)
+        actorFacings = Dictionary(uniqueKeysWithValues: state.actors.map { ($0.id, ActorAnimationDirection.down) })
         self.inventory = inventory
         self.surfaces = surfaces
         self.hasLineOfSight = hasLineOfSight
@@ -140,11 +157,15 @@ final class BattleViewModel {
     var sceneSnapshot: BattleSceneSnapshot {
         BattleSceneSnapshot(
             actors: state.actors.map { actor in
-                BattleActorMarker(
+                let visualID = ActorVisualIDResolver.visualID(for: actor)
+                return BattleActorMarker(
                     id: actor.id,
                     displayName: actor.displayName,
                     factionName: factionName(actor.faction),
-                    spriteName: ActorVisualIDResolver.visualID(for: actor),
+                    spriteName: visualID,
+                    visualID: visualID,
+                    facing: actorFacings[actor.id] ?? .down,
+                    baseAction: .idle,
                     position: actorPositions[actor.id] ?? .zero,
                     health: actor.stats.health,
                     maxHealth: actor.stats.maxHealth,
@@ -159,7 +180,8 @@ final class BattleViewModel {
             activeActorID: state.activeActorID,
             selectedAction: selectedAction,
             moveRadius: moveRadius,
-            lastEffectPoint: lastEffectPoint
+            lastEffectPoint: lastEffectPoint,
+            presentationEvents: presentationEvents
         )
     }
 

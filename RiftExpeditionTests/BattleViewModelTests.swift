@@ -30,6 +30,26 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertNotEqual(sprites["grunt_warrior"], sprites["player"])
     }
 
+    func testSnapshotIncludesStableAnimationState() throws {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: [], kind: .player, classID: "warrior"),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: []
+        )
+
+        let firstSnapshot = viewModel.sceneSnapshot
+        let secondSnapshot = viewModel.sceneSnapshot
+        let player = try XCTUnwrap(firstSnapshot.actors.first { $0.id == "player" })
+
+        XCTAssertEqual(player.visualID, "actor_warrior")
+        XCTAssertEqual(player.spriteName, player.visualID)
+        XCTAssertEqual(player.facing, .down)
+        XCTAssertEqual(player.baseAction, .idle)
+        XCTAssertEqual(firstSnapshot.presentationEvents, secondSnapshot.presentationEvents)
+    }
+
     func testBeastAndMonsterSpriteVariesByKindAndLevel() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
