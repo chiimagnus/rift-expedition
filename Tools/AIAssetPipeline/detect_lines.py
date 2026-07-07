@@ -17,7 +17,7 @@ is_black = (arr[..., 0] < 60) & (arr[..., 1] < 60) & (arr[..., 2] < 60)
 col_black_frac = is_black.mean(axis=0)
 row_black_frac = is_black.mean(axis=1)
 
-def find_lines(frac, min_frac=0.5):
+def find_lines(frac, min_frac=0.8):
     idx = np.where(frac >= min_frac)[0]
     if len(idx) == 0:
         return []
