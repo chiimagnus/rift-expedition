@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -604,7 +604,6 @@
 			packageReferences = (
 				47D3AD67B810E446EEB4EB33 /* XCLocalSwiftPackageReference "Packages/RiftCore" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -916,6 +915,7 @@
 				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = RDQHYSDFFG;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -937,6 +937,7 @@
 				CODE_SIGN_ENTITLEMENTS = RiftExpedition/RiftExpedition.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = RDQHYSDFFG;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "裂隙远征";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
