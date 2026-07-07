@@ -2,9 +2,9 @@
 //  TileAnimationFrame.swift
 //  SKTiled
 //
-//  Created by Michael Fessenden.
-//  Web: https://github.com/mfessenden
-//  Email: michael.fessenden@gmail.com
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
+//	Web: https://github.com/mfessenden
+//	Email: michael.fessenden@gmail.com
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -27,40 +27,37 @@
 import SpriteKit
 
 
-/**
- 
- ## Overview
- 
- A structure representing a single frame of animation. Time is stored in milliseconds.
- 
- ### Properties
- 
- | Property | Description             |
- |----------|-------------------------|
- | id       | unique tile (local) id. |
- | duration | frame duration.         |
- | texture  | optional tile texture.  |
- 
- */
+/// The `TileAnimationFrame` structure represents a single frame of animation. Time is stored in milliseconds.
+///
+/// ### Properties
+///
+/// - `id`: unique tile (local) id.
+/// - `duration`: frame duration.
+/// - `texture`: optional tile texture.
+///
 public class TileAnimationFrame: NSObject {
-    
+
+    // MARK: - Properties
+
     /// Frame tile id.
-    public var id: Int = 0
-    
+    public var id: UInt32 = 0
+
     /// Frame duration.
     public var duration: Int = 0
-    
+
     /// Frame texture.
     public var texture: SKTexture?
-    
-    /**
-     Initialize with an id, frame duration and texture.
-     
-     - parameter id: `Int` tile id.
-     - parameter duration: `Int` frame duration.
-     - parameter texture: `SKTexture?` frame texture.
-     */
-    public init(id: Int, duration: Int, texture: SKTexture? = nil) {
+
+    /// Initialize with an id, frame duration and texture.
+    ///
+    /// - Parameters:
+    ///   - id: tile id.
+    ///   - duration: frame duration.
+    ///   - texture: frame texture.
+    public init(id: UInt32,
+                duration: Int,
+                texture: SKTexture? = nil) {
+
         super.init()
         self.id = id
         self.duration = duration
@@ -72,14 +69,46 @@ public class TileAnimationFrame: NSObject {
 // MARK: - Extensions
 
 
+/// :nodoc: Tile animation frame debug descriptions.
 extension TileAnimationFrame {
-    
-    /// Frame description.
-    override public var description: String {
-        return "Frame: \(id): \(duration)"
+
+    public override var description: String {
+        return "id: \(id): \(duration)"
     }
-    
-    override public var debugDescription: String {
-        return "<\(description)>"
+
+    public override var debugDescription: String {
+        return #"<\#(description)>"#
+    }
+}
+
+
+/// :nodoc: Tile animation frame debug descriptions.
+extension TileAnimationFrame: CustomReflectable {
+
+    /// Returns a custom mirror for this object.
+    public var customMirror: Mirror {
+        let attributes: [(label: String?, value: Any)] = [
+            (label: "tile id", value: self.id),
+            (label: "duration", value: self.duration)
+        ]
+
+        return Mirror(self, children: attributes, displayStyle: .struct, ancestorRepresentation: .suppressed)
+    }
+}
+
+
+// MARK: - Deprecations
+
+
+extension TileAnimationFrame {
+    /// Initialize with an id, frame duration and texture.
+    ///
+    /// - Parameters:
+    ///   - id: tile id.
+    ///   - duration: frame duration.
+    ///   - texture: frame texture.
+    @available(*, deprecated, renamed: "init(id:duration:texture:)")
+    public convenience init(id: Int, duration: Int, texture: SKTexture? = nil) {
+        self.init(id: UInt32(id), duration: duration, texture: texture)
     }
 }

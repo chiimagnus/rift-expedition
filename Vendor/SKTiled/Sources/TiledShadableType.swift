@@ -1,8 +1,8 @@
 //
-//  SKTiled.h
+//  TiledShadableType.swift
 //  SKTiled
 //
-//  Copyright © 2021 Michael Fessenden. all rights reserved.
+//  Copyright © 2020 Michael Fessenden. all rights reserved.
 //	Web: https://github.com/mfessenden
 //	Email: michael.fessenden@gmail.com
 //
@@ -23,14 +23,11 @@
 //	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
-//
-//  Description:
-//     - SKTiled Objective-C umbrella header.
 
-#import <Foundation/Foundation.h>
+import SpriteKit
 
 
-FOUNDATION_EXPORT double SKTiledVersionNumber;
-FOUNDATION_EXPORT const unsigned char SKTiledVersionString[];
-
-// In this header, you should import all the public headers of your framework using statements like #import <CoolExtensions/PublicHeader.h>
+@objc public protocol TiledShadableType: class {
+    
+    @objc var shaderUniforms: [String: SKUniform] { get }
+}

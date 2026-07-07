@@ -2,10 +2,9 @@
 //  SKTilesetData.swift
 //  SKTiled
 //
-//  Created by Michael Fessenden.
-//
-//  Web: https://github.com/mfessenden
-//  Email: michael.fessenden@gmail.com
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
+//	Web: https://github.com/mfessenden
+//	Email: michael.fessenden@gmail.com
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -28,34 +27,27 @@
 import SpriteKit
 
 
+/// The `SKTilesetData` structure stores data for a single tileset tile, referencing the tile texture or animation frames (for animated tiles).
+///
+/// This class optionally includes navigation properties for tile accessability, and graph node weight.
+///
+/// ### Properties
+///
+/// - `id`: tile id (local).
+/// - `type`: tiled object type.
+/// - `texture`: Tile texture.
+/// - `tileOffset`: Tile offset.
+///
+public class SKTilesetData: CustomReflectable, TiledObjectType {
 
-/**
-
- ## Overview
-
- The `SKTilesetData` object stores data for a single tileset tile, referencing the tile texture, animation frames (for animated tiles) as well as tile orientation.
-
- Also includes navigation properties for tile accessability, and graph node weight.
-
- ### Properties
-
- | Property   | Description     |
- |------------|-----------------|
- | id         | Tile id (local) |
- | type       | Tiled type      |
- | texture    | Tile texture    |
- | tileOffset | Tile offset     |
-
- */
-public class SKTilesetData: SKTiledObject {
-
-    weak public var tileset: SKTileset!                     // reference to parent tileset
+    /// Reference to parent tileset.
+    public weak var tileset: SKTileset!
 
     /// Unique id.
     public var uuid: String = UUID().uuidString
 
-    /// Tile id (local).
-    public var id: Int = 0
+    /// Local tile id.
+    public var id: UInt32 = 0
 
     /// Tiled type.
     public var type: String!
@@ -69,20 +61,27 @@ public class SKTilesetData: SKTiledObject {
     public var texture: SKTexture!
 
     /// Source image name (collections tileset)
-    public var source: String! = nil
-    
+    public var source: String!
+
     /// Source image size (collections tileset)
     public var sourceSize: CGSize?
 
-    /// Tile occurance probability (parsed from Tiled, not currently used).
-
+    /// Probability value. This is parsed from the **Tiled** tileset data, though not used anywhere.
     public var probability: CGFloat = 1.0
 
-    /// Custom Tiled properties.
+    /// Custom node properties.
     public var properties: [String: String] = [:]
 
-    /// Node ignores custom properties.
+    /// :nodoc: Private **Tiled** properties.
+    public var _tiled_properties: [String: String] = [:]
+    
+    /// Ignore custom properties.
     public var ignoreProperties: Bool = false
+
+    /// Getter for the size of this tile. (collections tile size may be different than that of the tileset).
+    public var tileSize: CGSize {
+        return sourceSize ?? tileset.tileSize
+    }
 
     /// Tile offset.
     public var tileOffset: CGPoint = CGPoint.zero
@@ -90,28 +89,37 @@ public class SKTilesetData: SKTiledObject {
     /// Render scaling property.
     public var renderQuality: CGFloat = 8
 
-    /// Animated frames.
+    // MARK: - Animation
+
+    /// Current frame time.
     internal var currentTime: TimeInterval = 0
+
+    /// Current frame index.
     internal var frameIndex: UInt8 = 0
 
     /// Supress tile animation.
     internal var blockAnimation: Bool = false
+
+    /// Animation frames.
     internal var _frames: [TileAnimationFrame] = []
 
-
-    /// Tile animation frame storate.
-    public var frames:  [TileAnimationFrame] {
+    /// If animation is enabled, returns the current frames data.
+    ///
+    /// - Returns: array of animation frames.
+    public var frames: [TileAnimationFrame] {
         return (blockAnimation == false) ? _frames : []
     }
 
     /// Indicates the tile is animated.
-    public var isAnimated: Bool { return frames.isEmpty == false }
+    public var isAnimated: Bool {
+        return frames.isEmpty == false
+    }
 
-    /// Signifies that the tile data has changed.
+    /// Signifies that the tile data has been modified in some way.
     internal var dataChanged: Bool = false {
         didSet {
             guard (oldValue != dataChanged) else { return }
-            // if something has changed, we need to regenerate the skaction
+            // if something has changed, we need to regenerate the SKAction
             if (dataChanged == true) {
                 _animationAction = nil
             }
@@ -128,7 +136,9 @@ public class SKTilesetData: SKTiledObject {
         }
 
         guard (isAnimated == true),
-            let tileset = tileset else { return nil }
+            let tileset = tileset else {
+            return nil
+        }
 
         var framesData: [(texture: SKTexture, duration: TimeInterval)] = []
 
@@ -141,6 +151,7 @@ public class SKTilesetData: SKTiledObject {
             frameTexture.filteringMode = .nearest
             framesData.append((texture: frameTexture, duration:  TimeInterval(frame.duration) / 1000))
         }
+
         // return the resulting action
         let newAction = SKAction.tileAnimation(framesData)
 
@@ -156,21 +167,12 @@ public class SKTilesetData: SKTiledObject {
 
     /// Tile animation duration (in milliseconds).
     internal var animationTime: Int {
-        guard (isAnimated == true) else { return 0 }
+        guard (isAnimated == true) else {
+            return 0
+        }
         let durations: [Int] = frames.map { $0.duration }
         return durations.reduce(0, { $0 + $1 })
     }
-
-    // MARK: Tile Orientation
-
-    /// Tile is flipped horizontally
-    public var flipHoriz: Bool = false
-
-    /// Tile is flipped vertically.
-    public var flipVert:  Bool = false
-
-    /// Tile is flipped diagonally.
-    public var flipDiag:  Bool = false
 
     // MARK: Pathfinding Attributes
 
@@ -184,88 +186,89 @@ public class SKTilesetData: SKTiledObject {
     public var weight: CGFloat = 1
 
     /// Collision objects (not yet implemented).
-    public var collisions: [SKTileObject] = []
+    internal var collisions: [TileCollisionShape] = []
 
     /// Global id for this tile.
-    public var globalID: Int {
+    public var globalID: UInt32 {
         let firstGID = (tileset != nil) ? tileset.firstGID : 0
         return id + firstGID
     }
 
-    // MARK: - Init
+    // MARK: - Initialization
 
     /// Initialize an empty data structure.
     public init() {}
 
-    /**
-     Initialize the data with a tileset, id.
+    /// Initialize the data with a tileset, id.
+    ///
+    /// - Parameters:
+    ///   - id: unique tile id.
+    ///   - tileSet: tileset reference.
+    public init(id: UInt32, withTileset tset: SKTileset) {
 
-     - parameter tileId:  `Int` unique tile id.
-     - parameter tileSet: `SKTileset` tileset reference.
-     - returns: `SKTilesetData` tile data.
-     */
-    public init(id: Int, withTileset tileSet: SKTileset) {
         self.id = id
-        self.tileset = tileSet
-        self.parseTileID(id: id)
-        self.tileOffset = tileSet.tileOffset
-        self.ignoreProperties = tileSet.ignoreProperties
+        self.tileset = tset
+        self.tileOffset = tset.tileOffset
+        self.ignoreProperties = tset.ignoreProperties
     }
 
-    /**
-     Initialize the data with a tileset, id & texture.
+    /// Initialize the data with a tileset, id & texture.
+    ///
+    /// - Parameters:
+    ///   - id: unique tile id.
+    ///   - texture: tile texture.
+    ///   - tileSet: tileset reference.
+    public init(id: UInt32, texture: SKTexture, tileSet: SKTileset) {
 
-     - parameter id:      `Int` unique tile id.
-     - parameter texture: `SKTexture` tile texture.
-     - parameter tileSet: `SKTileset` tileset reference.
-     - returns: `SKTilesetData` tile data.
-     */
-    public init(id: Int, texture: SKTexture, tileSet: SKTileset) {
         self.id = id
         self.texture = texture
         self.texture.filteringMode = .nearest
         self.tileset = tileSet
-        self.parseTileID(id: id)
 
         self.tileOffset = tileSet.tileOffset
         self.ignoreProperties = tileSet.ignoreProperties
+    }
+
+    deinit {
+        texture = nil
+        _frames = []
     }
 
     // MARK: - Animation
 
 
-    /**
-     Add tile animation to the data.
+    /// Add tile animation to the data.
+    ///
+    /// - Parameters:
+    ///   - withID: id for frame.
+    ///   - interval: frame interval (in milliseconds).
+    ///   - tileTexture: frame texture.
+    /// - Returns: animation frame container.
+    public func addFrame(withID: UInt32,
+                         interval: Int,
+                         texture: SKTexture? = nil) -> TileAnimationFrame {
 
-     - parameter withID:      `Int` id for frame.
-     - parameter interval:    `Int` frame interval (in milliseconds).
-     - parameter tileTexture: `SKTexture?` frame texture.
-     - returns: `TileAnimationFrame` animation frame container.
-     */
-    public func addFrame(withID: Int, interval: Int, tileTexture: SKTexture? = nil) -> TileAnimationFrame {
         var id = withID
         // if the tileset firstGID is already set, subtract it to get the internal (local) id
         if let tileset = tileset, tileset.firstGID > 0 {
             id = withID - tileset.firstGID
         }
-        let frame = TileAnimationFrame(id: id, duration: interval, texture: tileTexture)
+
+        let frame = TileAnimationFrame(id: id, duration: interval, texture: texture)
 
         NotificationCenter.default.post(
             name: Notification.Name.TileData.FrameAdded,
-            object: self,
-            userInfo: nil
+            object: self
         )
 
         _frames.append(frame)
         return frame
     }
 
-    /**
-     Returns an animation frame at the given index.
-
-     - parameter index: `Int` frame index.
-     - returns: `TileAnimationFrame?` animation frame container.
-     */
+    /// Returns an animation frame at the given index.
+    ///
+    /// - Parameter index: frame index.
+    /// - Returns: animation frame container.
     public func frameAt(index: Int) -> TileAnimationFrame? {
         guard _frames.indices.contains(index) else {
             return nil
@@ -273,9 +276,7 @@ public class SKTilesetData: SKTiledObject {
         return frames[index]
     }
 
-    /**
-     Force the animated frames to update textuers.
-     */
+    /// Force animated frames to update textures.
     public func forceAnimatedFramesUpdate() {
         removeAnimation()
         _frames.forEach { frame in
@@ -286,26 +287,34 @@ public class SKTilesetData: SKTiledObject {
         runAnimation()
     }
 
-    /**
-     Set the texture for the tile data.
-
-     - parameter texture:   `SKTexture?` new texture.
-     - returns: `SKTexture?` old texture (if it exists).
-     */
+    /// Set the texture for the tile data.
+    ///
+    /// - Parameter newTexture: new texture.
+    /// - Returns: old texture (if it exists).
     public func setTexture(_ newTexture: SKTexture?) -> SKTexture? {
         let previousTexture = self.texture
         newTexture?.filteringMode = .nearest
         self.texture = newTexture
+
+        // send notification
+        let userInfo: [String: Any] = (previousTexture != nil) ? ["old": previousTexture!] : [:]
+
+        // update observers
+        NotificationCenter.default.post(
+            name: Notification.Name.TileData.TextureChanged,
+            object: self,
+            userInfo: userInfo
+        )
+
         return previousTexture
     }
 
-    /**
-     Set the texture for an animated frame at the given index.
-
-     - parameter texture:   `SKTexture?` new texture.
-     - parameter forFrame:  `Int` frame index.
-     - returns: `SKTexture?` old texture (if it exists).
-     */
+    /// Set the texture for an animated frame at the given index.
+    ///
+    /// - Parameters:
+    ///   - texture: new texture.
+    ///   - forFrame: frame index.
+    /// - Returns: old texture (if it exists).
     public func setTexture(_ texture: SKTexture?, forFrame: Int) -> SKTexture? {
         if let frame = frameAt(index: forFrame) {
             let previousTexture = frame.texture
@@ -316,13 +325,12 @@ public class SKTilesetData: SKTiledObject {
         return nil
     }
 
-    /**
-     Set the duration for an animated frame at the given index.
-
-     - parameter interval:  `Int` frame interval (in milliseconds).
-     - parameter forFrame:  `Int` frame index.
-     - returns: `Bool` frame duration was set correctly.
-     */
+    /// Set the duration for an animated frame at the given index.
+    ///
+    /// - Parameters:
+    ///   - interval: frame interval (in milliseconds).
+    ///   - forFrame: frame index.
+    /// - Returns: frame duration was set correctly.
     public func setDuration(interval: Int, forFrame: Int) -> Bool {
         if let frame = frameAt(index: forFrame) {
             frame.duration = interval
@@ -331,62 +339,55 @@ public class SKTilesetData: SKTiledObject {
         return false
     }
 
-    /**
-     Remove a tile animation frame at a given index.
-
-     - parameter at: `Int` frame index.
-     - returns: `TileAnimationFrame?` animation frame (if it exists).
-     */
+    /// Remove a tile animation frame at a given index.
+    ///
+    /// - Parameter index: frame index.
+    /// - Returns: animation frame (if it exists).
     public func removeFrame(at index: Int) -> TileAnimationFrame? {
         return _frames.remove(at: index)
     }
 
-    /**
-     Run tile animation.
-     */
+    /// Run tile animation.
     public func runAnimation() {
         self.blockAnimation = false
     }
 
-    /**
-     Remove tile animation. Animation is not actually destroyed, but rather blocked.
-
-     - parameter restore: `Bool` restore the initial texture.
-     */
+    /// Remove tile animation. Animation is not actually destroyed, but rather blocked.
+    ///
+    /// - Parameter restore: restore the initial texture.
     public func removeAnimation(restore: Bool = false) {
-        guard (isAnimated == true) else { return }
+        guard (isAnimated == true) else {
+            return
+        }
         self.blockAnimation = true
         if (restore == true) {
             self.texture = _frames.first!.texture
         }
     }
 
-    // MARK: - Flip Flags
+    // MARK: - Reflection
 
-    /**
-     Translate the global id. Returns the translated tile ID
-     and the corresponding flip flags.
 
-     - parameter id: `Int` tile ID
-     */
-    private func parseTileID(id: Int) {
-        // masks for tile flipping
-        let flippedDiagonalFlag: UInt32   = 0x20000000
-        let flippedVerticalFlag: UInt32   = 0x40000000
-        let flippedHorizontalFlag: UInt32 = 0x80000000
+    /// Returns a custom mirror for this object.
+    public var customMirror: Mirror {
 
-        let flippedAll = (flippedHorizontalFlag | flippedVerticalFlag | flippedDiagonalFlag)
-        let flippedMask = ~(flippedAll)
+        let attributes: [(label: String?, value: Any)] = [
+            (label: "local id", value: id),
+            (label: "global id", value: globalID),
+            (label: "type", value: type as Any),
+            (label: "frames", value: frames),
+            (label: "source", value: source as Any),
+            (label: "probability", value: probability),
+            (label: "tile size", value:  tileSize),
+            (label: "tileoffset", value: tileOffset),
+            (label: "properties", value: mirrorChildren()),
+            (label: "tileset", value: tileset.tilesetDataStruct())
+        ]
 
-        // set the current flip flags
-        self.flipHoriz = (UInt32(id) & flippedHorizontalFlag) != 0
-        self.flipVert  = (UInt32(id) & flippedVerticalFlag) != 0
-        self.flipDiag  = (UInt32(id) & flippedDiagonalFlag) != 0
-
-        // get the actual gid from the mask
-        self.id = Int(UInt32(id) & flippedMask)
+        return Mirror(self, children: attributes, displayStyle: .optional)   // was .class
     }
 }
+
 
 
 public func == (lhs: SKTilesetData, rhs: SKTilesetData) -> Bool {
@@ -394,53 +395,159 @@ public func == (lhs: SKTilesetData, rhs: SKTilesetData) -> Bool {
 }
 
 
+// MARK: - Extensions
 
+/// :nodoc:
+extension SKTilesetData: NSCopying {
+
+    /// Creates a new copy of the tile data. This data is *not* stored in the tileset tile data set, though it is still accessible.
+    ///
+    /// - Parameter zone: memory handler.
+    /// - Returns: tile data copy.
+    public func copy(with zone: NSZone? = nil) -> Any {
+        let cloned = SKTilesetData()
+
+        cloned.tileset = tileset
+        cloned.id = id
+        cloned.type = type
+        cloned.texture = texture
+        cloned.source = source
+        cloned.sourceSize = sourceSize
+        cloned.probability = probability
+
+        cloned.properties = properties
+        cloned.ignoreProperties = ignoreProperties
+        cloned.tileOffset = tileOffset
+        cloned.renderQuality = renderQuality
+        cloned.currentTime = currentTime
+        cloned.frameIndex = frameIndex
+        cloned.blockAnimation = blockAnimation
+        cloned._frames = _frames
+        cloned._animationAction = _animationAction
+
+        cloned.walkable = walkable
+        cloned.weight = weight
+        cloned.collisions = collisions
+        return cloned
+    }
+}
+
+
+/// :nodoc: Hash value for the tile data.
 extension SKTilesetData: Hashable {
 
-    /// :nodoc: Tile data hash function.
     public func hash(into hasher: inout Hasher) {
+        // return id.hashValue << 32 ^ globalID.hashValue
         hasher.combine(id)
         hasher.combine(globalID)
     }
 }
 
 
-
-
+/// :nodoc:
 extension SKTilesetData: CustomStringConvertible, CustomDebugStringConvertible {
 
-    /// :nodoc: Tile data description.
+    /// String representation of the tile data.
     public var description: String {
-        guard let tileset = tileset else { return "Tile ID: \(id) (no tileset)" }
-        let typeString = (type != nil) ? ", type: \"\(type!)\"" : ""
+        let className = String(describing: Swift.type(of: self))
+        guard let tileset = tileset else {
+            return "\(className): tile id: \(id) (no tileset)"
+        }
 
+        // add the tile data type, if it exists...
+        let typeString = (type != nil) ? ", type: '\(type!)'" : ""
+
+        // for collections data, add the image source path
         var sourceString = ""
         if (source != nil) {
             let sourceURL = URL(fileURLWithPath: source!, relativeTo: Bundle.main.bundleURL)
             sourceString = sourceURL.relativeString
         }
-        let framesString = (isAnimated == true) ? ", \(frames.count) frames" : ""
-        let idValue = id
-        let dataString = (properties.isEmpty == false) ? "Tile ID: \(idValue)\(typeString)\(sourceString) @ \(tileset.tileSize.shortDescription)\(framesString), "
-            : "Tile ID: \(idValue)\(typeString) @ \(tileset.tileSize.shortDescription)\(framesString)"
 
-        return "\(dataString)\(propertiesString)"
+        // animated fromes description
+        let framesString = (isAnimated == true) ? ", \(frames.count) frames" : ""
+        let frameOutput = (properties.isEmpty == false) ? "tile id: \(id)\(typeString)\(sourceString) @ \(tileset.tileSize.shortDescription)\(framesString), "
+            : "tile id: \(id)\(typeString) @ \(tileset.tileSize.shortDescription)\(framesString)"
+
+        let collisionOutput = (collisions.count > 0) ? ", collisions: \(collisions.count)" : ""
+        return "\(className): \(frameOutput)\(propertiesString)\(collisionOutput)"
     }
 
-    /// :nodoc:
     public var debugDescription: String {
         return "<\(description)>"
     }
 }
 
 
-// MARK: - Deprecated
+
+// MARK: - Deprecations
+
 
 extension SKTilesetData {
 
     /// Local id for this tile data.
     @available(*, deprecated, renamed: "id")
-    public var localID: Int {
+    public var localID: UInt32 {
         return id
+    }
+
+    /// Add tile an animation frame to the data.
+    ///
+    /// - Parameters:
+    ///   - withID: id for frame.
+    ///   - interval: frame interval (in milliseconds).
+    ///   - tileTexture: frame texture.
+    /// - Returns: animation frame container.
+    @available(*, deprecated, renamed: "addFrame(withID:interval:texture:)")
+    public func addFrame(withID: Int,
+                         interval: Int,
+                         tileTexture: SKTexture? = nil) -> TileAnimationFrame {
+
+        return addFrame(withID: UInt32(withID), interval: interval, texture: tileTexture)
+    }
+
+    /// Initialize the data with a tileset, id & texture.
+    ///
+    /// - Parameters:
+    ///   - id: unique tile id.
+    ///   - texture: tile texture.
+    ///   - tileSet: tileset reference.
+    @available(*, deprecated, renamed: "init(id:texture:tileSet:)")
+    public convenience init(id: Int, texture: SKTexture, tileSet: SKTileset) {
+        self.init(id: UInt32(id), texture: texture, tileSet: tileSet)
+    }
+
+    /// Initialize the data with a tileset, id.
+    ///
+    /// - Parameters:
+    ///   - id: unique tile id.
+    ///   - tileSet: tileset reference.
+    @available(*, deprecated, renamed: "init(id:withTileset:)")
+    public convenience init(id: Int, withTileset tileSet: SKTileset) {
+        self.init(id: UInt32(id), withTileset: tileSet)
+    }
+
+    /// Tile is flipped horizontally.
+    @available(*, unavailable, message: "Tile flip flags are stored in the individual tile instances.")
+    public var flipHoriz: Bool {
+        get {
+            return false
+        } set {}
+    }
+
+    /// Tile is flipped vertically.
+    @available(*, unavailable, message: "Tile flip flags are stored in the individual tile instances.")
+    public var flipVert: Bool {
+        get {
+            return false
+        } set {}
+    }
+
+    /// Tile is flipped diagonally.
+    @available(*, unavailable, message: "Tile flip flags are stored in the individual tile instances.")
+    public var flipDiag: Bool {
+        get {
+            return false
+        } set {}
     }
 }

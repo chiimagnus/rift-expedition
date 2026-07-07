@@ -1,22 +1,21 @@
 <p align="center">
 <img src="Docs/images/doc-banner-centered.svg" alt="SKTiled" title="SKTiled" width="881" height="81"/>
 <p align="center">
-<a href="https://swift.org"><img src="https://img.shields.io/badge/Swift-5.5-brightgreen.svg"></a>
+<a href="https://swift.org"><img src="https://img.shields.io/badge/Swift-5.3-brightgreen.svg"></a>
 <a href="https://developer.apple.com/download/more/"><img src="https://img.shields.io/badge/Xcode-11.0-orange.svg"></a>
 <a href="https://travis-ci.org/mfessenden/SKTiled"><img src="https://travis-ci.org/mfessenden/SKTiled.svg?branch=master"></a>
 <a href="https://github.com/mfessenden/SKTiled/blob/master/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
 <a href="http://www.apple.com"><img src="https://img.shields.io/badge/platforms-iOS%20%7C%20tvOS%20%7C%20macOS-red.svg"></a>
 <a href="https://github.com/Carthage/Carthage/"><img src="https://img.shields.io/badge/Carthage-compatible-4BC51D.svg"></a>
-<a href="https://cocoapods.org/pods/SKTiled"><img src="https://img.shields.io/cocoapods/v/SKTiled.svg"></a>
 </p>
 
 
 **SKTiled** is a framework for integrating [Tiled][tiled-url] assets with [Apple's SpriteKit][spritekit-url], built from the ground up with Swift. This project began life as an exercise to learn Apple's new programming language for a game project, but I've decided to release it as open source with the hopes that others will find it useful. **SKTiled** is up-to-date and supports **Tiled's** major features, including all map & object types.
 
-![Demo Image](Docs/images/demo-iphone.png?raw=true)
+![Demo Image][demo-iphone-img]
 
 
-Check out the [**Official Documentation**][sktiled-12-doc-url].
+Check out the [**Official Documentation**][sktiled-13-doc-url].
 
 ## Features
 
@@ -36,7 +35,7 @@ Check out the [**Official Documentation**][sktiled-12-doc-url].
 - [x] custom tile & object classes
 - [x] generate `GKGridGraph` graphs from custom attributes
 - [x] user-definable cost properties for `GKGridGraph` nodes
-- [ ] infinite maps
+- [x] infinite maps
 - [ ] tile collision objects
 - [ ] Zstandard compression support
 - [ ] layer tinting
@@ -58,7 +57,7 @@ Check out the [**Official Documentation**][sktiled-12-doc-url].
 
 For Carthage installation, create a Cartfile in the root of your project:
 
-    github "mfessenden/SKTiled" ~> 1.2
+    github "mfessenden/SKTiled" "release/1.30"
 
 
 To use the new **[binary framework][binary-frameworks-url]** format, pass the **`--use-xcframeworks`** parameter to the build command:
@@ -73,7 +72,7 @@ For more information, see the **[Carthage Installation][docs-carthage-url]** doc
 
 For CocoaPods, install via a reference in your podfile:
 
-    pod 'SKTiled', '~> 1.2'
+    pod 'SKTiled', :git => 'https://github.com/mfessenden/SKTiled.git', :branch => 'release/1.30'
 
 
 ## Usage
@@ -87,7 +86,7 @@ if let tilemap = SKTilemap.load(tmxFile: "sample-map") {
 ```
 Once loaded, the rendered [`SKTilemap`][sktilemap-url] node reflects the various properties defined in the originating scene:
 
-- `SKTilemap.size`: size of the map in tiles.
+- `SKTilemap.mapSize`: size of the map in tiles.
 - `SKTilemap.tileSize`: size of individual tiles.
 - `SKTilemap.orientation`: map orientation (ie orthogonal, isometric, etc).
 
@@ -108,11 +107,11 @@ All **SKTiled** layer types are subclasses of the base [`SKTiledLayerObject`][sk
 Layers can be accessed by type, name or index:
 
 ```swift
-// query layers by type
-let tileLayers = tilemap.tileLayers
+// access layers by type
+let tileLayers   = tilemap.tileLayers
 let objectGroups = tilemap.objectGroups
-let imageLayers = tilemap.imageLayers
-let groupLayers = tilemap.groupLayers
+let imageLayers  = tilemap.imageLayers
+let groupLayers  = tilemap.groupLayers
 
 // query named layers
 let groundLayers = tilemap.getLayers(named: "Ground") as! [SKTileLayer]
@@ -163,6 +162,13 @@ if let waterTiles = waterLayer.getTiles(globalID: 17) {
 }
 ```
 
+Changing an existing tile's tile data is easy; simply assign it a valid global ID value:
+
+```swift
+tile.globalId = 135
+```
+
+
 ### Working with Objects
 
 `SKTileObject` objects can be queried from both the [`SKTilemap`][sktilemap-url] and [`SKObjectGroup`][skobjectgroup-url] nodes:
@@ -181,15 +187,17 @@ let entrances = objectsLayer.getObjects(ofType: "Entrance")
 The [`SKTilemap`][sktilemap-url] node stores an array of individual tilesets parsed from the original **Tiled** document. Individual tile data is accessible from either the [`SKTileset`][sktileset-url] object:
 
 ```swift
-let tileSet = tilemap.getTileset("spritesheet-16x16")
+// access a named tileset
+let tileset = tilemap.getTileset("spritesheet-16x16")!
+
 // get data for a specific id
-let tileData = tileSet.getTileData(globalID: 177)
+let tiledata = tileset.getTileData(globalID: 177)
 ```
 
 and the parent [`SKTilemap`][sktilemap-url]:
 
 ```swift
-let tileData = tilemap.getTileData(globalID: 177)
+let tiledata = tilemap.getTileData(globalID: 177)
 ```
 
 
@@ -198,8 +206,8 @@ let tileData = tilemap.getTileData(globalID: 177)
 Tile data includes texture data, and [`SKTile`][sktile-url] objects are [`SKSpriteNode`][skspritenode-url] subclasses that can be initialized with tileset data:
 
 ```swift
-let newTile = SKTile(data: tileData)
-scene.addChild(newTile)
+let newtile = SKTile(data: tiledata)
+scene.addChild(newtile)
 ```
 
 Coordinate information is available from each layer via the [`SKTiledLayerObject.pointForCoordinate`][sktiledlayerobject-pointforcoordinate-url] method:
@@ -219,8 +227,11 @@ groundLayer.addChild(roadRoot, 4, 5, zpos: 100.0)
 **SKTiled** also provides methods for getting coordinate data from [`UITouch`][uitouch-url] and [`NSEvent`][nsevent-url] mouse events:
 
 ```swift
-// get the coordinate at the location of a touch event
-let touchLocation: CGPoint = objectsLayer.coordinateAtTouchLocation(touch)
+// get the coordinate at the location of a `UITouch` touch event
+let touchLocation: simd_int2 = objectsLayer.coordinateAtTouchLocation(touch: touch)
+
+// get the coordinate at the location of an `NSEvent` mouse event
+let mouseLocation: simd_int2 = objectsLayer.coordinateAtMouse(event: event)
 ```
 
 ## Animated Tiles
@@ -229,7 +240,7 @@ Tiles with animation will animate automatically when the tilemap node is added t
 
 
 ```swift
-// get all animated tiles, including nested layers
+// query all animated tiles, including nested layers
 let allAnimated = tilemap.animatedTiles(recursive: true)
 
 // pause/unpause tile animation
@@ -242,16 +253,16 @@ for tile in allAnimated {
     tile.speed = -1.0
 }
 
-// get animated tiles from individual layers
+// query animated tiles from individual layers
 let layerAnimated = groundLayer.animatedTiles()
 ```
 
 
 ## Custom Properties
 
-Custom properties are supported on all object types. All **SKTiled** objects conform to the [`SKTiledObject`][sktiledobject-url] protocol and allow access to and parsing of custom properties.
+Custom properties are supported on all object types. All **SKTiled** objects conform to the [`TiledObjectType`][tiledobjectype-url] protocol and allow access to and parsing of custom properties.
 
-Any property added to an object in **Tiled** will be translated and stored in the `SKTiledObject.properties` dictionary.
+Any property added to an object in **Tiled** will be translated and stored in the `TiledObjectType.properties` dictionary.
 
 ```swift
 let layerDepth = groundLayer.getValue(forProperty: "depth")
@@ -272,6 +283,7 @@ let groundWalkable = groundLayer.getTilesWithProperty("walkable", true)
 let allWalkable = tilemap.getTilesWithProperty("walkable", true")
 ```
 
+
 ## Acknowledgments
 
 - [Thorbjørn Lindeijer](https://github.com/bjorn): creator of *Tiled*
@@ -279,7 +291,10 @@ let allWalkable = tilemap.getTilesWithProperty("walkable", true")
 - [Steffen Itterheim](http://www.learn-cocos2d.com): Author of TilemapKit, the inspiration for this project
 - [Kenney Vleugels](http://www.kenney.nl): demo spritesheet assets
 - [Amit Patel](http://www-cs-students.stanford.edu/~amitp/gameprog.html): tile-based game logic
-- [Clint Bellanger: Isometric Tiles Math](http://clintbellanger.net/articles/isometric_math)
+- [Clint Bellanger](http://clintbellanger.net/articles/isometric_math): isometric grid math
+- [Amit Patel](https://www.redblobgames.com): hexagonal grid logic
+
+
 
 [swift5-image]:https://img.shields.io/badge/Swift-5.3-brightgreen.svg
 [swift4-image]:https://img.shields.io/badge/Swift-4.2-brightgreen.svg
@@ -306,27 +321,26 @@ let allWalkable = tilemap.getTilesWithProperty("walkable", true")
 [branch-xcode8-url]:https://github.com/mfessenden/SKTiled/tree/xcode8
 [branch-xcode9-url]:https://github.com/mfessenden/SKTiled/tree/xcode9
 
-[header-image]:https://mfessenden.github.io/SKTiled/1.2/images/header.png
-[demo-mac-image]:https://mfessenden.github.io/SKTiled/1.2/images/demo-macos-iso.png
-[demo-iphone-img]:https://mfessenden.github.io/SKTiled/1.2/images/demo-iphone.png
-
-
-[demo-phone-img2]:/Docs/images/demo-iphone.png
+[header-image]:https://mfessenden.github.io/SKTiled/1.3/images/header.png
+[demo-mac-image]:https://mfessenden.github.io/SKTiled/1.3/images/demo-macos-iso.png
+<!--[demo-iphone-img]:https://mfessenden.github.io/SKTiled/1.3/images/demo-iphone.png-->
+[demo-iphone-img]:Docs/images/demo-iphone.png
 
 
 <!--- Documentation --->
 
 [sktiled-gh-url]:https://mfessenden.github.io/SKTiled
-[sktiled-12-doc-url]:https://mfessenden.github.io/SKTiled/1.2/index.html
-[sktilemap-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTilemap.html
-[sktiledobject-url]:https://mfessenden.github.io/SKTiled/1.2/Protocols/SKTiledObject.html
-[sktile-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTile.html
-[skobjectgroup-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKObjectGroup.html
-[sktiledlayerobject-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTiledLayerObject.html
-[sktiledlayerobject-pointforcoordinate-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTiledLayerObject.html
-[sktilelayer-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTileLayer.html
-[sktileobject-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTileObject.html
-[sktileset-url]:https://mfessenden.github.io/SKTiled/1.2/Classes/SKTileset.html
+[sktiled-12-doc-url]:https://mfessenden.github.io/SKTiled/1.2/
+[sktiled-13-doc-url]:https://mfessenden.github.io/SKTiled/1.3/
+[sktilemap-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTilemap.html
+[sktiledobject-url]:https://mfessenden.github.io/SKTiled/1.3/Protocols/SKTiledObject.html
+[sktile-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTile.html
+[skobjectgroup-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKObjectGroup.html
+[sktiledlayerobject-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTiledLayerObject.html
+[sktiledlayerobject-pointforcoordinate-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTiledLayerObject.html
+[sktilelayer-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTileLayer.html
+[sktileobject-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTileObject.html
+[sktileset-url]:https://mfessenden.github.io/SKTiled/1.3/Classes/SKTileset.html
 [docs-carthage-url]:https://mfessenden.github.io/SKTiled/1.3/getting-started.html#carthage-installation
 
 <!--- Tiled --->
@@ -343,5 +357,4 @@ let allWalkable = tilemap.getTilesWithProperty("walkable", true")
 [skscene-update-url]:https://developer.apple.com/documentation/spritekit/skscene/1519802-update
 [uitouch-url]:https://developer.apple.com/documentation/uikit/uitouch
 [nsevent-url]:https://developer.apple.com/documentation/appkit/nsevent
-[swift-package-doc-url]:https://developer.apple.com/documentation/swift_packages
 [binary-frameworks-url]:https://developer.apple.com/videos/play/wwdc2019/416/

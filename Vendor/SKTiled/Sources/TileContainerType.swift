@@ -1,8 +1,8 @@
 //
-//  SKTiled.h
+//  TileContainerType.swift
 //  SKTiled
 //
-//  Copyright © 2021 Michael Fessenden. all rights reserved.
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
 //	Web: https://github.com/mfessenden
 //	Email: michael.fessenden@gmail.com
 //
@@ -23,14 +23,38 @@
 //	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //	THE SOFTWARE.
-//
-//  Description:
-//     - SKTiled Objective-C umbrella header.
 
-#import <Foundation/Foundation.h>
+import SpriteKit
 
 
-FOUNDATION_EXPORT double SKTiledVersionNumber;
-FOUNDATION_EXPORT const unsigned char SKTiledVersionString[];
+/// Protocol describing an object that interacts with a two-dimensional tile array. The only place this is used is in the parsing stage.
+protocol TileContainerType: TiledObjectType, DebugDrawableType {
+    
+    /// Internal two-dimensional array.
+    var tiles: Array2D<SKTile> { get set }
+    
+    /// Set the layer data.
+    ///
+    /// - Parameters:
+    ///   - data: array of tile ids.
+    func setLayerData(_ data: [UInt32]) -> Bool
+    
+    /// Builds a tile at the given coordinate from a global tile id.
+    ///
+    /// - Parameters:
+    ///   - coord: tile coordinate.
+    ///   - globalID: tile global id.
+    func buildTileAt(coord: simd_int2, globalID: UInt32) -> SKTile?
+    
+    /// Returns a tile at the given coordinates.
+    ///
+    /// - Parameters:
+    ///   - x: tile x-coordinate.
+    ///   - y: tile y-coordinate.
+    func tileAt(_ x: Int, _ y: Int) -> SKTile?
+}
 
-// In this header, you should import all the public headers of your framework using statements like #import <CoolExtensions/PublicHeader.h>
+
+
+extension SKTileLayerChunk: TileContainerType {}
+extension SKTileLayer: TileContainerType {}

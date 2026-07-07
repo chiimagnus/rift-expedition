@@ -2,7 +2,7 @@
 //  TiledBackgroundLayer.swift
 //  SKTiled
 //
-//  Copyright © 2020 Michael Fessenden. all rights reserved.
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
 //	Web: https://github.com/mfessenden
 //	Email: michael.fessenden@gmail.com
 //
@@ -26,68 +26,116 @@
 
 import SpriteKit
 
-/**
- The `BackgroundLayer` object represents the default background for a tilemap.
- */
-internal class BackgroundLayer: SKTiledLayerObject {
 
-    private var sprite: SKSpriteNode!
+/// The `TiledBackgroundLayer` object represents the default background for a tilemap.
+internal class TiledBackgroundLayer: TiledLayerObject {
+    
+    /// Sprite to hold the background color.
+    private weak var sprite: SKSpriteNode?
+    
+    /// The debug color.
     private var _debugColor: SKColor?
-
+    
+    /// Background offset.
+    public var frameOffset: CGSize = CGSize.zero {
+        didSet {
+            guard (oldValue != frameOffset) else { return }
+            sprite?.size.width += frameOffset.width
+            sprite?.size.height += frameOffset.height
+        }
+    }
+    
+    /// The background color.
     override var color: SKColor {
         didSet {
-            guard let sprite = sprite else { return }
+            guard let sprite = sprite else {
+                return
+            }
             sprite.color = (_debugColor == nil) ? color : _debugColor!
         }
     }
-
+    
+    /// Layer color blend factor.
     override var colorBlendFactor: CGFloat {
         didSet {
             guard let sprite = sprite else { return }
             sprite.colorBlendFactor = colorBlendFactor
         }
     }
-
-    // MARK: - Init
     
-    /**
-     Initialize with the parent `SKTilemap` node.
-
-     - parameter tilemap:   `SKTilemap` parent map.
-     */
-    public init(tilemap: SKTilemap) {
-        super.init(layerName: "DEFAULT", tilemap: tilemap)
+    // MARK: - Initialization
+    
+    /// Initialize with a parent `SKTilemap` node.
+    ///
+    /// - Parameter tilemap: parent tilemap node.
+    override init(tilemap: SKTilemap) {
+        super.init(layerName: "MAP_BACKGROUND_LAYER", tilemap: tilemap)
         layerType = .none
-        index = -1
-        sprite = SKSpriteNode(texture: nil, color: tilemap.backgroundColor ?? SKColor.clear, size: tilemap.sizeInPoints)
-        addChild(self.sprite!)
+        index = 0
+        
+        let spriteNode = SKSpriteNode(texture: nil, color: tilemap.backgroundColor ?? SKColor.clear, size: tilemap.sizeInPoints)
+        spriteNode.name = "MAP_BACKGROUND_SPRITE"
+        addChild(spriteNode)
+        
+        #if SKTILED_DEMO
+        spriteNode.setAttrs(values: ["tiled-invisible-node": true, "tiled-element-name": "overlay"])
+        #endif
 
+        
         // position sprite
-        sprite!.position.x += tilemap.sizeInPoints.width / 2
-        sprite!.position.y -= tilemap.sizeInPoints.height / 2
+        spriteNode.position.x += tilemap.sizeInPoints.width / 2
+        spriteNode.position.y -= tilemap.sizeInPoints.height / 2
+        
+        // frame offset
+        spriteNode.size.width += tilemap.backgroundOffset.width
+        spriteNode.size.height += tilemap.backgroundOffset.height
+        
+        sprite = spriteNode
+        
+        
+        
+        
     }
-
-    /**
-     Set the color of the background node.
-
-     - parameter tilemap:   `SKTilemap` parent map.
-     */
+    
+    /// Set the color of the background node.
+    ///
+    /// - Parameter color: parent map.
     public func setBackground(color: SKColor) {
         self.sprite?.color = color
     }
-
-    required public init?(coder aDecoder: NSCoder) {
+    
+    /// Instantiate the node with a decoder instance.
+    ///
+    /// - Parameter aDecoder: decoder.
+    required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+}
 
-    // MARK: - Updating: Background Layer
 
-    /**
-     Update the background layer before each frame is rendered.
 
-     - parameter currentTime: `TimeInterval` update interval.
-     */
-    override public func update(_ currentTime: TimeInterval) {
-        super.update(currentTime)
+// MARK: - Extensions
+
+
+extension TiledBackgroundLayer {
+    
+    /// Returns a "nicer" node name, for usage in the inspector.
+    @objc public override var tiledNodeNiceName: String {
+        return "Background Layer"
+    }
+    
+    /// Returns the internal **Tiled** node type icon.
+    @objc public override var tiledIconName: String {
+        return "background-icon"
+    }
+    
+    /// A description of the node used in list or outline views.
+    @objc public override var tiledListDescription: String {
+        return "\(tiledNodeNiceName): color \(color.hexString())"
+    }
+    
+    /// A description of the node type used for help features.
+    @objc public override var tiledHelpDescription: String {
+        return "Layer type for map background color."
     }
 }

@@ -2,9 +2,9 @@
 //  TileCollisionShape.swift
 //  SKTiled
 //
-//  Created by Michael Fessenden.
-//  Web: https://github.com/mfessenden
-//  Email: michael.fessenden@gmail.com
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
+//	Web: https://github.com/mfessenden
+//	Email: michael.fessenden@gmail.com
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +27,14 @@
 import SpriteKit
 
 
-/**
- A structure representing a tile collision shape.
-
- - parameter points:  `[CGPoint]` frame duration.
- */
-internal class TileCollisionShape: SKTiledObject {
+/// The `TileCollisionShape` structure representing a tile collision shape.
+///
+/// ### Properties
+///
+/// - `id`:  object id.
+/// - `points`: frame points.           
+///
+internal class TileCollisionShape: TiledObjectType {
 
     /// Object id.
     public var id: Int = 0
@@ -48,6 +50,9 @@ internal class TileCollisionShape: SKTiledObject {
 
     /// Custom properties.
     var properties: [String: String] = [:]
+    
+    /// :nodoc: Private **Tiled** properties.
+    var _tiled_properties: [String: String] = [:]
 
     /// Ignore custom properties.
     var ignoreProperties: Bool = false
@@ -60,9 +65,32 @@ internal class TileCollisionShape: SKTiledObject {
 // MARK: - Extensions
 
 
+extension TileCollisionShape: NSCopying {
+
+    /// Create a copy of this node.
+    ///
+    /// - Parameter zone: copying zone.
+    /// - Returns: node copy.
+    func copy(with zone: NSZone? = nil) -> Any {
+        let copy = TileCollisionShape()
+        //copy.uuid = uuid
+        copy.type = type
+        copy.properties = properties
+        copy.ignoreProperties = ignoreProperties
+        copy.renderQuality = renderQuality
+        copy.id = id
+        //copy.position = position
+        copy.points = points
+        return copy
+    }
+}
+
+
 extension TileCollisionShape {
 
     /// Parse the collision shape's properties.
+    ///
+    /// - Parameter completion: optional completion closure.
     func parseProperties(completion: (() -> Void)?) {
         if (ignoreProperties == true) { return }
         if (self.type == nil) { self.type = properties.removeValue(forKey: "type") }
@@ -70,6 +98,6 @@ extension TileCollisionShape {
 }
 
 
-
-/// :nodoc: Typealias for v1.3 compatibility.
+/// :nodoc: typealias for v1.2 compatibility.
+@available(*, deprecated, renamed: "TileCollisionShape")
 typealias SKTileCollisionShape = TileCollisionShape

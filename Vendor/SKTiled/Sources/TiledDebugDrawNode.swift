@@ -2,8 +2,7 @@
 //  TiledDebugDrawNode.swift
 //  SKTiled
 //
-//  Created by Michael Fessenden.
-//
+//  Copyright ©2016-2021 Michael Fessenden. all rights reserved.
 //  Web: https://github.com/mfessenden
 //  Email: michael.fessenden@gmail.com
 //
@@ -29,212 +28,290 @@ import SpriteKit
 
 
 /// Sprite object for visualizaing grid & graph.
-internal class SKTiledDebugDrawNode: SKNode {
-
-    private var layer: SKTiledLayerObject                     // parent layer
-    private var isDefault: Bool = false                       // is the tilemap default layer
-
+internal class TiledDebugDrawNode: SKNode {
+    
+    /// Parent layer.
+    private weak var layer: TiledLayerObject?
+    
+    /// Indicates the object is the map's default layer.
+    private var isDefault: Bool = false
+    
     private var gridSprite: SKSpriteNode!
     private var graphSprite: SKSpriteNode!
     private var frameShape: SKShapeNode!
-
+    
     private var gridTexture: SKTexture?                      // grid texture
     private var graphTexture: SKTexture?                     // GKGridGraph texture
+   
+    
+    /// Unique identifier used to access anchor shape nodes.
     private var anchorKey: String = "ANCHOR"
-
-    init(tileLayer: SKTiledLayerObject, isDefault def: Bool = false) {
+    
+    /// Initialize with the parent layer.
+    ///
+    /// - Parameters:
+    ///   - tileLayer: parent tile layer.
+    ///   - def: indicates the layer is the map's default layer.
+    init(tileLayer: TiledLayerObject, isDefault def: Bool = false) {
         layer = tileLayer
         isDefault = def
-        anchorKey = "ANCHOR_\(layer.uuid)"
+
+        anchorKey = "ANCHOR_\(tileLayer.shortId)"
         super.init()
         setup()
     }
-
+    
+    /// Instantiate the node with a decoder instance.
+    ///
+    /// - Parameter aDecoder: decoder.
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     deinit {
         gridTexture = nil
         graphTexture = nil
     }
-
+    
     var anchorPoint: CGPoint {
+        guard let layer = layer else {
+            return CGPoint(x: 0.5, y: 0.5)
+        }
         return convert(layer.position, from: layer)
     }
-
+    
     /// Debug visualization options.
-    var debugDrawOptions: DebugDrawOptions {
-        return (isDefault == true) ? layer.tilemap.debugDrawOptions : layer.debugDrawOptions
+    var debugDrawOptions: DebugDrawOptions? {
+        return (isDefault == true) ? layer?.tilemap.debugDrawOptions : layer?.debugDrawOptions
     }
-
-    /**
-     Align with the parent layer.
-     */
+    
+    /// Align with the parent layer.
     func setup() {
-        let nodeName = (isDefault == true) ? "MAP_DEBUG_DRAW" : "\(layer.layerName.uppercased())_DEBUG_DRAW"
-        name = nodeName
+        guard let layer = layer else {
+            return
+        }
+       
 
+        let nodePrefix = (isDefault == true) ? "MAP" : "\(layer.hash)"
+        let nodeName = "\(nodePrefix)_DEBUG_DRAW"
+        name = nodeName
+        
         // set the anchorpoints to 0,0 to match the frame
         gridSprite = SKSpriteNode(texture: nil, color: .clear, size: layer.sizeInPoints)
         gridSprite.anchorPoint = CGPoint.zero
+        gridSprite.name = "\(nodePrefix)_GRID_DISPLAY"
+        
         addChild(gridSprite!)
-
+        
         graphSprite = SKSpriteNode(texture: nil, color: .clear, size: layer.sizeInPoints)
         graphSprite.anchorPoint = CGPoint.zero
+        graphSprite.name = "\(nodePrefix)_GRAPH_DISPLAY"
+
         addChild(graphSprite!)
-
-        frameShape = SKShapeNode()
-        addChild(frameShape!)
-        //updateZPosition()
+        
+        let frameShapeNode = SKShapeNode()
+        frameShapeNode.name = "\(nodePrefix)_FRAME_DISPLAY"
+        
+        #if SKTILED_DEMO
+        setAttrs(values: ["tiled-helper-node": true])
+        gridSprite.setAttrs(values: ["tiled-invisible-node": true, "tiled-node-icon": "grid-icon", "tiled-node-nicename": "Grid Sprite", "tiled-node-listdesc": "Layer Grid Visualization", "tiled-help-desc": "Sprite containing layer grid visualization."])
+        graphSprite.setAttrs(values: ["tiled-invisible-node": true, "tiled-node-icon": "graph-icon", "tiled-node-nicename": "Graph Sprite", "tiled-node-listdesc": "Layer Graph Visualization", "tiled-help-desc": "Sprite containing layer pathfinding graph visualization."])
+        frameShapeNode.setAttrs(values: ["tiled-invisible-node": true, "tiled-help-desc": "Debug visualization shape for the map or layer frame."])
+        #endif
+        
+        addChild(frameShapeNode)
+        frameShape = frameShapeNode
+        frameShape.isUserInteractionEnabled = false
+        graphSprite.isUserInteractionEnabled = false
+        gridSprite.isUserInteractionEnabled = false
+        isUserInteractionEnabled = false
+        updateZPosition()
     }
-
+    
     func updateZPosition() {
+        guard let layer = layer else { return }
+        
         let tilemap = layer.tilemap
         let zDeltaValue: CGFloat = tilemap.zDeltaForLayers
-
+        
         // z-position values
         let startZposition = (isDefault == true) ? (tilemap.lastZPosition + zDeltaValue) : layer.zPosition
-
-        graphSprite!.zPosition = startZposition + zDeltaValue
-        gridSprite!.zPosition = startZposition + (zDeltaValue + 10)
-        frameShape!.zPosition = startZposition + (zDeltaValue + 20)
+        
+        // graph node visualization goes *under* the grid.
+        graphSprite.zPosition = startZposition + zDeltaValue
+        gridSprite.zPosition = startZposition + (zDeltaValue + 1)
+        
+        // bounding box goes on top
+        frameShape.zPosition = startZposition + (zDeltaValue + 2)
     }
-
-    /**
-     Update the node with the various options.
-     */
+    
+    /// Update the node with the various drawing options.
     func draw() {
+        guard let _ = layer,
+            let debugDrawOptions = debugDrawOptions else {
+            log("cannot access the parent layer", level: .warning)
+            return
+        }
+    
+        
         DispatchQueue.main.async {
-            self.isHidden = self.debugDrawOptions.isEmpty
-            if self.debugDrawOptions.contains(.drawGrid) {
+            self.isHidden = debugDrawOptions.isEmpty
+            
+            if debugDrawOptions.contains(.drawGrid) {
                 self.drawGrid()
+                self.gridSprite?.isUserInteractionEnabled = false
             } else {
                 self.gridSprite?.isHidden = true
             }
-
-            if self.debugDrawOptions.contains(.drawBounds) {
-                self.drawBounds()
+            
+            if debugDrawOptions.contains(.drawFrame) {
+                self.drawBounds(withColor: nil, duration: 0)
             } else {
                 self.frameShape?.isHidden = true
             }
-
-            if self.debugDrawOptions.contains(.drawGraph) {
+            
+            if debugDrawOptions.contains(.drawGraph) {
                 self.drawGraph()
             } else {
                 self.graphSprite?.isHidden = true
             }
-
-            if self.debugDrawOptions.contains(.drawAnchor) {
-                self.drawLayerAnchor()
+            
+            if debugDrawOptions.contains(.drawAnchor) {
+                // self.drawLayerAnchor()
             } else {
                 self.childNode(withName: self.anchorKey)?.removeFromParent()
             }
             self.updateZPosition()
         }
     }
-
-    /**
-     Reset all visualizations.
-     */
+    
+    /// Reset all visualizations.
     func reset() {
         gridSprite.texture = nil
         graphSprite.texture = nil
         childNode(withName: anchorKey)?.removeFromParent()
     }
+    
+    /// Visualize the layer's boundary shape.
+    ///
+    /// - Parameters:
+    ///   - withColor: highlight color.
+    ///   - duration: duration of effect.
+    @objc func drawBounds(withColor: SKColor? = nil,
+                          duration: TimeInterval = 0) {
+        
+        
+        guard let layer = layer else {
+            log("cannot access parent layer.", level: .error)
+            return
+        }
 
-    /**
-     Visualize the layer's boundary shape.
-     */
-    func drawBounds() {
-        let objectPath: CGPath!
-
-        // grab dimensions from the layer
+        let fillColor = layer.tilemap.gridColor
+        let objPath: CGPath!
+        
+        // query dimensions from the layer
+        //let width = (isDefault == true) ? layer.tilemap.frame.size.width : layer.width
+        //let height = (isDefault == true) ? layer.tilemap.frame.size.height : layer.height
+        
         let width = layer.width
         let height = layer.height
         let tileSize = layer.tileSize
 
+        
         switch layer.orientation {
             case .orthogonal:
-                objectPath = polygonPath(layer.bounds.points)
-
+                objPath = polygonPath(layer.boundingRect.points)
+            
             case .isometric:
+
                 let topPoint = CGPoint(x: 0, y: 0)
                 let rightPoint = CGPoint(x: (width - 1) * tileSize.height + tileSize.height, y: 0)
                 let bottomPoint = CGPoint(x: (width - 1) * tileSize.height + tileSize.height, y: (height - 1) * tileSize.height + tileSize.height)
                 let leftPoint = CGPoint(x: 0, y: (height - 1) * tileSize.height + tileSize.height)
-
+                
                 let points: [CGPoint] = [
                     // point order is top, right, bottom, left
-                    layer.pixelToScreenCoords(topPoint),
-                    layer.pixelToScreenCoords(rightPoint),
-                    layer.pixelToScreenCoords(bottomPoint),
-                    layer.pixelToScreenCoords(leftPoint)
+                    layer.pixelToScreenCoords(point: topPoint),
+                    layer.pixelToScreenCoords(point: rightPoint),
+                    layer.pixelToScreenCoords(point: bottomPoint),
+                    layer.pixelToScreenCoords(point: leftPoint)
                 ]
-
+                
+                // CONVERTED
                 let invertedPoints = points.map { $0.invertedY }
-                objectPath = polygonPath(invertedPoints)
-
+                objPath = polygonPath(invertedPoints)
+            
             case .hexagonal, .staggered:
-                objectPath = polygonPath(layer.bounds.points)
+                
+                objPath = polygonPath(layer.boundingRect.points)
         }
-
-        if let objectPath = objectPath {
-            frameShape.path = objectPath
+        
+        if let objPath = objPath {
+            frameShape.path = objPath
             frameShape.isAntialiased = layer.antialiased
-            frameShape.lineWidth = (layer.tileSize.halfHeight > 8) ? 2 : 0.75
+            frameShape.lineWidth = (layer.tileSize.halfHeight > 8) ? 1 : 0.5
             frameShape.lineJoin = .miter
-
+            //frameShape.alpha = layer.gridOpacity * 3
+            
             // don't draw bounds of hexagonal maps
-            frameShape.strokeColor = layer.frameColor
-            frameShape.alpha = layer.gridOpacity * 3
-
             if (layer.orientation == .hexagonal) {
-                frameShape.strokeColor = SKColor.clear
+                //frameShape.strokeColor = SKColor.clear
             }
-
+            
             frameShape.fillColor = SKColor.clear
         }
-
+        
         isHidden = false
+        //frameShape.fillColor = .white
+        frameShape.strokeColor = fillColor
         frameShape.isHidden = false
+        updateZPosition()
     }
-
+    
     /// Display the current tile grid.
     func drawGrid() {
+        guard let layer = layer else {
+            Logger.default.log("invalid layer.", level: .error, symbol: classNiceName)
+            return
+        }
+        
+        let fillColor = layer.tilemap.gridColor
+        
         if (gridTexture == nil) {
             gridSprite.isHidden = true
-
+            
             // get the last z-position
             zPosition = layer.tilemap.lastZPosition + (layer.tilemap.zDeltaForLayers + 10)
             isHidden = false
             var gridSize = CGSize.zero
-
+            
             // scale factor for texture
             let uiScale: CGFloat = TiledGlobals.default.contentScale
-
+            
             // multipliers used to generate smooth lines
             let imageScale: CGFloat = layer.tilemap.renderQuality
-
+            
             // line scale should be a multiple of 1
             let lineScale: CGFloat = (layer.tilemap.tileHeightHalf > 8) ? 2 : (layer.tilemap.tileHeightHalf > 4) ? 1 : 0.75
-
+            
             // generate the texture
-            if let gridImage = drawLayerGrid(self.layer, imageScale: imageScale, lineScale: lineScale) {
+            if let gridImage = drawLayerGrid(layer, imageScale: imageScale, lineScale: lineScale) {
+                
                 gridTexture = SKTexture(cgImage: gridImage)
-                gridTexture?.filteringMode = .linear
-
+                gridTexture?.filteringMode = .nearest
+                
                 // sprite scaling factor
                 let spriteScaleFactor: CGFloat = (1 / imageScale)
                 gridSize = (gridTexture != nil) ? gridTexture!.size() / uiScale : .zero
                 gridSprite.setScale(spriteScaleFactor)
-                Logger.default.log("grid texture size: \(gridSize.shortDescription), bpc: \(gridImage.bitsPerComponent), line scale: \(lineScale), scale: \(imageScale), content scale: \(uiScale)", level: .debug, symbol: "SKTiledDebugDrawNode")
-
+                Logger.default.log("grid texture size: \(gridSize.shortDescription), bpc: \(gridImage.bitsPerComponent), line scale: \(lineScale), scale: \(imageScale), content scale: \(uiScale)", level: .debug, symbol: classNiceName)
+                
                 gridSprite.texture = gridTexture
                 gridSprite.alpha = layer.gridOpacity
                 gridSprite.size = gridSize / imageScale
                 gridSprite.zPosition = zPosition * 3
 
+                
                 // need to flip the grid texture in y
                 // currently not doing this to the parent node so that objects will draw correctly.
                 #if os(iOS) || os(tvOS)
@@ -243,79 +320,72 @@ internal class SKTiledDebugDrawNode: SKNode {
                 gridSprite.yScale *= -1
                 #endif
             } else {
-                self.log("error drawing layer grid.", level: .error)
+                self.log("error drawing layer grid ( quality: \(imageScale) )", level: .error)
             }
         }
+        
+        gridSprite.color = fillColor
+        gridSprite.colorBlendFactor = TiledGlobals.default.debugDisplayOptions.gridOpacity
         gridSprite.isHidden = false
     }
-
+    
     /// Display the current tile graph (if it exists).
     func drawGraph() {
-
+        guard let layer = layer else {
+            return
+        }
+        
         // drawLayerGrid
         graphTexture = nil
         graphSprite.isHidden = true
-
+        
         // get the last z-position
         zPosition = layer.tilemap.lastZPosition + (layer.tilemap.zDeltaForLayers - 10)
         isHidden = false
         var graphSize = CGSize.zero
-
+        
         // scale factor for texture
         let uiScale: CGFloat = TiledGlobals.default.contentScale
-
+        
         // multipliers used to generate smooth lines
         let imageScale: CGFloat = layer.tilemap.renderQuality
         let lineScale: CGFloat = (layer.tilemap.tileHeightHalf > 8) ? 2 : 1
-
-
+        
+        
         // generate the texture
         if (graphTexture == nil) {
-
-            if let graphImage = drawLayerGraph(self.layer, imageScale: imageScale, lineScale: lineScale) {
-
+            
+            if let graphImage = drawLayerGraph(layer, imageScale: imageScale, lineScale: lineScale) {
+                
                 graphTexture = SKTexture(cgImage: graphImage)
                 graphTexture?.filteringMode = .linear
-
+                
                 // sprite scaling factor
                 let spriteScaleFactor: CGFloat = (1 / imageScale)
                 graphSize = (graphTexture != nil) ? graphTexture!.size() / uiScale : .zero
                 graphSprite.setScale(spriteScaleFactor)
                 Logger.default.log("graph texture size: \(graphSize.shortDescription), bpc: \(graphImage.bitsPerComponent), scale: \(imageScale)", level: .debug)
-
+                
                 graphSprite.texture = graphTexture
                 graphSprite.alpha = layer.gridOpacity * 3
                 graphSprite.size = graphSize / imageScale
                 graphSprite.zPosition = zPosition * 3
-
+                
+                #if os(macOS)
                 // need to flip the graph texture in y
-                // currently not doing this to the parent node so that objects will draw correctly.
-                #if os(iOS) || os(tvOS)
-                graphSprite.position.y = -layer.sizeInPoints.height
-                #else
                 graphSprite.yScale *= -1
+                graphSprite.position.y = layer.sizeInPoints.height
                 #endif
-
             }
         }
         graphSprite.isHidden = false
     }
-
-    /**
-     Visualize the layer's anchor point.
-     */
-    func drawLayerAnchor() {
-        let anchor = drawAnchor(self, withKey: anchorKey)
-        anchor.name = anchorKey
-        anchor.position = anchorPoint
-    }
-
+    
     // MARK: - Memory
-
-    /**
-     Flush large textures.
-     */
+    
+    /// Flush large textures.
     func flush() {
+        layer = nil
         gridSprite.texture = nil
         graphSprite.texture = nil
         gridTexture = nil
@@ -327,15 +397,41 @@ internal class SKTiledDebugDrawNode: SKNode {
 
 // MARK: - Extensions
 
-/// :nodoc:
-extension SKTiledDebugDrawNode: CustomReflectable {
+extension TiledDebugDrawNode: TiledCustomReflectableType {
     
-    var customMirror: Mirror {
-        return Mirror(reflecting: SKTiledDebugDrawNode.self)
+    @objc var tiledNodeNiceName: String {
+        return "Debug Draw Node"
     }
     
+    @objc var tiledIconName: String {
+        return "debug-icon"
+    }
+    
+    @objc var tiledListDescription: String {
+        guard let parentLayer = layer else {
+            return "\(tiledNodeNiceName)"
+        }
+        return "\(tiledNodeNiceName): '\(parentLayer.path)'"
+    }
+    
+    @objc var tiledHelpDescription: String {
+        return "Tilemap node debug visualization root."
+    }
+}
+
+
+
+/// :nodoc:
+extension TiledDebugDrawNode {
+    
     override var description: String {
-        return "Debug Draw Node: \(layer.layerName)"
+        let objString = "<\(String(describing: Swift.type(of: self)))>"
+        var attrsString = objString
+        if let layer = layer {
+            attrsString += " layer: '\(layer.layerName)'"
+        }
+        attrsString += " anchor: \(anchorPoint.shortDescription)"
+        return attrsString
     }
     
     override var debugDescription: String {
