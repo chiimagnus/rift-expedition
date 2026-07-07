@@ -68,6 +68,53 @@ final class GameSessionViewModelTests: XCTestCase {
         service.stopBGM()
     }
 
+    func testSessionAreaTransitionsRouteBGMAndAmbience() throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let audioService = AudioService(
+            makePlayer: { url in
+                let cueID = url.deletingPathExtension().lastPathComponent
+                let cue = try XCTUnwrap(AudioCue(rawValue: cueID))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in
+                URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav")
+            }
+        )
+        let session = GameSessionViewModel(audioService: audioService)
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+
+        session.startChapterWithSelectedParty()
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_square", to: "village_riverside")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_riverside", to: "wilds_riverbank")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(playersByCue[.villageTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.wildsTheme]?.playCount, 1)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "wilds_riverbank", to: "cave_entrance")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(playersByCue[.wildsTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.caveTheme]?.playCount, 1)
+        XCTAssertEqual(playersByCue[.caveDrip]?.playCount, 1)
+    }
+
     func testLeaderEnteringExitChangesArea() throws {
         let session = GameSessionViewModel()
         session.partyCreationViewModel.toggleSelection("warrior")
