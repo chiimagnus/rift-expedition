@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "frameSize": {
+    "width": 96,
+    "height": 96
+  },
+  "directions": ["down", "left", "right", "up"],
+  "actions": {
+    "idle": {
+      "startColumn": 0,
+      "frameCount": 3
+    },
+    "walk": {
+      "startColumn": 3,
+      "frameCount": 3
+    },
+    "attack": {
+      "startColumn": 6,
+      "frameCount": 3
+    },
+    "hurt": {
+      "startColumn": 9,
+      "frameCount": 3
+    }
+  },
+  "sprites": [
+    {
+      "visualID": "test_actor",
+      "sheet": "Assets/Characters/test_actor_anim.png"
+    }
+  ]
+}
