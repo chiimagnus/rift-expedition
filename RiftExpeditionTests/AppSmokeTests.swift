@@ -11,7 +11,7 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertEqual(scene.size, GameScene.sceneSize)
     }
 
-    func testSceneCanLoadAnimationCatalogOrFallBackToStaticTextures() throws {
+    func testSceneCanLoadAnimationCatalogOrFallBackToActorPlaceholders() throws {
         XCTAssertNotNil(ActorAnimationCatalog.resourceURL())
         XCTAssertNotNil(ActorAnimationCatalog.load())
 
@@ -167,7 +167,6 @@ final class AppSmokeTests: XCTestCase {
                     id: "player",
                     displayName: "战士",
                     factionName: "队友",
-                    spriteName: "actor_warrior",
                     visualID: "actor_warrior",
                     facing: .right,
                     baseAction: .idle,

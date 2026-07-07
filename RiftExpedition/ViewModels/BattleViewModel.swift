@@ -26,7 +26,6 @@ struct BattleActorMarker: Equatable, Identifiable {
     var id: String
     var displayName: String
     var factionName: String
-    var spriteName: String
     var visualID: String
     var facing: ActorAnimationDirection
     var baseAction: ActorAnimationKind
@@ -163,7 +162,6 @@ final class BattleViewModel {
                     id: actor.id,
                     displayName: actor.displayName,
                     factionName: factionName(actor.faction),
-                    spriteName: visualID,
                     visualID: visualID,
                     facing: actorFacings[actor.id] ?? .down,
                     baseAction: .idle,

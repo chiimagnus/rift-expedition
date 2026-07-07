@@ -34,6 +34,7 @@ final class GameScene: SKScene {
     private var nodeAnimationKeys: [String: String] = [:]
     private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
     private var didLogAnimationCatalogFallback = false
+    private var loggedMissingActorAnimations: Set<String> = []
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -269,10 +270,7 @@ final class GameScene: SKScene {
         node.zPosition = 550
         worldLayer.addChild(node)
 
-        let visualID = partyVisualID(for: member)
-        let sprite = SKSpriteNode(texture: texture(named: staticTextureName(for: visualID)))
-        sprite.name = "partySprite_\(member.actorID)"
-        sprite.size = CGSize(width: 30, height: 30)
+        let sprite = makeActorSprite(name: "partySprite_\(member.actorID)", size: CGSize(width: 30, height: 30))
         sprite.zPosition = 1
         node.addChild(sprite)
 
@@ -340,9 +338,7 @@ final class GameScene: SKScene {
         let container = SKNode()
         container.name = "battleActor_\(actor.id)"
 
-        let sprite = SKSpriteNode(texture: texture(named: actor.spriteName))
-        sprite.name = "battleActorSprite_\(actor.id)"
-        sprite.size = CGSize(width: 58, height: 58)
+        let sprite = makeActorSprite(name: "battleActorSprite_\(actor.id)", size: CGSize(width: 58, height: 58))
         sprite.zPosition = 1
         container.addChild(sprite)
         return container
@@ -608,10 +604,8 @@ final class GameScene: SKScene {
 
     private func makeNPCSprite(_ npc: MapNPC) -> SKNode {
         let visualID = ActorVisualIDResolver.npcVisualID(actorID: npc.actorID)
-        let sprite = SKSpriteNode(texture: texture(named: staticTextureName(for: visualID)))
-        sprite.name = "npc_\(npc.actorID)"
+        let sprite = makeActorSprite(name: "npc_\(npc.actorID)", size: CGSize(width: 52, height: 52))
         sprite.position = npc.position
-        sprite.size = CGSize(width: 52, height: 52)
         playActorAnimation(
             on: sprite,
             nodeKey: "npc:\(npc.tiledID)",
@@ -626,14 +620,7 @@ final class GameScene: SKScene {
         if let texture = textureCache[name] {
             return texture
         }
-        if let texture = villageNPCTexture(named: name)
-            ?? humanEnemyTexture(named: name)
-            ?? beastMonsterTexture(named: name) {
-            textureCache[name] = texture
-            return texture
-        }
         let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Sprites")
-            ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Characters")
             ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Icons")
         guard let url, let image = NSImage(contentsOf: url) else {
             return nil
@@ -648,7 +635,17 @@ final class GameScene: SKScene {
     private func preloadAnimationCatalogIfNeeded() {
         guard actorAnimationCatalog == nil, !didLogAnimationCatalogFallback else { return }
         didLogAnimationCatalogFallback = true
-        GameLog.assets.notice("Actor animation catalog unavailable; using static texture fallback")
+        GameLog.assets.notice("Actor animation catalog unavailable; using minimal actor placeholders")
+    }
+
+    private func makeActorSprite(name: String, size: CGSize) -> SKSpriteNode {
+        let sprite = SKSpriteNode(
+            color: SKColor(red: 0.72, green: 0.28, blue: 0.72, alpha: 0.85),
+            size: size
+        )
+        sprite.name = name
+        sprite.colorBlendFactor = 1
+        return sprite
     }
 
     private func animationFrames(
@@ -693,6 +690,7 @@ final class GameScene: SKScene {
             guard nodeAnimationKeys[nodeKey] != animationKey else { return }
             nodeAnimationKeys[nodeKey] = animationKey
             sprite.removeAction(forKey: "actorAnimation")
+            sprite.colorBlendFactor = 0
             sprite.texture = frames.first
             sprite.run(.repeatForever(.animate(with: frames, timePerFrame: 0.16)), withKey: "actorAnimation")
             return
@@ -700,9 +698,23 @@ final class GameScene: SKScene {
 
         nodeAnimationKeys[nodeKey] = nil
         sprite.removeAction(forKey: "actorAnimation")
-        sprite.texture = texture(named: staticTextureName(for: visualID))
+        logMissingActorAnimation(visualID: visualID, action: action, direction: direction)
+        sprite.texture = nil
+        sprite.color = SKColor(red: 0.72, green: 0.28, blue: 0.72, alpha: 0.85)
+        sprite.colorBlendFactor = 1
         sprite.xScale = direction == .left ? -abs(sprite.xScale) : abs(sprite.xScale)
         sprite.position = .zero
+    }
+
+    private func logMissingActorAnimation(
+        visualID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection
+    ) {
+        let key = "\(visualID)/\(action.rawValue)/\(direction.rawValue)"
+        guard !loggedMissingActorAnimations.contains(key) else { return }
+        loggedMissingActorAnimations.insert(key)
+        GameLog.assets.warning("Actor animation missing: \(key, privacy: .public)")
     }
 
     private func texture(sheetPath: String) -> SKTexture? {
@@ -724,78 +736,6 @@ final class GameScene: SKScene {
         texture.filteringMode = .nearest
         textureCache[cacheKey] = texture
         return texture
-    }
-
-    /// 从 `Assets/Characters` 目录下名为 `sheetName`、总共有 `frameCount` 帧的横向长条
-    /// 拼接图里，切出第 `frameIndex` 帧。这个函数是所有「多帧角色立绘图」共用的
-    /// （村民 NPC、人类敌人、动物/怪物都在用），这样以后新增一批角色立绘，
-    /// 只需要写一张「名字 -> 第几帧」的对照表就行，不用再单独写切图逻辑。
-    private func slicedTexture(sheetName: String, frameIndex: Int, frameCount: Int) -> SKTexture? {
-        guard let sheetURL = Bundle.main.url(forResource: sheetName, withExtension: "png", subdirectory: "Assets/Characters"),
-              let sheetImage = NSImage(contentsOf: sheetURL) else {
-            return nil
-        }
-
-        let sheetTexture = SKTexture(image: sheetImage)
-        let count = CGFloat(frameCount)
-        let rect = CGRect(x: CGFloat(frameIndex) / count, y: 0, width: 1 / count, height: 1)
-        let texture = SKTexture(rect: rect, in: sheetTexture)
-        texture.filteringMode = .nearest
-        return texture
-    }
-
-    /// `Assets/Characters/village_npcs.png` 是一张已登记的 3 帧横向拼接图（长者/村民/守卫），
-    /// 用于村庄里的 NPC。下面的 `spriteName(forNPC:)` 会先算出该用第几帧，
-    /// 这里再从这张公用大图里切出对应的一小块，而不用给每个 NPC 都单独画一张 PNG。
-    private static let villageNPCFrames: [String: Int] = [
-        "npc_village_resident": 1,
-        "npc_village_guard": 2
-    ]
-
-    private func villageNPCTexture(named name: String) -> SKTexture? {
-        guard let frameIndex = Self.villageNPCFrames[name] else { return nil }
-        return slicedTexture(sheetName: "village_npcs", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    /// `Assets/Characters/human_enemies.png` 是一张已登记的 3 帧拼接图（远程/近战/精英），
-    /// 这样人类敌人（对应 `BattleViewModel.spriteName(forHumanEnemy:)`）能有自己独立的
-    /// 立绘，而不是直接借用玩家队伍的职业立绘。
-    private static let humanEnemyFrames: [String: Int] = [
-        "enemy_human_ranged": 0,
-        "enemy_human_melee": 1,
-        "enemy_human_elite": 2
-    ]
-
-    private func humanEnemyTexture(named name: String) -> SKTexture? {
-        guard let frameIndex = Self.humanEnemyFrames[name] else { return nil }
-        return slicedTexture(sheetName: "human_enemies", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    /// `Assets/Characters/beasts_and_monsters.png` 是一张已登记的 3 帧拼接图（普通动物/
-    /// 受污染洞穴生物/裂隙腐化生物），这样洞穴里的小怪和裂隙幼体
-    /// （对应 `BattleViewModel.spriteName(forBeast:)`）就不用再全部共用同一张通用怪物立绘了。
-    private static let beastMonsterFrames: [String: Int] = [
-        "enemy_beast_animal": 0,
-        "enemy_beast_tainted": 1,
-        "enemy_beast_rift": 2
-    ]
-
-    private func beastMonsterTexture(named name: String) -> SKTexture? {
-        guard let frameIndex = Self.beastMonsterFrames[name] else { return nil }
-        return slicedTexture(sheetName: "beasts_and_monsters", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    private func staticTextureName(for visualID: String) -> String {
-        switch visualID {
-        case "npc_mayor":
-            "npc_elder"
-        case "npc_fiance", "npc_healer":
-            "npc_village_resident"
-        case "npc_gate_guard":
-            "npc_village_guard"
-        default:
-            visualID
-        }
     }
 
     private func spriteName(forMapItem item: MapItem) -> String {

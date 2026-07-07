@@ -5,10 +5,8 @@ import XCTest
 
 @MainActor
 final class BattleViewModelTests: XCTestCase {
-    // 敌人立绘多样化：人类敌人、动物/怪物不能再全部挤成一张复用的贴图
-    // （不管是玩家职业立绘，还是同一张通用怪物立绘）。
-    // 具体逻辑见 ActorVisualIDResolver。
-    func testHumanEnemySpriteVariesByClassAndLevel() {
+    // 敌人视觉 ID 多样化：具体动画资源由 actor-animations.json 决定。
+    func testHumanEnemyVisualIDVariesByClassAndLevel() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
                 actor(id: "player", faction: .player, actionPoints: 4, skillIDs: [], kind: .player, classID: "warrior"),
@@ -19,15 +17,15 @@ final class BattleViewModelTests: XCTestCase {
             skills: []
         )
 
-        let sprites = Dictionary(uniqueKeysWithValues: viewModel.sceneSnapshot.actors.map { ($0.id, $0.spriteName) })
+        let visualIDs = Dictionary(uniqueKeysWithValues: viewModel.sceneSnapshot.actors.map { ($0.id, $0.visualID) })
 
-        XCTAssertEqual(sprites["player"], "actor_warrior")
-        XCTAssertEqual(sprites["grunt_archer"], "enemy_human_ranged")
-        XCTAssertEqual(sprites["grunt_warrior"], "enemy_human_melee")
-        // 4 级的守卫不管战斗职业是什么，都应该读成「精英」立绘，这样即使它和前面的杂兵
+        XCTAssertEqual(visualIDs["player"], "actor_warrior")
+        XCTAssertEqual(visualIDs["grunt_archer"], "enemy_human_ranged")
+        XCTAssertEqual(visualIDs["grunt_warrior"], "enemy_human_melee")
+        // 4 级的守卫不管战斗职业是什么，都应该读成「精英」视觉，这样即使它和前面的杂兵
         // 共用同一个 warrior 职业 ID，章节高潮战也能明显区分开来。
-        XCTAssertEqual(sprites["elite_guard"], "enemy_human_elite")
-        XCTAssertNotEqual(sprites["grunt_warrior"], sprites["player"])
+        XCTAssertEqual(visualIDs["elite_guard"], "enemy_human_elite")
+        XCTAssertNotEqual(visualIDs["grunt_warrior"], visualIDs["player"])
     }
 
     func testSnapshotIncludesStableAnimationState() throws {
@@ -44,13 +42,12 @@ final class BattleViewModelTests: XCTestCase {
         let player = try XCTUnwrap(firstSnapshot.actors.first { $0.id == "player" })
 
         XCTAssertEqual(player.visualID, "actor_warrior")
-        XCTAssertEqual(player.spriteName, player.visualID)
         XCTAssertEqual(player.facing, .down)
         XCTAssertEqual(player.baseAction, .idle)
         XCTAssertEqual(firstSnapshot.presentationEvents, secondSnapshot.presentationEvents)
     }
 
-    func testBeastAndMonsterSpriteVariesByKindAndLevel() {
+    func testBeastAndMonsterVisualIDVariesByKindAndLevel() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
                 actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [], kind: .animal, level: 1),
@@ -60,13 +57,13 @@ final class BattleViewModelTests: XCTestCase {
             skills: []
         )
 
-        let sprites = Dictionary(uniqueKeysWithValues: viewModel.sceneSnapshot.actors.map { ($0.id, $0.spriteName) })
+        let visualIDs = Dictionary(uniqueKeysWithValues: viewModel.sceneSnapshot.actors.map { ($0.id, $0.visualID) })
 
-        XCTAssertEqual(sprites["boar"], "enemy_beast_animal")
-        XCTAssertEqual(sprites["cave_vermin"], "enemy_beast_tainted")
+        XCTAssertEqual(visualIDs["boar"], "enemy_beast_animal")
+        XCTAssertEqual(visualIDs["cave_vermin"], "enemy_beast_tainted")
         // 等级更高的裂隙幼体应该比洞穴小怪显得更「腐化」。
-        XCTAssertEqual(sprites["rift_hatchling"], "enemy_beast_rift")
-        XCTAssertNotEqual(sprites["cave_vermin"], sprites["rift_hatchling"])
+        XCTAssertEqual(visualIDs["rift_hatchling"], "enemy_beast_rift")
+        XCTAssertNotEqual(visualIDs["cave_vermin"], visualIDs["rift_hatchling"])
     }
     func testAPInsufficientDisablesSkillAndDoesNotSpendPoints() {
         let viewModel = BattleViewModel(
