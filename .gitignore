@@ -32,6 +32,8 @@ DerivedData/
 # ---- 你项目里已有的自定义项 ----
 .codegraph/
 .github/features/
+.github/archived_features/
+tmp/
 
 # ---- Docs: validator 生成产物（不入库，需要时现生成）----
 Docs/Reports/map-previews/

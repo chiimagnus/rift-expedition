@@ -385,5 +385,41 @@
     "license": "self-made",
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"
-  }
+  },
+    {
+        "id": "spritesheet.actor_warrior_anim",
+        "path": "Assets/Characters/actor_warrior_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated (nano-banana / Gemini image model), 4 direction sprite strips composited into a 4x12 grid; prompt documented in Notion art-asset prompt page",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-07",
+        "author": "AI-generated (nano-banana), post-processed by Rift Expedition project"
+    },
+    {
+        "id": "spritesheet.actor_archer_anim",
+        "path": "Assets/Characters/actor_archer_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated with built-in imagegen from P2-T3 archer prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-07",
+        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+    },
+    {
+        "id": "spritesheet.actor_mage_anim",
+        "path": "Assets/Characters/actor_mage_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated with built-in imagegen from P2-T4 mage prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-07",
+        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+    },
+    {
+        "id": "spritesheet.actor_rogue_anim",
+        "path": "Assets/Characters/actor_rogue_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated with built-in imagegen from P2-T5 rogue prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-08",
+        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+    }
 ]

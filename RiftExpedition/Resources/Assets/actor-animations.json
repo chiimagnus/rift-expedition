@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "frameSize": {
+    "width": 96,
+    "height": 96
+  },
+  "directions": ["down", "left", "right", "up"],
+  "actions": {
+    "idle": {
+      "startColumn": 0,
+      "frameCount": 3
+    },
+    "walk": {
+      "startColumn": 3,
+      "frameCount": 3
+    },
+    "attack": {
+      "startColumn": 6,
+      "frameCount": 3
+    },
+    "hurt": {
+      "startColumn": 9,
+      "frameCount": 3
+    }
+  },
+    "sprites": [
+        {
+            "visualID": "actor_warrior",
+            "sheet": "Assets/Characters/actor_warrior_anim.png"
+        },
+        {
+            "visualID": "actor_archer",
+            "sheet": "Assets/Characters/actor_archer_anim.png"
+        },
+        {
+            "visualID": "actor_mage",
+            "sheet": "Assets/Characters/actor_mage_anim.png"
+        },
+        {
+            "visualID": "actor_rogue",
+            "sheet": "Assets/Characters/actor_rogue_anim.png"
+        }
+    ]
+}

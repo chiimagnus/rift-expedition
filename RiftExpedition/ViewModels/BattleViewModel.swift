@@ -144,7 +144,7 @@ final class BattleViewModel {
                     id: actor.id,
                     displayName: actor.displayName,
                     factionName: factionName(actor.faction),
-                    spriteName: spriteName(for: actor),
+                    spriteName: ActorVisualIDResolver.visualID(for: actor),
                     position: actorPositions[actor.id] ?? .zero,
                     health: actor.stats.health,
                     maxHealth: actor.stats.maxHealth,
@@ -602,42 +602,6 @@ final class BattleViewModel {
         case .monster:
             "怪物"
         }
-    }
-
-    private func spriteName(for actor: Actor) -> String {
-        switch actor.kind {
-        case .player:
-            return actor.classID.map { "actor_\($0)" } ?? "actor_warrior"
-        case .npc:
-            return "npc_elder"
-        case .humanEnemy:
-            return spriteName(forHumanEnemy: actor)
-        case .animal, .monster:
-            return spriteName(forBeast: actor)
-        }
-    }
-
-    /// `human_enemies.png` 是一张已登记的 3 帧拼接图（远程/近战/精英），这样人类敌人能有
-    /// 自己独立的立绘，而不是悄悄复用玩家队伍的 `actor_<职业ID>` 立绘（这样会导致敌我
-    /// 立绘长得一模一样）。这里先判断等级，这样不管这个敌人的战斗职业是什么，
-    /// 只要是章节高潮战的守卫就都读成「精英」；其余情况再按战斗职业区分远程还是近战，
-    /// 这符合遭遇战设计的原则——敌人的外形应该让玩家一眼就能看出它的角色定位和威胁等级。
-    private func spriteName(forHumanEnemy actor: Actor) -> String {
-        if actor.level >= 4 {
-            return "enemy_human_elite"
-        }
-        return actor.classID == "archer" ? "enemy_human_ranged" : "enemy_human_melee"
-    }
-
-    /// `beasts_and_monsters.png` 是一张已登记的 3 帧拼接图（普通动物/受污染洞穴生物/
-    /// 裂隙腐化生物），这样洞穴小怪和裂隙幼体就不用再全部共用同一张通用怪物立绘了。
-    /// 动物类型统一读成「普通动物」；怪物类型则按等级分档，让章节高潮出现的裂隙幼体
-    /// 看起来比之前等级更低的洞穴小怪更「腐化」。
-    private func spriteName(forBeast actor: Actor) -> String {
-        guard actor.kind == .monster else {
-            return "enemy_beast_animal"
-        }
-        return actor.level >= 3 ? "enemy_beast_rift" : "enemy_beast_tainted"
     }
 
     private func readableError(_ error: Error) -> String {

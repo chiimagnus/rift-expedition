@@ -1,0 +1,11 @@
+[
+  {
+    "id": "test_actor_animation",
+    "path": "Assets/Characters/test_actor_anim.png",
+    "type": "spritesheet",
+    "source": "test fixture",
+    "license": "self-made",
+    "downloadedAt": "2026-07-07",
+    "author": "fixture"
+  }
+]
