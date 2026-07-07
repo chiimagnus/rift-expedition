@@ -31,6 +31,10 @@
         {
             "visualID": "actor_archer",
             "sheet": "Assets/Characters/actor_archer_anim.png"
+        },
+        {
+            "visualID": "actor_mage",
+            "sheet": "Assets/Characters/actor_mage_anim.png"
         }
     ]
 }

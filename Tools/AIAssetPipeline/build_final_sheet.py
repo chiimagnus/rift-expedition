@@ -20,7 +20,7 @@ PADDING = 4
 BLACK_THRESHOLD = 60
 LINE_MIN_FRACTION = 0.5
 LINE_GAP = 3
-LINE_INSET = 2
+LINE_INSET = 8
 
 
 def find_line_groups(frac, min_frac=LINE_MIN_FRACTION):
