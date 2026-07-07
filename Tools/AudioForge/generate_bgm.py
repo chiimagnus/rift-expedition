@@ -18,6 +18,10 @@ from __future__ import annotations
 import numpy as np
 import wave
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from audio_metrics import integrated_lufs, true_peak_dbtp  # noqa: E402
 
 SR = 44100
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +35,11 @@ NAMES = {'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5, 'F': -4, 'F#': -3,
 
 def freq(letter, octave, semi=0):
     return 440.0 * 2 ** ((NAMES[letter] + (octave - 4) * 12 + semi) / 12.0)
+
+
+def freq_abs(semi_abs):
+    """semi_abs：相对 A4(440Hz) 的绝对半音数（用于声部进行后的绝对音高）。"""
+    return 440.0 * 2 ** (semi_abs / 12.0)
 
 
 def _t(dur):
@@ -229,23 +238,43 @@ def loopify(sig, loop_s, xfade_s=0.09):
     return core[:N]
 
 
-def save_stereo(name, L, R, loop_s, peak=0.89):
+def save_stereo(name, L, R, loop_s, target_lufs=-16.0, tp_ceiling=-1.5):
+    """按行业标准归一化：先到目标 LUFS（BS.1770/EBU R128），再限 True Peak。
+
+    - 目标 -16 LUFS：游戏 BGM 常用响度，三首一致，并给音效留空间。
+    - True Peak 上限 -1.5 dBTP：避免采样间峰（inter-sample）削幅。
+    """
     L = loopify(L, loop_s)
     R = loopify(R, loop_s)
-    m = max(np.max(np.abs(L)), np.max(np.abs(R))) or 1.0
-    L = soft_clip(L / m * peak * 1.05)
-    R = soft_clip(R / m * peak * 1.05)
+    # 1) 归一化到目标 LUFS
+    lufs = integrated_lufs(L, R, SR)
+    if np.isfinite(lufs):
+        gain = 10 ** ((target_lufs - lufs) / 20.0)
+        L *= gain
+        R *= gain
+    # 2) True-peak 上限（必要时整体衷减，保护动态）
+    tp = max(true_peak_dbtp(L)[0], true_peak_dbtp(R)[0])
+    if tp > tp_ceiling:
+        atten = 10 ** ((tp_ceiling - tp) / 20.0)
+        L *= atten
+        R *= atten
+    # 3) 安全限幅（正常不触发）
+    L = np.clip(L, -1.0, 1.0)
+    R = np.clip(R, -1.0, 1.0)
     inter = np.empty(len(L) * 2)
-    inter[0::2] = np.clip(L, -1, 1)
-    inter[1::2] = np.clip(R, -1, 1)
+    inter[0::2] = L
+    inter[1::2] = R
     data = (inter * 32767).astype(np.int16)
     with wave.open(os.path.join(OUT, name), 'w') as w:
         w.setnchannels(2)
         w.setsampwidth(2)
         w.setframerate(SR)
         w.writeframes(data.tobytes())
-    seam = abs(int((L[0] * 32767)) - int((L[-1] * 32767)))
-    print(f"{name:24s} {len(L)/SR:5.2f}s stereo  peak={m:.2f}  seam={seam}")
+    lufs2 = integrated_lufs(L, R, SR)
+    tp2 = max(true_peak_dbtp(L)[0], true_peak_dbtp(R)[0])
+    seam = max(abs(L[0] - L[-1]), abs(R[0] - R[-1]))
+    print(f"{name:24s} {len(L)/SR:5.2f}s stereo  LUFS={lufs2:6.2f}  "
+          f"dBTP={tp2:6.2f}  seam={seam:.4f}")
 
 # ---------------------------------------------------------------- 和声
 QUAL = {
@@ -259,30 +288,85 @@ QUAL = {
 }
 
 
+def _chord_abs(root, qual, octave):
+    """和弦各音的绝对半音（相对 A4），原位堆叠。"""
+    b = NAMES[root] + (octave - 4) * 12
+    return [b + iv for iv in QUAL[qual]]
+
+
+def voice_lead(prev, root, qual, octave):
+    """声部进行（voice leading）：保留共同音，其余声部就近移动。
+
+    参考 music21.voiceLeading / tonaljs voice-leading / Berklee 声部进行准则：
+    换和弦时每个声部移动尽量小（取最近的和弦音八度），听感更顺滑；
+    再补齐缺失的和弦色彩音，保证和声完整。
+    """
+    tones = _chord_abs(root, qual, octave)
+    if prev is None:
+        return tones                       # 首和弦：原位
+    base = NAMES[root] + (octave - 4) * 12
+    ivs = QUAL[qual]
+    out = []
+    for p in prev:
+        best, bestd = None, 1e9
+        for iv in ivs:
+            for o in (-1, 0, 1):
+                cand = base + iv + 12 * o
+                d = abs(cand - p)
+                if d < bestd:
+                    bestd, best = d, cand
+        out.append(best)
+    have = set(c % 12 for c in out)        # 补齐缺失的和弦音
+    for iv in ivs:
+        if (base + iv) % 12 not in have:
+            out.append(base + iv)
+            have.add((base + iv) % 12)
+    return out
+
+
 def pan_lr(mono, pan):
     # equal-power panning; pan in [-1,1]
     a = (pan + 1) * np.pi / 4
     return mono * np.cos(a), mono * np.sin(a)
 
 
+def _value_noise(rng, ncp):
+    """[0,1] 平滑值噪声（Perlin 风格）：随机控制点 + smoothstep 插值。"""
+    cps = rng.random(max(2, ncp))
+
+    def f(x):                                    # x in [0,1]
+        pos = x * (len(cps) - 1)
+        i = int(np.floor(pos))
+        i2 = min(i + 1, len(cps) - 1)
+        frac = pos - i
+        s = frac * frac * (3 - 2 * frac)         # smoothstep
+        return cps[i] * (1 - s) + cps[i2] * s
+    return f
+
+
 def melody_line(rng, bars, scale, beats):
-    """为每小节生成旋律：强拍落和弦音，其余走阶。返回 [(bar, beat, semi, dur_beats)]。"""
+    """旋律：用平滑值噪声（Perlin 风格）勾勒连贯轮廓，强拍锰定到和弦音。
+
+    参考开源程序化音乐做法（如 SeedSong / Perlin melody）：连续噪声比纯随机
+    更能生成可歌唱、起伏自然的旋律线；同时保留“强拍落和弦音”的和声约束。
+    返回 [(bar, beat, semi, dur_beats)]。
+    """
+    total = len(bars) * beats
+    contour = _value_noise(rng, max(4, total // 2))
+    patterns = [[0, 1, 1], [0, 0.5, 0.5, 1], [0, 1.5, 0.5], [0, 2]]
     notes = []
     for bi, (root, qual) in enumerate(bars):
         tones = QUAL[qual]
-        patterns = [[0, 1, 1], [0, 0.5, 0.5, 1], [0, 1.5, 0.5], [0, 2]]
         pat = patterns[rng.integers(len(patterns))]
         beat_cursor = 0.0
-        prev = tones[rng.integers(len(tones))]
         for step, dur_b in enumerate(pat):
-            if step == 0:
-                semi = tones[rng.integers(len(tones))]
-            else:
-                # 走阶：在音阶里靠近 prev
-                cand = [s for s in scale if abs(s - prev) <= 4]
-                semi = cand[rng.integers(len(cand))] if cand else prev
+            x = (bi * beats + beat_cursor) / total
+            deg = int(round(contour(x) * (len(scale) - 1)))
+            semi = scale[deg]
+            # 所有整拍（强拍）锰定到和弦音，弱拍/切分才用 Perlin 漫游
+            if float(beat_cursor).is_integer():
+                semi = min(tones, key=lambda tt: abs(tt - semi))
             notes.append((bi, beat_cursor, semi, max(0.5, dur_b)))
-            prev = semi
             beat_cursor += dur_b
             if beat_cursor >= beats:
                 break
@@ -314,13 +398,17 @@ def render_song(spec):
     padvoice = spec.get('pad', strings_pad)
     g = spec['gains']
 
+    prev_voicing = None
     for bi, (root, qual) in enumerate(bars):
         at = bi * bar_dur
         tones = QUAL[qual]
-        # --- pad 和声（展开到立体声两侧）---
-        for ti, s in enumerate(tones):
-            samp = padvoice(freq(root, spec['pad_oct'], s), bar_dur + 0.4)
-            pan = -0.5 + ti / max(1, len(tones) - 1)
+        # --- pad 和声：声部进行（voice leading，最小移动）展开立体声 ---
+        voicing = voice_lead(prev_voicing, root, qual, spec['pad_oct'])
+        prev_voicing = voicing
+        nv = len(voicing)
+        for ti, sabs in enumerate(voicing):
+            samp = padvoice(freq_abs(sabs), bar_dur + 0.4)
+            pan = -0.5 + ti / max(1, nv - 1)
             place(at, samp, g['pad'], pan * 0.6)
             send.add(at, samp, g['pad'] * 0.4)
         # --- bass：根-五-根-三 走动 ---
@@ -376,8 +464,9 @@ def main():
     os.makedirs(OUT, exist_ok=True)
 
     # ===================== VILLAGE : C 大调、明快田园 =====================
-    C = ['C', 'G', 'A', 'F', 'C', 'G', 'F', 'G']
-    Q = ['maj7', 'maj', 'min7', 'maj7', 'maj', 'dom7', 'add9', 'maj']
+    # 主音框定：I-IV-vi-IV-I-IV-V7-I，首尾落 C，末小节 G7→C 正格终止
+    C = ['C', 'F', 'A', 'F', 'C', 'F', 'G', 'C']
+    Q = ['maj7', 'maj', 'min7', 'add9', 'maj', 'maj', 'dom7', 'maj']
     village = {
         'bpm': 108, 'beats_per_bar': 4, 'seed': 21,
         'bars': list(zip(C, Q)),
@@ -393,8 +482,9 @@ def main():
     save_stereo("village_theme_loop.wav", *render_song(village))
 
     # ===================== WILDS : A 自然小调、开阔神秘 =====================
-    C = ['A', 'F', 'C', 'G', 'A', 'F', 'D', 'E']
-    Q = ['min7', 'maj7', 'maj', 'dom7', 'min7', 'add9', 'min7', 'min']
+    # 纯三和弦避免 min7 引入 G/C 混淆调性；A 主导低音 + E7→Am（G# 导音），无歧义 A 小调
+    C = ['A', 'D', 'E', 'A', 'A', 'D', 'E', 'A']
+    Q = ['min', 'min', 'dom7', 'min', 'min', 'min', 'dom7', 'min']
     wilds = {
         'bpm': 96, 'beats_per_bar': 4, 'seed': 44,
         'bars': list(zip(C, Q)),
@@ -410,8 +500,9 @@ def main():
     save_stereo("wilds_theme_loop.wav", *render_song(wilds))
 
     # ===================== CAVE : D 小调、阴暗空旷 =====================
-    C = ['D', 'D', 'A', 'D', 'A#', 'F', 'A', 'D']
-    Q = ['min', 'sus2', 'min7', 'min', 'maj7', 'maj', 'min7', 'sus2']
+    # i-VI-III-VII-i-iv-VII-i（D 自然小调/埃奥利亚），首尾落 Dm，保留小三度 F
+    C = ['D', 'A#', 'F', 'C', 'D', 'G', 'C', 'D']
+    Q = ['min', 'maj7', 'maj', 'maj', 'min', 'min7', 'maj', 'min']
     cave = {
         'bpm': 66, 'beats_per_bar': 4, 'seed': 9,
         'bars': list(zip(C, Q)),
