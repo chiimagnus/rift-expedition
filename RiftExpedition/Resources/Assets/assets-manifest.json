@@ -246,27 +246,27 @@
     "id": "audio.village_theme_loop",
     "path": "Assets/Audio/village_theme_loop.wav",
     "type": "audio",
-    "source": "local procedurally generated WAV ambience loop",
+    "source": "local procedurally generated BGM loop via Tools/AudioForge/generate_bgm.py",
     "license": "self-made",
-    "downloadedAt": "2026-07-06",
+    "downloadedAt": "2026-07-08",
     "author": "Rift Expedition project"
   },
   {
     "id": "audio.wilds_theme_loop",
     "path": "Assets/Audio/wilds_theme_loop.wav",
     "type": "audio",
-    "source": "local procedurally generated WAV ambience loop",
+    "source": "local procedurally generated BGM loop via Tools/AudioForge/generate_bgm.py",
     "license": "self-made",
-    "downloadedAt": "2026-07-06",
+    "downloadedAt": "2026-07-08",
     "author": "Rift Expedition project"
   },
   {
     "id": "audio.cave_theme_loop",
     "path": "Assets/Audio/cave_theme_loop.wav",
     "type": "audio",
-    "source": "local procedurally generated WAV ambience loop",
+    "source": "local procedurally generated BGM loop via Tools/AudioForge/generate_bgm.py",
     "license": "self-made",
-    "downloadedAt": "2026-07-06",
+    "downloadedAt": "2026-07-08",
     "author": "Rift Expedition project"
   },
   {
