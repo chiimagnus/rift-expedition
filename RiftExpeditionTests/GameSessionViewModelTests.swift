@@ -14,6 +14,13 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(AudioService.bgmCue(for: "cave_depths"), .caveTheme)
     }
 
+    func testAreaIDsMapToAmbienceCues() {
+        XCTAssertNil(AudioService.ambienceCue(for: "village_square"))
+        XCTAssertNil(AudioService.ambienceCue(for: "wilds_road"))
+        XCTAssertEqual(AudioService.ambienceCue(for: "cave_entrance"), .caveDrip)
+        XCTAssertEqual(AudioService.ambienceCue(for: "cave_depths"), .caveDrip)
+    }
+
     func testLeaderEnteringExitChangesArea() throws {
         let session = GameSessionViewModel()
         session.partyCreationViewModel.toggleSelection("warrior")

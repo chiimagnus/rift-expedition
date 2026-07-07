@@ -70,6 +70,7 @@ final class GameSessionViewModel {
 
     func enterExploration() {
         audioService.playBGM(for: currentAreaID)
+        audioService.playAmbience(for: currentAreaID)
         appState = .exploration
         statusText = "点击地图移动队长。"
     }
@@ -435,6 +436,7 @@ final class GameSessionViewModel {
         currentSpawnID = spawnID
         if appState == .exploration {
             audioService.playBGM(for: areaID)
+            audioService.playAmbience(for: areaID)
         }
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: areaID, bundle: contentBundle)
         configureEncounterTriggers()

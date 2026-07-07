@@ -57,6 +57,11 @@ final class AudioService {
         player.play()
     }
 
+    func playAmbience(for areaID: String) {
+        guard let cue = Self.ambienceCue(for: areaID) else { return }
+        play(cue)
+    }
+
     func stopBGM() {
         players[currentBGMCue ?? .villageTheme]?.stop()
         currentBGMCue = nil
@@ -70,6 +75,10 @@ final class AudioService {
             return .wildsTheme
         }
         return .villageTheme
+    }
+
+    static func ambienceCue(for areaID: String) -> AudioCue? {
+        areaID.hasPrefix("cave_") ? .caveDrip : nil
     }
 
     private func loadPlayers() {
