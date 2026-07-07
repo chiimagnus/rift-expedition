@@ -264,6 +264,7 @@ final class GameScene: SKScene {
 
     private func renderStaticObjects(metadata: TiledMapMetadata) {
         staticObjectLayer?.removeFromParent()
+        nodeAnimationKeys = nodeAnimationKeys.filter { !$0.key.hasPrefix("npc:") }
         let layer = SKNode()
         layer.name = "staticObjectLayer"
         // SKTiled 的 `SKTilemap` 会给它从 .tmx 文件里解析出来的每个图层自己分配一个内部
@@ -298,7 +299,7 @@ final class GameScene: SKScene {
             layer.addChild(makeEncounterMarker(encounter))
         }
         for npc in metadata.npcs {
-            layer.addChild(makeMapSprite(name: spriteName(forNPC: npc), position: npc.position, size: CGSize(width: 52, height: 52)))
+            layer.addChild(makeNPCSprite(npc))
         }
         for item in metadata.items {
             layer.addChild(makeMapSprite(name: spriteName(forMapItem: item), position: item.position, size: CGSize(width: 48, height: 48)))
@@ -516,6 +517,22 @@ final class GameScene: SKScene {
         return sprite
     }
 
+    private func makeNPCSprite(_ npc: MapNPC) -> SKNode {
+        let visualID = ActorVisualIDResolver.npcVisualID(actorID: npc.actorID)
+        let sprite = SKSpriteNode(texture: texture(named: staticTextureName(for: visualID)))
+        sprite.name = "npc_\(npc.actorID)"
+        sprite.position = npc.position
+        sprite.size = CGSize(width: 52, height: 52)
+        playActorAnimation(
+            on: sprite,
+            nodeKey: "npc:\(npc.tiledID)",
+            visualID: visualID,
+            action: .idle,
+            direction: .down
+        )
+        return sprite
+    }
+
     private func texture(named name: String) -> SKTexture? {
         if let texture = textureCache[name] {
             return texture
@@ -677,17 +694,6 @@ final class GameScene: SKScene {
     private func beastMonsterTexture(named name: String) -> SKTexture? {
         guard let frameIndex = Self.beastMonsterFrames[name] else { return nil }
         return slicedTexture(sheetName: "beasts_and_monsters", frameIndex: frameIndex, frameCount: 3)
-    }
-
-    private func spriteName(forNPC npc: MapNPC) -> String {
-        switch npc.actorID {
-        case "elder", "mayor":
-            staticTextureName(for: "npc_mayor")
-        case "gate_guard":
-            staticTextureName(for: "npc_gate_guard")
-        default:
-            staticTextureName(for: "npc_fiance")
-        }
     }
 
     private func staticTextureName(for visualID: String) -> String {
