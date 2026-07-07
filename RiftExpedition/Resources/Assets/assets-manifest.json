@@ -385,5 +385,14 @@
     "license": "self-made",
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.actor_warrior_anim",
+    "path": "Assets/Characters/actor_warrior_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated (nano-banana / Gemini image model), 4 direction sprite strips composited into a 4x12 grid; prompt documented in Notion art-asset prompt page",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-07",
+    "author": "AI-generated (nano-banana), post-processed by Rift Expedition project"
   }
 ]
