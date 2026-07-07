@@ -69,7 +69,7 @@ final class GameSessionViewModel {
     }
 
     func enterExploration() {
-        audioService.playAreaBGM()
+        audioService.playBGM(for: currentAreaID)
         appState = .exploration
         statusText = "点击地图移动队长。"
     }
@@ -223,7 +223,7 @@ final class GameSessionViewModel {
     }
 
     func returnToMainMenu() {
-        audioService.stopAreaBGM()
+        audioService.stopBGM()
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
@@ -433,6 +433,9 @@ final class GameSessionViewModel {
     private func loadArea(_ areaID: String, spawnID: String) {
         currentAreaID = areaID
         currentSpawnID = spawnID
+        if appState == .exploration {
+            audioService.playBGM(for: areaID)
+        }
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: areaID, bundle: contentBundle)
         configureEncounterTriggers()
         // 之前这里完全没有把地图的障碍物同步给 explorationController，所以 navObstacle

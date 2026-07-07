@@ -5,11 +5,13 @@ enum AudioCue: String, CaseIterable {
     case uiClick = "ui_click"
     case attackHit = "attack_hit"
     case skillCast = "skill_cast"
-    case areaBGM = "area_bgm_loop"
     case battleStart = "battle_start"
     case chestOpen = "chest_open"
     case healDrink = "heal_drink"
     case caveDrip = "cave_drip"
+    case villageTheme = "village_theme_loop"
+    case wildsTheme = "wilds_theme_loop"
+    case caveTheme = "cave_theme_loop"
 }
 
 @MainActor
@@ -28,6 +30,7 @@ final class AudioService {
 
     private let bundle: Bundle
     private var players: [AudioCue: AVAudioPlayer] = [:]
+    private var currentBGMCue: AudioCue?
 
     init(bundle: Bundle = .main) {
         self.bundle = bundle
@@ -40,16 +43,33 @@ final class AudioService {
         player.play()
     }
 
-    func playAreaBGM() {
-        guard let player = players[.areaBGM] else { return }
-        player.numberOfLoops = -1
-        if !player.isPlaying {
-            player.play()
+    func playBGM(for areaID: String) {
+        let cue = Self.bgmCue(for: areaID)
+        guard currentBGMCue != cue else { return }
+        players[currentBGMCue ?? cue]?.stop()
+        guard let player = players[cue] else {
+            currentBGMCue = nil
+            return
         }
+        currentBGMCue = cue
+        player.numberOfLoops = -1
+        player.currentTime = 0
+        player.play()
     }
 
-    func stopAreaBGM() {
-        players[.areaBGM]?.stop()
+    func stopBGM() {
+        players[currentBGMCue ?? .villageTheme]?.stop()
+        currentBGMCue = nil
+    }
+
+    static func bgmCue(for areaID: String) -> AudioCue {
+        if areaID.hasPrefix("cave_") {
+            return .caveTheme
+        }
+        if areaID.hasPrefix("wilds_") {
+            return .wildsTheme
+        }
+        return .villageTheme
     }
 
     private func loadPlayers() {

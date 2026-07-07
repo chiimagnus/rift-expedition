@@ -5,6 +5,15 @@ import XCTest
 
 @MainActor
 final class GameSessionViewModelTests: XCTestCase {
+    func testAreaIDsMapToRegionalBGMCues() {
+        XCTAssertEqual(AudioService.bgmCue(for: "village_square"), .villageTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "village_riverside"), .villageTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "wilds_road"), .wildsTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "wilds_riverbank"), .wildsTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "cave_entrance"), .caveTheme)
+        XCTAssertEqual(AudioService.bgmCue(for: "cave_depths"), .caveTheme)
+    }
+
     func testLeaderEnteringExitChangesArea() throws {
         let session = GameSessionViewModel()
         session.partyCreationViewModel.toggleSelection("warrior")
