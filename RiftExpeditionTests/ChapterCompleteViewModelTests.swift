@@ -24,16 +24,24 @@ final class ChapterCompleteViewModelTests: XCTestCase {
         XCTAssertTrue(session.statusText.contains("第一章完成"))
     }
 
-    func testMapTriggerOpensDialogueWhenLeaderEntersTriggerFrame() {
+    func testMapTriggerOpensDialogueWhenLeaderEntersTriggerFrame() throws {
         let session = GameSessionViewModel()
         session.partyCreationViewModel.toggleSelection("warrior")
         session.partyCreationViewModel.toggleSelection("mage")
         session.startChapterWithSelectedParty()
 
-        session.explorationController.configureParty(session.party, at: CGPoint(x: 464, y: 160))
+        let metadata = try TiledMapLoader.loadMetadata(areaID: "village_square")
+        let notice = try XCTUnwrap(metadata.triggers.first { $0.triggerID == "village_square_notice" })
+        session.explorationController.configureParty(session.party, at: notice.frame.center)
         session.gameScene(GameScene(size: .init(width: 1, height: 1)), didAdvance: 1.0 / 60.0)
 
         XCTAssertEqual(session.appState, .dialogue)
         XCTAssertEqual(session.dialogViewModel.activeDialog?.id, "notice_board")
+    }
+}
+
+private extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: midX, y: midY)
     }
 }
