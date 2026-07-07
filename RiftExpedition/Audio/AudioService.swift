@@ -109,6 +109,7 @@ final class AudioService {
     private func loadPlayers() {
         for cue in AudioCue.allCases {
             guard let url = urlForCue(cue) else {
+                GameLog.assets.warning("Audio cue missing: \(cue.rawValue, privacy: .public).wav")
                 continue
             }
             do {
@@ -116,6 +117,7 @@ final class AudioService {
                 player.prepareToPlay()
                 players[cue] = player
             } catch {
+                GameLog.assets.error("Audio cue failed to load: \(cue.rawValue, privacy: .public).wav")
                 continue
             }
         }
