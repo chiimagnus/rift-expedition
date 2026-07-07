@@ -62,7 +62,7 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 ### Actor animation spritesheet contract
 
-角色动画配置写在 `RiftExpedition/Resources/Assets/actor-animations.json`。每个可动画角色登记一个稳定 `visual_id`，对应 sheet 路径固定为 `Assets/Characters/<visual_id>_anim.png`，并且该 PNG 必须同步登记在 `assets-manifest.json`，类型为 `spritesheet`。
+角色动画配置写在 `RiftExpedition/Resources/Assets/actor-animations.json`。每个可动画角色登记一个稳定 `visualID`，对应 sheet 路径固定为 `Assets/Characters/<visualID>_anim.png`，并且该 PNG 必须同步登记在 `assets-manifest.json`，类型为 `spritesheet`。
 
 每张角色动画 sheet 固定为 `1152x384`，单帧 `96x96`，4 行 12 列。行顺序从上到下固定为：
 

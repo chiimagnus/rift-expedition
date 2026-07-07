@@ -146,6 +146,11 @@ public enum AssetValidator {
         if catalog.directions != expectedDirections {
             issues.append(AssetValidationIssue(message: "\(animationConfigPath) directions must be \(expectedDirections), got \(catalog.directions)"))
         }
+        let actionNames = Set(catalog.actions.keys)
+        let expectedActionNames = Set(expectedActions.keys)
+        if actionNames != expectedActionNames {
+            issues.append(AssetValidationIssue(message: "\(animationConfigPath) actions must be \(expectedActionNames.sorted()), got \(actionNames.sorted())"))
+        }
 
         var usedColumns: Set<Int> = []
         for actionName in expectedActions.keys.sorted() {
@@ -169,7 +174,15 @@ public enum AssetValidator {
             }
         }
 
+        var seenVisualIDs: Set<String> = []
         for sprite in catalog.sprites {
+            if !seenVisualIDs.insert(sprite.visualID).inserted {
+                issues.append(AssetValidationIssue(message: "Duplicate actor animation visualID: \(sprite.visualID)"))
+            }
+            let expectedSheet = "Assets/Characters/\(sprite.visualID)_anim.png"
+            if sprite.sheet != expectedSheet {
+                issues.append(AssetValidationIssue(message: "Actor animation \(sprite.visualID) sheet must be \(expectedSheet), got \(sprite.sheet)"))
+            }
             let sheetURL = resourcesRoot.appending(path: sprite.sheet)
             if !FileManager.default.fileExists(atPath: sheetURL.path) {
                 issues.append(AssetValidationIssue(message: "Actor animation \(sprite.visualID) missing sheet: \(sprite.sheet)"))
