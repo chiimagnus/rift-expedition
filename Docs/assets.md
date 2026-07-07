@@ -84,6 +84,19 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 `elder` 继续复用 `npc_mayor` 的视觉资源；`notice_board` 是交互物，不进入角色动画表。
 
+### AI spritesheet generation rules
+
+角色动画 spritesheet 使用 `$imagegen` 本地生成，原始输出先放在 `$CODEX_HOME/generated_images/` 或 `tmp/imagegen/`，再复制规范化后的 PNG 到 `RiftExpedition/Resources/Assets/Characters/`。项目引用不得指向 `$CODEX_HOME`。
+
+每张入库动画表必须：
+
+- 使用纯色 chroma-key 背景生成；默认 `#00ff00`，角色需要绿色元素时改用 `#ff00ff`。
+- 用 `remove_chroma_key.py` 去背景，再用 `Tools/SpriteSheetNormalizer/normalize_sprite_sheet.swift` 拆格、alpha 裁边、等比 fit 到 `96x96`，合成 `1152x384`。
+- 在 `assets-manifest.json` 登记为 `type: "spritesheet"`、`license: "ai-static"`；`source` 必须写明本地 AI 生成说明和可追溯 prompt 位置或角色描述，`downloadedAt` 写入库日期。
+- 在 `actor-animations.json` 登记 `visualID` 与 `Assets/Characters/<visualID>_anim.png`。
+
+不接受格位错乱、跨格攻击特效、缺方向、缺帧、遮挡全身、明显身份漂移、脏边明显或非等比压缩的图片；这些情况直接重抽，不在 runtime 或 normalizer 里迁就。
+
 ## 3. 替换规则（Guide）
 
 - 可替换为 CC0 或等价可商用免署名资源（例如面向 RPG 的 tileset / spritesheet）。
