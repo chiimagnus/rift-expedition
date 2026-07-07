@@ -122,4 +122,39 @@ final class AppSmokeTests: XCTestCase {
         // 必须真的带着一个职业立绘的子节点，而不是光秃秃一个色圈。
         XCTAssertNotNil(partyNode.childNode(withName: "partySprite_player_1"))
     }
+
+    func testExplorationPartyReusesNodeAndPlaysIdleThenWalkAnimation() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        let idleMember = PartyMemberPosition(
+            actorID: "player_1",
+            displayName: "战士1",
+            classID: "warrior",
+            position: CGPoint(x: 160, y: 320),
+            target: nil,
+            facing: .down
+        )
+        scene.renderParty([idleMember], leaderID: "player_1")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let partyNode = try XCTUnwrap(worldLayer.childNode(withName: "party_player_1"))
+        let idleSprite = try XCTUnwrap(partyNode.childNode(withName: "partySprite_player_1") as? SKSpriteNode)
+        XCTAssertNotNil(idleSprite.action(forKey: "actorAnimation"))
+
+        let movingMember = PartyMemberPosition(
+            actorID: "player_1",
+            displayName: "战士1",
+            classID: "warrior",
+            position: CGPoint(x: 180, y: 320),
+            target: CGPoint(x: 220, y: 320),
+            facing: .right
+        )
+        scene.renderParty([movingMember], leaderID: "player_1")
+
+        let updatedPartyNode = try XCTUnwrap(worldLayer.childNode(withName: "party_player_1"))
+        let walkSprite = try XCTUnwrap(updatedPartyNode.childNode(withName: "partySprite_player_1") as? SKSpriteNode)
+        XCTAssertTrue(partyNode === updatedPartyNode)
+        XCTAssertNotNil(walkSprite.action(forKey: "actorAnimation"))
+    }
 }
