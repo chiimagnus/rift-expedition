@@ -244,6 +244,7 @@ final class BattleViewModel {
         do {
             try engine.move(actorID: actor.id, distance: distance)
             actorPositions[actor.id] = destination
+            emitMovementEvent(actorID: actor.id, from: start, to: destination)
             lastEffectPoint = destination
             statusText = "\(actor.displayName) 移动，消耗 \(APRules.movementCost(forDistance: distance)) AP。"
             targetPrompt = "可继续移动、选择技能或结束回合。"
@@ -584,13 +585,60 @@ final class BattleViewModel {
 
     private func move(actorID: String, toward targetID: String, distance: Double) {
         guard let start = actorPositions[actorID], let target = actorPositions[targetID] else { return }
-        actorPositions[actorID] = movedPoint(from: start, toward: target, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        let destination = movedPoint(from: start, toward: target, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        actorPositions[actorID] = destination
+        emitMovementEvent(actorID: actorID, from: start, to: destination)
     }
 
     private func move(actorID: String, awayFrom targetID: String, distance: Double) {
         guard let start = actorPositions[actorID], let target = actorPositions[targetID] else { return }
         let reflected = CGPoint(x: start.x + (start.x - target.x), y: start.y + (start.y - target.y))
-        actorPositions[actorID] = movedPoint(from: start, toward: reflected, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        let destination = movedPoint(from: start, toward: reflected, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+        actorPositions[actorID] = destination
+        emitMovementEvent(actorID: actorID, from: start, to: destination)
+    }
+
+    private func emitMovementEvent(actorID: String, from start: CGPoint, to end: CGPoint) {
+        guard let direction = animationDirection(from: start, to: end) else { return }
+        actorFacings[actorID] = direction
+        appendPresentationEvent(
+            actorID: actorID,
+            action: .walk,
+            direction: direction,
+            targetActorID: nil,
+            effectPoint: end
+        )
+    }
+
+    private func appendPresentationEvent(
+        actorID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection,
+        targetActorID: String?,
+        effectPoint: CGPoint?
+    ) {
+        presentationEvents.append(BattlePresentationEvent(
+            id: nextPresentationEventID,
+            actorID: actorID,
+            action: action,
+            direction: direction,
+            targetActorID: targetActorID,
+            effectPoint: effectPoint
+        ))
+        nextPresentationEventID += 1
+        if presentationEvents.count > 8 {
+            presentationEvents.removeFirst(presentationEvents.count - 8)
+        }
+    }
+
+    private func animationDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {
+        let dx = end.x - start.x
+        let dy = end.y - start.y
+        guard abs(dx) > 0.01 || abs(dy) > 0.01 else { return nil }
+        if abs(dx) > abs(dy) {
+            return dx >= 0 ? .right : .left
+        }
+        return dy >= 0 ? .up : .down
     }
 
     private func movedPoint(from start: CGPoint, toward end: CGPoint, distance: CGFloat) -> CGPoint {

@@ -126,6 +126,15 @@ final class BattleViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 3)
         XCTAssertEqual(viewModel.actorPositions["player"], CGPoint(x: 156, y: 100))
+        XCTAssertEqual(viewModel.sceneSnapshot.actors.first { $0.id == "player" }?.facing, .right)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.last, BattlePresentationEvent(
+            id: 1,
+            actorID: "player",
+            action: .walk,
+            direction: .right,
+            targetActorID: nil,
+            effectPoint: CGPoint(x: 156, y: 100)
+        ))
     }
 
     func testOutOfRangeTargetDoesNotSpendAP() {
@@ -228,6 +237,10 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.state.activeActorID, "player")
         XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.actionPoints, 3)
         XCTAssertEqual(viewModel.statusText, "boar 逼近 player。")
+        XCTAssertEqual(viewModel.sceneSnapshot.actors.first { $0.id == "boar" }?.facing, .left)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.last?.actorID, "boar")
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.last?.action, .walk)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.last?.direction, .left)
     }
 
     private var heavySlash: SkillDefinition {
