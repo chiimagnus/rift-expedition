@@ -36,78 +36,6 @@
     "author": "Rift Expedition project"
   },
   {
-    "id": "sprite.actor_warrior",
-    "path": "Assets/Sprites/actor_warrior.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.actor_archer",
-    "path": "Assets/Sprites/actor_archer.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.actor_mage",
-    "path": "Assets/Sprites/actor_mage.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.actor_rogue",
-    "path": "Assets/Sprites/actor_rogue.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.enemy_boar",
-    "path": "Assets/Sprites/enemy_boar.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.enemy_raider",
-    "path": "Assets/Sprites/enemy_raider.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.enemy_spider",
-    "path": "Assets/Sprites/enemy_spider.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.npc_elder",
-    "path": "Assets/Sprites/npc_elder.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
     "id": "sprite.prop_chest",
     "path": "Assets/Sprites/prop_chest.png",
     "type": "sprite",
@@ -121,33 +49,6 @@
     "path": "Assets/Sprites/prop_woodpile.png",
     "type": "sprite",
     "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "spritesheet.village_npcs",
-    "path": "Assets/Characters/village_npcs.png",
-    "type": "spritesheet",
-    "source": "local self-made procedural pixel spritesheet for chapter village NPCs",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "spritesheet.human_enemies",
-    "path": "Assets/Characters/human_enemies.png",
-    "type": "spritesheet",
-    "source": "local self-made procedural pixel spritesheet for chapter human enemies",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "spritesheet.beasts_and_monsters",
-    "path": "Assets/Characters/beasts_and_monsters.png",
-    "type": "spritesheet",
-    "source": "local self-made procedural pixel spritesheet for beasts and corrupted creatures",
     "license": "self-made",
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"
@@ -308,15 +209,6 @@
   {
     "id": "audio.skill_cast",
     "path": "Assets/Audio/skill_cast.wav",
-    "type": "audio",
-    "source": "local procedurally generated WAV tone",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "audio.area_bgm_loop",
-    "path": "Assets/Audio/area_bgm_loop.wav",
     "type": "audio",
     "source": "local procedurally generated WAV tone",
     "license": "self-made",
