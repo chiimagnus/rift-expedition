@@ -5,7 +5,7 @@
 ## 按主题导航
 
 - **架构与数据流** → [`architecture.md`](architecture.md)：分层结构、依赖方向、从地图到战斗的完整数据流、测试分布。
-- **依赖清单** → [`dependencies.md`](dependencies.md)：允许使用的 Apple 框架与第三方包（目前只有 SKTiled），以及明确禁止引入的依赖类型。
+- **依赖清单** → [`dependencies.md`](dependencies.md)：允许使用的 Apple 框架与本地 vendored 依赖（目前只有 SKTiled），以及明确禁止引入的依赖类型。
 - **美术 / 音频资源** → [`assets.md`](assets.md)：资源授权契约、当前来源登记、多帧 spritesheet 分帧约定、替换规则。
 - **首章数值基线** → [`balance-starting-values.md`](balance-starting-values.md)：职业初始属性、技能数值、装备加成、首章 5 场固定战斗与调参方向。
 - **第一章世界图谱** → [`chapter1-worldgraph.md`](chapter1-worldgraph.md)：9 个区域及其连接关系、设计约束。

@@ -10,10 +10,22 @@ settings:
 packages:
   RiftCore:
     path: Packages/RiftCore
-  SKTiled:
-    url: https://github.com/mfessenden/SKTiled.git
-    revision: 9ca740baffcfbeb296a1f5ebc57d0bc2f4bda1fe
 targets:
+  SKTiled:
+    type: framework
+    platform: macOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: Vendor/SKTiled/Sources
+        excludes:
+          - Info.plist
+          - SKTiled.h
+    settings:
+      base:
+        PRODUCT_NAME: SKTiled
+        GENERATE_INFOPLIST_FILE: true
+        SWIFT_VERSION: "5.5"
+        SWIFT_STRICT_CONCURRENCY: minimal
   RiftExpedition:
     type: application
     platform: macOS
@@ -33,7 +45,7 @@ targets:
         type: folder
     dependencies:
       - package: RiftCore
-      - package: SKTiled
+      - target: SKTiled
     entitlements:
       path: RiftExpedition/RiftExpedition.entitlements
     settings:
