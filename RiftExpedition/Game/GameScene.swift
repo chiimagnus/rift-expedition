@@ -28,6 +28,7 @@ final class GameScene: SKScene {
     private var battleLayer: SKNode?
     private var textureCache: [String: SKTexture] = [:]
     private var animationFrameCache: [String: [SKTexture]] = [:]
+    private var nodeAnimationKeys: [String: String] = [:]
     private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
     private var didLogAnimationCatalogFallback = false
 
@@ -97,6 +98,7 @@ final class GameScene: SKScene {
         for actorID in staleActorIDs {
             partyNodes[actorID]?.removeFromParent()
             partyNodes[actorID] = nil
+            nodeAnimationKeys["party:\(actorID)"] = nil
         }
 
         for member in members {
@@ -106,28 +108,17 @@ final class GameScene: SKScene {
                 ? SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
                 : SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 1)
             if let sprite = node.childNode(withName: "partySprite_\(member.actorID)") as? SKSpriteNode {
-                sprite.xScale = member.facing == .left ? -abs(sprite.xScale) : abs(sprite.xScale)
-                let isMoving = member.target != nil
-                if isMoving {
-                    if sprite.action(forKey: "walkBob") == nil {
-                        sprite.run(.repeatForever(walkBobAction()), withKey: "walkBob")
-                    }
-                } else if sprite.action(forKey: "walkBob") != nil {
-                    sprite.removeAction(forKey: "walkBob")
-                    sprite.position = .zero
-                }
+                let visualID = partyVisualID(for: member)
+                playActorAnimation(
+                    on: sprite,
+                    nodeKey: "party:\(member.actorID)",
+                    visualID: visualID,
+                    action: member.target == nil ? .idle : .walk,
+                    direction: member.facing
+                )
             }
             partyNodes[member.actorID] = node
         }
-    }
-
-    /// 简单的“走路弹跳”动画：贴图相对自己原点小幅上下移动，配合 `renderParty` 里的
-    /// 移动状态判断循环播放。做法参考了 `makeEffectNode` 里命中特效用到的 `SKAction` 序列。
-    private func walkBobAction() -> SKAction {
-        let up = SKAction.moveBy(x: 0, y: 3, duration: 0.15)
-        up.timingMode = .easeInEaseOut
-        let down = up.reversed()
-        return .sequence([up, down])
     }
 
     func renderBattle(_ snapshot: BattleSceneSnapshot?) {
@@ -248,7 +239,8 @@ final class GameScene: SKScene {
         node.zPosition = 550
         worldLayer.addChild(node)
 
-        let sprite = SKSpriteNode(texture: texture(named: partySpriteName(for: member)))
+        let visualID = partyVisualID(for: member)
+        let sprite = SKSpriteNode(texture: texture(named: staticTextureName(for: visualID)))
         sprite.name = "partySprite_\(member.actorID)"
         sprite.size = CGSize(width: 30, height: 30)
         sprite.zPosition = 1
@@ -257,9 +249,17 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func partySpriteName(for member: PartyMemberPosition) -> String {
-        guard let classID = member.classID else { return staticTextureName(for: "actor_warrior") }
-        return staticTextureName(for: "actor_\(classID)")
+    private func partyVisualID(for member: PartyMemberPosition) -> String {
+        switch member.classID {
+        case "archer":
+            "actor_archer"
+        case "mage":
+            "actor_mage"
+        case "rogue":
+            "actor_rogue"
+        default:
+            "actor_warrior"
+        }
     }
 
     private func renderStaticObjects(metadata: TiledMapMetadata) {
@@ -572,6 +572,31 @@ final class GameScene: SKScene {
         }
         animationFrameCache[cacheKey] = frames
         return frames
+    }
+
+    private func playActorAnimation(
+        on sprite: SKSpriteNode,
+        nodeKey: String,
+        visualID: String,
+        action: ActorAnimationKind,
+        direction: ActorAnimationDirection
+    ) {
+        let animationKey = "\(visualID)/\(action.rawValue)/\(direction.rawValue)"
+        if let frames = animationFrames(visualID: visualID, action: action, direction: direction) {
+            sprite.xScale = abs(sprite.xScale)
+            guard nodeAnimationKeys[nodeKey] != animationKey else { return }
+            nodeAnimationKeys[nodeKey] = animationKey
+            sprite.removeAction(forKey: "actorAnimation")
+            sprite.texture = frames.first
+            sprite.run(.repeatForever(.animate(with: frames, timePerFrame: 0.16)), withKey: "actorAnimation")
+            return
+        }
+
+        nodeAnimationKeys[nodeKey] = nil
+        sprite.removeAction(forKey: "actorAnimation")
+        sprite.texture = texture(named: staticTextureName(for: visualID))
+        sprite.xScale = direction == .left ? -abs(sprite.xScale) : abs(sprite.xScale)
+        sprite.position = .zero
     }
 
     private func texture(sheetPath: String) -> SKTexture? {
