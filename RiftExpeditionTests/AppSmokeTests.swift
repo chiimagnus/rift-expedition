@@ -205,6 +205,7 @@ final class AppSmokeTests: XCTestCase {
         let spriteNode = try XCTUnwrap(actorNode.childNode(withName: "battleActorSprite_player"))
         XCTAssertEqual(battleLayer.children.filter { $0.name == "battleActor_player" }.count, 1)
         XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_1" }.count, 1)
+        XCTAssertNotNil(spriteNode.action(forKey: "actorAnimation"))
 
         scene.renderBattle(snapshot)
 

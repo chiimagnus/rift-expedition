@@ -28,6 +28,7 @@ final class GameScene: SKScene {
     private var battleLayer: SKNode?
     private var battleActorNodes: [String: SKNode] = [:]
     private var renderedBattleEffectIDs: Set<Int> = []
+    private var playedBattleAnimationEventIDs: Set<Int> = []
     private var textureCache: [String: SKTexture] = [:]
     private var animationFrameCache: [String: [SKTexture]] = [:]
     private var nodeAnimationKeys: [String: String] = [:]
@@ -129,6 +130,7 @@ final class GameScene: SKScene {
             battleLayer = nil
             battleActorNodes.removeAll()
             renderedBattleEffectIDs.removeAll()
+            playedBattleAnimationEventIDs.removeAll()
             return
         }
 
@@ -160,6 +162,7 @@ final class GameScene: SKScene {
             battleActorNodes[actor.id] = node
         }
         for event in snapshot.presentationEvents {
+            playBattlePresentationEvent(event, actors: snapshot.actors)
             guard let point = event.effectPoint, !renderedBattleEffectIDs.contains(event.id) else { continue }
             renderedBattleEffectIDs.insert(event.id)
             layer.addChild(makeEffectNode(at: point, eventID: event.id))
@@ -352,9 +355,18 @@ final class GameScene: SKScene {
             child.removeFromParent()
         }
         if let sprite = container.childNode(withName: "battleActorSprite_\(actor.id)") as? SKSpriteNode {
-            sprite.texture = texture(named: actor.spriteName)
             sprite.size = CGSize(width: 58, height: 58)
             sprite.zPosition = 1
+            let nodeKey = "battle:\(actor.id)"
+            if nodeAnimationKeys[nodeKey]?.hasPrefix("event:") != true {
+                playActorAnimation(
+                    on: sprite,
+                    nodeKey: nodeKey,
+                    visualID: actor.visualID,
+                    action: actor.baseAction,
+                    direction: actor.facing
+                )
+            }
         }
 
         let ring = SKShapeNode(circleOfRadius: actor.isActive ? 34 : 30)
@@ -391,6 +403,40 @@ final class GameScene: SKScene {
         label.position = CGPoint(x: 0, y: 42)
         label.verticalAlignmentMode = .center
         container.addChild(label)
+    }
+
+    private func playBattlePresentationEvent(_ event: BattlePresentationEvent, actors: [BattleActorMarker]) {
+        guard !playedBattleAnimationEventIDs.contains(event.id),
+              let actor = actors.first(where: { $0.id == event.actorID }),
+              let node = battleActorNodes[event.actorID],
+              let sprite = node.childNode(withName: "battleActorSprite_\(event.actorID)") as? SKSpriteNode
+        else {
+            return
+        }
+        playedBattleAnimationEventIDs.insert(event.id)
+        let nodeKey = "battle:\(event.actorID)"
+        guard let frames = animationFrames(visualID: actor.visualID, action: event.action, direction: event.direction) else {
+            playActorAnimation(on: sprite, nodeKey: nodeKey, visualID: actor.visualID, action: .idle, direction: actor.facing)
+            return
+        }
+
+        nodeAnimationKeys[nodeKey] = "event:\(event.id)"
+        sprite.xScale = abs(sprite.xScale)
+        sprite.removeAction(forKey: "actorAnimation")
+        sprite.texture = frames.first
+        sprite.run(.sequence([
+            .animate(with: frames, timePerFrame: 0.12),
+            .run { [weak self, weak sprite] in
+                guard let self, let sprite else { return }
+                self.playActorAnimation(
+                    on: sprite,
+                    nodeKey: nodeKey,
+                    visualID: actor.visualID,
+                    action: .idle,
+                    direction: actor.facing
+                )
+            }
+        ]), withKey: "actorAnimation")
     }
 
     private func makeMoveRangeNode(center: CGPoint, radius: CGFloat) -> SKNode {
