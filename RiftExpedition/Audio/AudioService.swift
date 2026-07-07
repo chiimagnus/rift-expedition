@@ -1,6 +1,19 @@
 import AVFoundation
 import Observation
 
+protocol AudioPlaying: AnyObject {
+    var currentTime: TimeInterval { get set }
+    var volume: Float { get set }
+    var numberOfLoops: Int { get set }
+    var isPlaying: Bool { get }
+
+    @discardableResult func play() -> Bool
+    func stop()
+    @discardableResult func prepareToPlay() -> Bool
+}
+
+extension AVAudioPlayer: AudioPlaying {}
+
 enum AudioCue: String, CaseIterable {
     case uiClick = "ui_click"
     case attackHit = "attack_hit"
@@ -28,12 +41,20 @@ final class AudioService {
         }
     }
 
-    private let bundle: Bundle
-    private var players: [AudioCue: AVAudioPlayer] = [:]
+    private let makePlayer: (URL) throws -> any AudioPlaying
+    private let urlForCue: (AudioCue) -> URL?
+    private var players: [AudioCue: any AudioPlaying] = [:]
     private var currentBGMCue: AudioCue?
 
-    init(bundle: Bundle = .main) {
-        self.bundle = bundle
+    init(
+        bundle: Bundle = .main,
+        makePlayer: @escaping (URL) throws -> any AudioPlaying = { try AVAudioPlayer(contentsOf: $0) },
+        urlForCue: ((AudioCue) -> URL?)? = nil
+    ) {
+        self.makePlayer = makePlayer
+        self.urlForCue = urlForCue ?? { cue in
+            bundle.url(forResource: cue.rawValue, withExtension: "wav", subdirectory: "Assets/Audio")
+        }
         loadPlayers()
     }
 
@@ -46,7 +67,9 @@ final class AudioService {
     func playBGM(for areaID: String) {
         let cue = Self.bgmCue(for: areaID)
         guard currentBGMCue != cue else { return }
-        players[currentBGMCue ?? cue]?.stop()
+        if let currentBGMCue {
+            players[currentBGMCue]?.stop()
+        }
         guard let player = players[cue] else {
             currentBGMCue = nil
             return
@@ -63,7 +86,9 @@ final class AudioService {
     }
 
     func stopBGM() {
-        players[currentBGMCue ?? .villageTheme]?.stop()
+        if let currentBGMCue {
+            players[currentBGMCue]?.stop()
+        }
         currentBGMCue = nil
     }
 
@@ -83,13 +108,16 @@ final class AudioService {
 
     private func loadPlayers() {
         for cue in AudioCue.allCases {
-            guard let url = bundle.url(forResource: cue.rawValue, withExtension: "wav", subdirectory: "Assets/Audio"),
-                  let player = try? AVAudioPlayer(contentsOf: url)
-            else {
+            guard let url = urlForCue(cue) else {
                 continue
             }
-            player.prepareToPlay()
-            players[cue] = player
+            do {
+                let player = try makePlayer(url)
+                player.prepareToPlay()
+                players[cue] = player
+            } catch {
+                continue
+            }
         }
         updateVolumes()
     }
