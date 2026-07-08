@@ -36,7 +36,7 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 - `Assets/Tilesets/`：首章村庄、野外、洞穴 tileset。
 - `Assets/Sprites/`：地图物件 sprite。
-- `Assets/Characters/`：正式角色动画 spritesheet（当前已入库玩家职业 `*_anim.png`）。
+- `Assets/Characters/`：正式角色动画 spritesheet（当前已入库玩家、NPC、人类敌人与野兽共 14 张 `*_anim.png`）。
 - `Assets/Icons/`：技能、消耗品、宝箱、元素矿图标。
 - `Assets/Audio/`：UI、战斗、探索、洞穴音效与环境循环（加载路径 `Assets/Audio`）。
 
@@ -77,12 +77,12 @@ P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cav
 
 ### AI spritesheet generation rules
 
-角色动画 spritesheet 使用 `$imagegen` 本地生成，原始输出先放在 `$CODEX_HOME/generated_images/` 或 `tmp/imagegen/`，再复制规范化后的 PNG 到 `RiftExpedition/Resources/Assets/Characters/`。项目引用不得指向 `$CODEX_HOME`。
+角色动画 spritesheet 使用 `$imagegen` 本地生成，原始输出先放在 `$CODEX_HOME/generated_images/` 或 `tmp/imagegen/`，再复制规范化后的 PNG 到 `RiftExpedition/Resources/Assets/Characters/`。项目引用不得指向 `$CODEX_HOME`。P2 已完成 14 张角色动画表入库：玩家职业 4 张、NPC 4 张、人类敌人 3 张、野兽/怪物 3 张。
 
 每张入库动画表必须：
 
 - 使用纯色 chroma-key 背景生成；默认 `#00ff00`，角色需要绿色元素时改用 `#ff00ff`。
-- 用 `remove_chroma_key.py` 去背景，再用 `Tools/SpriteSheetNormalizer/normalize_sprite_sheet.swift` 拆格、alpha 裁边、等比 fit 到 `96x96`，合成 `1152x384`。
+- 用 `Tools/AIAssetPipeline/build_final_sheet.py` 按黑色网格线检测 12 格方向 strip，逐格 chroma-key 去背景、alpha 裁边、等比 fit 到 `96x96`，合成 `1152x384`。默认绿色 key 会额外清理绿色背景阴影；需要保留绿色主体时使用洋红 key。
 - 在 `assets-manifest.json` 登记为 `type: "spritesheet"`、`license: "ai-static"`；`source` 必须写明本地 AI 生成说明和可追溯 prompt 位置或角色描述，`downloadedAt` 写入库日期。
 - 在 `actor-animations.json` 登记 `visualID` 与 `Assets/Characters/<visualID>_anim.png`。
 
