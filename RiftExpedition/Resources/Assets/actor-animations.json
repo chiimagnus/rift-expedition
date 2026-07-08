@@ -43,6 +43,10 @@
         {
             "visualID": "npc_mayor",
             "sheet": "Assets/Characters/npc_mayor_anim.png"
+        },
+        {
+            "visualID": "npc_fiance",
+            "sheet": "Assets/Characters/npc_fiance_anim.png"
         }
     ]
 }
