@@ -358,5 +358,14 @@
         "license": "ai-static",
         "downloadedAt": "2026-07-08",
         "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+    },
+    {
+        "id": "spritesheet.enemy_human_ranged_anim",
+        "path": "Assets/Characters/enemy_human_ranged_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated with built-in imagegen from P2-T11 enemy_human_ranged prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-08",
+        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
     }
 ]

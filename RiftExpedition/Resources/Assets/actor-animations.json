@@ -59,6 +59,10 @@
         {
             "visualID": "enemy_human_melee",
             "sheet": "Assets/Characters/enemy_human_melee_anim.png"
+        },
+        {
+            "visualID": "enemy_human_ranged",
+            "sheet": "Assets/Characters/enemy_human_ranged_anim.png"
         }
     ]
 }
