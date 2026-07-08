@@ -331,5 +331,14 @@
         "license": "ai-static",
         "downloadedAt": "2026-07-08",
         "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+    },
+    {
+        "id": "spritesheet.npc_gate_guard_anim",
+        "path": "Assets/Characters/npc_gate_guard_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated with built-in imagegen from P2-T8 npc_gate_guard prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-08",
+        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
     }
 ]

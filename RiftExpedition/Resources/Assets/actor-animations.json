@@ -47,6 +47,10 @@
         {
             "visualID": "npc_fiance",
             "sheet": "Assets/Characters/npc_fiance_anim.png"
+        },
+        {
+            "visualID": "npc_gate_guard",
+            "sheet": "Assets/Characters/npc_gate_guard_anim.png"
         }
     ]
 }
