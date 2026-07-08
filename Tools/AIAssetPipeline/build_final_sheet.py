@@ -92,6 +92,9 @@ def chroma_key_to_alpha(arr, key, transparent_threshold=12, opaque_threshold=220
     lo = transparent_threshold * 3.0
     hi = opaque_threshold * 1.2
     alpha = np.clip((dist - lo) / max(hi - lo, 1e-6), 0.0, 1.0)
+    if should_despill(key):
+        green_shadow = (arr[..., 1] > arr[..., 0] + 25) & (arr[..., 1] > arr[..., 2] + 25)
+        alpha = np.where(green_shadow, 0.0, alpha)
     out = arr.copy()
     if despill:
         key_channel = int(np.argmax(key))
