@@ -39,6 +39,10 @@
         {
             "visualID": "actor_rogue",
             "sheet": "Assets/Characters/actor_rogue_anim.png"
+        },
+        {
+            "visualID": "npc_mayor",
+            "sheet": "Assets/Characters/npc_mayor_anim.png"
         }
     ]
 }
