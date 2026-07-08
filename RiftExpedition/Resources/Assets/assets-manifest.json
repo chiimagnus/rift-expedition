@@ -394,5 +394,14 @@
         "license": "ai-static",
         "downloadedAt": "2026-07-08",
         "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+    },
+    {
+        "id": "spritesheet.enemy_beast_rift_anim",
+        "path": "Assets/Characters/enemy_beast_rift_anim.png",
+        "type": "spritesheet",
+        "source": "AI-generated with built-in imagegen from P2-T15 enemy_beast_rift prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+        "license": "ai-static",
+        "downloadedAt": "2026-07-08",
+        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
     }
 ]

@@ -75,6 +75,10 @@
         {
             "visualID": "enemy_beast_tainted",
             "sheet": "Assets/Characters/enemy_beast_tainted_anim.png"
+        },
+        {
+            "visualID": "enemy_beast_rift",
+            "sheet": "Assets/Characters/enemy_beast_rift_anim.png"
         }
     ]
 }
