@@ -55,6 +55,10 @@
         {
             "visualID": "npc_healer",
             "sheet": "Assets/Characters/npc_healer_anim.png"
+        },
+        {
+            "visualID": "enemy_human_melee",
+            "sheet": "Assets/Characters/enemy_human_melee_anim.png"
         }
     ]
 }
