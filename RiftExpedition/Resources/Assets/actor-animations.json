@@ -51,6 +51,10 @@
         {
             "visualID": "npc_gate_guard",
             "sheet": "Assets/Characters/npc_gate_guard_anim.png"
+        },
+        {
+            "visualID": "npc_healer",
+            "sheet": "Assets/Characters/npc_healer_anim.png"
         }
     ]
 }
