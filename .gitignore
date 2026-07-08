@@ -25,6 +25,8 @@ DerivedData/
 .build/
 **/.build/
 .swiftpm/
+.venv/
+**/.venv/
 # Package.resolved 一般建议提交（App 里锁版本）；
 # 纯 library 才考虑忽略，按需取舍：
 # Package.resolved
