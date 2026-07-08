@@ -71,6 +71,10 @@
         {
             "visualID": "enemy_beast_animal",
             "sheet": "Assets/Characters/enemy_beast_animal_anim.png"
+        },
+        {
+            "visualID": "enemy_beast_tainted",
+            "sheet": "Assets/Characters/enemy_beast_tainted_anim.png"
         }
     ]
 }
