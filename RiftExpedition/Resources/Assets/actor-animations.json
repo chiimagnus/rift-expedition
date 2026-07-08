@@ -63,6 +63,10 @@
         {
             "visualID": "enemy_human_ranged",
             "sheet": "Assets/Characters/enemy_human_ranged_anim.png"
+        },
+        {
+            "visualID": "enemy_human_elite",
+            "sheet": "Assets/Characters/enemy_human_elite_anim.png"
         }
     ]
 }
