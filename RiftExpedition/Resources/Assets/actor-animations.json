@@ -39,6 +39,46 @@
         {
             "visualID": "actor_rogue",
             "sheet": "Assets/Characters/actor_rogue_anim.png"
+        },
+        {
+            "visualID": "npc_mayor",
+            "sheet": "Assets/Characters/npc_mayor_anim.png"
+        },
+        {
+            "visualID": "npc_fiance",
+            "sheet": "Assets/Characters/npc_fiance_anim.png"
+        },
+        {
+            "visualID": "npc_gate_guard",
+            "sheet": "Assets/Characters/npc_gate_guard_anim.png"
+        },
+        {
+            "visualID": "npc_healer",
+            "sheet": "Assets/Characters/npc_healer_anim.png"
+        },
+        {
+            "visualID": "enemy_human_melee",
+            "sheet": "Assets/Characters/enemy_human_melee_anim.png"
+        },
+        {
+            "visualID": "enemy_human_ranged",
+            "sheet": "Assets/Characters/enemy_human_ranged_anim.png"
+        },
+        {
+            "visualID": "enemy_human_elite",
+            "sheet": "Assets/Characters/enemy_human_elite_anim.png"
+        },
+        {
+            "visualID": "enemy_beast_animal",
+            "sheet": "Assets/Characters/enemy_beast_animal_anim.png"
+        },
+        {
+            "visualID": "enemy_beast_tainted",
+            "sheet": "Assets/Characters/enemy_beast_tainted_anim.png"
+        },
+        {
+            "visualID": "enemy_beast_rift",
+            "sheet": "Assets/Characters/enemy_beast_rift_anim.png"
         }
     ]
 }

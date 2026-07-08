@@ -36,7 +36,7 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 - `Assets/Tilesets/`：首章村庄、野外、洞穴 tileset。
 - `Assets/Sprites/`：地图物件 sprite。
-- `Assets/Characters/`：正式角色动画 spritesheet（当前已入库玩家职业 `*_anim.png`）。
+- `Assets/Characters/`：正式角色动画 spritesheet（当前已入库玩家、NPC、人类敌人与野兽共 14 张 `*_anim.png`）。
 - `Assets/Icons/`：技能、消耗品、宝箱、元素矿图标。
 - `Assets/Audio/`：UI、战斗、探索、洞穴音效与环境循环（加载路径 `Assets/Audio`）。
 
@@ -47,7 +47,7 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 | skill/item icons | 本地程序化绘制 | self-made | Rift Expedition project |
 | WAV cues / ambience loops | 本地程序化合成 | self-made | Rift Expedition project |
 
-P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cave_theme_loop.wav` 已按 `self-made` 登记为本地程序化合成循环。2026-07-08 核对外部 CC0 候选时未找到比现有资源明显更合适、且授权/免署名口径更稳定的替换项，因此本轮保留现有三条区域 BGM；日后替换必须重新登记具体来源 URL、作者、license 与入库日期。
+P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cave_theme_loop.wav` 已按 `self-made` 登记为本地程序化合成循环。2026-07-08 将三条区域 BGM 由旧的 1.8~2s 单波形短循环重制为多轨编曲的立体声长循环（44100Hz / 16bit / stereo；strings/choir pad 和声铺底 + 走动 bass + 竖琴/钟琴琶音 + 带颤音主旋律 + 柔和鼓组，经 Schroeder 混响、多抽头延迟、合唱与无缝 crossfade 收尾），情绪分别为 village 大调明快 / wilds 小调开阔 / cave 小调阴暗。生成器为 `Tools/AudioForge/generate_bgm.py`（纯 numpy，确定性随机种子，可复现），随源码入库；license 仍为 `self-made`。日后若改用外部资源必须重新登记具体来源 URL、作者、license 与入库日期。
 
 > 已移除旧静态角色资源、旧 3 帧角色 sheet 与旧单曲 BGM；这些资源不再作为正式资源登记。角色视觉运行时以 `actor-animations.json` 和 `Assets/Characters/*_anim.png` 为准；缺动画时只显示最小安全占位并记录 assets 日志。
 
@@ -77,12 +77,12 @@ P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cav
 
 ### AI spritesheet generation rules
 
-角色动画 spritesheet 使用 `$imagegen` 本地生成，原始输出先放在 `$CODEX_HOME/generated_images/` 或 `tmp/imagegen/`，再复制规范化后的 PNG 到 `RiftExpedition/Resources/Assets/Characters/`。项目引用不得指向 `$CODEX_HOME`。
+角色动画 spritesheet 使用 `$imagegen` 本地生成，原始输出先放在 `$CODEX_HOME/generated_images/` 或 `tmp/imagegen/`，再复制规范化后的 PNG 到 `RiftExpedition/Resources/Assets/Characters/`。项目引用不得指向 `$CODEX_HOME`。P2 已完成 14 张角色动画表入库：玩家职业 4 张、NPC 4 张、人类敌人 3 张、野兽/怪物 3 张。
 
 每张入库动画表必须：
 
 - 使用纯色 chroma-key 背景生成；默认 `#00ff00`，角色需要绿色元素时改用 `#ff00ff`。
-- 用 `remove_chroma_key.py` 去背景，再用 `Tools/SpriteSheetNormalizer/normalize_sprite_sheet.swift` 拆格、alpha 裁边、等比 fit 到 `96x96`，合成 `1152x384`。
+- 用 `Tools/AIAssetPipeline/build_final_sheet.py` 按黑色网格线检测 12 格方向 strip，逐格 chroma-key 去背景、alpha 裁边、等比 fit 到 `96x96`，合成 `1152x384`。默认绿色 key 会额外清理绿色背景阴影；需要保留绿色主体时使用洋红 key。
 - 在 `assets-manifest.json` 登记为 `type: "spritesheet"`、`license: "ai-static"`；`source` 必须写明本地 AI 生成说明和可追溯 prompt 位置或角色描述，`downloadedAt` 写入库日期。
 - 在 `actor-animations.json` 登记 `visualID` 与 `Assets/Characters/<visualID>_anim.png`。
 

@@ -23,7 +23,7 @@ final class GameScene: SKScene {
     private var tilemap: SKTilemap?
     private var loadedAreaID: String?
     private var lastUpdateTime: TimeInterval?
-    private var partyNodes: [String: SKShapeNode] = [:]
+    private var partyNodes: [String: SKNode] = [:]
     private var staticObjectLayer: SKNode?
     private var battleLayer: SKNode?
     private var battleActorNodes: [String: SKNode] = [:]
@@ -108,9 +108,9 @@ final class GameScene: SKScene {
         for member in members {
             let node = partyNodes[member.actorID] ?? makePartyNode(for: member)
             node.position = member.position
-            node.fillColor = member.actorID == leaderID
-                ? SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
-                : SKColor(red: 0.38, green: 0.72, blue: 0.78, alpha: 1)
+            // 队长用头顶的小箭头标记来区分，而不是脚下套一圈圆圈；这样探索时的角色本体
+            // 和战斗时看起来完全一致（同样的精灵尺寸、没有额外的底盘和描边圈）。
+            node.childNode(withName: "partyLeaderMarker_\(member.actorID)")?.isHidden = member.actorID != leaderID
             if let sprite = node.childNode(withName: "partySprite_\(member.actorID)") as? SKSpriteNode {
                 let visualID = partyVisualID(for: member)
                 playActorAnimation(
@@ -260,19 +260,32 @@ final class GameScene: SKScene {
         worldLayer.addChild(marker)
     }
 
-    private func makePartyNode(for member: PartyMemberPosition) -> SKShapeNode {
-        let node = SKShapeNode(circleOfRadius: 14)
+    private func makePartyNode(for member: PartyMemberPosition) -> SKNode {
+        let node = SKNode()
         node.name = "party_\(member.actorID)"
-        node.strokeColor = .white
-        node.lineWidth = 2
         // 参考 renderStaticObjects 里 staticObjectLayer.zPosition 的注释：这里把数值从
-        // 10 调高了不少，确保队伍标记不会被地图图层挡住。
+        // 10 调高了不少，确保队伍角色不会被地图图层挡住。
         node.zPosition = 550
         worldLayer.addChild(node)
 
-        let sprite = makeActorSprite(name: "partySprite_\(member.actorID)", size: CGSize(width: 30, height: 30))
+        // 探索场景的角色本体与战斗场景保持一致：同样用 58×58 的精灵图，不再套脚下的
+        // 圆形底盘和白色描边圈（旧的 SKShapeNode 队伍标记已删除）。
+        let sprite = makeActorSprite(name: "partySprite_\(member.actorID)", size: CGSize(width: 58, height: 58))
         sprite.zPosition = 1
         node.addChild(sprite)
+
+        // 队长标记：头顶一个金色小箭头，仅队长可见（renderParty 里按 leaderID 切换显隐）。
+        let leaderMarker = SKLabelNode(text: "\u{25BC}")
+        leaderMarker.name = "partyLeaderMarker_\(member.actorID)"
+        leaderMarker.fontName = "Helvetica-Bold"
+        leaderMarker.fontSize = 16
+        leaderMarker.fontColor = SKColor(red: 0.88, green: 0.68, blue: 0.24, alpha: 1)
+        leaderMarker.verticalAlignmentMode = .center
+        leaderMarker.horizontalAlignmentMode = .center
+        leaderMarker.position = CGPoint(x: 0, y: 40)
+        leaderMarker.zPosition = 2
+        leaderMarker.isHidden = true
+        node.addChild(leaderMarker)
 
         return node
     }
@@ -300,7 +313,7 @@ final class GameScene: SKScene {
         // 实现细节，所以与其猜一个「应该够用」的数值，这里干脆调得比它内部可能用到的任何数值
         // 都高很多，确保 staticObjectLayer（以及同级的队伍标记、点击标记、战斗层）
         // 不会被地图瓦片挡住。同时配合 GameRootView 里 SpriteView 的 `ignoresSiblingOrder`
-        // 开关，让 zPosition 变成全局排序，而不是一层层按父子关系排。
+        // 开关，让 zPosition 变成全局排序，而不是一层层按父子��系排。
         layer.zPosition = 500
         worldLayer.addChild(layer)
         staticObjectLayer = layer

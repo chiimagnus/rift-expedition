@@ -34,22 +34,13 @@ struct PartyCreationView: View {
 
     private func classCard(_ classDefinition: ClassDefinition) -> some View {
         let selected = viewModel.isSelected(classDefinition.id)
-        let tint = RiftClassIconography.tint(for: classDefinition.id)
 
         return Button {
             viewModel.toggleSelection(classDefinition.id)
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    ZStack {
-                        Circle()
-                            .fill(tint)
-                            .overlay(Circle().stroke(RiftPalette.outline, lineWidth: 2.5))
-                        Image(systemName: RiftClassIconography.icon(for: classDefinition.id))
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-                    .frame(width: 52, height: 52)
+                    RiftActorPortrait(classID: classDefinition.id, size: 60)
 
                     Spacer()
 

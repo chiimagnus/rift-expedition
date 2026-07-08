@@ -111,6 +111,10 @@ struct ExplorationController: Equatable {
 
         guard members.indices.contains(leaderIndex) else { return }
         refreshFollowerTargets(leaderDestination: members[leaderIndex].target ?? members[leaderIndex].position)
+
+        // 队伍成员之间也要有基本的身位碰撞：解算完这一帧的移动后，把彼此重叠的成员推开，
+        // 避免两个角色完全穿透、叠在同一个点上。
+        separateOverlappingMembers()
     }
 
     private mutating func refreshFollowerTargets(leaderDestination: CGPoint) {
@@ -154,6 +158,33 @@ struct ExplorationController: Equatable {
         if !isBlocked(slideY) { return slideY }
 
         return start
+    }
+
+    /// 队伍成员之间的身位碰撞：如果两个成员靠得比“两个身位半径”还近，就沿两人连线方向
+    /// 把他们对半推开到刚好不重叠。完全重合时用一个默认方向掰开，避免除零。推开时同样
+    /// 走 `isBlocked` 检查，绝不把人推进墙里（宁可暂时重叠，下一帧继续推）。
+    private mutating func separateOverlappingMembers() {
+        let minDistance = agentRadius * 2
+        guard minDistance > 0 else { return }
+
+        for i in members.indices {
+            for j in members.indices where j > i {
+                let a = members[i].position
+                let b = members[j].position
+                let gap = distance(from: a, to: b)
+                guard gap < minDistance else { continue }
+
+                let direction: CGPoint = gap > 0.001
+                    ? CGPoint(x: (b.x - a.x) / gap, y: (b.y - a.y) / gap)
+                    : CGPoint(x: 1, y: 0)
+                let push = (minDistance - gap) / 2
+
+                let pushedA = CGPoint(x: a.x - direction.x * push, y: a.y - direction.y * push)
+                let pushedB = CGPoint(x: b.x + direction.x * push, y: b.y + direction.y * push)
+                if !isBlocked(pushedA) { members[i].position = pushedA }
+                if !isBlocked(pushedB) { members[j].position = pushedB }
+            }
+        }
     }
 
     private func facingDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {

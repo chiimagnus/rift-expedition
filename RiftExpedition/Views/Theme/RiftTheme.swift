@@ -1,3 +1,4 @@
+import AppKit
 import RiftCore
 import SwiftUI
 
@@ -265,34 +266,92 @@ struct RiftItemGridSlot: View {
     }
 }
 
-// MARK: - 人物剪影（角色面板用的简化"纸娃娃"站姿，不是最终精灵图）
+// MARK: - 角色立绘（从动画 spritesheet 裁出 idle/down 首帧，供选人/背包等 SwiftUI 面板复用）
 
-struct RiftHumanoidSilhouette: View {
-    var tint: Color = RiftPalette.accentGreen
+/// 从 `Assets/Characters/<visualID>_anim.png` 裁出「朝下 idle 第一帧」作为角色头像/立绘。
+/// 精灵表固定 12 列 × 4 行（见 ActorAnimationCatalog）：第 0 行是朝下，第 0 列是 idle 首帧。
+/// 复用同一批战斗/探索精灵图，保证选人页、背包页和场景里的角色形象完全一致。
+/// 只在 SwiftUI 视图（主线程）里使用，标为 @MainActor 后静态缓存就是线程安全的。
+@MainActor
+enum RiftActorArt {
+    private static var cache: [String: NSImage] = [:]
+
+    /// 与 GameScene.partyVisualID / ActorVisualIDResolver 的玩家职业映射保持一致。
+    static func visualID(forClassID classID: String?) -> String {
+        switch classID {
+        case "archer":
+            "actor_archer"
+        case "mage":
+            "actor_mage"
+        case "rogue":
+            "actor_rogue"
+        default:
+            "actor_warrior"
+        }
+    }
+
+    static func portraitFrame(forClassID classID: String?) -> NSImage? {
+        let visualID = visualID(forClassID: classID)
+        if let cached = cache[visualID] {
+            return cached
+        }
+        guard
+            let url = Bundle.main.url(forResource: "\(visualID)_anim", withExtension: "png", subdirectory: "Assets/Characters"),
+            let sheet = NSImage(contentsOf: url)
+        else {
+            return nil
+        }
+
+        let frameWidth = sheet.size.width / 12
+        let frameHeight = sheet.size.height / 4
+        guard frameWidth > 0, frameHeight > 0 else { return nil }
+
+        // NSImage 坐标原点在左下角；朝下动画是最上面一行，所以裁最顶部、最左边那一格。
+        let source = NSRect(x: 0, y: sheet.size.height - frameHeight, width: frameWidth, height: frameHeight)
+        let frame = NSImage(size: NSSize(width: frameWidth, height: frameHeight))
+        frame.lockFocus()
+        NSGraphicsContext.current?.imageInterpolation = .none
+        sheet.draw(
+            in: NSRect(x: 0, y: 0, width: frameWidth, height: frameHeight),
+            from: source,
+            operation: .copy,
+            fraction: 1
+        )
+        frame.unlockFocus()
+
+        cache[visualID] = frame
+        return frame
+    }
+}
+
+/// 角色立绘视图：优先显示真实精灵图首帧；拿不到资源时回退到职业��底 + 图标，
+/// 保证任何情况下都有可辨识的占位，不会出现空白。
+struct RiftActorPortrait: View {
+    let classID: String?
+    var size: CGFloat = 56
 
     var body: some View {
-        VStack(spacing: -4) {
-            Circle()
-                .fill(Color(red: 0.88, green: 0.73, blue: 0.58))
-                .overlay(Circle().stroke(RiftPalette.outline, lineWidth: 2))
-                .frame(width: 32, height: 32)
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(RiftClassIconography.tint(for: classID).opacity(0.28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(RiftPalette.outline, lineWidth: 2)
+                )
 
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(tint)
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(RiftPalette.outline, lineWidth: 2))
-                .frame(width: 54, height: 60)
-
-            HStack(spacing: 8) {
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(Color(red: 0.35, green: 0.27, blue: 0.20))
-                    .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(RiftPalette.outline, lineWidth: 1.5))
-                    .frame(width: 14, height: 40)
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(Color(red: 0.35, green: 0.27, blue: 0.20))
-                    .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(RiftPalette.outline, lineWidth: 1.5))
-                    .frame(width: 14, height: 40)
+            if let portrait = RiftActorArt.portraitFrame(forClassID: classID) {
+                Image(nsImage: portrait)
+                    .interpolation(.none)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(4)
+            } else {
+                Image(systemName: RiftClassIconography.icon(for: classID ?? ""))
+                    .font(.system(size: size * 0.42, weight: .bold))
+                    .foregroundStyle(.white)
             }
         }
+        .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 }
