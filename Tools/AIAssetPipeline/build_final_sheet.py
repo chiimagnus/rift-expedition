@@ -103,6 +103,10 @@ def chroma_key_to_alpha(arr, key, transparent_threshold=12, opaque_threshold=220
     return out_rgba
 
 
+def should_despill(key):
+    return key[1] > key[0] + 50 and key[1] > key[2] + 50
+
+
 def trim_alpha(img_rgba):
     arr = np.array(img_rgba)
     alpha = arr[..., 3]
@@ -133,7 +137,7 @@ def slice_strip(path, debug_prefix=None):
     arr = np.array(src).astype(np.float32)
     col_ranges, row_ranges = detect_grid_ranges(arr)
     key = compute_global_key(arr, col_ranges, row_ranges)
-    keyed = chroma_key_to_alpha(arr, key)
+    keyed = chroma_key_to_alpha(arr, key, despill=should_despill(key))
     keyed_img = Image.fromarray(keyed, mode="RGBA")
 
     tiles = []
