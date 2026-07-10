@@ -187,6 +187,21 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertFalse(save.collectedMapItemKeys.isEmpty)
     }
 
+#if DEBUG
+    func testDebugSkillsScreenSeedsAPlayableParty() {
+        let session = GameSessionViewModel()
+
+        session.configureDebugScreen(named: "skills")
+
+        XCTAssertEqual(session.appState, .inventory)
+        XCTAssertEqual(session.inventoryTab, .skills)
+        XCTAssertEqual(session.party.count, 2)
+        XCTAssertNotNil(session.inventoryViewModel)
+        XCTAssertFalse(session.inventory.itemCounts.isEmpty)
+        XCTAssertFalse(session.dialogViewModel.questLogEntries.isEmpty)
+    }
+#endif
+
     func testBitterrootCanBePickedUpAndTurnedInForRewards() throws {
         let session = GameSessionViewModel()
         let scene = GameScene(size: .init(width: 1, height: 1))

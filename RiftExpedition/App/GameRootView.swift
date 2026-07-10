@@ -35,7 +35,8 @@ struct GameRootView: View {
                 if let inventoryViewModel = viewModel.inventoryViewModel {
                     InventoryView(
                         viewModel: inventoryViewModel,
-                        onClose: viewModel.closePanel
+                        onClose: viewModel.closePanel,
+                        initialTab: viewModel.inventoryTab
                     )
                 } else {
                     simpleStatePanel
@@ -153,7 +154,7 @@ struct GameRootView: View {
             VStack(spacing: 0) {
                 HStack(alignment: .top, spacing: 14) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("探索 · \(viewModel.currentAreaID)")
+                        Text("探索 · \(viewModel.currentAreaDisplayName)")
                             .font(.headline.weight(.heavy))
                         Text(viewModel.statusText)
                             .font(.caption)

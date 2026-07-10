@@ -1,20 +1,32 @@
 import RiftCore
 import SwiftUI
 
+enum InventoryTab: String, CaseIterable, Identifiable {
+    case equipment = "装备与属性"
+    case skills = "技能"
+
+    var id: String { rawValue }
+}
+
 struct InventoryView: View {
     let viewModel: InventoryViewModel
     let onClose: () -> Void
+    private let initialTab: InventoryTab
 
     @State private var selectedItemID: String?
-    @State private var selectedTab: SheetTab = .equipment
+    @State private var selectedTab: InventoryTab
 
     private let gridColumns = [GridItem(.adaptive(minimum: 72, maximum: 72), spacing: 12)]
 
-    private enum SheetTab: String, CaseIterable, Identifiable {
-        case equipment = "装备与属性"
-        case skills = "技能"
-
-        var id: String { rawValue }
+    init(
+        viewModel: InventoryViewModel,
+        onClose: @escaping () -> Void,
+        initialTab: InventoryTab = .equipment
+    ) {
+        self.viewModel = viewModel
+        self.onClose = onClose
+        self.initialTab = initialTab
+        _selectedTab = State(initialValue: initialTab)
     }
 
     var body: some View {
@@ -26,7 +38,7 @@ struct InventoryView: View {
             maxWidth: 900
         ) {
             HStack(spacing: 8) {
-                ForEach(SheetTab.allCases) { tab in
+                ForEach(InventoryTab.allCases) { tab in
                     Button(tab.rawValue) {
                         selectedTab = tab
                     }
@@ -119,7 +131,7 @@ struct InventoryView: View {
                             Text(actor.displayName)
                                 .font(.title2.weight(.heavy))
                                 .foregroundStyle(RiftPalette.textBrown)
-                            Text("已掌握 (viewModel.skills(for: actor).count) 个技能")
+                            Text("已掌握 \(viewModel.skills(for: actor).count) 个技能")
                                 .font(.callout)
                                 .foregroundStyle(RiftPalette.textBrownLight)
                         }

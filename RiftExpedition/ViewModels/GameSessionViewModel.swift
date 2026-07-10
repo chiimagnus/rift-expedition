@@ -51,6 +51,7 @@ final class GameSessionViewModel {
         battleViewModel?.state
     }
     var inventoryViewModel: InventoryViewModel?
+    var inventoryTab: InventoryTab = .equipment
     var saveLoadViewModel: SaveLoadViewModel?
     let audioService: AudioService
     var uiScale = 1.0
@@ -93,6 +94,55 @@ final class GameSessionViewModel {
             session: session
         )
     }
+
+#if DEBUG
+    func configureDebugScreen(named name: String?) {
+        let screen = name?.lowercased() ?? "mainmenu"
+        guard screen != "mainmenu" else { return }
+
+        if screen == "party" {
+            appState = .partyCreation
+            return
+        }
+
+        let demoParty = partyCreationViewModel.availableClasses.prefix(2).map(\.id)
+        for classID in demoParty {
+            partyCreationViewModel.toggleSelection(classID)
+        }
+        party = partyCreationViewModel.createParty()
+        inventory = Self.makeStartingInventory(for: party)
+        for item in itemDefinitions.prefix(12) {
+            inventory.addItem(id: item.id)
+        }
+        session.questState = QuestState(statuses: Dictionary(
+            uniqueKeysWithValues: questDefinitions.prefix(2).map { ($0.id, QuestStatus.active) }
+        ))
+        loadArea("village_square", spawnID: "start")
+        inventoryViewModel = InventoryViewModel(
+            session: session,
+            itemDefinitions: itemDefinitions,
+            skillDefinitions: skillDefinitions
+        )
+
+        switch screen {
+        case "exploration":
+            appState = .exploration
+            statusText = "调试预览：探索界面。"
+        case "inventory":
+            inventoryTab = .equipment
+            appState = .inventory
+        case "skills":
+            inventoryTab = .skills
+            appState = .inventory
+        case "quests":
+            appState = .questLog
+        case "save":
+            openSaveLoad()
+        default:
+            appState = .mainMenu
+        }
+    }
+#endif
 
     func startNewGame() {
         audioService.play(.uiClick)
@@ -454,6 +504,10 @@ final class GameSessionViewModel {
 
     var debugEncounterTriggerCount: Int {
         currentMapMetadata?.encounterTriggers.count ?? 0
+    }
+
+    var currentAreaDisplayName: String {
+        areaDisplayName(for: currentAreaID)
     }
 
     private func configureEncounterTriggers() {
