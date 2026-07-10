@@ -3,6 +3,31 @@ import Foundation
 import Observation
 import RiftCore
 
+/// Player-owned data shared by every screen. Views may keep selection state, never another copy of this data.
+@MainActor
+@Observable
+final class GameSessionState {
+    var party: [Actor]
+    var inventory: PartyInventory
+    var questState: QuestState
+    var collectedMapItemKeys: Set<String>
+    var firedMapTriggerKeys: Set<String>
+
+    init(
+        party: [Actor] = [],
+        inventory: PartyInventory = PartyInventory(),
+        questState: QuestState = QuestState(),
+        collectedMapItemKeys: Set<String> = [],
+        firedMapTriggerKeys: Set<String> = []
+    ) {
+        self.party = party
+        self.inventory = inventory
+        self.questState = questState
+        self.collectedMapItemKeys = collectedMapItemKeys
+        self.firedMapTriggerKeys = firedMapTriggerKeys
+    }
+}
+
 @MainActor
 @Observable
 final class GameSessionViewModel {
@@ -11,7 +36,15 @@ final class GameSessionViewModel {
     var lastWorldClick: CGPoint?
     var currentAreaID = "village_square"
     var currentSpawnID = "start"
-    var party: [Actor] = []
+    let session = GameSessionState()
+    var party: [Actor] {
+        get { session.party }
+        set { session.party = newValue }
+    }
+    var inventory: PartyInventory {
+        get { session.inventory }
+        set { session.inventory = newValue }
+    }
     var explorationController = ExplorationController()
     var battleViewModel: BattleViewModel?
     var battleState: BattleState? {
@@ -30,8 +63,6 @@ final class GameSessionViewModel {
     private let areaNamesByID: [String: String]
     private let npcNamesByID: [String: String]
     private var currentMapMetadata: TiledMapMetadata?
-    private var collectedMapItemKeys: Set<String> = []
-    private var firedMapTriggerKeys: Set<String> = []
     private let saveGameStore: SaveGameStore
     private let contentBundle: Bundle
     let partyCreationViewModel: PartyCreationViewModel
@@ -58,7 +89,8 @@ final class GameSessionViewModel {
         partyCreationViewModel = Self.makePartyCreation(from: catalog)
         dialogViewModel = DialogViewModel(
             scripts: DialogViewModel.loadScripts(from: contentBundle),
-            questDefinitions: loadedQuestDefinitions
+            questDefinitions: loadedQuestDefinitions,
+            session: session
         )
     }
 
@@ -83,11 +115,15 @@ final class GameSessionViewModel {
         }
 
         party = createdParty
+        inventory = Self.makeStartingInventory(for: createdParty)
+        session.questState = QuestState()
+        session.collectedMapItemKeys = []
+        session.firedMapTriggerKeys = []
         loadArea("village_square", spawnID: "start")
         inventoryViewModel = InventoryViewModel(
-            party: createdParty,
-            inventory: Self.makeStartingInventory(for: createdParty),
-            itemDefinitions: itemDefinitions
+            session: session,
+            itemDefinitions: itemDefinitions,
+            skillDefinitions: skillDefinitions
         )
         enterExploration()
         performSafeAutosave()
@@ -138,9 +174,6 @@ final class GameSessionViewModel {
     }
 
     func closePanel() {
-        if let inventoryViewModel {
-            party = inventoryViewModel.party
-        }
         appState = party.isEmpty ? .mainMenu : .exploration
     }
 
@@ -158,21 +191,17 @@ final class GameSessionViewModel {
             return
         }
 
-        var inventory = inventoryViewModel?.inventory ?? PartyInventory()
+        var updatedInventory = inventory
         for itemID in questTurnInItemIDs(for: questID) {
-            try? inventory.removeItem(id: itemID)
+            try? updatedInventory.removeItem(id: itemID)
         }
         for itemID in quest.rewardItemIDs {
-            inventory.addItem(id: itemID)
+            updatedInventory.addItem(id: itemID)
         }
 
-        let rewardedParty = learnSkills(quest.rewardSkillIDs, for: inventoryViewModel?.party ?? party)
+        let rewardedParty = learnSkills(quest.rewardSkillIDs, for: party)
         party = rewardedParty
-        inventoryViewModel = InventoryViewModel(
-            party: rewardedParty,
-            inventory: inventory,
-            itemDefinitions: itemDefinitions
-        )
+        inventory = updatedInventory
 
         let rewardNames = (quest.rewardItemIDs.map(itemName) + quest.rewardSkillIDs.map(skillName)).joined(separator: "、")
         statusText = rewardNames.isEmpty ? "任务已完成。" : "任务完成，获得：\(rewardNames)。"
@@ -203,13 +232,9 @@ final class GameSessionViewModel {
                         revived.stats.health = max(1, revived.stats.maxHealth / 2)
                     }
                     return revived
-                }
+            }
             party = survivingParty
-            inventoryViewModel = InventoryViewModel(
-                party: survivingParty,
-                inventory: battleViewModel.inventory,
-                itemDefinitions: itemDefinitions
-            )
+            inventory = battleViewModel.inventory
             let didAutosave = performSafeAutosave()
             self.battleViewModel = nil
             appState = .exploration
@@ -231,14 +256,17 @@ final class GameSessionViewModel {
         battleViewModel = nil
         inventoryViewModel = nil
         saveLoadViewModel = nil
+        session.questState = QuestState()
+        session.collectedMapItemKeys = []
+        session.firedMapTriggerKeys = []
     }
 
     private func startBattle(_ encounter: EncounterDefinition, trigger: MapEncounterTrigger?) {
         audioService.play(.battleStart)
         battleViewModel = BattleViewModel(
-            state: BattleState(actors: (inventoryViewModel?.party ?? party) + encounter.enemies),
+            state: BattleState(actors: party + encounter.enemies),
             skills: skillDefinitions,
-            inventory: inventoryViewModel?.inventory ?? PartyInventory(),
+            inventory: inventory,
             itemDefinitions: itemDefinitions,
             initialPositions: battleInitialPositions(for: encounter, trigger: trigger),
             surfaces: battleSurfaces(),
@@ -250,24 +278,32 @@ final class GameSessionViewModel {
     }
 
     private func makeCurrentSave() -> SaveGame? {
-        let currentParty = inventoryViewModel?.party ?? party
-        guard !currentParty.isEmpty else { return nil }
+        guard !party.isEmpty else { return nil }
 
         return SaveGame(
             currentAreaID: currentAreaID,
             currentSpawnID: currentSpawnID,
-            party: currentParty,
-            inventory: inventoryViewModel?.inventory ?? PartyInventory()
+            party: party,
+            inventory: inventory,
+            questState: session.questState,
+            collectedMapItemKeys: session.collectedMapItemKeys.sorted(),
+            firedMapTriggerKeys: session.firedMapTriggerKeys.sorted()
         )
     }
 
     private func apply(_ save: SaveGame) {
         party = save.party
-        inventoryViewModel = InventoryViewModel(
-            party: save.party,
-            inventory: save.inventory,
-            itemDefinitions: itemDefinitions
-        )
+        inventory = save.inventory
+        session.questState = save.questState
+        session.collectedMapItemKeys = Set(save.collectedMapItemKeys)
+        session.firedMapTriggerKeys = Set(save.firedMapTriggerKeys)
+        if inventoryViewModel == nil {
+            inventoryViewModel = InventoryViewModel(
+                session: session,
+                itemDefinitions: itemDefinitions,
+                skillDefinitions: skillDefinitions
+            )
+        }
         loadArea(save.currentAreaID, spawnID: save.currentSpawnID)
         battleViewModel = nil
         appState = .exploration
@@ -524,21 +560,14 @@ final class GameSessionViewModel {
         guard let item = nearestItem(to: point) else { return false }
 
         let key = mapItemKey(item)
-        guard !collectedMapItemKeys.contains(key) else {
+        guard !session.collectedMapItemKeys.contains(key) else {
             statusText = "这里已经搜刮过了。"
             return true
         }
 
         if isLeaderNear(item.position, radius: 96) {
-            var inventory = inventoryViewModel?.inventory ?? PartyInventory()
             inventory.addItem(id: item.itemID)
-            let currentParty = inventoryViewModel?.party ?? party
-            inventoryViewModel = InventoryViewModel(
-                party: currentParty,
-                inventory: inventory,
-                itemDefinitions: itemDefinitions
-            )
-            collectedMapItemKeys.insert(key)
+            session.collectedMapItemKeys.insert(key)
             audioService.play(.chestOpen)
             statusText = "拾取了 \(itemName(item.itemID))。"
         } else {
@@ -581,10 +610,10 @@ final class GameSessionViewModel {
     private func dialogID(for npc: MapNPC) -> String {
         switch npc.actorID {
         case "healer" where dialogViewModel.questState.statuses["bitterroot_medicine"] == .active
-            && (inventoryViewModel?.inventory.count(of: "bitterroot_herb") ?? 0) > 0:
+            && inventory.count(of: "bitterroot_herb") > 0:
             return "healer_return"
         case "mayor" where dialogViewModel.questState.statuses["blood_debt"] == .active
-            && (inventoryViewModel?.inventory.count(of: "element_ore_ledger") ?? 0) > 0:
+            && inventory.count(of: "element_ore_ledger") > 0:
             return "elder_return"
         default:
             return npc.dialogID
@@ -610,9 +639,9 @@ final class GameSessionViewModel {
 
     private func perform(_ trigger: MapTrigger) {
         let key = mapTriggerKey(trigger)
-        guard !firedMapTriggerKeys.contains(key) else { return }
+        guard !session.firedMapTriggerKeys.contains(key) else { return }
 
-        firedMapTriggerKeys.insert(key)
+        session.firedMapTriggerKeys.insert(key)
         if let dialogID = dialogID(fromTriggerAction: trigger.action) {
             openDialog(dialogID)
         } else if trigger.action == "chapterComplete" {
