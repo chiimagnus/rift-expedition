@@ -12,6 +12,10 @@
 - **Tiled 地图契约** → [`tiled-map-contract.md`](tiled-map-contract.md)：`.tmx` 必需对象层、校验规则、校验工具 CLI 用法。
 - **术语表** → [`glossary.md`](glossary.md)：项目里常见英文/技术术语的大白话说明。
 
+## 运行界面核对
+
+Debug 构建可通过 -uiState 启动参数直接展示 party、exploration、inventory、skills、quests 或 save 状态。该入口只用于可复现的窗口截图与布局检查；状态、存档兼容和测试边界见 architecture.md。
+
 ## 报告与生成产物（不入库）
 
 地图校验报告与预览 SVG 是 `Tools/RiftValidator` 的生成产物，已在 `.gitignore` 忽略，不提交到仓库；需要时按 [`tiled-map-contract.md`](tiled-map-contract.md) 里的命令现生成到 `Docs/Reports/`。
@@ -22,6 +26,6 @@
 
 - 减优于加：代码变化影响到文档时，优先编辑既有条目，不新增“更新记录”流水账。
 - 深度内容只放这里；`README.md` 只做入口，`AGENTS.md` 只放规则。
-- 出现日期一律用 `YYYY-MM-DD`，不写“最近/今天”这类相对时间。
+- 出现日期一律用 `YYYY-MM-DD`，不写相对日期描述。
 
 本次文档同步的基线（commit、生成时间、已知覆盖缺口）记录在 [`GENERATION.md`](GENERATION.md)，下次同步文档前先看这里，只更新受代码改动影响的页面。

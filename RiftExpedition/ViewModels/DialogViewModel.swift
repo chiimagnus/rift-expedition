@@ -36,18 +36,25 @@ enum DialogOutcome: Equatable {
 final class DialogViewModel {
     private let scriptsByID: [String: DialogScript]
     private let questDefinitions: [QuestDefinition]
-    private(set) var questState = QuestState()
+    private let session: GameSessionState
     var activeDialog: DialogScript?
     var message = "还没有对话。"
 
-    init(scripts: [DialogScript], questDefinitions: [QuestDefinition]) {
+    init(
+        scripts: [DialogScript],
+        questDefinitions: [QuestDefinition],
+        session: GameSessionState = GameSessionState()
+    ) {
         var indexedScripts: [String: DialogScript] = [:]
         for script in scripts where indexedScripts[script.id] == nil {
             indexedScripts[script.id] = script
         }
         scriptsByID = indexedScripts
         self.questDefinitions = questDefinitions
+        self.session = session
     }
+
+    var questState: QuestState { session.questState }
 
     var questLogEntries: [QuestLogEntry] {
         QuestEngine.logEntries(in: questState, definitions: questDefinitions)
@@ -69,13 +76,21 @@ final class DialogViewModel {
             switch option.action {
             case .acceptQuest:
                 if let questID = option.questID {
-                    questState = try QuestEngine.accept(questID: questID, in: questState, definitions: questDefinitions)
+                    session.questState = try QuestEngine.accept(
+                        questID: questID,
+                        in: session.questState,
+                        definitions: questDefinitions
+                    )
                     message = "任务已接受。"
                 }
                 return .none
             case .completeQuest:
                 if let questID = option.questID {
-                    questState = try QuestEngine.complete(questID: questID, in: questState, definitions: questDefinitions)
+                    session.questState = try QuestEngine.complete(
+                        questID: questID,
+                        in: session.questState,
+                        definitions: questDefinitions
+                    )
                     message = "任务已完成。"
                     return .completedQuest(questID)
                 }

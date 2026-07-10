@@ -8,20 +8,53 @@ struct InventoryItemRow: Equatable, Identifiable {
     var slotName: String?
 }
 
+struct CharacterSkillRow: Equatable, Identifiable {
+    var id: String
+    var displayName: String
+    var actionPointCost: Int
+    var range: Double
+    var targetName: String
+}
+
 @MainActor
 @Observable
 final class InventoryViewModel {
-    var party: [Actor]
-    private(set) var inventory: PartyInventory
+    private let session: GameSessionState
     let itemDefinitions: [ItemDefinition]
+    let skillDefinitions: [SkillDefinition]
     var selectedActorID: String?
     var statusText = "队伍背包已打开。"
 
-    init(party: [Actor], inventory: PartyInventory, itemDefinitions: [ItemDefinition]) {
-        self.party = party
-        self.inventory = inventory
+    init(
+        session: GameSessionState,
+        itemDefinitions: [ItemDefinition],
+        skillDefinitions: [SkillDefinition] = []
+    ) {
+        self.session = session
         self.itemDefinitions = itemDefinitions
-        selectedActorID = party.first?.id
+        self.skillDefinitions = skillDefinitions
+        selectedActorID = session.party.first?.id
+    }
+
+    convenience init(
+        party: [Actor],
+        inventory: PartyInventory,
+        itemDefinitions: [ItemDefinition],
+        skillDefinitions: [SkillDefinition] = []
+    ) {
+        self.init(
+            session: GameSessionState(party: party, inventory: inventory),
+            itemDefinitions: itemDefinitions,
+            skillDefinitions: skillDefinitions
+        )
+    }
+
+    var party: [Actor] {
+        session.party
+    }
+
+    var inventory: PartyInventory {
+        session.inventory
     }
 
     var selectedActor: Actor? {
@@ -37,6 +70,19 @@ final class InventoryViewModel {
                 displayName: item.displayName,
                 count: inventory.count(of: itemID),
                 slotName: item.equipment.map { slotName($0.slot) }
+            )
+        }
+    }
+
+    func skills(for actor: Actor) -> [CharacterSkillRow] {
+        actor.skillIDs.compactMap { skillID in
+            guard let skill = skillDefinitions.first(where: { $0.id == skillID }) else { return nil }
+            return CharacterSkillRow(
+                id: skill.id,
+                displayName: skill.displayName,
+                actionPointCost: skill.actionPointCost,
+                range: skill.range,
+                targetName: targetName(skill.target)
             )
         }
     }
@@ -63,15 +109,15 @@ final class InventoryViewModel {
             return
         }
 
-        var actor = party[actorIndex]
+        var actor = session.party[actorIndex]
         do {
             try EquipmentRules.equip(
                 itemID: itemID,
                 on: &actor,
-                inventory: inventory,
+                inventory: session.inventory,
                 items: itemDefinitions
             )
-            party[actorIndex] = actor
+            session.party[actorIndex] = actor
             statusText = "\(actor.displayName) 已装备 \(itemName(itemID))。"
         } catch {
             statusText = readableError(error)
@@ -86,10 +132,10 @@ final class InventoryViewModel {
             return
         }
 
-        var actor = party[actorIndex]
+        var actor = session.party[actorIndex]
         do {
             try AttributePoints.allocate(1, to: attribute, actor: &actor)
-            party[actorIndex] = actor
+            session.party[actorIndex] = actor
             statusText = "\(actor.displayName) 提升了\(attributeName(attribute))。"
         } catch {
             statusText = readableError(error)
@@ -119,6 +165,19 @@ final class InventoryViewModel {
             "护甲"
         case .accessory:
             "饰品"
+        }
+    }
+
+    private func targetName(_ target: SkillTarget) -> String {
+        switch target {
+        case .selfOnly:
+            "自身"
+        case .ally:
+            "友军"
+        case .enemy:
+            "敌人"
+        case .point:
+            "地面"
         }
     }
 

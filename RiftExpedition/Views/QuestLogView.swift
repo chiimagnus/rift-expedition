@@ -16,13 +16,41 @@ struct QuestLogView: View {
                 Text("当前没有已接任务。")
                     .foregroundStyle(RiftPalette.textBrownLight)
             } else {
-                VStack(spacing: 12) {
-                    ForEach(entries) { entry in
-                        questCard(entry)
+                let activeEntries = entries.filter { $0.status == .active }
+                let completedEntries = entries.filter { $0.status == .completed }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        if !activeEntries.isEmpty {
+                            sectionHeader("进行中", count: activeEntries.count, tint: RiftPalette.goldButtonDark)
+                            ForEach(activeEntries) { entry in
+                                questCard(entry)
+                            }
+                        }
+                        if !completedEntries.isEmpty {
+                            sectionHeader("已完成", count: completedEntries.count, tint: RiftPalette.accentGreenDark)
+                            ForEach(completedEntries) { entry in
+                                questCard(entry)
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+
+    private func sectionHeader(_ title: String, count: Int, tint: Color) -> some View {
+        HStack {
+            Text(title)
+                .font(.headline.weight(.heavy))
+            Text("\(count)")
+                .font(.caption.bold())
+                .foregroundStyle(.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(tint, in: Capsule())
+            Spacer()
+        }
+        .foregroundStyle(RiftPalette.textBrown)
     }
 
     private func questCard(_ entry: QuestLogEntry) -> some View {

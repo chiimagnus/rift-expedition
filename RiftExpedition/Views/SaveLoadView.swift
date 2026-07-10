@@ -4,6 +4,7 @@ import SwiftUI
 struct SaveLoadView: View {
     let viewModel: SaveLoadViewModel
     let onClose: () -> Void
+    @State private var overwriteSlot: SaveSlot?
 
     var body: some View {
         RiftPanelScaffold(
@@ -21,6 +22,26 @@ struct SaveLoadView: View {
             Text(viewModel.message)
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(RiftPalette.bannerRed)
+        }
+        .confirmationDialog(
+            "覆盖这个手动存档？",
+            isPresented: Binding(
+                get: { overwriteSlot != nil },
+                set: { if !$0 { overwriteSlot = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("确认覆盖", role: .destructive) {
+                if let overwriteSlot {
+                    viewModel.saveManual(slot: overwriteSlot)
+                }
+                overwriteSlot = nil
+            }
+            Button("取消", role: .cancel) {
+                overwriteSlot = nil
+            }
+        } message: {
+            Text("旧进度将不能恢复。")
         }
     }
 
@@ -60,8 +81,12 @@ struct SaveLoadView: View {
             Spacer()
 
             if row.slot.kind == .manual {
-                Button("保存") {
-                    viewModel.saveManual(slot: row.slot)
+                Button(row.canLoad ? "覆盖" : "保存") {
+                    if row.canLoad {
+                        overwriteSlot = row.slot
+                    } else {
+                        viewModel.saveManual(slot: row.slot)
+                    }
                 }
                 .buttonStyle(RiftSecondaryButtonStyle())
                 .accessibilityLabel("保存到\(row.title)")

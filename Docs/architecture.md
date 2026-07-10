@@ -39,6 +39,14 @@ SwiftUI Views -> ViewModels -> Game 层服务（GameScene / TiledMapLoader / Nav
 2. `GameScene` 渲染 tileset、放置 NPC / 敌人 / 道具立绘（贴图来自 `Assets/Characters`，分帧约定见 [`assets.md`](assets.md)），并把可行走区域 / 视线交给 `NavigationService` / `LineOfSightService`。
 3. 玩家进入 `encounter` 触发范围 → `EncounterTriggerService` 触发战斗 → `BattleViewModel` 驱动 `RiftCore.BattleEngine` 完成回合结算 → 结果写回存档（`SaveGameStore` → `RiftCore.SaveGame`）。
 
+## 共享会话、存档与 Debug 截图
+
+GameSessionViewModel 持有唯一的 GameSessionState：队伍、共享背包、任务状态、已拾取物和一次性地图触发器只在此处可写。InventoryViewModel 与 DialogViewModel 引用同一个状态，避免面板关闭后才回写的副本不同步问题。
+
+手动保存与安全自动保存将会话状态写入 JSON。SaveGame schema 2 额外保存任务状态、已拾取物与一次性触发器；读取 schema 1 时，缺失字段回退为空状态，保持旧存档可读。
+
+ContentView 仅在 #if DEBUG 中读取 -uiState 启动参数。GameSessionViewModel 会为 party、exploration、inventory、skills、quests、save 准备确定的示例状态，供窗口截图和布局回归检查；Release 不包含此入口。最小回归测试在 RiftExpeditionTests/GameSessionViewModelTests.swift。
+
 ## 测试分布
 
 | 测试目标 | 位置 | 运行方式 |

@@ -149,6 +149,59 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(save.party.count, 2)
     }
 
+    func testManualSavePersistsAcceptedQuestAndWorldProgress() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store)
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+        session.startChapterWithSelectedParty()
+
+        XCTAssertTrue(session.dialogViewModel.start(dialogID: "healer_request"))
+        let accept = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "bitterroot_medicine" })
+        XCTAssertEqual(session.dialogViewModel.choose(accept), .none)
+
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_square", to: "village_riverside")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        session.explorationController.configureParty(
+            session.party,
+            at: try exitCenter(in: "village_riverside", to: "wilds_riverbank")
+        )
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        let bitterrootPosition = try itemPosition(in: "wilds_riverbank", itemID: "bitterroot_herb")
+        session.explorationController.configureParty(session.party, at: bitterrootPosition)
+        session.gameScene(scene, didClickWorld: bitterrootPosition)
+
+        session.openSaveLoad()
+        session.saveLoadViewModel?.saveManual(slot: .manual(1))
+        let save = try store.read(.manual(1))
+
+        XCTAssertEqual(save.questState.statuses["bitterroot_medicine"], .active)
+        XCTAssertEqual(save.inventory.count(of: "bitterroot_herb"), 1)
+        XCTAssertFalse(save.collectedMapItemKeys.isEmpty)
+    }
+
+#if DEBUG
+    func testDebugSkillsScreenSeedsAPlayableParty() {
+        let session = GameSessionViewModel()
+
+        session.configureDebugScreen(named: "skills")
+
+        XCTAssertEqual(session.appState, .inventory)
+        XCTAssertEqual(session.inventoryTab, .skills)
+        XCTAssertEqual(session.party.count, 2)
+        XCTAssertNotNil(session.inventoryViewModel)
+        XCTAssertFalse(session.inventory.itemCounts.isEmpty)
+        XCTAssertFalse(session.dialogViewModel.questLogEntries.isEmpty)
+    }
+#endif
+
     func testBitterrootCanBePickedUpAndTurnedInForRewards() throws {
         let session = GameSessionViewModel()
         let scene = GameScene(size: .init(width: 1, height: 1))

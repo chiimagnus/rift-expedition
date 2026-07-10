@@ -224,6 +224,13 @@ struct RiftEquipSlotView: View {
             Text(label)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(RiftPalette.textBrownLight)
+
+            Text(itemName)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(itemName == "未装备" ? RiftPalette.textBrownLight : RiftPalette.textBrown)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 78)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(label)：\(itemName)")

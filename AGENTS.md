@@ -116,12 +116,9 @@
 
 ## 测试与调试
 
-工具约束（本机 Apple/Swift 技能默认）：
-- 本目录下涉及 build/test/run 的操作，统一使用原生 `xcodebuild`。
-- 涉及 Simulator/Device 与日志相关的操作，按需使用原生 `xcrun simctl` / `log stream` 等系统工具。
-
 单元测试优先级建议：
-- **逻辑层 / ViewModel / UI 层**：统一用 XCTest（通过 `xcodebuild test` 跑）
+- **逻辑层 / ViewModel / UI 层**：统一用 XCTest
+- **UI 截图验收**：Debug 构建可传 `-uiState <party|exploration|inventory|skills|quests|save>` 进入可复现的示例状态；入口必须留在 `#if DEBUG` 内，不能读取或改写玩家存档。
 
 调试与日志：
 - 日志用 `os.Logger`，明确 `subsystem` 与 `category`，便于过滤与定位

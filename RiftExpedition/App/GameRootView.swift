@@ -35,7 +35,8 @@ struct GameRootView: View {
                 if let inventoryViewModel = viewModel.inventoryViewModel {
                     InventoryView(
                         viewModel: inventoryViewModel,
-                        onClose: viewModel.closePanel
+                        onClose: viewModel.closePanel,
+                        initialTab: viewModel.inventoryTab
                     )
                 } else {
                     simpleStatePanel
@@ -86,28 +87,58 @@ struct GameRootView: View {
     private var mainMenu: some View {
         RiftPanelScaffold(
             title: "裂隙远征",
-            subtitle: "村庄、野外与洞穴之间，第一章的谎言正等着被拆穿。"
+            subtitle: "村庄、野外与洞穴之间，第一章的谎言正等着被拆穿。",
+            maxWidth: 1_080
         ) {
-            HStack(spacing: 14) {
-                Button("新游戏") {
-                    viewModel.startNewGame()
-                }
-                .buttonStyle(RiftPrimaryButtonStyle())
-                .keyboardShortcut(.defaultAction)
-                .accessibilityLabel("开始新游戏")
+            HStack(alignment: .top, spacing: 42) {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("第一章 · 裂隙村的谎言")
+                        .font(.title2.weight(.heavy))
+                        .foregroundStyle(RiftPalette.textBrown)
+                    Text("组建两人小队，在村庄、野外与洞穴中追查一份足以撕裂裂隙村的账本。")
+                        .font(.body)
+                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                Button("读取存档") {
-                    viewModel.openSaveLoad()
-                }
-                .buttonStyle(RiftPrimaryButtonStyle())
-                .accessibilityLabel("读取或管理存档")
+                    VStack(alignment: .leading, spacing: 10) {
+                        Button("开始新远征") {
+                            viewModel.startNewGame()
+                        }
+                        .buttonStyle(RiftPrimaryButtonStyle())
+                        .keyboardShortcut(.defaultAction)
+                        .accessibilityLabel("开始新游戏")
 
-                Button("设置") {
-                    viewModel.openSettings()
+                        Button("继续 / 读取存档") {
+                            viewModel.openSaveLoad()
+                        }
+                        .buttonStyle(RiftSecondaryButtonStyle())
+                        .accessibilityLabel("读取或管理存档")
+
+                        Button("设置") {
+                            viewModel.openSettings()
+                        }
+                        .buttonStyle(RiftSecondaryButtonStyle())
+                        .accessibilityLabel("打开设置")
+                    }
                 }
-                .buttonStyle(RiftSecondaryButtonStyle())
-                .accessibilityLabel("打开设置")
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Label("回合制战术战斗", systemImage: "scope")
+                    Label("自由距离、视线与整数 AP", systemImage: "ruler")
+                    Label("共享背包与角色成长", systemImage: "backpack")
+                    Label("5 个手动存档 + 安全自动存档", systemImage: "square.and.arrow.down")
+                }
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(RiftPalette.textBrown)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(RiftPalette.parchmentShade)
+                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RiftPalette.outline.opacity(0.45), lineWidth: 1.5))
+                )
             }
+            .frame(minHeight: 300)
 
             Text(viewModel.statusText)
                 .font(.callout.weight(.medium))
@@ -116,49 +147,65 @@ struct GameRootView: View {
     }
 
     private var exploration: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack {
             GameSceneView(viewModel: viewModel)
                 .ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text(viewModel.appState.title)
-                    .font(.headline)
+            VStack(spacing: 0) {
+                HStack(alignment: .top, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("探索 · \(viewModel.currentAreaDisplayName)")
+                            .font(.headline.weight(.heavy))
+                        Text(viewModel.statusText)
+                            .font(.caption)
+                            .lineLimit(2)
+                    }
                     .foregroundStyle(RiftPalette.textBrown)
-                Text(viewModel.statusText)
-                    .font(.callout)
-                    .foregroundStyle(RiftPalette.textBrown)
-                Text("点击地图移动；点击角色、线索、宝箱或草药互动；Tab 切换队长。")
-                    .font(.caption)
-                    .foregroundStyle(RiftPalette.textBrownLight)
-                HStack(spacing: 8) {
-                    Button("背包") {
-                        viewModel.openInventory()
-                    }
-                    .accessibilityLabel("打开共享背包和角色面板")
 
-                    Button("存档") {
-                        viewModel.openSaveLoad()
-                    }
-                    .accessibilityLabel("打开存档面板")
+                    Spacer()
 
-                    Button("任务日志") {
-                        viewModel.openQuestLog()
+                    HStack(spacing: 6) {
+                        explorationButton("backpack.fill", title: "队伍档案", action: viewModel.openInventory)
+                        explorationButton("list.bullet.rectangle", title: "任务日志", action: viewModel.openQuestLog)
+                        explorationButton("square.and.arrow.down", title: "存档", action: viewModel.openSaveLoad)
+                        explorationButton("gearshape.fill", title: "设置", action: viewModel.openSettings)
                     }
-                    .accessibilityLabel("打开任务日志")
-
-                    Button("设置") {
-                        viewModel.openSettings()
-                    }
-                    .accessibilityLabel("打开设置")
                 }
-                .buttonStyle(RiftPrimaryButtonStyle())
-                .controlSize(.regular)
+                .padding(12)
+                .riftParchmentPanel(cornerRadius: 16)
+
+                HStack(spacing: 8) {
+                    ForEach(viewModel.party) { actor in
+                        HStack(spacing: 6) {
+                            RiftActorPortrait(classID: actor.classID, size: 32)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(actor.displayName).font(.caption.weight(.bold))
+                                Text("\(actor.stats.health)/\(actor.stats.maxHealth) HP")
+                                    .font(.caption2.monospacedDigit())
+                            }
+                        }
+                        .foregroundStyle(RiftPalette.textBrown)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(RiftPalette.parchment.opacity(0.94), in: Capsule())
+                    }
+                }
+                .padding(.top, 8)
+
+                Spacer()
             }
-            .padding(14)
-            .riftParchmentPanel(cornerRadius: 16)
             .padding()
-            .accessibilityElement(children: .contain)
         }
+    }
+
+    private func explorationButton(_ icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.callout.weight(.bold))
+                .frame(width: 28, height: 28)
+        }
+        .buttonStyle(RiftSecondaryButtonStyle())
+        .accessibilityLabel(title)
     }
 
     private var battle: some View {
