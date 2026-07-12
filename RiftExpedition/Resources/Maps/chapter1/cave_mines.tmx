@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="16">
   <properties>
-    <property name="areaName" value="元素矿道"/>
-    <property name="assetId" value="tileset.chapter1_cave"/>
+    <property name="areaName" value="元素矿道" />
+    <property name="assetId" value="tileset.chapter1_cave" />
   </properties>
   <tileset firstgid="1" name="chapter1_cave_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
-    <image source="../../Assets/Tilesets/chapter1_cave_tileset.png" width="256" height="32"/>
+    <image source="../../Assets/Tilesets/chapter1_cave_tileset.png" width="256" height="32" />
   </tileset>
   <layer id="1" name="terrain" width="32" height="20">
     <data encoding="csv">
@@ -34,12 +34,12 @@
   <objectgroup id="2" name="spawn">
     <object id="1" name="from_entrance" x="96" y="320">
       <properties>
-        <property name="id" value="from_entrance"/>
+        <property name="id" value="from_entrance" />
       </properties>
     </object>
     <object id="2" name="from_depths" x="896" y="320">
       <properties>
-        <property name="id" value="from_depths"/>
+        <property name="id" value="from_depths" />
       </properties>
     </object>
   </objectgroup>
@@ -48,88 +48,88 @@
   <objectgroup id="4" name="encounter">
     <object id="11" name="守矿工人" x="544" y="288" width="160" height="128">
       <properties>
-        <property name="encounterId" value="cave_miners"/>
-        <property name="radius" value="104"/>
+        <property name="encounterId" value="cave_miners" />
+        <property name="radius" value="104" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="5" name="trigger">
     <object id="13" name="偷采证据" x="768" y="224" width="96" height="96">
       <properties>
-        <property name="triggerId" value="mine_evidence"/>
-        <property name="action" value="dialogue:mine_evidence"/>
+        <property name="triggerId" value="mine_evidence" />
+        <property name="action" value="dialogue:mine_evidence" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="6" name="exit">
     <object id="3" name="回入口" x="32" y="288" width="32" height="64">
       <properties>
-        <property name="targetAreaId" value="cave_entrance"/>
-        <property name="targetSpawnId" value="from_mines"/>
+        <property name="targetAreaId" value="cave_entrance" />
+        <property name="targetSpawnId" value="from_mines" />
       </properties>
     </object>
     <object id="4" name="去深处" x="960" y="288" width="32" height="64">
       <properties>
-        <property name="targetAreaId" value="cave_depths"/>
-        <property name="targetSpawnId" value="from_mines"/>
+        <property name="targetAreaId" value="cave_depths" />
+        <property name="targetSpawnId" value="from_mines" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="7" name="navObstacle">
     <object id="5" name="北边界" x="0" y="0" width="1024" height="32">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="6" name="南边界" x="0" y="608" width="1024" height="32">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="7" name="西边界" x="0" y="0" width="32" height="640">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="8" name="东边界" x="992" y="0" width="32" height="640">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="9" name="矿车轨道断口" x="352" y="288" width="160" height="64">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="10" name="元素矿堆" x="640" y="192" width="128" height="128">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="8" name="surface">
     <object id="14" name="油污" x="512" y="352" width="128" height="96">
       <properties>
-        <property name="surfaceType" value="oil"/>
+        <property name="surfaceType" value="oil" />
       </properties>
     </object>
     <object id="15" name="毒雾" x="704" y="352" width="128" height="96">
       <properties>
-        <property name="surfaceType" value="poison"/>
+        <property name="surfaceType" value="poison" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="9" name="item">
     <object id="12" name="元素矿账册" x="800" y="256">
       <properties>
-        <property name="itemId" value="element_ore_ledger"/>
+        <property name="itemId" value="element_ore_ledger" />
       </properties>
     </object>
-  </objectgroup>
+  <object id="9001" name="遗落护臂" type="item" x="324" y="244" width="24" height="24"><properties><property name="itemId" value="miner_gauntlets" /><property name="quantity" type="int" value="1" /><property name="pickupMessage" value="你拾起了守矿人的护臂，皮带上还留着旧矿粉。" /></properties></object></objectgroup>
 </map>

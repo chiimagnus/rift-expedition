@@ -202,34 +202,26 @@ struct GameRootView: View {
         VStack(alignment: .leading, spacing: 18) {
             RiftSectionHeader("远征简报", eyebrow: "CHAPTER INTEL", systemImage: "map.fill")
 
-            ZStack {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [RiftPalette.riftViolet.opacity(0.24), RiftPalette.void.opacity(0.65)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                VStack(spacing: 14) {
-                    RiftLogoMark(size: 94)
-                    Text("封层完整度")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(RiftPalette.textBrownLight)
-                    RiftMetricBar(value: 0.38, tint: RiftPalette.danger, height: 8)
-                    HStack {
-                        Text("临界")
-                            .foregroundStyle(RiftPalette.danger)
-                        Spacer()
-                        Text("38%")
-                            .monospacedDigit()
-                            .foregroundStyle(RiftPalette.frost)
-                    }
-                    .font(.caption.weight(.black))
+            ZStack(alignment: .bottomLeading) {
+                RiftIllustrationCard(
+                    illustrationID: "chapter1_village_square",
+                    height: 210,
+                    overlayTint: RiftPalette.riftViolet,
+                    cornerRadius: 16
+                )
+                VStack(alignment: .leading, spacing: 10) {
+                    RiftLogoMark(size: 52)
+                    Text("第一章：失踪的新娘")
+                        .font(.title3.weight(.black))
+                        .foregroundStyle(.white)
+                    Text("纯 2D 卡通手绘内容版：原创立绘、环境关键画与更强音景已经接入。")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.82))
+                        .fixedSize(horizontal: false, vertical: true)
+                    RiftMetricBadge(label: "建议时长", value: "20~30 分钟", tint: RiftPalette.riftBlue)
                 }
-                .padding(22)
+                .padding(18)
             }
-            .frame(height: 210)
 
             dossierRow(icon: "building.columns.fill", title: "裂隙村", detail: "表面平静，河水已被矿脉污染")
             dossierRow(icon: "figure.hiking", title: "断塔荒野", detail: "脚印、偷猎者与失控野兽")

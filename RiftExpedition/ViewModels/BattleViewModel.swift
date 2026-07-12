@@ -9,6 +9,15 @@ enum BattleActionChoice: Equatable {
     case consumable(String)
 }
 
+enum BattleEffectStyle: String, Equatable {
+    case strike
+    case projectile
+    case arcane
+    case fire
+    case poison
+    case heal
+}
+
 struct BattleConsumableRow: Equatable, Identifiable {
     var id: String
     var displayName: String
@@ -46,6 +55,7 @@ struct BattlePresentationEvent: Equatable, Identifiable {
     var direction: ActorAnimationDirection
     var targetActorID: String?
     var effectPoint: CGPoint?
+    var effectStyle: BattleEffectStyle?
 }
 
 struct BattleSceneSnapshot: Equatable {
@@ -471,6 +481,9 @@ final class BattleViewModel {
             emitSkillEvents(
                 actorID: actor.id,
                 targetID: targetID,
+                action: actionBeforeResolution,
+                skill: skill,
+                actorClassID: actor.classID,
                 casterPosition: casterPosition,
                 targetPosition: targetPosition,
                 didDodge: resolution.didDodge,
@@ -612,7 +625,8 @@ final class BattleViewModel {
             action: .walk,
             direction: direction,
             targetActorID: nil,
-            effectPoint: nil
+            effectPoint: nil,
+            effectStyle: nil
         )
     }
 
@@ -621,7 +635,8 @@ final class BattleViewModel {
         action: ActorAnimationKind,
         direction: ActorAnimationDirection,
         targetActorID: String?,
-        effectPoint: CGPoint?
+        effectPoint: CGPoint?,
+        effectStyle: BattleEffectStyle? = nil
     ) {
         presentationEvents.append(BattlePresentationEvent(
             id: nextPresentationEventID,
@@ -629,7 +644,8 @@ final class BattleViewModel {
             action: action,
             direction: direction,
             targetActorID: targetActorID,
-            effectPoint: effectPoint
+            effectPoint: effectPoint,
+            effectStyle: effectStyle
         ))
         nextPresentationEventID += 1
         if presentationEvents.count > 8 {
@@ -640,6 +656,9 @@ final class BattleViewModel {
     private func emitSkillEvents(
         actorID: String,
         targetID: String,
+        action: BattleActionChoice,
+        skill: SkillDefinition,
+        actorClassID: String?,
         casterPosition: CGPoint,
         targetPosition: CGPoint,
         didDodge: Bool,
@@ -648,13 +667,15 @@ final class BattleViewModel {
         let attackDirection = animationDirection(from: casterPosition, to: targetPosition)
             ?? actorFacings[actorID]
             ?? .down
+        let effectStyle = presentationStyle(for: action, skill: skill, actorClassID: actorClassID)
         actorFacings[actorID] = attackDirection
         appendPresentationEvent(
             actorID: actorID,
             action: .attack,
             direction: attackDirection,
             targetActorID: targetID,
-            effectPoint: targetPosition
+            effectPoint: targetPosition,
+            effectStyle: effectStyle
         )
 
         guard !didDodge, damage > 0 else { return }
@@ -667,8 +688,50 @@ final class BattleViewModel {
             action: .hurt,
             direction: hurtDirection,
             targetActorID: actorID,
-            effectPoint: targetPosition
+            effectPoint: targetPosition,
+            effectStyle: effectStyle
         )
+    }
+
+    private func presentationStyle(
+        for action: BattleActionChoice,
+        skill: SkillDefinition,
+        actorClassID: String?
+    ) -> BattleEffectStyle {
+        switch action {
+        case .move:
+            return .strike
+        case .consumable:
+            return .heal
+        case .basicAttack:
+            return skill.range > 3 ? .projectile : .strike
+        case .skill:
+            if skill.effects.contains(where: { effect in
+                if case .heal = effect { return true }
+                return false
+            }) {
+                return .heal
+            }
+            if skill.effects.contains(where: { effect in
+                if case let .createSurface(surfaceID: surfaceID, durationTurns: _) = effect, surfaceID == "poison" { return true }
+                return false
+            }) {
+                return .poison
+            }
+            if skill.effects.contains(where: { effect in
+                if case let .createSurface(surfaceID: surfaceID, durationTurns: _) = effect, surfaceID == "fire" { return true }
+                return false
+            }) {
+                return .fire
+            }
+            if skill.range > 3.5 || actorClassID == "archer" {
+                return .projectile
+            }
+            if actorClassID == "mage" || skill.id.contains("spark") || skill.id.contains("orb") || skill.id.contains("light") {
+                return .arcane
+            }
+            return .strike
+        }
     }
 
     private func emitAudioCues(action: BattleActionChoice, damage: Int) {

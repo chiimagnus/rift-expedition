@@ -1,5 +1,9 @@
 import Foundation
+#if canImport(Darwin)
 import Darwin
+#else
+import Glibc
+#endif
 
 struct Arguments {
     var resourcesRoot: URL
@@ -89,18 +93,26 @@ func mapURLs(resourcesRoot: URL, areaID: String?) throws -> [URL] {
 }
 
 func allMapURLs(mapsRoot: URL) throws -> [URL] {
-    guard let enumerator = FileManager.default.enumerator(
-        at: mapsRoot,
-        includingPropertiesForKeys: [.isRegularFileKey],
-        options: [.skipsHiddenFiles]
-    ) else {
-        return []
-    }
+    var result: [URL] = []
+    var pending = [mapsRoot]
+    let keys: Set<URLResourceKey> = [.isDirectoryKey, .isRegularFileKey]
 
-    return enumerator
-        .compactMap { $0 as? URL }
-        .filter { $0.pathExtension == "tmx" }
-        .sorted { $0.path < $1.path }
+    while let directory = pending.popLast() {
+        let children = try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: Array(keys),
+            options: [.skipsHiddenFiles]
+        )
+        for child in children {
+            let values = try child.resourceValues(forKeys: keys)
+            if values.isDirectory == true {
+                pending.append(child)
+            } else if values.isRegularFile == true, child.pathExtension == "tmx" {
+                result.append(child)
+            }
+        }
+    }
+    return result.sorted { $0.path < $1.path }
 }
 
 func chapterAreaIDs(resourcesRoot: URL, chapterID: String?) throws -> Set<String>? {
@@ -152,10 +164,15 @@ do {
         }
     }
 
-    let issueCount = results.reduce(0) { $0 + $1.issues.count }
-        + worldResults.reduce(0) { $0 + $1.issues.count }
-        + (mapReferenceResult?.issues.count ?? 0)
-        + (assetResult?.issues.count ?? 0)
+    let mapIssueCount = results.reduce(0) { partial, result in
+        partial + result.issues.count
+    }
+    let worldIssueCount = worldResults.reduce(0) { partial, result in
+        partial + result.issues.count
+    }
+    let referenceIssueCount = mapReferenceResult?.issues.count ?? 0
+    let assetIssueCount = assetResult?.issues.count ?? 0
+    let issueCount = mapIssueCount + worldIssueCount + referenceIssueCount + assetIssueCount
     let scopeTitle = scopeTitle(arguments: arguments)
     let summary = [
         "# \(scopeTitle)校验总览",
@@ -181,7 +198,7 @@ do {
     let report = reportSections.joined(separator: "\n")
     if let reportPath = arguments.reportPath {
         try FileManager.default.createDirectory(at: reportPath.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try report.write(to: reportPath, atomically: true, encoding: .utf8)
+        try report.write(to: reportPath, atomically: true, encoding: String.Encoding.utf8)
     } else {
         print(report)
     }

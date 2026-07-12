@@ -44,6 +44,45 @@ struct SettingsView: View {
                         tint: RiftPalette.riftBlue
                     )
 
+                    sliderCard(
+                        icon: "music.note.list",
+                        title: "音乐层",
+                        detail: "控制探索 / 战斗的基础音乐与动态叠层",
+                        value: Binding(
+                            get: { viewModel.audioService.musicVolume },
+                            set: { viewModel.audioService.musicVolume = $0 }
+                        ),
+                        range: 0...1,
+                        displayValue: "\(Int(viewModel.audioService.musicVolume * 100))%",
+                        tint: RiftPalette.riftViolet
+                    )
+
+                    sliderCard(
+                        icon: "wind",
+                        title: "环境层",
+                        detail: "控制河流、风声、洞窟滴水等氛围循环",
+                        value: Binding(
+                            get: { viewModel.audioService.ambienceVolume },
+                            set: { viewModel.audioService.ambienceVolume = $0 }
+                        ),
+                        range: 0...1,
+                        displayValue: "\(Int(viewModel.audioService.ambienceVolume * 100))%",
+                        tint: RiftPalette.success
+                    )
+
+                    sliderCard(
+                        icon: "sparkles",
+                        title: "战斗 / 反馈音效",
+                        detail: "控制命中、施法、任务完成与章节提示音",
+                        value: Binding(
+                            get: { viewModel.audioService.sfxVolume },
+                            set: { viewModel.audioService.sfxVolume = $0 }
+                        ),
+                        range: 0...1,
+                        displayValue: "\(Int(viewModel.audioService.sfxVolume * 100))%",
+                        tint: RiftPalette.ember
+                    )
+
                     RiftSectionHeader("界面与辅助", eyebrow: "ACCESSIBILITY", systemImage: "accessibility.fill")
 
                     sliderCard(

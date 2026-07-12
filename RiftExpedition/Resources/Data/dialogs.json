@@ -214,5 +214,89 @@
         "action": "close"
       }
     ]
+  },
+  {
+    "id": "fiance_ring_request",
+    "speakerName": "未婚夫梁铮",
+    "lines": [
+      "如果你们真要经过断塔废墟，替我找一样东西。",
+      "那枚订婚戒昨晚被顾家的人扔进了火堆。它救不了婚礼，但至少能证明争执确实发生过。"
+    ],
+    "options": [
+      {
+        "id": "accept_scorched_vow",
+        "title": "接受支线 · 寻找烧黑的订婚戒",
+        "action": "acceptQuest",
+        "questID": "scorched_vow"
+      },
+      {
+        "id": "leave_scorched_vow",
+        "title": "暂时离开",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "fiance_ring_return",
+    "speakerName": "未婚夫梁铮",
+    "lines": [
+      "……真的是它。连戒壁都被灼成了黑色。",
+      "谢谢你把它带回来。至少我知道，昨夜发生的事没有被他们彻底抹掉。"
+    ],
+    "options": [
+      {
+        "id": "complete_scorched_vow",
+        "title": "交还烧黑的银戒",
+        "action": "completeQuest",
+        "questID": "scorched_vow"
+      },
+      {
+        "id": "leave_ring_return",
+        "title": "暂时保留戒指",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "guard_gauntlets_request",
+    "speakerName": "守卫阿砾",
+    "lines": [
+      "旧矿洞封起来后，仍有人偷偷轮值。昨天老罗没回来，只剩一道拖痕。",
+      "若你们真要下去，留意一副铁护手。指节上刻着三道横纹，那是他的。"
+    ],
+    "options": [
+      {
+        "id": "accept_miners_last_shift",
+        "title": "接受支线 · 寻找矿工铁护手",
+        "action": "acceptQuest",
+        "questID": "miners_last_shift"
+      },
+      {
+        "id": "leave_miners_last_shift",
+        "title": "暂时离开",
+        "action": "close"
+      }
+    ]
+  },
+  {
+    "id": "guard_gauntlets_return",
+    "speakerName": "守卫阿砾",
+    "lines": [
+      "三道横纹……是老罗的护手。那家伙总说自己还能再守三班。",
+      "谢谢。现在我至少能让他的家人知道，他不是无声无息地消失。"
+    ],
+    "options": [
+      {
+        "id": "complete_miners_last_shift",
+        "title": "交付矿工铁护手",
+        "action": "completeQuest",
+        "questID": "miners_last_shift"
+      },
+      {
+        "id": "leave_gauntlets_return",
+        "title": "暂时保留护手",
+        "action": "close"
+      }
+    ]
   }
 ]

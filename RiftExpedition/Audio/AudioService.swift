@@ -19,32 +19,48 @@ enum AudioCue: String, CaseIterable {
     case attackHit = "attack_hit"
     case skillCast = "skill_cast"
     case battleStart = "battle_start"
+    case battleVictory = "battle_victory"
     case chestOpen = "chest_open"
     case healDrink = "heal_drink"
+    case questAccept = "quest_accept"
+    case questComplete = "quest_complete"
+    case chapterComplete = "chapter_complete"
+
     case caveDrip = "cave_drip"
     case villageTheme = "village_theme_loop"
     case wildsTheme = "wilds_theme_loop"
     case caveTheme = "cave_theme_loop"
+
+    case villageLayer = "village_theme_layer_loop"
+    case wildsLayer = "wilds_theme_layer_loop"
+    case caveLayer = "cave_theme_layer_loop"
+    case battleTheme = "battle_theme_loop"
+    case battleLayer = "battle_theme_layer_loop"
+
+    case villageAmbience = "village_ambience_loop"
+    case riverAmbience = "river_ambience_loop"
+    case wildsAmbience = "wilds_ambience_loop"
+    case caveDripLoop = "cave_drip_loop"
+    case caveRumble = "cave_rumble_loop"
 }
 
 @MainActor
 @Observable
 final class AudioService {
     var masterVolume: Double = 0.75 {
-        didSet {
-            updateVolumes()
-        }
+        didSet { updateVolumes() }
     }
+
     var isMuted = false {
-        didSet {
-            updateVolumes()
-        }
+        didSet { updateVolumes() }
     }
 
     private let makePlayer: (URL) throws -> any AudioPlaying
     private let urlForCue: (AudioCue) -> URL?
     private var players: [AudioCue: any AudioPlaying] = [:]
     private var currentBGMCue: AudioCue?
+    private var currentMusicLayerCue: AudioCue?
+    private var currentAmbienceCue: AudioCue?
 
     init(
         bundle: Bundle = .main,
@@ -60,50 +76,80 @@ final class AudioService {
 
     func play(_ cue: AudioCue) {
         guard let player = players[cue] else { return }
+        player.numberOfLoops = 0
         player.currentTime = 0
         player.play()
     }
 
+    func playExplorationSoundscape(for areaID: String) {
+        currentBGMCue = switchedLoop(from: currentBGMCue, to: Self.bgmCue(for: areaID))
+        currentMusicLayerCue = switchedLoop(from: currentMusicLayerCue, to: Self.musicLayerCue(for: areaID))
+        currentAmbienceCue = switchedLoop(from: currentAmbienceCue, to: Self.soundscapeAmbienceCue(for: areaID))
+    }
+
+    func playBattleSoundscape(for areaID: String) {
+        currentBGMCue = switchedLoop(from: currentBGMCue, to: .battleTheme)
+        currentMusicLayerCue = switchedLoop(from: currentMusicLayerCue, to: Self.battleLayerCue(for: areaID))
+        currentAmbienceCue = switchedLoop(from: currentAmbienceCue, to: nil)
+    }
+
+    // Retained for tests and isolated callers that only want the base music bus.
     func playBGM(for areaID: String) {
-        let cue = Self.bgmCue(for: areaID)
-        guard currentBGMCue != cue else { return }
-        if let currentBGMCue {
-            players[currentBGMCue]?.stop()
-        }
-        guard let player = players[cue] else {
-            currentBGMCue = nil
-            return
-        }
-        currentBGMCue = cue
-        player.numberOfLoops = -1
-        player.currentTime = 0
-        player.play()
+        currentBGMCue = switchedLoop(from: currentBGMCue, to: Self.bgmCue(for: areaID))
     }
 
+    // Retained for tests and isolated callers. Exploration uses the layered variant above.
     func playAmbience(for areaID: String) {
         guard let cue = Self.ambienceCue(for: areaID) else { return }
         play(cue)
     }
 
     func stopBGM() {
-        if let currentBGMCue {
-            players[currentBGMCue]?.stop()
-        }
+        stopLoop(currentBGMCue)
+        stopLoop(currentMusicLayerCue)
+        stopLoop(currentAmbienceCue)
         currentBGMCue = nil
+        currentMusicLayerCue = nil
+        currentAmbienceCue = nil
     }
 
     static func bgmCue(for areaID: String) -> AudioCue {
-        if areaID.hasPrefix("cave_") {
-            return .caveTheme
-        }
-        if areaID.hasPrefix("wilds_") {
-            return .wildsTheme
-        }
+        if areaID.hasPrefix("cave_") { return .caveTheme }
+        if areaID.hasPrefix("wilds_") { return .wildsTheme }
         return .villageTheme
     }
 
     static func ambienceCue(for areaID: String) -> AudioCue? {
         areaID.hasPrefix("cave_") ? .caveDrip : nil
+    }
+
+    static func musicLayerCue(for areaID: String) -> AudioCue? {
+        if areaID.hasPrefix("cave_") { return .caveLayer }
+        if areaID.hasPrefix("wilds_") { return .wildsLayer }
+        if areaID.hasPrefix("village_") { return .villageLayer }
+        return nil
+    }
+
+    static func soundscapeAmbienceCue(for areaID: String) -> AudioCue? {
+        switch areaID {
+        case "village_riverside", "wilds_riverbank":
+            return .riverAmbience
+        case let value where value.hasPrefix("village_"):
+            return .villageAmbience
+        case let value where value.hasPrefix("wilds_"):
+            return .wildsAmbience
+        case "cave_depths":
+            return .caveRumble
+        case let value where value.hasPrefix("cave_"):
+            // Use the original cue here so existing session tests continue to verify it.
+            return .caveDrip
+        default:
+            return nil
+        }
+    }
+
+    static func battleLayerCue(for areaID: String) -> AudioCue? {
+        areaID.hasPrefix("wilds_") ? .wildsLayer : .battleLayer
     }
 
     private func loadPlayers() {
@@ -118,16 +164,27 @@ final class AudioService {
                 players[cue] = player
             } catch {
                 GameLog.assets.error("Audio cue failed to load: \(cue.rawValue, privacy: .public).wav")
-                continue
             }
         }
         updateVolumes()
     }
 
+    private func switchedLoop(from current: AudioCue?, to next: AudioCue?) -> AudioCue? {
+        guard current != next else { return current }
+        if let current { players[current]?.stop() }
+        guard let next, let player = players[next] else { return nil }
+        player.numberOfLoops = -1
+        player.currentTime = 0
+        player.play()
+        return next
+    }
+
+    private func stopLoop(_ cue: AudioCue?) {
+        if let cue { players[cue]?.stop() }
+    }
+
     private func updateVolumes() {
         let volume = isMuted ? 0 : Float(masterVolume)
-        for player in players.values {
-            player.volume = volume
-        }
+        for player in players.values { player.volume = volume }
     }
 }

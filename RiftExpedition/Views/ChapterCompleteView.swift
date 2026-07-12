@@ -53,7 +53,12 @@ struct ChapterCompleteView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(spacing: 17) {
-                    RiftLogoMark(size: 124)
+                    RiftIllustrationCard(
+                        illustrationID: "chapter1_cave_depths",
+                        height: 176,
+                        overlayTint: RiftPalette.riftViolet,
+                        cornerRadius: 18
+                    )
                     Text("RIFT REMAINS")
                         .font(.caption.weight(.black))
                         .tracking(3)
@@ -65,6 +70,7 @@ struct ChapterCompleteView: View {
 
                     epilogueRow(icon: "person.fill.checkmark", title: "沈砚", detail: "获救并成为矿洞真相的证人", tint: RiftPalette.success)
                     epilogueRow(icon: "building.columns.fill", title: "裂隙村", detail: "秩序开始重建，信任尚未恢复", tint: RiftPalette.ember)
+                    epilogueRow(icon: "paintpalette.fill", title: "内容升级", detail: "本章已接入原创角色立绘、环境关键画与分层音景。", tint: RiftPalette.riftBlue)
                     epilogueRow(icon: "waveform.path.ecg", title: "封层回声", detail: "新的频率正在更深处回应", tint: RiftPalette.riftViolet)
                 }
                 .padding(24)

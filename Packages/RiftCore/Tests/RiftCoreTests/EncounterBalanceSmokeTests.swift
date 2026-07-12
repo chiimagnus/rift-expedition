@@ -12,7 +12,8 @@ final class EncounterBalanceSmokeTests: XCTestCase {
             "road_bandit_ambush",
             "cave_vermin",
             "cave_miners",
-            "rift_custodian"
+            "rift_custodian",
+            "river_taint_surge"
         ]
 
         XCTAssertEqual(Set(encounters.map(\.id)), expectedEncounterIDs)

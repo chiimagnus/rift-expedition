@@ -598,6 +598,7 @@ enum RiftRarityStyle {
 @MainActor
 enum RiftActorArt {
     private static var cache: [String: NSImage] = [:]
+    private static var illustrationCache: [String: NSImage] = [:]
 
     static func visualID(forClassID classID: String?) -> String {
         switch classID {
@@ -619,6 +620,10 @@ enum RiftActorArt {
     static func portraitFrame(forVisualID visualID: String) -> NSImage? {
         if let cached = cache[visualID] {
             return cached
+        }
+        if let dedicatedPortrait = portraitIllustration(forVisualID: visualID) {
+            cache[visualID] = dedicatedPortrait
+            return dedicatedPortrait
         }
         guard
             let url = Bundle.main.url(forResource: "\(visualID)_anim", withExtension: "png", subdirectory: "Assets/Characters"),
@@ -645,6 +650,43 @@ enum RiftActorArt {
 
         cache[visualID] = frame
         return frame
+    }
+
+    static func illustration(named name: String) -> NSImage? {
+        if let cached = illustrationCache[name] {
+            return cached
+        }
+        guard let url = Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Assets/Illustrations"),
+              let image = NSImage(contentsOf: url)
+        else {
+            return nil
+        }
+        illustrationCache[name] = image
+        return image
+    }
+
+    private static func portraitIllustration(forVisualID visualID: String) -> NSImage? {
+        guard let assetName = portraitAssetName(forVisualID: visualID),
+              let image = illustration(named: assetName)
+        else {
+            return nil
+        }
+        return image
+    }
+
+    private static func portraitAssetName(forVisualID visualID: String) -> String? {
+        switch visualID {
+        case "actor_warrior":
+            return "portrait_actor_warrior"
+        case "actor_archer":
+            return "portrait_actor_archer"
+        case "actor_mage":
+            return "portrait_actor_mage"
+        case "actor_rogue":
+            return "portrait_actor_rogue"
+        default:
+            return nil
+        }
     }
 }
 
@@ -715,6 +757,52 @@ struct RiftActorPortrait: View {
         .frame(width: size, height: size)
         .shadow(color: isActive ? RiftPalette.riftBlue.opacity(0.32) : .black.opacity(0.3), radius: 9, y: 4)
         .accessibilityHidden(true)
+    }
+}
+
+struct RiftIllustrationCard: View {
+    let illustrationID: String
+    var height: CGFloat = 210
+    var overlayTint: Color = RiftPalette.riftBlue
+    var cornerRadius: CGFloat = 16
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [overlayTint.opacity(0.18), RiftPalette.void.opacity(0.78)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            if let art = RiftActorArt.illustration(named: illustrationID) {
+                Image(nsImage: art)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                    .overlay(
+                        LinearGradient(
+                            colors: [Color.clear, RiftPalette.void.opacity(0.18), RiftPalette.void.opacity(0.68)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            } else {
+                RiftLogoMark(size: min(height * 0.52, 110))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: height)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(overlayTint.opacity(0.36), lineWidth: 1)
+        )
+        .shadow(color: overlayTint.opacity(0.22), radius: 18, y: 8)
     }
 }
 

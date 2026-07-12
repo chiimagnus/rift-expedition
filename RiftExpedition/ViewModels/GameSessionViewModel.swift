@@ -151,8 +151,7 @@ final class GameSessionViewModel {
     }
 
     func enterExploration() {
-        audioService.playBGM(for: currentAreaID)
-        audioService.playAmbience(for: currentAreaID)
+        audioService.playExplorationSoundscape(for: currentAreaID)
         appState = .exploration
         statusText = "点击地图移动队长。"
     }
@@ -254,6 +253,7 @@ final class GameSessionViewModel {
         inventory = updatedInventory
 
         let rewardNames = (quest.rewardItemIDs.map(itemName) + quest.rewardSkillIDs.map(skillName)).joined(separator: "、")
+        audioService.play(.questComplete)
         statusText = rewardNames.isEmpty ? "任务已完成。" : "任务完成，获得：\(rewardNames)。"
         if questID == "blood_debt" {
             completeChapter()
@@ -262,7 +262,8 @@ final class GameSessionViewModel {
 
     func completeChapter() {
         let didAutosave = performSafeAutosave()
-        audioService.play(.uiClick)
+        audioService.stopBGM()
+        audioService.play(.chapterComplete)
         battleViewModel = nil
         appState = .chapterComplete
         statusText = didAutosave
@@ -286,8 +287,10 @@ final class GameSessionViewModel {
             party = survivingParty
             inventory = battleViewModel.inventory
             let didAutosave = performSafeAutosave()
+            audioService.play(.battleVictory)
             self.battleViewModel = nil
             appState = .exploration
+            audioService.playExplorationSoundscape(for: currentAreaID)
             statusText = didAutosave
                 ? "战斗胜利。倒下的队友已在战后复活。"
                 : "战斗胜利，倒下的队友已复活；自动存档失败，已保留上一个安全存档。"
@@ -313,6 +316,7 @@ final class GameSessionViewModel {
 
     private func startBattle(_ encounter: EncounterDefinition, trigger: MapEncounterTrigger?) {
         audioService.play(.battleStart)
+        audioService.playBattleSoundscape(for: currentAreaID)
         battleViewModel = BattleViewModel(
             state: BattleState(actors: party + encounter.enemies),
             skills: skillDefinitions,
@@ -357,6 +361,7 @@ final class GameSessionViewModel {
         loadArea(save.currentAreaID, spawnID: save.currentSpawnID)
         battleViewModel = nil
         appState = .exploration
+        audioService.playExplorationSoundscape(for: save.currentAreaID)
         statusText = "已读取存档。"
     }
 
@@ -460,13 +465,17 @@ final class GameSessionViewModel {
     }
 
     private func questTurnInItemIDs(for questID: String) -> [String] {
-        // ponytail（有意为之的技术债）：第一章目前只有两个手写好的任务提交逻辑；
-        // 如果以后任务变多、需求变复杂，再把这部分挪到统一的任务数据里管理。
+        // ponytail（有意为之的技术债）：章节任务目前仍使用轻量手写映射；
+        // 等任务量进一步上涨，再统一迁移到更完整的数据驱动结构里。
         switch questID {
         case "blood_debt":
             return ["element_ore_ledger"]
         case "bitterroot_medicine":
             return ["bitterroot_herb"]
+        case "scorched_vow":
+            return ["scorched_ring"]
+        case "miners_last_shift":
+            return ["miner_gauntlets"]
         default:
             return []
         }
@@ -474,6 +483,16 @@ final class GameSessionViewModel {
 
     private func itemName(_ itemID: String) -> String {
         itemDefinitions.first(where: { $0.id == itemID })?.displayName ?? itemID
+    }
+
+    private func inventoryContains(_ itemID: String) -> Bool {
+        inventory.count(of: itemID) > 0
+    }
+
+    private func hasTurnInItems(for questID: String) -> Bool {
+        let required = questTurnInItemIDs(for: questID)
+        guard !required.isEmpty else { return true }
+        return required.allSatisfy { inventoryContains($0) }
     }
 
     private func skillName(_ skillID: String) -> String {
@@ -525,8 +544,7 @@ final class GameSessionViewModel {
         currentAreaID = areaID
         currentSpawnID = spawnID
         if appState == .exploration {
-            audioService.playBGM(for: areaID)
-            audioService.playAmbience(for: areaID)
+            audioService.playExplorationSoundscape(for: areaID)
         }
         currentMapMetadata = try? TiledMapLoader.loadMetadata(areaID: areaID, bundle: contentBundle)
         configureEncounterTriggers()
@@ -663,11 +681,17 @@ final class GameSessionViewModel {
 
     private func dialogID(for npc: MapNPC) -> String {
         switch npc.actorID {
-        case "healer" where dialogViewModel.questState.statuses["bitterroot_medicine"] == .active
-            && inventory.count(of: "bitterroot_herb") > 0:
+        case "healer" where dialogViewModel.questState.statuses["bitterroot_medicine"] == .active && hasTurnInItems(for: "bitterroot_medicine"):
             return "healer_return"
-        case "mayor" where dialogViewModel.questState.statuses["blood_debt"] == .active
-            && inventory.count(of: "element_ore_ledger") > 0:
+        case "fiance" where dialogViewModel.questState.statuses["scorched_vow"] == .active && hasTurnInItems(for: "scorched_vow"):
+            return "fiance_ring_return"
+        case "fiance" where dialogViewModel.questState.statuses["blood_debt"] == .active && dialogViewModel.questState.statuses["scorched_vow"] == nil:
+            return "fiance_ring_request"
+        case "gate_guard" where dialogViewModel.questState.statuses["miners_last_shift"] == .active && hasTurnInItems(for: "miners_last_shift"):
+            return "guard_gauntlets_return"
+        case "gate_guard" where dialogViewModel.questState.statuses["blood_debt"] == .active && dialogViewModel.questState.statuses["miners_last_shift"] == nil:
+            return "guard_gauntlets_request"
+        case "mayor" where dialogViewModel.questState.statuses["blood_debt"] == .active && hasTurnInItems(for: "blood_debt"):
             return "elder_return"
         default:
             return npc.dialogID

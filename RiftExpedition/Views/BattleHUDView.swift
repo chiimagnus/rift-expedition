@@ -207,16 +207,7 @@ struct BattleHUDView: View {
                     )
 
                     ForEach(viewModel.activeSkills) { skill in
-                        actionButton(
-                            title: skill.displayName,
-                            subtitle: "\(skill.actionPointCost) AP · \(skill.range, format: .number.precision(.fractionLength(0))) 距离",
-                            icon: RiftSkillIconography.icon(for: skill.id),
-                            tint: RiftSkillIconography.tint(for: skill.id),
-                            selected: viewModel.selectedAction == .skill(skill.id),
-                            enabled: viewModel.canUseSkill(skill)
-                        ) {
-                            viewModel.performSkill(id: skill.id)
-                        }
+                        skillActionButton(skill)
                     }
 
                     consumableMenu
@@ -311,6 +302,30 @@ struct BattleHUDView: View {
         }
         .menuStyle(.borderlessButton)
         .disabled(viewModel.consumableRows.isEmpty)
+    }
+
+    private func skillActionButton(_ skill: SkillDefinition) -> some View {
+        let subtitle = skillSubtitle(for: skill)
+        let icon = RiftSkillIconography.icon(for: skill.id)
+        let tint = RiftSkillIconography.tint(for: skill.id)
+        let isSelected = viewModel.selectedAction == .skill(skill.id)
+        let isEnabled = viewModel.canUseSkill(skill)
+
+        return actionButton(
+            title: skill.displayName,
+            subtitle: subtitle,
+            icon: icon,
+            tint: tint,
+            selected: isSelected,
+            enabled: isEnabled
+        ) {
+            viewModel.performSkill(id: skill.id)
+        }
+    }
+
+    private func skillSubtitle(for skill: SkillDefinition) -> String {
+        let rangeText = skill.range.formatted(.number.precision(.fractionLength(0)))
+        return "\(skill.actionPointCost) AP · \(rangeText) 距离"
     }
 
     private func actionButton(

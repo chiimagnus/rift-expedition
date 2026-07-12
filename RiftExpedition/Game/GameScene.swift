@@ -35,6 +35,7 @@ final class GameScene: SKScene {
     private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
     private var didLogAnimationCatalogFallback = false
     private var loggedMissingActorAnimations: Set<String> = []
+    private var usesPaintedMapArt = false
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -166,7 +167,7 @@ final class GameScene: SKScene {
             playBattlePresentationEvent(event, actors: snapshot.actors)
             guard let point = event.effectPoint, !renderedBattleEffectIDs.contains(event.id) else { continue }
             renderedBattleEffectIDs.insert(event.id)
-            layer.addChild(makeEffectNode(at: point, eventID: event.id))
+            layer.addChild(makeEffectNode(at: point, style: event.effectStyle, eventID: event.id))
         }
     }
 
@@ -186,6 +187,7 @@ final class GameScene: SKScene {
 
         tilemap?.removeFromParent()
         tilemap = nil
+        usesPaintedMapArt = false
         staticObjectLayer?.removeFromParent()
         staticObjectLayer = nil
 
@@ -193,6 +195,7 @@ final class GameScene: SKScene {
             let (loadedMap, metadata) = try TiledMapLoader.load(areaID: areaID)
             loadedMap.position = .zero
             loadedMap.zPosition = 1
+            configureMapArtLayers(in: loadedMap)
             worldLayer.addChild(loadedMap)
             tilemap = loadedMap
             loadedAreaID = areaID
@@ -202,6 +205,22 @@ final class GameScene: SKScene {
             loadedAreaID = nil
             layoutWorld()
             GameLog.map.error("\(areaID, privacy: .public).tmx 加载失败")
+        }
+    }
+
+    private func configureMapArtLayers(in tilemap: SKTilemap) {
+        for imageLayer in tilemap.imageLayers() {
+            switch imageLayer.layerName {
+            case "background_art":
+                usesPaintedMapArt = true
+                imageLayer.zPosition = -10
+            case let name where name.hasPrefix("foreground_"):
+                // Foreground art is authored as a transparent image layer and can
+                // occlude actors without changing collision or interaction data.
+                imageLayer.zPosition = 760
+            default:
+                break
+            }
         }
     }
 
@@ -344,9 +363,11 @@ final class GameScene: SKScene {
             guard let type = SurfaceTypeColor(rawValue: surface.surfaceType) else { continue }
             layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))
         }
-        for obstacle in metadata.navObstacles where obstacle.blocksMovement {
-            if let node = makeVisibleObstacleNode(obstacle) {
-                layer.addChild(node)
+        if !usesPaintedMapArt {
+            for obstacle in metadata.navObstacles where obstacle.blocksMovement {
+                if let node = makeVisibleObstacleNode(obstacle) {
+                    layer.addChild(node)
+                }
             }
         }
         for exit in metadata.exits {
@@ -508,46 +529,51 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func makeEffectNode(at point: CGPoint, eventID: Int? = nil) -> SKNode {
+    private func makeEffectNode(at point: CGPoint, style: BattleEffectStyle?, eventID: Int? = nil) -> SKNode {
         let container = SKNode()
         container.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
         container.position = point
         container.zPosition = 20
 
-        let core = SKShapeNode(circleOfRadius: 9)
-        core.fillColor = SKColor(red: 1.0, green: 0.88, blue: 0.62, alpha: 0.92)
-        core.strokeColor = .white
+        let palette = effectPalette(for: style)
+        let coreRadius: CGFloat = style == .projectile ? 7 : 9
+        let ringRadius: CGFloat = style == .heal ? 16 : 18
+
+        let core = SKShapeNode(circleOfRadius: coreRadius)
+        core.fillColor = palette.core
+        core.strokeColor = palette.stroke
         core.lineWidth = 1
         core.glowWidth = 6
         container.addChild(core)
 
-        let ring = SKShapeNode(circleOfRadius: 18)
+        let ring = SKShapeNode(circleOfRadius: ringRadius)
         ring.fillColor = .clear
-        ring.strokeColor = SKColor(red: 1.0, green: 0.42, blue: 0.16, alpha: 0.95)
-        ring.lineWidth = 3
+        ring.strokeColor = palette.ring
+        ring.lineWidth = style == .heal ? 2 : 3
         ring.glowWidth = 4
         container.addChild(ring)
 
         core.run(.group([
-            .scale(to: 0.2, duration: 0.20),
+            .scale(to: style == .heal ? 0.35 : 0.2, duration: 0.20),
             .fadeOut(withDuration: 0.20)
         ]))
         ring.run(.group([
-            .scale(to: 2.35, duration: 0.24),
+            .scale(to: style == .projectile ? 1.9 : 2.35, duration: 0.24),
             .fadeOut(withDuration: 0.24)
         ]))
 
         for index in 0..<8 {
-            let spark = SKShapeNode(circleOfRadius: index.isMultiple(of: 2) ? 2.2 : 1.4)
-            spark.fillColor = index.isMultiple(of: 2)
-                ? SKColor(red: 1.0, green: 0.70, blue: 0.20, alpha: 0.95)
-                : SKColor(red: 0.42, green: 0.84, blue: 1.0, alpha: 0.9)
+            let spark = SKShapeNode(circleOfRadius: index.isMultiple(of: 2) ? 2.4 : 1.5)
+            spark.fillColor = index.isMultiple(of: 2) ? palette.sparkA : palette.sparkB
             spark.strokeColor = .clear
             let angle = CGFloat(index) / 8 * .pi * 2
-            let distance: CGFloat = index.isMultiple(of: 2) ? 34 : 25
+            let distance: CGFloat = style == .heal ? (index.isMultiple(of: 2) ? 28 : 22) : (index.isMultiple(of: 2) ? 34 : 25)
+            let movement = style == .projectile
+                ? CGVector(dx: cos(angle) * distance * 0.8, dy: sin(angle) * distance * 0.55)
+                : CGVector(dx: cos(angle) * distance, dy: sin(angle) * distance)
             spark.run(.sequence([
                 .group([
-                    .moveBy(x: cos(angle) * distance, y: sin(angle) * distance, duration: 0.22),
+                    .moveBy(x: movement.dx, y: movement.dy, duration: 0.22),
                     .scale(to: 0.15, duration: 0.22),
                     .fadeOut(withDuration: 0.22)
                 ]),
@@ -556,8 +582,71 @@ final class GameScene: SKScene {
             container.addChild(spark)
         }
 
+        if style == .heal {
+            for index in 0..<2 {
+                let bar = SKShapeNode(rectOf: CGSize(width: index == 0 ? 12 : 4, height: index == 0 ? 4 : 12), cornerRadius: 1)
+                bar.fillColor = palette.stroke
+                bar.strokeColor = .clear
+                container.addChild(bar)
+                bar.run(.sequence([.fadeOut(withDuration: 0.22), .removeFromParent()]))
+            }
+        }
+
         container.run(.sequence([.wait(forDuration: 0.28), .removeFromParent()]))
         return container
+    }
+
+    private func effectPalette(for style: BattleEffectStyle?) -> (core: SKColor, stroke: SKColor, ring: SKColor, sparkA: SKColor, sparkB: SKColor) {
+        switch style ?? .strike {
+        case .strike:
+            return (
+                SKColor(red: 1.0, green: 0.88, blue: 0.62, alpha: 0.92),
+                .white,
+                SKColor(red: 1.0, green: 0.42, blue: 0.16, alpha: 0.95),
+                SKColor(red: 1.0, green: 0.70, blue: 0.20, alpha: 0.95),
+                SKColor(red: 0.42, green: 0.84, blue: 1.0, alpha: 0.9)
+            )
+        case .projectile:
+            return (
+                SKColor(red: 0.72, green: 0.92, blue: 1.0, alpha: 0.92),
+                .white,
+                SKColor(red: 0.33, green: 0.73, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.82, green: 0.95, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.32, green: 0.72, blue: 1.0, alpha: 0.9)
+            )
+        case .arcane:
+            return (
+                SKColor(red: 0.88, green: 0.75, blue: 1.0, alpha: 0.94),
+                .white,
+                SKColor(red: 0.62, green: 0.42, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.95, green: 0.86, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.50, green: 0.72, blue: 1.0, alpha: 0.9)
+            )
+        case .fire:
+            return (
+                SKColor(red: 1.0, green: 0.78, blue: 0.32, alpha: 0.94),
+                .white,
+                SKColor(red: 1.0, green: 0.36, blue: 0.14, alpha: 0.96),
+                SKColor(red: 1.0, green: 0.55, blue: 0.20, alpha: 0.95),
+                SKColor(red: 1.0, green: 0.86, blue: 0.42, alpha: 0.9)
+            )
+        case .poison:
+            return (
+                SKColor(red: 0.72, green: 0.94, blue: 0.50, alpha: 0.94),
+                .white,
+                SKColor(red: 0.36, green: 0.78, blue: 0.28, alpha: 0.96),
+                SKColor(red: 0.60, green: 0.94, blue: 0.42, alpha: 0.95),
+                SKColor(red: 0.90, green: 1.0, blue: 0.62, alpha: 0.9)
+            )
+        case .heal:
+            return (
+                SKColor(red: 0.62, green: 1.0, blue: 0.86, alpha: 0.94),
+                .white,
+                SKColor(red: 0.22, green: 0.82, blue: 0.68, alpha: 0.96),
+                SKColor(red: 0.72, green: 1.0, blue: 0.90, alpha: 0.95),
+                SKColor(red: 0.42, green: 0.94, blue: 0.82, alpha: 0.9)
+            )
+        }
     }
 
     private func makeSurfaceNode(_ surface: BattleSurfaceMarker) -> SKNode {

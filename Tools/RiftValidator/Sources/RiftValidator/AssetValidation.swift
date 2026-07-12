@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 
 public struct AssetManifestEntry: Codable, Equatable, Sendable {
@@ -204,12 +203,13 @@ public enum AssetValidator {
     }
 
     private static func pngSize(url: URL) -> FrameSize? {
-        guard
-            let data = try? Data(contentsOf: url),
-            let bitmap = NSBitmapImageRep(data: data)
-        else {
-            return nil
+        guard let data = try? Data(contentsOf: url), data.count >= 24 else { return nil }
+        let signature: [UInt8] = [137, 80, 78, 71, 13, 10, 26, 10]
+        guard Array(data.prefix(8)) == signature else { return nil }
+
+        func integer(at offset: Int) -> Int {
+            data[offset..<(offset + 4)].reduce(0) { ($0 << 8) | Int($1) }
         }
-        return FrameSize(width: bitmap.pixelsWide, height: bitmap.pixelsHigh)
+        return FrameSize(width: integer(at: 16), height: integer(at: 20))
     }
 }
