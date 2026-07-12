@@ -278,130 +278,337 @@
     "downloadedAt": "2026-07-06",
     "author": "Rift Expedition project"
   },
-    {
-        "id": "spritesheet.actor_warrior_anim",
-        "path": "Assets/Characters/actor_warrior_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated via built-in imagegen, 4 direction sprite strips composited with Tools/AIAssetPipeline; prompt documented in .github/features/modify2026-07-07/plan-p2.md#p2-t2",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated, post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.actor_archer_anim",
-        "path": "Assets/Characters/actor_archer_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T3 archer prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-07",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.actor_mage_anim",
-        "path": "Assets/Characters/actor_mage_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T4 mage prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-07",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.actor_rogue_anim",
-        "path": "Assets/Characters/actor_rogue_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T5 rogue prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.npc_mayor_anim",
-        "path": "Assets/Characters/npc_mayor_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T6 npc_mayor prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.npc_fiance_anim",
-        "path": "Assets/Characters/npc_fiance_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T7 npc_fiance prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.npc_gate_guard_anim",
-        "path": "Assets/Characters/npc_gate_guard_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T8 npc_gate_guard prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.npc_healer_anim",
-        "path": "Assets/Characters/npc_healer_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T9 npc_healer prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.enemy_human_melee_anim",
-        "path": "Assets/Characters/enemy_human_melee_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T10 enemy_human_melee prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.enemy_human_ranged_anim",
-        "path": "Assets/Characters/enemy_human_ranged_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T11 enemy_human_ranged prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.enemy_human_elite_anim",
-        "path": "Assets/Characters/enemy_human_elite_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T12 enemy_human_elite prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.enemy_beast_animal_anim",
-        "path": "Assets/Characters/enemy_beast_animal_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T13 enemy_beast_animal prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.enemy_beast_tainted_anim",
-        "path": "Assets/Characters/enemy_beast_tainted_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T14 enemy_beast_tainted prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    },
-    {
-        "id": "spritesheet.enemy_beast_rift_anim",
-        "path": "Assets/Characters/enemy_beast_rift_anim.png",
-        "type": "spritesheet",
-        "source": "AI-generated with built-in imagegen from P2-T15 enemy_beast_rift prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
-        "license": "ai-static",
-        "downloadedAt": "2026-07-08",
-        "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
-    }
+  {
+    "id": "spritesheet.actor_warrior_anim",
+    "path": "Assets/Characters/actor_warrior_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated via built-in imagegen, 4 direction sprite strips composited with Tools/AIAssetPipeline; prompt documented in .github/features/modify2026-07-07/plan-p2.md#p2-t2",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated, post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.actor_archer_anim",
+    "path": "Assets/Characters/actor_archer_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T3 archer prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-07",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.actor_mage_anim",
+    "path": "Assets/Characters/actor_mage_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T4 mage prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-07",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.actor_rogue_anim",
+    "path": "Assets/Characters/actor_rogue_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T5 rogue prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.npc_mayor_anim",
+    "path": "Assets/Characters/npc_mayor_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T6 npc_mayor prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.npc_fiance_anim",
+    "path": "Assets/Characters/npc_fiance_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T7 npc_fiance prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.npc_gate_guard_anim",
+    "path": "Assets/Characters/npc_gate_guard_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T8 npc_gate_guard prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.npc_healer_anim",
+    "path": "Assets/Characters/npc_healer_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T9 npc_healer prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.enemy_human_melee_anim",
+    "path": "Assets/Characters/enemy_human_melee_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T10 enemy_human_melee prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.enemy_human_ranged_anim",
+    "path": "Assets/Characters/enemy_human_ranged_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T11 enemy_human_ranged prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.enemy_human_elite_anim",
+    "path": "Assets/Characters/enemy_human_elite_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T12 enemy_human_elite prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.enemy_beast_animal_anim",
+    "path": "Assets/Characters/enemy_beast_animal_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T13 enemy_beast_animal prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.enemy_beast_tainted_anim",
+    "path": "Assets/Characters/enemy_beast_tainted_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T14 enemy_beast_tainted prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "spritesheet.enemy_beast_rift_anim",
+    "path": "Assets/Characters/enemy_beast_rift_anim.png",
+    "type": "spritesheet",
+    "source": "AI-generated with built-in imagegen from P2-T15 enemy_beast_rift prompts; 4 direction sprite strips composited into a 4x12 grid via Tools/AIAssetPipeline/build_final_sheet.py",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-08",
+    "author": "AI-generated (built-in imagegen), post-processed by Rift Expedition project"
+  },
+  {
+    "id": "illustration.portrait_actor_warrior",
+    "path": "Assets/Illustrations/portrait_actor_warrior.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "illustration.portrait_actor_archer",
+    "path": "Assets/Illustrations/portrait_actor_archer.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "illustration.portrait_actor_mage",
+    "path": "Assets/Illustrations/portrait_actor_mage.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "illustration.portrait_actor_rogue",
+    "path": "Assets/Illustrations/portrait_actor_rogue.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "illustration.chapter1_village_square",
+    "path": "Assets/Illustrations/chapter1_village_square.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "illustration.chapter1_wilds_riverbank",
+    "path": "Assets/Illustrations/chapter1_wilds_riverbank.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "illustration.chapter1_cave_depths",
+    "path": "Assets/Illustrations/chapter1_cave_depths.png",
+    "type": "illustration",
+    "source": "AI-generated with built-in imagegen, grounded on the provided Rift Expedition character / tileset / props montage images to preserve the game’s pure 2D cartoon tone.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated for Rift Expedition"
+  },
+  {
+    "id": "audio.village_theme_layer_loop",
+    "path": "Assets/Audio/village_theme_layer_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.wilds_theme_layer_loop",
+    "path": "Assets/Audio/wilds_theme_layer_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.cave_theme_layer_loop",
+    "path": "Assets/Audio/cave_theme_layer_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.battle_theme_loop",
+    "path": "Assets/Audio/battle_theme_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.battle_theme_layer_loop",
+    "path": "Assets/Audio/battle_theme_layer_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.village_ambience_loop",
+    "path": "Assets/Audio/village_ambience_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.river_ambience_loop",
+    "path": "Assets/Audio/river_ambience_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.wilds_ambience_loop",
+    "path": "Assets/Audio/wilds_ambience_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.cave_drip_loop",
+    "path": "Assets/Audio/cave_drip_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.cave_rumble_loop",
+    "path": "Assets/Audio/cave_rumble_loop.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.quest_accept",
+    "path": "Assets/Audio/quest_accept.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.quest_complete",
+    "path": "Assets/Audio/quest_complete.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.battle_victory",
+    "path": "Assets/Audio/battle_victory.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "audio.chapter_complete",
+    "path": "Assets/Audio/chapter_complete.wav",
+    "type": "audio",
+    "source": "Procedurally synthesized in-container with Python for this project iteration; intended as lightweight, replaceable placeholder-ready production assets for a solo 2D game pipeline.",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "Procedural generation for Rift Expedition"
+  },
+  {
+    "id": "mapart.chapter1_village_square",
+    "path": "Assets/MapArt/chapter1/village_square.png",
+    "type": "map-art",
+    "source": "AI-generated top-down 2D environment aligned and cropped by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_depths",
+    "path": "Assets/MapArt/chapter1/cave_depths.png",
+    "type": "map-art",
+    "source": "AI-generated top-down 2D environment aligned and cropped by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  }
 ]
