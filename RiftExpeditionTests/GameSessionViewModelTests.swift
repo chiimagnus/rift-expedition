@@ -53,6 +53,28 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(playersByCue[.wildsTheme]?.playCount, 1)
     }
 
+    func testAudioServiceMixerVolumesAffectOnlyTheirBus() throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let service = AudioService(
+            makePlayer: { url in
+                let cue = try XCTUnwrap(AudioCue(rawValue: url.deletingPathExtension().lastPathComponent))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav") }
+        )
+
+        service.masterVolume = 0.5
+        service.musicVolume = 0.4
+        service.ambienceVolume = 0.6
+        service.sfxVolume = 0.8
+
+        XCTAssertEqual(try XCTUnwrap(playersByCue[.villageTheme]).volume, 0.2, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(playersByCue[.riverAmbience]).volume, 0.3, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(playersByCue[.attackHit]).volume, 0.4, accuracy: 0.001)
+    }
+
     func testAudioServiceMissingCuesDoNotCrash() {
         let service = AudioService(
             makePlayer: { _ in

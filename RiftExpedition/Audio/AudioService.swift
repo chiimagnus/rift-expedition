@@ -51,6 +51,18 @@ final class AudioService {
         didSet { updateVolumes() }
     }
 
+    var musicVolume: Double = 1.0 {
+        didSet { updateVolumes() }
+    }
+
+    var ambienceVolume: Double = 1.0 {
+        didSet { updateVolumes() }
+    }
+
+    var sfxVolume: Double = 1.0 {
+        didSet { updateVolumes() }
+    }
+
     var isMuted = false {
         didSet { updateVolumes() }
     }
@@ -184,7 +196,29 @@ final class AudioService {
     }
 
     private func updateVolumes() {
-        let volume = isMuted ? 0 : Float(masterVolume)
-        for player in players.values { player.volume = volume }
+        for (cue, player) in players {
+            player.volume = outputVolume(for: cue)
+        }
+    }
+
+    private func outputVolume(for cue: AudioCue) -> Float {
+        guard !isMuted else { return 0 }
+        let busVolume: Double
+        switch cue {
+        case .villageTheme, .wildsTheme, .caveTheme,
+             .villageLayer, .wildsLayer, .caveLayer,
+             .battleTheme, .battleLayer:
+            busVolume = musicVolume
+        case .caveDrip, .villageAmbience, .riverAmbience,
+             .wildsAmbience, .caveDripLoop, .caveRumble:
+            busVolume = ambienceVolume
+        case .uiClick, .attackHit, .skillCast, .battleStart,
+             .battleVictory, .chestOpen, .healDrink,
+             .questAccept, .questComplete, .chapterComplete:
+            busVolume = sfxVolume
+        }
+        let normalizedMaster = min(max(masterVolume, 0), 1)
+        let normalizedBus = min(max(busVolume, 0), 1)
+        return Float(normalizedMaster * normalizedBus)
     }
 }

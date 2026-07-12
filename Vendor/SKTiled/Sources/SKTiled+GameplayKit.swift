@@ -295,7 +295,7 @@ extension SKTiledScene {
     ///
     /// - Parameter named: graph node type.
     /// - Returns: dictionary insertion was successful.
-    open func objectForGraphType(named: String?) -> GKGridGraphNode.Type {
+    public func objectForGraphType(named: String?) -> GKGridGraphNode.Type {
         return SKTiledGraphNode.self
     }
 
@@ -305,7 +305,7 @@ extension SKTiledScene {
     ///   - named:  name of graph
     ///   - graph: graph object.
     /// - Returns: graph was added sucessfully.
-    open func addGraph(named: String, graph: GKGridGraph<GKGridGraphNode>) -> Bool {
+    public func addGraph(named: String, graph: GKGridGraph<GKGridGraphNode>) -> Bool {
         if (graphs[named] != nil) {
             return false
         }
@@ -319,7 +319,7 @@ extension SKTiledScene {
     ///
     /// - Parameter named: name of graph.
     /// - Returns: removed graph instance.
-    open func removeGraph(named: String) -> GKGridGraph<GKGridGraphNode>? {
+    public func removeGraph(named: String) -> GKGridGraph<GKGridGraphNode>? {
         log("removing graph '\(named)' from scene.", level: .debug)
         return graphs.removeValue(forKey: named)
     }

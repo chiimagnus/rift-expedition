@@ -27,7 +27,7 @@
 import SpriteKit
 
 
-@objc public protocol TiledShadableType: class {
+@objc public protocol TiledShadableType: AnyObject {
     
     @objc var shaderUniforms: [String: SKUniform] { get }
 }

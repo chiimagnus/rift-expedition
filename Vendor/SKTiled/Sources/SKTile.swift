@@ -435,8 +435,7 @@ open class SKTile: SKSpriteNode, CustomReflectable {
     @objc open override func getVertices(offset: CGPoint = CGPoint.zero) -> [CGPoint] {
         
         // FIXME: this is incorrect for tiles added to a layer after a map is rendered with no layer
-        guard let tileLayer = layer,
-              let parent = parent else {
+        guard let tileLayer = layer, parent != nil else {
             return boundingRect.points
         }
 
@@ -1277,7 +1276,7 @@ extension SKTile {
     /// A reference to the tile data's containing tileset.
     ///
     /// - Returns: tileset instance, if one exists.
-    open var tileset: SKTileset? {
+    public var tileset: SKTileset? {
         guard let tileset = tileData.tileset else {
             return nil
         }
@@ -1285,7 +1284,7 @@ extension SKTile {
     }
 
     /// Reference to the tile's parent tilemap.
-    open var tilemap: SKTilemap? {
+    public var tilemap: SKTilemap? {
         guard let tileset = tileset, let map = tileset.tilemap else {
             return nil
         }
@@ -1293,7 +1292,7 @@ extension SKTile {
     }
 
     /// Opacity value of the tile.
-    open var opacity: CGFloat {
+    public var opacity: CGFloat {
         get {
             return self.alpha
         }
@@ -1303,7 +1302,7 @@ extension SKTile {
     }
 
     /// Toggle for tile visibility.
-    open var isVisble: Bool {
+    public var isVisble: Bool {
         get {
             return !self.isHidden
         }
@@ -1577,7 +1576,7 @@ extension SKTile {
     @objc public override var tiledMenuItemDescription: String {
         let tileGIDString = "gid \(tileData.globalID)"
         let layerNameString = (layer != nil) ? " layer: '\(layer.layerName)'" : ""
-        let tileNameString = (name != nil) ? " '\(name)'" : ""
+        let tileNameString = name.map { " '\($0)'" } ?? ""
         return "Tile: \(tileGIDString)\(layerNameString)\(tileNameString)"
     }
 
@@ -1607,7 +1606,7 @@ extension SKTile {
 
     /// Toggle for tile visibility.
     @available(*, deprecated, renamed: "isVisible")
-    open var visible: Bool {
+    public var visible: Bool {
         get {
             return !self.isHidden
         }
@@ -1624,7 +1623,7 @@ extension SKTile {
 
     /// Pauses tile animation
     @available(*, deprecated, message: "Use the default `SKNode.isPaused` to pause animation.")
-    open var pauseAnimation: Bool {
+    public var pauseAnimation: Bool {
         get {
             return self.isPaused
         } set {
@@ -1634,7 +1633,7 @@ extension SKTile {
 
     /// Returns a shortened textual representation for debugging.
     @available(*, deprecated, renamed: "description")
-    open var shortDescription: String {
+    public var shortDescription: String {
         return description
     }
 
@@ -1652,7 +1651,7 @@ extension SKTile {
     ///   - rect: rectangle.
     ///   - debug: debug draw.
     @available(*, deprecated, renamed: "draw()")
-    open func draw(in rect: CGRect, debug: Bool = false) {
+    public func draw(in rect: CGRect, debug: Bool = false) {
         self.draw()
     }
 
@@ -1660,7 +1659,7 @@ extension SKTile {
     ///
     /// - Parameter data: new tile data.
     @available(*, deprecated, message: "Use the `SKTile.tileData` property.")
-    open func setTileData(data: SKTilesetData) {
+    public func setTileData(data: SKTilesetData) {
         self.tileData = data
     }
 }

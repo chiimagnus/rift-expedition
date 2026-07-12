@@ -72,8 +72,6 @@ public class SKWorld: SKNode, TiledSceneCameraDelegate {
     ///
     /// - Parameter newZoom: camera zoom amount.
     public func cameraZoomChanged(newZoom: CGFloat) {
-        let currentZoom = zoom
-        //let delta = newZoom - currentZoom
         zoom = newZoom
     }
 }

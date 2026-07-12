@@ -24,11 +24,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
+import ImageIO
 import SpriteKit
+import UniformTypeIdentifiers
 import zlib
 #if os(iOS) || os(tvOS)
 import UIKit
-import MobileCoreServices
 typealias Image = UIImage
 typealias SKScreen = UIScreen
 
@@ -315,7 +316,7 @@ public func imageOfSize(_ size: CGSize,
 /// - Returns: image was created.
 @discardableResult
 public func writeCGImage(_ image: CGImage, to fileUrl: URL) -> Bool {
-    guard let destination = CGImageDestinationCreateWithURL(fileUrl as CFURL, kUTTypePNG, 1, nil) else {
+    guard let destination = CGImageDestinationCreateWithURL(fileUrl as CFURL, UTType.png.identifier as CFString, 1, nil) else {
         Logger.default.log("error writing image to '\(fileUrl.path)'", level: .error, symbol: "SKTiled")
         return false
     }
@@ -1107,7 +1108,7 @@ extension CGPoint {
 }
 
 
-extension CGPoint: Hashable {
+extension CGPoint: @retroactive Hashable {
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(x)

@@ -1368,7 +1368,7 @@ extension SKTileObject {
 extension SKTileObject {
 
     /// Reference to the objects's parent tilemap.
-    open var tilemap: SKTilemap? {
+    public var tilemap: SKTilemap? {
         guard let layer = layer else {
             return nil
         }
@@ -1376,7 +1376,7 @@ extension SKTileObject {
     }
 
     /// Object opacity.
-    open var opacity: CGFloat {
+    public var opacity: CGFloat {
         get {
             return self.alpha
         }
@@ -1386,7 +1386,7 @@ extension SKTileObject {
     }
 
     /// Object visibility.
-    open var visible: Bool {
+    public var visible: Bool {
         get {
             return !self.isHidden
         }
@@ -1396,7 +1396,7 @@ extension SKTileObject {
     }
 
     /// Returns true if the object references an animated tile.
-    open var isAnimated: Bool {
+    public var isAnimated: Bool {
         if let tile = self.tile {
             return tile.tileData.isAnimated
         }
@@ -1404,12 +1404,12 @@ extension SKTileObject {
     }
 
     /// Signifies that the object is a text object.
-    open var isTextObject: Bool {
+    public var isTextObject: Bool {
         return (textAttributes != nil)
     }
 
     /// Signifies that the object is a tile object.
-    open var isTileObject: Bool {
+    public var isTileObject: Bool {
         return (globalID != nil)
     }
 
@@ -1503,7 +1503,7 @@ extension SKTileObject {
 
     /// Tiled global id (for tile objects).
     @available(*, deprecated, renamed: "globalID")
-    open var gid: UInt32! {
+    public var gid: UInt32! {
         get {
             return self.globalID
         } set {
@@ -1519,20 +1519,20 @@ extension SKTileObject {
 
     /// Runs a tile animation.
     @available(*, deprecated)
-    open func runAnimation() {}
+    public func runAnimation() {}
 
     /// Draw the object.
     ///
     /// - Parameter debug: debug draw option.
     @available(*, deprecated, renamed: "draw()")
-    open func draw(debug: Bool = false) {
+    public func draw(debug: Bool = false) {
         self.draw()
     }
 
 
     /// Returns a shortened textual representation for debugging.
     @available(*, deprecated, renamed: "tiledListDescription")
-    open var shortDescription: String {
+    public var shortDescription: String {
         var result = "\(objectType.name) id: \(self.id)"
         result += (self.type != nil) ? ", type: '\(self.type!)'" : ""
         return result

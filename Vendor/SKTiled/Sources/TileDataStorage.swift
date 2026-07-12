@@ -927,7 +927,6 @@ extension TileDataStorage: CustomReflectable, TiledCustomReflectableType {
         //var actionsTileData:  [String: String] = [:]
 
         for (_, sitem) in staticTileCache.enumerated() {
-            let data = sitem.key
             staticTileCount += sitem.value.count
             staticDataCount += 1
         }
