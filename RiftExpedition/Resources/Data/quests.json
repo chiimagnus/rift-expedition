@@ -1,20 +1,42 @@
 [
   {
     "id": "blood_debt",
-    "title": "血债：失踪的新娘",
-    "summary": "沈砚在婚宴前失踪，未婚夫梁铮诬陷外来法师；你们需要沿村外脚印、野路线索和旧矿洞账册查明真相，揭穿村长顾怀恩偷采元素矿引发污染。",
+    "title": "主线 · 血债：失踪的新娘",
+    "summary": "沈砚在婚宴前失踪。梁铮把罪名推给外来法师，村长顾怀恩却封锁旧矿洞。沿村外脚印、河水污染和元素矿账册追查真相，证明这场灾难并非怪物造成。",
     "startDialogID": "elder_intro",
     "turnInDialogID": "elder_return",
-    "rewardItemIDs": ["rift_shard_amulet"],
-    "rewardSkillIDs": ["water_orb"]
+    "rewardItemIDs": [
+      "rift_shard_amulet"
+    ],
+    "rewardSkillIDs": [
+      "water_orb"
+    ],
+    "isMainQuest": true,
+    "locationHint": "当前方向：村外东门 → 断塔野路 → 旧矿洞",
+    "objectives": [
+      "询问梁铮与村中守卫，确认失踪时间线",
+      "沿野路寻找沈砚留下的痕迹",
+      "进入旧矿洞并取得元素矿账册",
+      "找到沈砚，带证据回村揭穿顾怀恩"
+    ]
   },
   {
     "id": "bitterroot_medicine",
-    "title": "苦根草药",
-    "summary": "药师林婆需要野外河湾的苦根草，以压住村民身上的毒热。",
+    "title": "支线 · 苦根草药",
+    "summary": "矿脉污染让村中孩子出现毒热。前往苦根河湾采回一束苦根草，交给药师林婆熬制解毒剂。",
     "startDialogID": "healer_request",
     "turnInDialogID": "healer_return",
-    "rewardItemIDs": ["minor_healing_draught", "river_charm"],
-    "rewardSkillIDs": []
+    "rewardItemIDs": [
+      "minor_healing_draught",
+      "river_charm"
+    ],
+    "rewardSkillIDs": [],
+    "isMainQuest": false,
+    "locationHint": "当前方向：村庄河岸 → 苦根河湾",
+    "objectives": [
+      "与林婆确认病症与药材特征",
+      "在苦根河湾采集苦根草",
+      "返回药铺交付药材"
+    ]
   }
 ]

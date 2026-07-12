@@ -8,8 +8,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 8 } }
-    ]
+      {
+        "damage": {
+          "_0": 8
+        }
+      }
+    ],
+    "description": "以稳定的横斩压低敌人生命，是战士最可靠的近战起手。"
   },
   {
     "id": "shield_bash",
@@ -20,8 +25,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 6 } }
-    ]
+      {
+        "damage": {
+          "_0": 6
+        }
+      }
+    ],
+    "description": "用盾缘撞开防线，在近距离以较低风险制造伤害。"
   },
   {
     "id": "rallying_guard",
@@ -32,8 +42,13 @@
     "affectsAllies": true,
     "canBeDodged": false,
     "effects": [
-      { "heal": { "_0": 5 } }
-    ]
+      {
+        "heal": {
+          "_0": 5
+        }
+      }
+    ],
+    "description": "重新站稳并包扎伤口，用 1 AP 换取持续作战能力。"
   },
   {
     "id": "aimed_shot",
@@ -44,8 +59,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 7 } }
-    ]
+      {
+        "damage": {
+          "_0": 7
+        }
+      }
+    ],
+    "description": "牺牲机动换取精准远射，适合处理暴露在直线上的目标。"
   },
   {
     "id": "hamstring_shot",
@@ -56,8 +76,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 5 } }
-    ]
+      {
+        "damage": {
+          "_0": 5
+        }
+      }
+    ],
+    "description": "射向腿部的牵制箭，用于压迫试图贴近的敌人。"
   },
   {
     "id": "oil_arrow",
@@ -68,9 +93,19 @@
     "affectsAllies": false,
     "canBeDodged": false,
     "effects": [
-      { "damage": { "_0": 3 } },
-      { "createSurface": { "surfaceID": "oil", "durationTurns": 2 } }
-    ]
+      {
+        "damage": {
+          "_0": 3
+        }
+      },
+      {
+        "createSurface": {
+          "surfaceID": "oil",
+          "durationTurns": 2
+        }
+      }
+    ],
+    "description": "将油瓶固定在箭头上，命中后制造可被火焰点燃的油地表。"
   },
   {
     "id": "spark",
@@ -81,9 +116,19 @@
     "affectsAllies": false,
     "canBeDodged": false,
     "effects": [
-      { "damage": { "_0": 6 } },
-      { "createSurface": { "surfaceID": "fire", "durationTurns": 2 } }
-    ]
+      {
+        "damage": {
+          "_0": 6
+        }
+      },
+      {
+        "createSurface": {
+          "surfaceID": "fire",
+          "durationTurns": 2
+        }
+      }
+    ],
+    "description": "稳定的元素火花，同时点燃目标区域并建立火焰地表。"
   },
   {
     "id": "water_orb",
@@ -94,9 +139,19 @@
     "affectsAllies": false,
     "canBeDodged": false,
     "effects": [
-      { "damage": { "_0": 4 } },
-      { "createSurface": { "surfaceID": "water", "durationTurns": 2 } }
-    ]
+      {
+        "damage": {
+          "_0": 4
+        }
+      },
+      {
+        "createSurface": {
+          "surfaceID": "water",
+          "durationTurns": 2
+        }
+      }
+    ],
+    "description": "凝聚水元素冲击目标，制造水地表以改变后续元素反应。"
   },
   {
     "id": "mending_light",
@@ -107,8 +162,13 @@
     "affectsAllies": true,
     "canBeDodged": false,
     "effects": [
-      { "heal": { "_0": 10 } }
-    ]
+      {
+        "heal": {
+          "_0": 10
+        }
+      }
+    ],
+    "description": "把裂光折成温和的愈合脉冲，为远处队友恢复生命。"
   },
   {
     "id": "backstab",
@@ -119,8 +179,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 11 } }
-    ]
+      {
+        "damage": {
+          "_0": 11
+        }
+      }
+    ],
+    "description": "贴身刺入防具接缝，AP 消耗高，但能打出决定性的爆发。"
   },
   {
     "id": "throwing_knife",
@@ -131,8 +196,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 6 } }
-    ]
+      {
+        "damage": {
+          "_0": 6
+        }
+      }
+    ],
+    "description": "快速投掷短刃，在无法安全贴身时保持输出。"
   },
   {
     "id": "venom_edge",
@@ -143,9 +213,19 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 5 } },
-      { "createSurface": { "surfaceID": "poison", "durationTurns": 2 } }
-    ]
+      {
+        "damage": {
+          "_0": 5
+        }
+      },
+      {
+        "createSurface": {
+          "surfaceID": "poison",
+          "durationTurns": 2
+        }
+      }
+    ],
+    "description": "让刀刃携带矿毒，命中后留下危险的毒性地表。"
   },
   {
     "id": "boar_bite",
@@ -156,8 +236,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 6 } }
-    ]
+      {
+        "damage": {
+          "_0": 6
+        }
+      }
+    ],
+    "description": "受惊野兽的撕咬，动作直接而凶猛。"
   },
   {
     "id": "poacher_shot",
@@ -168,8 +253,13 @@
     "affectsAllies": false,
     "canBeDodged": true,
     "effects": [
-      { "damage": { "_0": 5 } }
-    ]
+      {
+        "damage": {
+          "_0": 5
+        }
+      }
+    ],
+    "description": "偷猎者常用的粗暴射击，射程长、准备快。"
   },
   {
     "id": "minor_healing_draught",
@@ -180,7 +270,12 @@
     "affectsAllies": true,
     "canBeDodged": false,
     "effects": [
-      { "heal": { "_0": 8 } }
-    ]
+      {
+        "heal": {
+          "_0": 8
+        }
+      }
+    ],
+    "description": "在战斗中快速止血，为友军恢复少量生命。"
   }
 ]

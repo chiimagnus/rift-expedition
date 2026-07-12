@@ -11,6 +11,7 @@ struct InventoryItemRow: Equatable, Identifiable {
 struct CharacterSkillRow: Equatable, Identifiable {
     var id: String
     var displayName: String
+    var description: String
     var actionPointCost: Int
     var range: Double
     var targetName: String
@@ -80,6 +81,7 @@ final class InventoryViewModel {
             return CharacterSkillRow(
                 id: skill.id,
                 displayName: skill.displayName,
+                description: skill.description ?? "尚未记录该技能的战术说明。",
                 actionPointCost: skill.actionPointCost,
                 range: skill.range,
                 targetName: targetName(skill.target)

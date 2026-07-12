@@ -250,13 +250,35 @@ final class GameScene: SKScene {
     private func markClick(at point: CGPoint) {
         worldLayer.childNode(withName: "clickMarker")?.removeFromParent()
 
-        let marker = SKShapeNode(circleOfRadius: 10)
+        let marker = SKNode()
         marker.name = "clickMarker"
         marker.position = point
-        marker.fillColor = SKColor(red: 0.86, green: 0.73, blue: 0.34, alpha: 0.85)
-        marker.strokeColor = .white
-        marker.lineWidth = 2
         marker.zPosition = 560
+
+        let outerRing = SKShapeNode(circleOfRadius: 13)
+        outerRing.fillColor = .clear
+        outerRing.strokeColor = SKColor(red: 0.20, green: 0.82, blue: 1.0, alpha: 0.95)
+        outerRing.lineWidth = 2
+        outerRing.glowWidth = 5
+        marker.addChild(outerRing)
+
+        let innerDiamond = SKShapeNode(rectOf: CGSize(width: 8, height: 8), cornerRadius: 1)
+        innerDiamond.zRotation = .pi / 4
+        innerDiamond.fillColor = SKColor(red: 0.66, green: 0.34, blue: 1.0, alpha: 0.9)
+        innerDiamond.strokeColor = .white.withAlphaComponent(0.85)
+        innerDiamond.lineWidth = 1
+        marker.addChild(innerDiamond)
+
+        outerRing.run(.group([
+            .scale(to: 2.25, duration: 0.42),
+            .fadeOut(withDuration: 0.42)
+        ]))
+        innerDiamond.run(.sequence([
+            .scale(to: 1.35, duration: 0.10),
+            .scale(to: 0.75, duration: 0.22),
+            .fadeOut(withDuration: 0.10)
+        ]))
+        marker.run(.sequence([.wait(forDuration: 0.46), .removeFromParent()]))
         worldLayer.addChild(marker)
     }
 
@@ -388,6 +410,12 @@ final class GameScene: SKScene {
             : actor.isActive ? SKColor(red: 0.84, green: 0.73, blue: 0.42, alpha: 1) : .white.withAlphaComponent(0.35)
         ring.lineWidth = actor.isTargetable || actor.isActive ? 4 : 2
         ring.zPosition = -1
+        if actor.isActive {
+            ring.run(.repeatForever(.sequence([
+                .group([.scale(to: 1.12, duration: 0.48), .fadeAlpha(to: 0.56, duration: 0.48)]),
+                .group([.scale(to: 1.0, duration: 0.48), .fadeAlpha(to: 1.0, duration: 0.48)])
+            ])))
+        }
         container.addChild(ring)
 
         let healthBack = SKShapeNode(rectOf: CGSize(width: 52, height: 6), cornerRadius: 3)
@@ -446,6 +474,27 @@ final class GameScene: SKScene {
                 )
             }
         ]), withKey: "actorAnimation")
+
+        if event.action == .hurt {
+            sprite.run(.sequence([
+                .colorize(with: .white, colorBlendFactor: 1, duration: 0.02),
+                .wait(forDuration: 0.045),
+                .colorize(withColorBlendFactor: 0, duration: 0.08)
+            ]), withKey: "impactFlash")
+
+            node.run(.sequence([
+                .moveBy(x: -4, y: 1, duration: 0.025),
+                .moveBy(x: 7, y: -2, duration: 0.035),
+                .moveBy(x: -3, y: 1, duration: 0.04)
+            ]), withKey: "impactRecoil")
+
+            worldLayer.removeAction(forKey: "impactShake")
+            worldLayer.run(.sequence([
+                .moveBy(x: 3, y: 1, duration: 0.025),
+                .moveBy(x: -6, y: -2, duration: 0.035),
+                .moveBy(x: 3, y: 1, duration: 0.045)
+            ]), withKey: "impactShake")
+        }
     }
 
     private func makeMoveRangeNode(center: CGPoint, radius: CGFloat) -> SKNode {
@@ -460,20 +509,55 @@ final class GameScene: SKScene {
     }
 
     private func makeEffectNode(at point: CGPoint, eventID: Int? = nil) -> SKNode {
-        let node = SKShapeNode(circleOfRadius: 18)
-        node.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
-        node.position = point
-        node.fillColor = SKColor(red: 1.0, green: 0.46, blue: 0.14, alpha: 0.42)
-        node.strokeColor = SKColor(red: 1.0, green: 0.86, blue: 0.38, alpha: 0.9)
-        node.lineWidth = 3
-        node.run(.sequence([
-            .group([
-                .scale(to: 2.0, duration: 0.18),
-                .fadeOut(withDuration: 0.18)
-            ]),
-            .removeFromParent()
+        let container = SKNode()
+        container.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
+        container.position = point
+        container.zPosition = 20
+
+        let core = SKShapeNode(circleOfRadius: 9)
+        core.fillColor = SKColor(red: 1.0, green: 0.88, blue: 0.62, alpha: 0.92)
+        core.strokeColor = .white
+        core.lineWidth = 1
+        core.glowWidth = 6
+        container.addChild(core)
+
+        let ring = SKShapeNode(circleOfRadius: 18)
+        ring.fillColor = .clear
+        ring.strokeColor = SKColor(red: 1.0, green: 0.42, blue: 0.16, alpha: 0.95)
+        ring.lineWidth = 3
+        ring.glowWidth = 4
+        container.addChild(ring)
+
+        core.run(.group([
+            .scale(to: 0.2, duration: 0.20),
+            .fadeOut(withDuration: 0.20)
         ]))
-        return node
+        ring.run(.group([
+            .scale(to: 2.35, duration: 0.24),
+            .fadeOut(withDuration: 0.24)
+        ]))
+
+        for index in 0..<8 {
+            let spark = SKShapeNode(circleOfRadius: index.isMultiple(of: 2) ? 2.2 : 1.4)
+            spark.fillColor = index.isMultiple(of: 2)
+                ? SKColor(red: 1.0, green: 0.70, blue: 0.20, alpha: 0.95)
+                : SKColor(red: 0.42, green: 0.84, blue: 1.0, alpha: 0.9)
+            spark.strokeColor = .clear
+            let angle = CGFloat(index) / 8 * .pi * 2
+            let distance: CGFloat = index.isMultiple(of: 2) ? 34 : 25
+            spark.run(.sequence([
+                .group([
+                    .moveBy(x: cos(angle) * distance, y: sin(angle) * distance, duration: 0.22),
+                    .scale(to: 0.15, duration: 0.22),
+                    .fadeOut(withDuration: 0.22)
+                ]),
+                .removeFromParent()
+            ]))
+            container.addChild(spark)
+        }
+
+        container.run(.sequence([.wait(forDuration: 0.28), .removeFromParent()]))
+        return container
     }
 
     private func makeSurfaceNode(_ surface: BattleSurfaceMarker) -> SKNode {

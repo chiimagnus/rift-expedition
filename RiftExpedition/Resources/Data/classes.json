@@ -12,12 +12,19 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["slash", "shield_bash", "rallying_guard"],
+    "initialSkillIDs": [
+      "slash",
+      "shield_bash",
+      "rallying_guard"
+    ],
     "defaultEquipment": {
       "weaponID": "rusted_sword",
       "armorID": "padded_armor",
       "accessoryID": "training_buckle"
-    }
+    },
+    "title": "边境守誓者",
+    "combatRole": "前排控制 · 稳定承伤",
+    "description": "从塌陷矿道里活着走出来的人。以盾面封锁路线，用低 AP 技能为同伴争取决定战局的一步。"
   },
   {
     "id": "archer",
@@ -32,12 +39,19 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["aimed_shot", "hamstring_shot", "oil_arrow"],
+    "initialSkillIDs": [
+      "aimed_shot",
+      "hamstring_shot",
+      "oil_arrow"
+    ],
     "defaultEquipment": {
       "weaponID": "worn_bow",
       "armorID": "scout_jacket",
       "accessoryID": "fletching_ring"
-    }
+    },
+    "title": "灰羽游猎者",
+    "combatRole": "远程压制 · 地表引爆",
+    "description": "熟悉断塔荒野的每一道风向。擅长保持距离、限制敌人，并用油火组合重塑战场。"
   },
   {
     "id": "mage",
@@ -52,12 +66,19 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["spark", "water_orb", "mending_light"],
+    "initialSkillIDs": [
+      "spark",
+      "water_orb",
+      "mending_light"
+    ],
     "defaultEquipment": {
       "weaponID": "cracked_staff",
       "armorID": "apprentice_robe",
       "accessoryID": "ember_focus"
-    }
+    },
+    "title": "裂光研习者",
+    "combatRole": "元素联动 · 治疗支援",
+    "description": "能听见元素矿在石层下低鸣。以火、水和愈合术制造连锁反应，是队伍最灵活的战术核心。"
   },
   {
     "id": "rogue",
@@ -72,11 +93,18 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["backstab", "throwing_knife", "venom_edge"],
+    "initialSkillIDs": [
+      "backstab",
+      "throwing_knife",
+      "venom_edge"
+    ],
     "defaultEquipment": {
       "weaponID": "chipped_dagger",
       "armorID": "shadow_cloak",
       "accessoryID": "lucky_thread"
-    }
+    },
+    "title": "夜痕追猎者",
+    "combatRole": "高机动爆发 · 状态施压",
+    "description": "不相信村长，也不相信封死的矿门。利用高闪避和短距爆发切入薄弱点，让敌人来不及重整阵线。"
   }
 ]

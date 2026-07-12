@@ -40,7 +40,7 @@ final class PartyCreationViewModel {
             }
             return Actor(
                 id: "player_\(index + 1)",
-                displayName: "\(classDefinition.displayName)\(index + 1)",
+                displayName: adventurerName(for: classDefinition.id, fallbackIndex: index),
                 kind: .player,
                 faction: .player,
                 level: 1,
@@ -49,6 +49,25 @@ final class PartyCreationViewModel {
                 skillIDs: classDefinition.initialSkillIDs,
                 equipment: classDefinition.defaultEquipment
             )
+        }
+    }
+
+    func selectionIndex(for classID: String) -> Int? {
+        selectedClassIDs.firstIndex(of: classID).map { $0 + 1 }
+    }
+
+    func adventurerName(for classID: String, fallbackIndex: Int = 0) -> String {
+        switch classID {
+        case "warrior":
+            "赫岚"
+        case "archer":
+            "烬羽"
+        case "mage":
+            "瑟芙"
+        case "rogue":
+            "鸦刃"
+        default:
+            "远征者\(fallbackIndex + 1)"
         }
     }
 

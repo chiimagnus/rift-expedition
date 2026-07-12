@@ -63,9 +63,18 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
     case quest
 }
 
+public enum ItemRarity: String, Codable, CaseIterable, Sendable {
+    case common
+    case uncommon
+    case rare
+    case epic
+}
+
 public struct ItemDefinition: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var displayName: String
+    public var description: String?
+    public var rarity: ItemRarity?
     public var kind: ItemKind
     public var equipment: EquipmentDefinition?
     public var skillID: String?
@@ -73,12 +82,16 @@ public struct ItemDefinition: Codable, Equatable, Identifiable, Sendable {
     public init(
         id: String,
         displayName: String,
+        description: String? = nil,
+        rarity: ItemRarity? = nil,
         kind: ItemKind,
         equipment: EquipmentDefinition? = nil,
         skillID: String? = nil
     ) {
         self.id = id
         self.displayName = displayName
+        self.description = description
+        self.rarity = rarity
         self.kind = kind
         self.equipment = equipment
         self.skillID = skillID

@@ -8,6 +8,7 @@ public enum SkillTarget: String, Codable, CaseIterable, Sendable {
 public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var displayName: String
+    public var description: String?
     public var actionPointCost: Int
     public var range: Double
     public var target: SkillTarget
@@ -18,6 +19,7 @@ public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
     public init(
         id: String,
         displayName: String,
+        description: String? = nil,
         actionPointCost: Int,
         range: Double,
         target: SkillTarget,
@@ -27,6 +29,7 @@ public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
     ) {
         self.id = id
         self.displayName = displayName
+        self.description = description
         self.actionPointCost = actionPointCost
         self.range = range
         self.target = target
@@ -38,6 +41,7 @@ public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id
         case displayName
+        case description
         case actionPointCost
         case range
         case target
@@ -50,6 +54,7 @@ public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(String.self, forKey: .id)
         self.displayName = try container.decode(String.self, forKey: .displayName)
+        self.description = try container.decodeIfPresent(String.self, forKey: .description)
         self.actionPointCost = try container.decode(Int.self, forKey: .actionPointCost)
         self.range = try container.decode(Double.self, forKey: .range)
         self.target = try container.decode(SkillTarget.self, forKey: .target)
