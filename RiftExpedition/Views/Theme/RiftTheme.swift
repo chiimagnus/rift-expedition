@@ -4,8 +4,8 @@ import SwiftUI
 
 // MARK: - Cinematic visual language
 
-/// A dark, high-contrast tactical fantasy palette. The legacy property names are intentionally
-/// preserved so every existing screen inherits the new art direction without duplicating colors.
+/// The canonical dark, high-contrast tactical fantasy palette.
+/// Call sites use semantic color names so visual intent remains explicit.
 enum RiftPalette {
     static let void = Color(red: 0.025, green: 0.035, blue: 0.055)
     static let obsidian = Color(red: 0.055, green: 0.075, blue: 0.105)
