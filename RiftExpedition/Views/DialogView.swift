@@ -1,4 +1,5 @@
 import SwiftUI
+import RiftCore
 
 struct DialogView: View {
     let viewModel: DialogViewModel

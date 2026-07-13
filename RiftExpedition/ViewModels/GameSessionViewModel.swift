@@ -178,7 +178,7 @@ final class GameSessionViewModel {
         self.audioService = audioService
         self.mapMetadataLoader = mapMetadataLoader
 
-        let catalog: ContentCatalog
+        var catalog: ContentCatalog
         let displayMetadata: SessionDisplayMetadata
         var startupErrorMessage: String?
         do {
