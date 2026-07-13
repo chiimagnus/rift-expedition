@@ -216,7 +216,78 @@
         "blocksMovement": true,
         "blocksSight": false
       }
-    ]
+    ],
+    "status": "ready"
+  },
+  "village_riverside": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/village_riverside_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/village_riverside.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_riverside.png",
+    "assetID": "mapart.chapter1_village_riverside",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
+  },
+  "village_outskirts": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/village_outskirts_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/village_outskirts.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_outskirts.png",
+    "assetID": "mapart.chapter1_village_outskirts",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
+  },
+  "wilds_road": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/wilds_road_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_road.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_road.png",
+    "assetID": "mapart.chapter1_wilds_road",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
+  },
+  "wilds_ruins": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/wilds_ruins_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_ruins.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_ruins.png",
+    "assetID": "mapart.chapter1_wilds_ruins",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
+  },
+  "wilds_riverbank": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/wilds_riverbank_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_riverbank.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_riverbank.png",
+    "assetID": "mapart.chapter1_wilds_riverbank",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
+  },
+  "cave_entrance": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/cave_entrance_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_entrance.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_entrance.png",
+    "assetID": "mapart.chapter1_cave_entrance",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
+  },
+  "cave_mines": {
+    "status": "pending-source",
+    "source": "Tools/MapArtPipeline/Sources/cave_mines_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_mines.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_mines.png",
+    "assetID": "mapart.chapter1_cave_mines",
+    "layerName": "background_art",
+    "crop": "center",
+    "terrainVisible": false
   },
   "cave_depths": {
     "source": "Tools/MapArtPipeline/Sources/cave_depths_source.png",
@@ -225,6 +296,7 @@
     "assetID": "mapart.chapter1_cave_depths",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "status": "ready"
   }
 }
