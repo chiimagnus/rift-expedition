@@ -14,11 +14,11 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(AudioService.bgmCue(for: "cave_depths"), .caveTheme)
     }
 
-    func testAreaIDsMapToAmbienceCues() {
-        XCTAssertNil(AudioService.ambienceCue(for: "village_square"))
-        XCTAssertNil(AudioService.ambienceCue(for: "wilds_road"))
-        XCTAssertEqual(AudioService.ambienceCue(for: "cave_entrance"), .caveDrip)
-        XCTAssertEqual(AudioService.ambienceCue(for: "cave_depths"), .caveDrip)
+    func testAreaIDsMapToSoundscapeAmbienceCues() {
+        XCTAssertEqual(AudioService.soundscapeAmbienceCue(for: "village_square"), .villageAmbience)
+        XCTAssertEqual(AudioService.soundscapeAmbienceCue(for: "wilds_road"), .wildsAmbience)
+        XCTAssertEqual(AudioService.soundscapeAmbienceCue(for: "cave_entrance"), .caveDripLoop)
+        XCTAssertEqual(AudioService.soundscapeAmbienceCue(for: "cave_depths"), .caveRumble)
     }
 
     func testAudioServiceVolumeMuteAndBGMSwitchUseAllPlayers() {
@@ -44,11 +44,11 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertTrue(playersByCue.values.allSatisfy { $0.volume == 0 })
 
         service.isMuted = false
-        service.playBGM(for: "village_square")
+        service.playExplorationSoundscape(for: "village_square")
         XCTAssertEqual(playersByCue[.villageTheme]?.numberOfLoops, -1)
         XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
 
-        service.playBGM(for: "wilds_road")
+        service.playExplorationSoundscape(for: "wilds_road")
         XCTAssertEqual(playersByCue[.villageTheme]?.stopCount, 1)
         XCTAssertEqual(playersByCue[.wildsTheme]?.numberOfLoops, -1)
         XCTAssertEqual(playersByCue[.wildsTheme]?.playCount, 1)
@@ -196,9 +196,9 @@ final class GameSessionViewModelTests: XCTestCase {
         )
 
         service.play(.uiClick)
-        service.playBGM(for: "cave_entrance")
-        service.playAmbience(for: "cave_entrance")
-        service.stopBGM()
+        service.playExplorationSoundscape(for: "cave_entrance")
+        service.playBattleSoundscape(for: "cave_entrance")
+        service.stopSoundscape()
     }
 
     func testSessionAreaTransitionsRouteBGMAndAmbience() throws {

@@ -135,17 +135,6 @@ final class AudioService {
         transition(to: .battle(areaID: areaID))
     }
 
-    // Retained for tests and isolated callers that only want the base music bus.
-    func playBGM(for areaID: String) {
-        currentBGMCue = switchedLoop(from: currentBGMCue, to: Self.bgmCue(for: areaID))
-    }
-
-    // Retained for tests and isolated callers. Exploration uses the layered variant above.
-    func playAmbience(for areaID: String) {
-        guard let cue = Self.ambienceCue(for: areaID) else { return }
-        play(cue)
-    }
-
     func stopSoundscape() {
         guard soundscapeState != .stopped
                 || currentBGMCue != nil
@@ -156,10 +145,6 @@ final class AudioService {
         }
         applySoundscapeCues(Self.soundscapeCues(for: .stopped))
         soundscapeState = .stopped
-    }
-
-    func stopBGM() {
-        stopSoundscape()
     }
 
     static func soundscapeCues(for state: AudioSoundscapeState) -> (bgm: AudioCue?, layer: AudioCue?, ambience: AudioCue?) {
@@ -187,10 +172,6 @@ final class AudioService {
         return .villageTheme
     }
 
-    static func ambienceCue(for areaID: String) -> AudioCue? {
-        areaID.hasPrefix("cave_") ? .caveDrip : nil
-    }
-
     static func musicLayerCue(for areaID: String) -> AudioCue? {
         if areaID.hasPrefix("cave_") { return .caveLayer }
         if areaID.hasPrefix("wilds_") { return .wildsLayer }
@@ -209,8 +190,7 @@ final class AudioService {
         case "cave_depths":
             return .caveRumble
         case let value where value.hasPrefix("cave_"):
-            // Use the original cue here so existing session tests continue to verify it.
-            return .caveDrip
+            return .caveDripLoop
         default:
             return nil
         }
@@ -247,17 +227,6 @@ final class AudioService {
             }
         }
         updateVolumes()
-    }
-
-    private func switchedLoop(from current: AudioCue?, to next: AudioCue?) -> AudioCue? {
-        guard current != next else { return current }
-        if let current { players[current]?.stop() }
-        guard let next, let player = players[next] else { return nil }
-        player.numberOfLoops = -1
-        player.currentTime = 0
-        player.volume = outputVolume(for: next)
-        player.play()
-        return next
     }
 
     private func crossfadeLoop(bus: LoopBus, from current: AudioCue?, to next: AudioCue?) -> AudioCue? {
