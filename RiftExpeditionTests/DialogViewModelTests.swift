@@ -20,12 +20,12 @@ final class DialogViewModelTests: XCTestCase {
         let session = GameSessionState(
             questState: QuestState(statuses: ["blood_debt": .active])
         )
-        let completion = DialogScript(
+        let completion = DialogDefinition(
             id: "elder_return",
             speakerName: "村长",
             lines: ["交出证据。"],
             options: [
-                DialogOption(
+                DialogOptionDefinition(
                     id: "complete",
                     title: "交付",
                     action: .completeQuest,
@@ -56,14 +56,14 @@ final class DialogViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.choose(option), .startBattle("boar_intro"))
     }
 
-    private var script: DialogScript {
-        DialogScript(
+    private var script: DialogDefinition {
+        DialogDefinition(
             id: "elder_intro",
             speakerName: "村长",
             lines: ["去村外查清楚。"],
             options: [
-                DialogOption(id: "accept", title: "接下任务", action: .acceptQuest, questID: "blood_debt", encounterID: nil),
-                DialogOption(id: "fight", title: "拔剑吧", action: .startBattle, questID: nil, encounterID: "boar_intro")
+                DialogOptionDefinition(id: "accept", title: "接下任务", action: .acceptQuest, questID: "blood_debt", encounterID: nil),
+                DialogOptionDefinition(id: "fight", title: "拔剑吧", action: .startBattle, questID: nil, encounterID: "boar_intro")
             ]
         )
     }

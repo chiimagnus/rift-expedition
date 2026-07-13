@@ -36,7 +36,7 @@ struct DialogView: View {
         }
     }
 
-    private func handleOption(_ option: DialogOption) {
+    private func handleOption(_ option: DialogOptionDefinition) {
         switch viewModel.choose(option) {
         case .none:
             break
@@ -51,9 +51,9 @@ struct DialogView: View {
 }
 
 private struct CinematicDialogContent: View {
-    let dialog: DialogScript
+    let dialog: DialogDefinition
     let message: String
-    let onChoose: (DialogOption) -> Void
+    let onChoose: (DialogOptionDefinition) -> Void
 
     @State private var lineIndex = 0
 
@@ -130,7 +130,7 @@ private struct CinematicDialogContent: View {
                                 Button(option.title) {
                                     onChoose(option)
                                 }
-                                .buttonStyle(RiftDialogOptionButtonStyle())
+                                .buttonStyle(RiftDialogOptionDefinitionButtonStyle())
                                 .accessibilityLabel("对话选项：\(option.title)")
                             }
                         }

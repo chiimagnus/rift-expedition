@@ -2,9 +2,6 @@ import Foundation
 import Observation
 import RiftCore
 
-typealias DialogScript = DialogDefinition
-typealias DialogOption = DialogOptionDefinition
-typealias DialogAction = DialogActionDefinition
 
 enum DialogOutcome: Equatable {
     case none
@@ -16,18 +13,18 @@ enum DialogOutcome: Equatable {
 @MainActor
 @Observable
 final class DialogViewModel {
-    private let scriptsByID: [String: DialogScript]
+    private let scriptsByID: [String: DialogDefinition]
     private let questDefinitions: [QuestDefinition]
     private let session: GameSessionState
-    var activeDialog: DialogScript?
+    var activeDialog: DialogDefinition?
     var message = "还没有对话。"
 
     init(
-        scripts: [DialogScript],
+        scripts: [DialogDefinition],
         questDefinitions: [QuestDefinition],
         session: GameSessionState = GameSessionState()
     ) {
-        var indexedScripts: [String: DialogScript] = [:]
+        var indexedScripts: [String: DialogDefinition] = [:]
         for script in scripts where indexedScripts[script.id] == nil {
             indexedScripts[script.id] = script
         }
@@ -53,7 +50,7 @@ final class DialogViewModel {
         return true
     }
 
-    func choose(_ option: DialogOption) -> DialogOutcome {
+    func choose(_ option: DialogOptionDefinition) -> DialogOutcome {
         do {
             switch option.action {
             case .acceptQuest:
