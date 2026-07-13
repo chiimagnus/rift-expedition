@@ -56,12 +56,27 @@ public enum MapReferenceValidator {
                 }
             }
             for object in map.objectGroups["trigger", default: []] {
-                guard let action = object.properties["action"],
-                      let dialogID = action.removingPrefix("dialogue:")
-                else { continue }
-                if !dialogs.contains(dialogID) {
-                    issues.append(MapReferenceValidationIssue(message: "\(map.areaID) trigger object \(object.tiledID) references missing dialog: \(dialogID)"))
+                guard let rawAction = object.properties["action"] else { continue }
+                let action = rawAction.trimmingCharacters(in: .whitespacesAndNewlines)
+                if action == "chapterComplete" {
+                    continue
                 }
+                if let rawDialogID = action.removingPrefix("dialogue:") {
+                    let dialogID = rawDialogID.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if dialogID.isEmpty {
+                        issues.append(MapReferenceValidationIssue(
+                            message: "\(map.areaID) trigger object \(object.tiledID) has empty dialogue action"
+                        ))
+                    } else if !dialogs.contains(dialogID) {
+                        issues.append(MapReferenceValidationIssue(
+                            message: "\(map.areaID) trigger object \(object.tiledID) references missing dialog: \(dialogID)"
+                        ))
+                    }
+                    continue
+                }
+                issues.append(MapReferenceValidationIssue(
+                    message: "\(map.areaID) trigger object \(object.tiledID) has unsupported action: \(action)"
+                ))
             }
         }
 

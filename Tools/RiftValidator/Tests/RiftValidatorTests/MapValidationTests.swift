@@ -272,6 +272,53 @@ final class MapValidationTests: XCTestCase {
         XCTAssertThrowsError(try MapReferenceValidator.validateIfPresent(resourcesRoot: root, maps: []))
     }
 
+    func testMapReferenceValidationRejectsUnknownAndEmptyTriggerActions() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let dataRoot = root.appending(path: "Data")
+        try FileManager.default.createDirectory(at: dataRoot, withIntermediateDirectories: true)
+        try "[]".write(to: dataRoot.appending(path: "encounters.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "items.json"), atomically: true, encoding: .utf8)
+        try #"[{"id":"known_dialog"}]"#.write(
+            to: dataRoot.appending(path: "dialogs.json"),
+            atomically: true,
+            encoding: .utf8
+        )
+        let map = TiledMap(
+            areaID: "test",
+            width: 320,
+            height: 320,
+            objectGroups: [
+                "trigger": [
+                    TiledObject(
+                        tiledID: 1, name: nil, type: nil, x: 32, y: 32, width: 32, height: 32,
+                        properties: ["triggerId": "typo", "action": "dialog:known_dialog"]
+                    ),
+                    TiledObject(
+                        tiledID: 2, name: nil, type: nil, x: 64, y: 32, width: 32, height: 32,
+                        properties: ["triggerId": "empty", "action": "dialogue:   "]
+                    ),
+                    TiledObject(
+                        tiledID: 3, name: nil, type: nil, x: 96, y: 32, width: 32, height: 32,
+                        properties: ["triggerId": "ending", "action": "chapterComplete"]
+                    ),
+                    TiledObject(
+                        tiledID: 4, name: nil, type: nil, x: 128, y: 32, width: 32, height: 32,
+                        properties: ["triggerId": "dialogue", "action": "dialogue:known_dialog"]
+                    )
+                ]
+            ]
+        )
+
+        let result = try XCTUnwrap(try MapReferenceValidator.validateIfPresent(resourcesRoot: root, maps: [map]))
+
+        XCTAssertEqual(result.issues.count, 2)
+        XCTAssertTrue(result.issues.contains { $0.message.contains("unsupported action: dialog:known_dialog") })
+        XCTAssertTrue(result.issues.contains { $0.message.contains("empty dialogue action") })
+    }
+
     func testMapReferenceValidationCatchesMissingItem() throws {
         let root = URL.temporaryDirectory
             .appending(path: "RiftValidatorTests")
