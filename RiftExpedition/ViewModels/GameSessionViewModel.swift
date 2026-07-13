@@ -12,19 +12,22 @@ final class GameSessionState {
     var questState: QuestState
     var collectedMapItemKeys: Set<String>
     var firedMapTriggerKeys: Set<String>
+    var resolvedEncounterKeys: Set<String>
 
     init(
         party: [Actor] = [],
         inventory: PartyInventory = PartyInventory(),
         questState: QuestState = QuestState(),
         collectedMapItemKeys: Set<String> = [],
-        firedMapTriggerKeys: Set<String> = []
+        firedMapTriggerKeys: Set<String> = [],
+        resolvedEncounterKeys: Set<String> = []
     ) {
         self.party = party
         self.inventory = inventory
         self.questState = questState
         self.collectedMapItemKeys = collectedMapItemKeys
         self.firedMapTriggerKeys = firedMapTriggerKeys
+        self.resolvedEncounterKeys = resolvedEncounterKeys
     }
 }
 
@@ -57,6 +60,7 @@ final class GameSessionViewModel {
     var uiScale = 1.0
     var isDebugOverlayVisible = false
     private var encounterTriggerService: EncounterTriggerService?
+    private var activeEncounterKey: String?
     private let encounterDefinitions: [EncounterDefinition]
     private let skillDefinitions: [SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
@@ -168,6 +172,8 @@ final class GameSessionViewModel {
         session.questState = QuestState()
         session.collectedMapItemKeys = []
         session.firedMapTriggerKeys = []
+        session.resolvedEncounterKeys = []
+        activeEncounterKey = nil
         loadArea("village_square", spawnID: "start")
         inventoryViewModel = InventoryViewModel(
             session: session,
@@ -275,6 +281,10 @@ final class GameSessionViewModel {
         guard let battleViewModel else { return }
         switch battleViewModel.state.outcome {
         case .victory:
+            if let activeEncounterKey {
+                session.resolvedEncounterKeys.insert(activeEncounterKey)
+            }
+            activeEncounterKey = nil
             let survivingParty = battleViewModel.state.actors
                 .filter { $0.faction == .player }
                 .map { actor in
@@ -295,6 +305,7 @@ final class GameSessionViewModel {
                 ? "战斗胜利。倒下的队友已在战后复活。"
                 : "战斗胜利，倒下的队友已复活；自动存档失败，已保留上一个安全存档。"
         case .defeat:
+            activeEncounterKey = nil
             recoverFromLatestAutosave()
         case .ongoing:
             statusText = "战斗尚未结束。"
@@ -312,9 +323,12 @@ final class GameSessionViewModel {
         session.questState = QuestState()
         session.collectedMapItemKeys = []
         session.firedMapTriggerKeys = []
+        session.resolvedEncounterKeys = []
+        activeEncounterKey = nil
     }
 
     private func startBattle(_ encounter: EncounterDefinition, trigger: MapEncounterTrigger?) {
+        activeEncounterKey = trigger.map(encounterKey)
         audioService.play(.battleStart)
         audioService.playBattleSoundscape(for: currentAreaID)
         battleViewModel = BattleViewModel(
@@ -341,7 +355,8 @@ final class GameSessionViewModel {
             inventory: inventory,
             questState: session.questState,
             collectedMapItemKeys: session.collectedMapItemKeys.sorted(),
-            firedMapTriggerKeys: session.firedMapTriggerKeys.sorted()
+            firedMapTriggerKeys: session.firedMapTriggerKeys.sorted(),
+            resolvedEncounterKeys: session.resolvedEncounterKeys.sorted()
         )
     }
 
@@ -351,6 +366,8 @@ final class GameSessionViewModel {
         session.questState = save.questState
         session.collectedMapItemKeys = Set(save.collectedMapItemKeys)
         session.firedMapTriggerKeys = Set(save.firedMapTriggerKeys)
+        session.resolvedEncounterKeys = Set(save.resolvedEncounterKeys)
+        activeEncounterKey = nil
         if inventoryViewModel == nil {
             inventoryViewModel = InventoryViewModel(
                 session: session,
@@ -533,7 +550,8 @@ final class GameSessionViewModel {
         if let metadata = currentMapMetadata {
             encounterTriggerService = EncounterTriggerService(
                 triggers: metadata.encounterTriggers,
-                encounters: encounterDefinitions
+                encounters: encounterDefinitions,
+                triggeredTiledIDs: resolvedEncounterTiledIDs(in: currentAreaID)
             )
         } else {
             encounterTriggerService = nil
@@ -713,6 +731,18 @@ final class GameSessionViewModel {
 
     private func mapTriggerKey(_ trigger: MapTrigger) -> String {
         "\(currentAreaID):\(trigger.tiledID)"
+    }
+
+    private func encounterKey(_ trigger: MapEncounterTrigger) -> String {
+        "\(currentAreaID):\(trigger.tiledID)"
+    }
+
+    private func resolvedEncounterTiledIDs(in areaID: String) -> Set<Int> {
+        let prefix = "\(areaID):"
+        return Set(session.resolvedEncounterKeys.compactMap { key in
+            guard key.hasPrefix(prefix) else { return nil }
+            return Int(key.dropFirst(prefix.count))
+        })
     }
 
     private func perform(_ trigger: MapTrigger) {

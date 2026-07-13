@@ -16,15 +16,20 @@ struct TriggeredEncounter: Equatable {
 struct EncounterTriggerService: Equatable {
     private let triggers: [MapEncounterTrigger]
     private let encountersByID: [String: EncounterDefinition]
-    private(set) var triggeredEncounterIDs: Set<String> = []
+    private(set) var triggeredTiledIDs: Set<Int>
 
-    init(triggers: [MapEncounterTrigger], encounters: [EncounterDefinition]) {
+    init(
+        triggers: [MapEncounterTrigger],
+        encounters: [EncounterDefinition],
+        triggeredTiledIDs: Set<Int> = []
+    ) {
         self.triggers = triggers
         var indexedEncounters: [String: EncounterDefinition] = [:]
         for encounter in encounters where indexedEncounters[encounter.id] == nil {
             indexedEncounters[encounter.id] = encounter
         }
         encountersByID = indexedEncounters
+        self.triggeredTiledIDs = triggeredTiledIDs
     }
 
     mutating func encounter(at position: CGPoint) -> EncounterDefinition? {
@@ -33,12 +38,12 @@ struct EncounterTriggerService: Equatable {
 
     mutating func triggeredEncounter(at position: CGPoint) -> TriggeredEncounter? {
         guard let trigger = triggers.first(where: { trigger in
-            !triggeredEncounterIDs.contains(trigger.encounterID) && trigger.contains(position)
+            !triggeredTiledIDs.contains(trigger.tiledID) && trigger.contains(position)
         }) else {
             return nil
         }
 
-        triggeredEncounterIDs.insert(trigger.encounterID)
+        triggeredTiledIDs.insert(trigger.tiledID)
         guard let encounter = encountersByID[trigger.encounterID] else { return nil }
         return TriggeredEncounter(definition: encounter, trigger: trigger)
     }

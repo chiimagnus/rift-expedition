@@ -30,6 +30,24 @@ final class EncounterTriggerServiceTests: XCTestCase {
         XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
     }
 
+    func testPretriggeredTiledObjectDoesNotStartAgain() {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 41,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: [encounter],
+            triggeredTiledIDs: [41]
+        )
+
+        XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertEqual(service.triggeredTiledIDs, [41])
+    }
+
     func testVerticalSliceMetadataReadsEncounterTrigger() throws {
         let metadata = try TiledMapLoader.loadMetadata(url: verticalSliceURL(), areaID: "vertical_slice")
 
