@@ -25,8 +25,8 @@ class MapArtPipelineTests(unittest.TestCase):
     def test_specs_cover_world_graph_and_validate(self) -> None:
         self.assertEqual(set(self.specs), {area["id"] for area in self.areas})
         self.assertEqual(pipeline.validate_contracts(self.project_root, self.specs, self.areas), [])
-        self.assertEqual(sum(spec["status"] == "ready" for spec in self.specs.values()), 2)
-        self.assertEqual(sum(spec["status"] == "pending-source" for spec in self.specs.values()), 7)
+        self.assertEqual(sum(spec["status"] == "ready" for spec in self.specs.values()), 4)
+        self.assertEqual(sum(spec["status"] == "pending-source" for spec in self.specs.values()), 5)
 
     def test_pending_source_can_export_guide_without_source_image(self) -> None:
         area = next(area for area in self.areas if area["id"] == "wilds_road")
@@ -69,6 +69,33 @@ class MapArtPipelineTests(unittest.TestCase):
             }
             self.assertEqual(properties["artPipelineVersion"], pipeline.PIPELINE_VERSION)
             self.assertIsNotNone(next((layer for layer in root.findall("imagelayer") if layer.get("name") == "background_art"), None))
+
+
+    def test_ready_source_with_foreground_builds_both_layers(self) -> None:
+        spec = self.specs["village_riverside"]
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            relatives = [
+                spec["tmx"],
+                spec["source"],
+                spec["foregroundSource"],
+                "RiftExpedition/Resources/Assets/assets-manifest.json",
+            ]
+            for relative in relatives:
+                source = self.project_root / relative
+                destination = project / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+
+            pipeline.build(project, "village_riverside", spec)
+
+            with Image.open(project / spec["foregroundOutput"]) as image:
+                self.assertEqual(image.size, (1024, 640))
+                self.assertEqual(image.mode, "RGBA")
+            root = ET.parse(project / spec["tmx"]).getroot()
+            layer_names = {layer.get("name") for layer in root.findall("imagelayer")}
+            self.assertIn("background_art", layer_names)
+            self.assertIn(spec["foregroundLayerName"], layer_names)
 
     def test_pending_source_cannot_be_built_as_runtime_art(self) -> None:
         with self.assertRaisesRegex(ValueError, "not approved yet"):

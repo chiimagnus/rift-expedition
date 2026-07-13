@@ -16,7 +16,7 @@ from typing import Any
 
 from PIL import Image, ImageDraw
 
-PIPELINE_VERSION = "2"
+PIPELINE_VERSION = "3"
 VALID_STATUSES = {"ready", "pending-source"}
 GUIDE_GROUP_COLORS: dict[str, tuple[int, int, int, int]] = {
     "navObstacle": (220, 38, 38, 76),
@@ -152,16 +152,16 @@ def ensure_image_layer(root: ET.Element, map_path: Path, output_path: Path, laye
     image.set("height", str(height))
 
 
-def update_manifest(project_root: Path, spec: dict[str, Any]) -> None:
+def update_manifest_entry(project_root: Path, *, asset_id: str, output: str, source_description: str) -> None:
     manifest_path = project_root / "RiftExpedition/Resources/Assets/assets-manifest.json"
     entries = json.loads(manifest_path.read_text(encoding="utf-8"))
-    output = Path(spec["output"])
+    output = Path(output)
     relative_to_resources = output.relative_to(Path("RiftExpedition/Resources")).as_posix()
     entry = {
-        "id": spec["assetID"],
+        "id": asset_id,
         "path": relative_to_resources,
         "type": "map-art",
-        "source": "AI-generated top-down 2D environment aligned and cropped by Tools/MapArtPipeline",
+        "source": source_description,
         "license": "ai-static",
         "downloadedAt": "2026-07-12",
         "author": "AI-generated, integrated by Rift Expedition project",
@@ -169,6 +169,22 @@ def update_manifest(project_root: Path, spec: dict[str, Any]) -> None:
     entries = [item for item in entries if item.get("id") != entry["id"] and item.get("path") != entry["path"]]
     entries.append(entry)
     manifest_path.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def update_manifest(project_root: Path, spec: dict[str, Any]) -> None:
+    update_manifest_entry(
+        project_root,
+        asset_id=spec["assetID"],
+        output=spec["output"],
+        source_description=spec.get("sourceDescription", "Top-down 2D environment aligned by Tools/MapArtPipeline"),
+    )
+    if spec.get("foregroundOutput") and spec.get("foregroundAssetID"):
+        update_manifest_entry(
+            project_root,
+            asset_id=spec["foregroundAssetID"],
+            output=spec["foregroundOutput"],
+            source_description=spec.get("foregroundSourceDescription", "Transparent foreground occlusion art aligned by Tools/MapArtPipeline"),
+        )
 
 
 def draw_object_overlay(image: Image.Image, root: ET.Element, *, include_labels: bool) -> Image.Image:
@@ -329,6 +345,12 @@ def validate_contracts(
                 errors.append(f"{area_id}: missing {key}")
         if spec.get("layerName") != "background_art":
             errors.append(f"{area_id}: layerName must be background_art")
+        foreground_keys = ["foregroundSource", "foregroundOutput", "foregroundAssetID", "foregroundLayerName"]
+        present_foreground = [key for key in foreground_keys if spec.get(key)]
+        if present_foreground and len(present_foreground) != len(foreground_keys):
+            errors.append(f"{area_id}: foreground fields must be provided together")
+        if spec.get("foregroundLayerName") and not str(spec["foregroundLayerName"]).startswith("foreground_"):
+            errors.append(f"{area_id}: foregroundLayerName must start with foreground_")
 
         asset_id = spec.get("assetID", "")
         if asset_id in asset_ids:
@@ -358,6 +380,8 @@ def validate_contracts(
                 errors.append(f"{area_id}: TMX path differs from world graph ({expected_tmx})")
         if status == "ready" and not (project_root / spec.get("source", "")).is_file():
             errors.append(f"{area_id}: ready source is missing")
+        if status == "ready" and spec.get("foregroundSource") and not (project_root / spec["foregroundSource"]).is_file():
+            errors.append(f"{area_id}: ready foreground source is missing")
     return errors
 
 
@@ -370,6 +394,7 @@ def write_report(project_root: Path, area_id: str, spec: dict[str, Any], map_wid
         f"- Output size: {map_width} x {map_height}\n"
         f"- TMX source: `{spec['tmx']}`\n"
         f"- Runtime art: `{spec['output']}`\n"
+        f"- Foreground art: `{spec.get('foregroundOutput', 'none')}`\n"
         f"- Collision objects: {len(spec.get('replaceObstacles', []))}\n"
         f"- Overlay preview: `{overlay.relative_to(project_root).as_posix()}`\n"
         f"- Tiled GUI required: no\n",
@@ -400,9 +425,30 @@ def build(project_root: Path, area_id: str, spec: dict[str, Any]) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(output_path, optimize=True)
 
+    foreground_image = None
+    if spec.get("foregroundSource"):
+        foreground_source = project_root / spec["foregroundSource"]
+        foreground_output = project_root / spec["foregroundOutput"]
+        foreground_image = Image.open(foreground_source).convert("RGBA")
+        if spec.get("crop") == "center":
+            foreground_image = center_crop(foreground_image, map_width / map_height)
+        foreground_image = foreground_image.resize((map_width, map_height), Image.Resampling.LANCZOS)
+        foreground_output.parent.mkdir(parents=True, exist_ok=True)
+        foreground_image.save(foreground_output, optimize=True)
+
     ensure_property(root, "artAssetId", spec["assetID"])
     ensure_property(root, "artPipelineVersion", PIPELINE_VERSION)
     ensure_image_layer(root, map_path, output_path, spec["layerName"], map_width, map_height)
+    if spec.get("foregroundOutput"):
+        ensure_property(root, "foregroundArtAssetId", spec["foregroundAssetID"])
+        ensure_image_layer(
+            root,
+            map_path,
+            project_root / spec["foregroundOutput"],
+            spec["foregroundLayerName"],
+            map_width,
+            map_height,
+        )
     terrain = next((layer for layer in root.findall("layer") if layer.get("name") == "terrain"), None)
     if terrain is not None:
         terrain.set("visible", "1" if spec.get("terrainVisible", True) else "0")

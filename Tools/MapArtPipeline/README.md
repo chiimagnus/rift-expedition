@@ -55,3 +55,15 @@ python3 Tools/MapArtPipeline/build_map_art.py --area village_square
 ```sh
 python3 -m unittest Tools/MapArtPipeline/test_map_art_pipeline.py
 ```
+
+## 确定性程序化源图
+
+当图像生成工具无法遵守 TMX 几何时，使用可复现的程序化绘制器：
+
+```sh
+python3 Tools/MapArtPipeline/generate_procedural_sources.py \
+  --area village_riverside \
+  --area village_outskirts
+```
+
+程序化源图直接读取 TMX 地形与对象坐标，输出背景和透明 `foreground_*` 遮挡层。它优先保证道路、出口、碰撞和交互点一致，不会生成 UI、斜视角或自由构图场景。

@@ -220,24 +220,36 @@
     "status": "ready"
   },
   "village_riverside": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/village_riverside_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/village_riverside.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_riverside.png",
     "assetID": "mapart.chapter1_village_riverside",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/village_riverside_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_riverside_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_village_riverside_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "village_outskirts": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/village_outskirts_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/village_outskirts.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_outskirts.png",
     "assetID": "mapart.chapter1_village_outskirts",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/village_outskirts_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_outskirts_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_village_outskirts_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "wilds_road": {
     "status": "pending-source",

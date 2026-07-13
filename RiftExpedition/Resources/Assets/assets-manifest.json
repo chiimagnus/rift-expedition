@@ -610,5 +610,41 @@
     "license": "ai-static",
     "downloadedAt": "2026-07-12",
     "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_riverside",
+    "path": "Assets/MapArt/chapter1/village_riverside.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_riverside_foreground",
+    "path": "Assets/MapArt/chapter1/village_riverside_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_outskirts",
+    "path": "Assets/MapArt/chapter1/village_outskirts.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_outskirts_foreground",
+    "path": "Assets/MapArt/chapter1/village_outskirts_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
   }
 ]
