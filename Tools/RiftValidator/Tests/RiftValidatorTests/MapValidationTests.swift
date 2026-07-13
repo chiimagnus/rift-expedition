@@ -59,6 +59,47 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(result.reportMarkdown().contains("World area is disconnected from start: c"))
     }
 
+    func testWorldGraphValidationCanScopeToOneChapter() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let worldsRoot = root.appending(path: "Data/worlds")
+        try FileManager.default.createDirectory(at: worldsRoot, withIntermediateDirectories: true)
+
+        let chapter1: [String: Any] = [
+            "id": "chapter1",
+            "title": "Chapter 1",
+            "startAreaId": "a",
+            "startSpawnId": "start",
+            "areas": [[
+                "id": "a",
+                "displayName": "A",
+                "biome": "test",
+                "mapPath": "Maps/a.tmx",
+                "exits": []
+            ]]
+        ]
+        let chapter2: [String: Any] = [
+            "id": "chapter2",
+            "title": "Chapter 2",
+            "startAreaId": "missing",
+            "startSpawnId": "missing",
+            "areas": []
+        ]
+        try JSONSerialization.data(withJSONObject: chapter1).write(to: worldsRoot.appending(path: "chapter1.json"))
+        try JSONSerialization.data(withJSONObject: chapter2).write(to: worldsRoot.appending(path: "chapter2.json"))
+
+        let results = try WorldGraphValidator.validateIfPresent(
+            resourcesRoot: root,
+            maps: [map("a", spawns: ["start"])],
+            worldID: "chapter1"
+        )
+
+        XCTAssertEqual(results.map(\.worldID), ["chapter1"])
+        XCTAssertTrue(results.allSatisfy(\.isValid))
+    }
+
     func testMapReferenceValidationCatchesMissingItem() throws {
         let root = URL.temporaryDirectory
             .appending(path: "RiftValidatorTests")

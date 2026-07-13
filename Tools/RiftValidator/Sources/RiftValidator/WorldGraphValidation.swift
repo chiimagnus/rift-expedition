@@ -26,7 +26,11 @@ public struct WorldGraphValidationResult: Equatable, Sendable {
 }
 
 public enum WorldGraphValidator {
-    public static func validateIfPresent(resourcesRoot: URL, maps: [TiledMap]) throws -> [WorldGraphValidationResult] {
+    public static func validateIfPresent(
+        resourcesRoot: URL,
+        maps: [TiledMap],
+        worldID: String? = nil
+    ) throws -> [WorldGraphValidationResult] {
         let worldsRoot = resourcesRoot.appending(path: "Data/worlds")
         guard let contents = try? FileManager.default.contentsOfDirectory(
             at: worldsRoot,
@@ -36,13 +40,15 @@ public enum WorldGraphValidator {
         }
 
         let decoder = JSONDecoder()
-        return try contents
+        let graphs = try contents
             .filter { $0.pathExtension == "json" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .map { url in
-                let graph = try decoder.decode(ChapterWorldGraph.self, from: Data(contentsOf: url))
-                return validate(graph, maps: maps)
+                try decoder.decode(ChapterWorldGraph.self, from: Data(contentsOf: url))
             }
+        return graphs
+            .filter { worldID == nil || $0.id == worldID }
+            .map { validate($0, maps: maps) }
     }
 
     static func validate(_ graph: ChapterWorldGraph, maps: [TiledMap]) -> WorldGraphValidationResult {

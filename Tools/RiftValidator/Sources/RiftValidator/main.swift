@@ -156,8 +156,15 @@ do {
     let assetResult = FileManager.default.fileExists(atPath: assetManifest.path)
         ? try AssetValidator.validate(resourcesRoot: arguments.resourcesRoot)
         : nil
-    let worldResults = try WorldGraphValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
-    let mapReferenceResult = try MapReferenceValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
+    let worldResults = try WorldGraphValidator.validateIfPresent(
+        resourcesRoot: arguments.resourcesRoot,
+        maps: scopedResults.map(\.map),
+        worldID: arguments.chapterID
+    )
+    let mapReferenceResult = try MapReferenceValidator.validateIfPresent(
+        resourcesRoot: arguments.resourcesRoot,
+        maps: scopedResults.map(\.map)
+    )
     let chapterFlowResult = try ChapterFlowValidator.validateIfPresent(
         resourcesRoot: arguments.resourcesRoot,
         maps: scopedResults.map(\.map),
