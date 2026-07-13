@@ -499,7 +499,7 @@ private struct GameSceneView: View {
                 scene.renderParty(controller.members, leaderID: controller.leaderID)
             }
             .onChange(of: viewModel.battleViewModel?.sceneSnapshot) { _, snapshot in
-                scene.renderBattle(snapshot)
+                renderBattleSnapshot(snapshot)
             }
     }
 
@@ -513,7 +513,13 @@ private struct GameSceneView: View {
             scene.renderBattle(nil)
         } else if viewModel.appState == .battle {
             scene.renderParty([], leaderID: nil)
-            scene.renderBattle(viewModel.battleViewModel?.sceneSnapshot)
+            renderBattleSnapshot(viewModel.battleViewModel?.sceneSnapshot)
         }
+    }
+
+    private func renderBattleSnapshot(_ snapshot: BattleSceneSnapshot?) {
+        scene.renderBattle(snapshot)
+        guard let lastEventID = snapshot?.presentationEvents.last?.id else { return }
+        viewModel.battleViewModel?.acknowledgePresentationEvents(through: lastEventID)
     }
 }

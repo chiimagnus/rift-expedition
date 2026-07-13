@@ -186,6 +186,27 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.map(\.id), Array(1...10))
     }
 
+    func testAcknowledgingPresentationEventsRemovesOnlyConsumedPrefix() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 20, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 600, y: 100)
+            ]
+        )
+
+        for step in 1...3 {
+            viewModel.performMove(to: CGPoint(x: 100 + CGFloat(step), y: 100))
+        }
+        viewModel.acknowledgePresentationEvents(through: 2)
+
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.map(\.id), [3])
+    }
+
     func testOutOfRangeTargetDoesNotSpendAP() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [

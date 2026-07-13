@@ -201,6 +201,10 @@ final class BattleViewModel {
         )
     }
 
+    func acknowledgePresentationEvents(through eventID: Int) {
+        presentationEvents.removeAll { $0.id <= eventID }
+    }
+
     var consumableRows: [BattleConsumableRow] {
         itemDefinitions
             .filter { $0.kind == .consumable && inventory.count(of: $0.id) > 0 }
