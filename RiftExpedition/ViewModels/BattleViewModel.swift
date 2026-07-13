@@ -18,6 +18,12 @@ enum BattleEffectStyle: String, Equatable {
     case heal
 }
 
+enum BattleFeedback: Equatable {
+    case damage(amount: Int, defeated: Bool)
+    case healing(amount: Int)
+    case dodge
+}
+
 struct BattleConsumableRow: Equatable, Identifiable {
     var id: String
     var displayName: String
@@ -54,8 +60,10 @@ struct BattlePresentationEvent: Equatable, Identifiable {
     var action: ActorAnimationKind
     var direction: ActorAnimationDirection
     var targetActorID: String?
+    var sourcePoint: CGPoint? = nil
     var effectPoint: CGPoint?
-    var effectStyle: BattleEffectStyle?
+    var effectStyle: BattleEffectStyle? = nil
+    var feedback: BattleFeedback? = nil
 }
 
 struct BattleSceneSnapshot: Equatable {
@@ -476,6 +484,8 @@ final class BattleViewModel {
             )
             let afterHealth = state.actor(id: targetID)?.stats.health ?? beforeHealth
             let damage = max(0, beforeHealth - afterHealth)
+            let healing = max(0, afterHealth - beforeHealth)
+            let targetWasDefeated = afterHealth <= 0
             let surfaceText = applyCreatedSurfaces(resolution.createdSurfaces, at: targetPosition, targetID: targetID)
             consumeSelectedItemIfNeeded()
             emitSkillEvents(
@@ -487,7 +497,9 @@ final class BattleViewModel {
                 casterPosition: casterPosition,
                 targetPosition: targetPosition,
                 didDodge: resolution.didDodge,
-                damage: damage
+                damage: damage,
+                healing: healing,
+                targetWasDefeated: targetWasDefeated
             )
             emitAudioCues(action: actionBeforeResolution, damage: damage)
 
@@ -635,8 +647,10 @@ final class BattleViewModel {
         action: ActorAnimationKind,
         direction: ActorAnimationDirection,
         targetActorID: String?,
+        sourcePoint: CGPoint? = nil,
         effectPoint: CGPoint?,
-        effectStyle: BattleEffectStyle? = nil
+        effectStyle: BattleEffectStyle? = nil,
+        feedback: BattleFeedback? = nil
     ) {
         presentationEvents.append(BattlePresentationEvent(
             id: nextPresentationEventID,
@@ -644,8 +658,10 @@ final class BattleViewModel {
             action: action,
             direction: direction,
             targetActorID: targetActorID,
+            sourcePoint: sourcePoint,
             effectPoint: effectPoint,
-            effectStyle: effectStyle
+            effectStyle: effectStyle,
+            feedback: feedback
         ))
         nextPresentationEventID += 1
         if presentationEvents.count > 8 {
@@ -662,20 +678,34 @@ final class BattleViewModel {
         casterPosition: CGPoint,
         targetPosition: CGPoint,
         didDodge: Bool,
-        damage: Int
+        damage: Int,
+        healing: Int,
+        targetWasDefeated: Bool
     ) {
         let attackDirection = animationDirection(from: casterPosition, to: targetPosition)
             ?? actorFacings[actorID]
             ?? .down
         let effectStyle = presentationStyle(for: action, skill: skill, actorClassID: actorClassID)
+        let feedback: BattleFeedback? = if didDodge {
+            .dodge
+        } else if damage > 0 {
+            .damage(amount: damage, defeated: targetWasDefeated)
+        } else if healing > 0 {
+            .healing(amount: healing)
+        } else {
+            nil
+        }
+
         actorFacings[actorID] = attackDirection
         appendPresentationEvent(
             actorID: actorID,
             action: .attack,
             direction: attackDirection,
             targetActorID: targetID,
+            sourcePoint: casterPosition,
             effectPoint: targetPosition,
-            effectStyle: effectStyle
+            effectStyle: effectStyle,
+            feedback: feedback
         )
 
         guard !didDodge, damage > 0 else { return }
@@ -688,8 +718,10 @@ final class BattleViewModel {
             action: .hurt,
             direction: hurtDirection,
             targetActorID: actorID,
-            effectPoint: targetPosition,
-            effectStyle: effectStyle
+            sourcePoint: nil,
+            effectPoint: nil,
+            effectStyle: nil,
+            feedback: nil
         )
     }
 

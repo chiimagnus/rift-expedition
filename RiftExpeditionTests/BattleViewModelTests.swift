@@ -113,7 +113,10 @@ final class BattleViewModelTests: XCTestCase {
                 action: .attack,
                 direction: .right,
                 targetActorID: "boar",
-                effectPoint: CGPoint(x: 120, y: 100)
+                sourcePoint: CGPoint(x: 100, y: 100),
+                effectPoint: CGPoint(x: 120, y: 100),
+                effectStyle: .strike,
+                feedback: .damage(amount: 5, defeated: false)
             ),
             BattlePresentationEvent(
                 id: 2,
@@ -121,7 +124,7 @@ final class BattleViewModelTests: XCTestCase {
                 action: .hurt,
                 direction: .left,
                 targetActorID: "player",
-                effectPoint: CGPoint(x: 120, y: 100)
+                effectPoint: nil
             )
         ])
         XCTAssertEqual(cues, [.skillCast, .attackHit])
@@ -212,7 +215,10 @@ final class BattleViewModelTests: XCTestCase {
                 action: .attack,
                 direction: .down,
                 targetActorID: "player",
-                effectPoint: CGPoint(x: 100, y: 100)
+                sourcePoint: CGPoint(x: 100, y: 100),
+                effectPoint: CGPoint(x: 100, y: 100),
+                effectStyle: .heal,
+                feedback: .healing(amount: 8)
             )
         ])
         XCTAssertEqual(cues, [.healDrink])
@@ -242,7 +248,10 @@ final class BattleViewModelTests: XCTestCase {
                 action: .attack,
                 direction: .right,
                 targetActorID: "rogue",
-                effectPoint: CGPoint(x: 120, y: 100)
+                sourcePoint: CGPoint(x: 100, y: 100),
+                effectPoint: CGPoint(x: 120, y: 100),
+                effectStyle: .strike,
+                feedback: .dodge
             )
         ])
     }
@@ -327,7 +336,10 @@ final class BattleViewModelTests: XCTestCase {
                 action: .attack,
                 direction: .left,
                 targetActorID: "player",
-                effectPoint: CGPoint(x: 100, y: 100)
+                sourcePoint: CGPoint(x: 120, y: 100),
+                effectPoint: CGPoint(x: 100, y: 100),
+                effectStyle: .strike,
+                feedback: .damage(amount: 5, defeated: false)
             ),
             BattlePresentationEvent(
                 id: 2,
@@ -335,9 +347,65 @@ final class BattleViewModelTests: XCTestCase {
                 action: .hurt,
                 direction: .right,
                 targetActorID: "boar",
-                effectPoint: CGPoint(x: 100, y: 100)
+                effectPoint: nil
             )
         ])
+    }
+
+
+    func testRangedSkillCarriesSourcePointAndProjectileStyle() {
+        let shot = SkillDefinition(
+            id: "test_shot",
+            displayName: "试射",
+            actionPointCost: 1,
+            range: 8,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.damage(4)]
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "archer", faction: .player, actionPoints: 4, skillIDs: ["test_shot"], kind: .player, classID: "archer"),
+                actor(id: "target", faction: .hostile, health: 12, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [shot],
+            initialPositions: [
+                "archer": CGPoint(x: 80, y: 120),
+                "target": CGPoint(x: 240, y: 120)
+            ]
+        )
+
+        viewModel.performSkill(id: "test_shot")
+        viewModel.performSelectedAction(targetID: "target")
+
+        let event = viewModel.sceneSnapshot.presentationEvents.first
+        XCTAssertEqual(event?.sourcePoint, CGPoint(x: 80, y: 120))
+        XCTAssertEqual(event?.effectPoint, CGPoint(x: 240, y: 120))
+        XCTAssertEqual(event?.effectStyle, .projectile)
+        XCTAssertEqual(event?.feedback, .damage(amount: 4, defeated: false))
+    }
+
+    func testLethalDamageMarksFeedbackAsDefeated() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
+                actor(id: "boar", faction: .animal, health: 4, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+        viewModel.performSelectedAction(targetID: "boar")
+
+        XCTAssertEqual(
+            viewModel.sceneSnapshot.presentationEvents.first?.feedback,
+            .damage(amount: 4, defeated: true)
+        )
     }
 
     private var heavySlash: SkillDefinition {
