@@ -65,7 +65,7 @@ No issues.
 
 - Quests: 4 (main: 1, side: 3)
 - Required turn-in items checked: 4
-- Map encounter references checked: 7
+- Map encounter references checked: 6
 - Validation: passed
 - No issues.
 
