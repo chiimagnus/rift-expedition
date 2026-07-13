@@ -24,6 +24,7 @@ final class GameSessionViewModelTests: XCTestCase {
     func testAudioServiceVolumeMuteAndBGMSwitchUseAllPlayers() {
         var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
         let service = AudioService(
+            crossfadeDuration: 0,
             makePlayer: { url in
                 let cueID = url.deletingPathExtension().lastPathComponent
                 let cue = try XCTUnwrap(AudioCue(rawValue: cueID))
@@ -79,6 +80,7 @@ final class GameSessionViewModelTests: XCTestCase {
     func testAudioSoundscapeStateIsIdempotentAndRoutesThreeLoopBuses() throws {
         var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
         let service = AudioService(
+            crossfadeDuration: 0,
             makePlayer: { url in
                 let cue = try XCTUnwrap(AudioCue(rawValue: url.deletingPathExtension().lastPathComponent))
                 let player = FakeAudioPlayer()
@@ -130,6 +132,60 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(playersByCue[.riverAmbience]?.playCount, 2)
     }
 
+
+    func testAudioCrossfadeUsesFadeRequestsBeforeStoppingOldLoops() throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let service = AudioService(
+            crossfadeDuration: 0.2,
+            makePlayer: { url in
+                let cue = try XCTUnwrap(AudioCue(rawValue: url.deletingPathExtension().lastPathComponent))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav") }
+        )
+
+        service.playExplorationSoundscape(for: "village_square")
+        service.playBattleSoundscape(for: "village_square")
+
+        let villageTheme = try XCTUnwrap(playersByCue[.villageTheme])
+        let battleTheme = try XCTUnwrap(playersByCue[.battleTheme])
+        XCTAssertEqual(villageTheme.stopCount, 0)
+        let villageFade = try XCTUnwrap(villageTheme.fadeRequests.last)
+        let battleFade = try XCTUnwrap(battleTheme.fadeRequests.last)
+        XCTAssertEqual(villageFade.volume, 0, accuracy: 0.001)
+        XCTAssertEqual(villageFade.duration, 0.2, accuracy: 0.001)
+        XCTAssertEqual(battleFade.volume, 0.75, accuracy: 0.001)
+        XCTAssertEqual(battleFade.duration, 0.2, accuracy: 0.001)
+    }
+
+    func testAudioCrossfadeGenerationDoesNotStopRestartedLoop() async throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let service = AudioService(
+            crossfadeDuration: 0.02,
+            makePlayer: { url in
+                let cue = try XCTUnwrap(AudioCue(rawValue: url.deletingPathExtension().lastPathComponent))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav") }
+        )
+
+        service.playExplorationSoundscape(for: "village_square")
+        service.playBattleSoundscape(for: "village_square")
+        service.playExplorationSoundscape(for: "village_square")
+        try await Task.sleep(for: .milliseconds(60))
+
+        let villageTheme = try XCTUnwrap(playersByCue[.villageTheme])
+        let battleTheme = try XCTUnwrap(playersByCue[.battleTheme])
+        XCTAssertTrue(villageTheme.isPlaying)
+        XCTAssertEqual(villageTheme.stopCount, 0)
+        XCTAssertFalse(battleTheme.isPlaying)
+        XCTAssertEqual(battleTheme.stopCount, 1)
+    }
+
     func testAudioServiceMissingCuesDoNotCrash() {
         let service = AudioService(
             makePlayer: { _ in
@@ -148,6 +204,7 @@ final class GameSessionViewModelTests: XCTestCase {
     func testSessionAreaTransitionsRouteBGMAndAmbience() throws {
         var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
         let audioService = AudioService(
+            crossfadeDuration: 0,
             makePlayer: { url in
                 let cueID = url.deletingPathExtension().lastPathComponent
                 let cue = try XCTUnwrap(AudioCue(rawValue: cueID))
@@ -505,6 +562,7 @@ private final class FakeAudioPlayer: AudioPlaying {
     private(set) var isPlaying = false
     private(set) var playCount = 0
     private(set) var stopCount = 0
+    private(set) var fadeRequests: [(volume: Float, duration: TimeInterval)] = []
 
     func play() -> Bool {
         playCount += 1
@@ -519,5 +577,10 @@ private final class FakeAudioPlayer: AudioPlaying {
 
     func prepareToPlay() -> Bool {
         true
+    }
+
+    func setVolume(_ volume: Float, fadeDuration: TimeInterval) {
+        fadeRequests.append((volume: volume, duration: fadeDuration))
+        self.volume = volume
     }
 }

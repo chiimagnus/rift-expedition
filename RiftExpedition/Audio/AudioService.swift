@@ -10,6 +10,7 @@ protocol AudioPlaying: AnyObject {
     @discardableResult func play() -> Bool
     func stop()
     @discardableResult func prepareToPlay() -> Bool
+    func setVolume(_ volume: Float, fadeDuration: TimeInterval)
 }
 
 extension AVAudioPlayer: AudioPlaying {}
@@ -60,6 +61,11 @@ struct AudioSoundscapeSnapshot: Equatable {
 @MainActor
 @Observable
 final class AudioService {
+    private enum LoopBus: Hashable {
+        case bgm
+        case musicLayer
+        case ambience
+    }
     var masterVolume: Double = 0.75 {
         didSet { updateVolumes() }
     }
@@ -82,10 +88,12 @@ final class AudioService {
 
     private let makePlayer: (URL) throws -> any AudioPlaying
     private let urlForCue: (AudioCue) -> URL?
+    private let crossfadeDuration: TimeInterval
     private var players: [AudioCue: any AudioPlaying] = [:]
     private var currentBGMCue: AudioCue?
     private var currentMusicLayerCue: AudioCue?
     private var currentAmbienceCue: AudioCue?
+    private var loopGenerations: [LoopBus: Int] = [:]
     private(set) var soundscapeState: AudioSoundscapeState = .stopped
 
     var soundscapeSnapshot: AudioSoundscapeSnapshot {
@@ -99,10 +107,12 @@ final class AudioService {
 
     init(
         bundle: Bundle = .main,
+        crossfadeDuration: TimeInterval = 0.35,
         makePlayer: @escaping (URL) throws -> any AudioPlaying = { try AVAudioPlayer(contentsOf: $0) },
         urlForCue: ((AudioCue) -> URL?)? = nil
     ) {
         self.makePlayer = makePlayer
+        self.crossfadeDuration = max(0, crossfadeDuration)
         self.urlForCue = urlForCue ?? { cue in
             bundle.url(forResource: cue.rawValue, withExtension: "wav", subdirectory: "Assets/Audio")
         }
@@ -113,6 +123,7 @@ final class AudioService {
         guard let player = players[cue] else { return }
         player.numberOfLoops = 0
         player.currentTime = 0
+        player.volume = outputVolume(for: cue)
         player.play()
     }
 
@@ -135,17 +146,20 @@ final class AudioService {
         play(cue)
     }
 
-    func stopBGM() {
-        if soundscapeState == .stopped {
-            stopLoop(currentBGMCue)
-            stopLoop(currentMusicLayerCue)
-            stopLoop(currentAmbienceCue)
-            currentBGMCue = nil
-            currentMusicLayerCue = nil
-            currentAmbienceCue = nil
-        } else {
-            transition(to: .stopped)
+    func stopSoundscape() {
+        guard soundscapeState != .stopped
+                || currentBGMCue != nil
+                || currentMusicLayerCue != nil
+                || currentAmbienceCue != nil
+        else {
+            return
         }
+        applySoundscapeCues(Self.soundscapeCues(for: .stopped))
+        soundscapeState = .stopped
+    }
+
+    func stopBGM() {
+        stopSoundscape()
     }
 
     static func soundscapeCues(for state: AudioSoundscapeState) -> (bgm: AudioCue?, layer: AudioCue?, ambience: AudioCue?) {
@@ -208,11 +222,14 @@ final class AudioService {
 
     private func transition(to nextState: AudioSoundscapeState) {
         guard soundscapeState != nextState else { return }
-        let cues = Self.soundscapeCues(for: nextState)
-        currentBGMCue = switchedLoop(from: currentBGMCue, to: cues.bgm)
-        currentMusicLayerCue = switchedLoop(from: currentMusicLayerCue, to: cues.layer)
-        currentAmbienceCue = switchedLoop(from: currentAmbienceCue, to: cues.ambience)
+        applySoundscapeCues(Self.soundscapeCues(for: nextState))
         soundscapeState = nextState
+    }
+
+    private func applySoundscapeCues(_ cues: (bgm: AudioCue?, layer: AudioCue?, ambience: AudioCue?)) {
+        currentBGMCue = crossfadeLoop(bus: .bgm, from: currentBGMCue, to: cues.bgm)
+        currentMusicLayerCue = crossfadeLoop(bus: .musicLayer, from: currentMusicLayerCue, to: cues.layer)
+        currentAmbienceCue = crossfadeLoop(bus: .ambience, from: currentAmbienceCue, to: cues.ambience)
     }
 
     private func loadPlayers() {
@@ -238,12 +255,69 @@ final class AudioService {
         guard let next, let player = players[next] else { return nil }
         player.numberOfLoops = -1
         player.currentTime = 0
+        player.volume = outputVolume(for: next)
         player.play()
         return next
     }
 
-    private func stopLoop(_ cue: AudioCue?) {
-        if let cue { players[cue]?.stop() }
+    private func crossfadeLoop(bus: LoopBus, from current: AudioCue?, to next: AudioCue?) -> AudioCue? {
+        guard current != next else { return current }
+
+        let generation = (loopGenerations[bus] ?? 0) + 1
+        loopGenerations[bus] = generation
+
+        let nextCue: AudioCue?
+        if let next, let nextPlayer = players[next] {
+            nextPlayer.numberOfLoops = -1
+            nextPlayer.currentTime = 0
+            if crossfadeDuration > 0 {
+                nextPlayer.volume = 0
+                nextPlayer.play()
+                nextPlayer.setVolume(outputVolume(for: next), fadeDuration: crossfadeDuration)
+            } else {
+                nextPlayer.volume = outputVolume(for: next)
+                nextPlayer.play()
+            }
+            nextCue = next
+        } else {
+            nextCue = nil
+        }
+
+        if let current, let currentPlayer = players[current] {
+            if crossfadeDuration > 0 {
+                currentPlayer.setVolume(0, fadeDuration: crossfadeDuration)
+                scheduleStop(cue: current, bus: bus, generation: generation)
+            } else {
+                currentPlayer.stop()
+            }
+        }
+        return nextCue
+    }
+
+    private func scheduleStop(cue: AudioCue, bus: LoopBus, generation: Int) {
+        let delay = crossfadeDuration
+        Task { @MainActor [weak self] in
+            guard delay > 0 else { return }
+            try? await Task.sleep(for: .milliseconds(Int64((delay * 1_000).rounded())))
+            guard let self,
+                  self.loopGenerations[bus] == generation,
+                  self.currentCue(for: bus) != cue
+            else {
+                return
+            }
+            self.players[cue]?.stop()
+        }
+    }
+
+    private func currentCue(for bus: LoopBus) -> AudioCue? {
+        switch bus {
+        case .bgm:
+            currentBGMCue
+        case .musicLayer:
+            currentMusicLayerCue
+        case .ambience:
+            currentAmbienceCue
+        }
     }
 
     private func updateVolumes() {

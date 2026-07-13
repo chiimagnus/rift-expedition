@@ -268,7 +268,7 @@ final class GameSessionViewModel {
 
     func completeChapter() {
         let didAutosave = performSafeAutosave()
-        audioService.stopBGM()
+        audioService.stopSoundscape()
         audioService.play(.chapterComplete)
         battleViewModel = nil
         appState = .chapterComplete
@@ -313,7 +313,7 @@ final class GameSessionViewModel {
     }
 
     func returnToMainMenu() {
-        audioService.stopBGM()
+        audioService.stopSoundscape()
         appState = .mainMenu
         statusText = "裂隙正在沉睡。"
         lastWorldClick = nil
