@@ -75,6 +75,61 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(playersByCue[.attackHit]).volume, 0.4, accuracy: 0.001)
     }
 
+
+    func testAudioSoundscapeStateIsIdempotentAndRoutesThreeLoopBuses() throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let service = AudioService(
+            makePlayer: { url in
+                let cue = try XCTUnwrap(AudioCue(rawValue: url.deletingPathExtension().lastPathComponent))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav") }
+        )
+
+        service.playExplorationSoundscape(for: "village_riverside")
+        service.playExplorationSoundscape(for: "village_riverside")
+
+        XCTAssertEqual(
+            service.soundscapeSnapshot,
+            AudioSoundscapeSnapshot(
+                state: .exploration(areaID: "village_riverside"),
+                bgmCue: .villageTheme,
+                musicLayerCue: .villageLayer,
+                ambienceCue: .riverAmbience
+            )
+        )
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 1)
+        XCTAssertEqual(playersByCue[.villageLayer]?.playCount, 1)
+        XCTAssertEqual(playersByCue[.riverAmbience]?.playCount, 1)
+
+        service.playBattleSoundscape(for: "village_riverside")
+        service.playBattleSoundscape(for: "village_riverside")
+
+        XCTAssertEqual(
+            service.soundscapeSnapshot,
+            AudioSoundscapeSnapshot(
+                state: .battle(areaID: "village_riverside"),
+                bgmCue: .battleTheme,
+                musicLayerCue: .battleLayer,
+                ambienceCue: nil
+            )
+        )
+        XCTAssertEqual(playersByCue[.villageTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.villageLayer]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.riverAmbience]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.battleTheme]?.playCount, 1)
+        XCTAssertEqual(playersByCue[.battleLayer]?.playCount, 1)
+
+        service.playExplorationSoundscape(for: "village_riverside")
+        XCTAssertEqual(playersByCue[.battleTheme]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.battleLayer]?.stopCount, 1)
+        XCTAssertEqual(playersByCue[.villageTheme]?.playCount, 2)
+        XCTAssertEqual(playersByCue[.villageLayer]?.playCount, 2)
+        XCTAssertEqual(playersByCue[.riverAmbience]?.playCount, 2)
+    }
+
     func testAudioServiceMissingCuesDoNotCrash() {
         let service = AudioService(
             makePlayer: { _ in

@@ -44,6 +44,19 @@ enum AudioCue: String, CaseIterable {
     case caveRumble = "cave_rumble_loop"
 }
 
+enum AudioSoundscapeState: Equatable {
+    case stopped
+    case exploration(areaID: String)
+    case battle(areaID: String)
+}
+
+struct AudioSoundscapeSnapshot: Equatable {
+    var state: AudioSoundscapeState
+    var bgmCue: AudioCue?
+    var musicLayerCue: AudioCue?
+    var ambienceCue: AudioCue?
+}
+
 @MainActor
 @Observable
 final class AudioService {
@@ -73,6 +86,16 @@ final class AudioService {
     private var currentBGMCue: AudioCue?
     private var currentMusicLayerCue: AudioCue?
     private var currentAmbienceCue: AudioCue?
+    private(set) var soundscapeState: AudioSoundscapeState = .stopped
+
+    var soundscapeSnapshot: AudioSoundscapeSnapshot {
+        AudioSoundscapeSnapshot(
+            state: soundscapeState,
+            bgmCue: currentBGMCue,
+            musicLayerCue: currentMusicLayerCue,
+            ambienceCue: currentAmbienceCue
+        )
+    }
 
     init(
         bundle: Bundle = .main,
@@ -94,15 +117,11 @@ final class AudioService {
     }
 
     func playExplorationSoundscape(for areaID: String) {
-        currentBGMCue = switchedLoop(from: currentBGMCue, to: Self.bgmCue(for: areaID))
-        currentMusicLayerCue = switchedLoop(from: currentMusicLayerCue, to: Self.musicLayerCue(for: areaID))
-        currentAmbienceCue = switchedLoop(from: currentAmbienceCue, to: Self.soundscapeAmbienceCue(for: areaID))
+        transition(to: .exploration(areaID: areaID))
     }
 
     func playBattleSoundscape(for areaID: String) {
-        currentBGMCue = switchedLoop(from: currentBGMCue, to: .battleTheme)
-        currentMusicLayerCue = switchedLoop(from: currentMusicLayerCue, to: Self.battleLayerCue(for: areaID))
-        currentAmbienceCue = switchedLoop(from: currentAmbienceCue, to: nil)
+        transition(to: .battle(areaID: areaID))
     }
 
     // Retained for tests and isolated callers that only want the base music bus.
@@ -117,12 +136,35 @@ final class AudioService {
     }
 
     func stopBGM() {
-        stopLoop(currentBGMCue)
-        stopLoop(currentMusicLayerCue)
-        stopLoop(currentAmbienceCue)
-        currentBGMCue = nil
-        currentMusicLayerCue = nil
-        currentAmbienceCue = nil
+        if soundscapeState == .stopped {
+            stopLoop(currentBGMCue)
+            stopLoop(currentMusicLayerCue)
+            stopLoop(currentAmbienceCue)
+            currentBGMCue = nil
+            currentMusicLayerCue = nil
+            currentAmbienceCue = nil
+        } else {
+            transition(to: .stopped)
+        }
+    }
+
+    static func soundscapeCues(for state: AudioSoundscapeState) -> (bgm: AudioCue?, layer: AudioCue?, ambience: AudioCue?) {
+        switch state {
+        case .stopped:
+            return (nil, nil, nil)
+        case let .exploration(areaID):
+            return (
+                bgmCue(for: areaID),
+                musicLayerCue(for: areaID),
+                soundscapeAmbienceCue(for: areaID)
+            )
+        case let .battle(areaID):
+            return (
+                .battleTheme,
+                battleLayerCue(for: areaID),
+                nil
+            )
+        }
     }
 
     static func bgmCue(for areaID: String) -> AudioCue {
@@ -162,6 +204,15 @@ final class AudioService {
 
     static func battleLayerCue(for areaID: String) -> AudioCue? {
         areaID.hasPrefix("wilds_") ? .wildsLayer : .battleLayer
+    }
+
+    private func transition(to nextState: AudioSoundscapeState) {
+        guard soundscapeState != nextState else { return }
+        let cues = Self.soundscapeCues(for: nextState)
+        currentBGMCue = switchedLoop(from: currentBGMCue, to: cues.bgm)
+        currentMusicLayerCue = switchedLoop(from: currentMusicLayerCue, to: cues.layer)
+        currentAmbienceCue = switchedLoop(from: currentAmbienceCue, to: cues.ambience)
+        soundscapeState = nextState
     }
 
     private func loadPlayers() {
