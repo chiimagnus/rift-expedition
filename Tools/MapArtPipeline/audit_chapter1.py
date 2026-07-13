@@ -27,6 +27,8 @@ for area,spec in SPECS.items():
         with Image.open(bg) as im:
             if im.size!=(w,h): issues.append(f'{area}: background size {im.size} != {(w,h)}')
     fg_state='none'
+    if not spec.get('foregroundOutput'):
+        issues.append(f'{area}: foreground is not configured')
     if spec.get('foregroundOutput'):
         fg=ROOT/spec['foregroundOutput']; fg_state='ok'
         if not fg.is_file(): issues.append(f'{area}: missing foreground'); fg_state='missing'

@@ -52,7 +52,7 @@ class MapArtPipelineTests(unittest.TestCase):
         spec = self.specs["village_square"]
         with tempfile.TemporaryDirectory() as directory:
             project = Path(directory)
-            for relative in [spec["tmx"], spec["source"], "RiftExpedition/Resources/Assets/assets-manifest.json"]:
+            for relative in [spec["tmx"], spec["source"], spec["foregroundSource"], "RiftExpedition/Resources/Assets/assets-manifest.json"]:
                 source = self.project_root / relative
                 destination = project / relative
                 destination.parent.mkdir(parents=True, exist_ok=True)

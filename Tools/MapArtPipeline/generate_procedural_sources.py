@@ -139,10 +139,20 @@ def add_environment(area: str, image: Image.Image, root: ET.Element) -> tuple[Im
     fgd = ImageDraw.Draw(fg, "RGBA")
     width, height = image.size
 
-    # Boundary vegetation: drawn into foreground so actors can pass visually beneath crowns near openings.
-    for x in range(20, width, 54):
-        draw_tree(fgd, x + rng.randint(-8,8), 22 + rng.randint(-5,8), rng.randint(22,30), rng, 235)
-        draw_tree(fgd, x + rng.randint(-8,8), height-18 + rng.randint(-8,5), rng.randint(22,31), rng, 235)
+    # Boundary occlusion: forest canopies outdoors, rock overhangs in caves.
+    if area.startswith("cave_"):
+        for x in range(12, width, 46):
+            for yy in (18, height - 18):
+                r = rng.randint(22, 34)
+                fgd.ellipse((x-r, yy-r, x+r, yy+r), fill=(62, 61, 65, 245), outline=(34, 34, 39, 255), width=3)
+        for y in range(52, height-40, 50):
+            for xx in (16, width - 16):
+                r = rng.randint(23, 35)
+                fgd.ellipse((xx-r, y-r, xx+r, y+r), fill=(62, 61, 65, 245), outline=(34, 34, 39, 255), width=3)
+    else:
+        for x in range(20, width, 54):
+            draw_tree(fgd, x + rng.randint(-8,8), 22 + rng.randint(-5,8), rng.randint(22,30), rng, 235)
+            draw_tree(fgd, x + rng.randint(-8,8), height-18 + rng.randint(-8,5), rng.randint(22,31), rng, 235)
     for y in range(70, height-50, 62):
         left_open = ((area == "village_outskirts" and 245 <= y <= 395)
                      or (area == "village_riverside" and y >= 515)
@@ -156,10 +166,11 @@ def add_environment(area: str, image: Image.Image, root: ET.Element) -> tuple[Im
                       or (area == "wilds_ruins" and 95 <= y <= 220)
                       or (area == "wilds_riverbank" and 245 <= y <= 395)
                       or (area in {"cave_entrance", "cave_mines"} and 245 <= y <= 395))
-        if not left_open:
-            draw_tree(fgd, 18 + rng.randint(-5,8), y, rng.randint(23,31), rng, 235)
-        if not right_open:
-            draw_tree(fgd, width-18 + rng.randint(-8,5), y, rng.randint(23,31), rng, 235)
+        if not area.startswith("cave_"):
+            if not left_open:
+                draw_tree(fgd, 18 + rng.randint(-5,8), y, rng.randint(23,31), rng, 235)
+            if not right_open:
+                draw_tree(fgd, width-18 + rng.randint(-8,5), y, rng.randint(23,31), rng, 235)
 
     if area == "village_riverside":
         # Water refinement and reeds, respecting the shallow-water/southwest layout.

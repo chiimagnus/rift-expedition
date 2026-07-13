@@ -217,7 +217,12 @@
         "blocksSight": false
       }
     ],
-    "status": "ready"
+    "status": "ready",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/village_square_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_square_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_village_square_foreground",
+    "foregroundLayerName": "foreground_roofs",
+    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout"
   },
   "village_riverside": {
     "status": "ready",
@@ -339,6 +344,11 @@
     "layerName": "background_art",
     "crop": "center",
     "terrainVisible": false,
-    "status": "ready"
+    "status": "ready",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/cave_depths_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_depths_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_cave_depths_foreground",
+    "foregroundLayerName": "foreground_overhang",
+    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout"
   }
 }

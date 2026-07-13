@@ -684,6 +684,42 @@
     "author": "AI-generated, integrated by Rift Expedition project"
   },
   {
+    "id": "mapart.chapter1_village_square",
+    "path": "Assets/MapArt/chapter1/village_square.png",
+    "type": "map-art",
+    "source": "Top-down 2D environment aligned by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_square_foreground",
+    "path": "Assets/MapArt/chapter1/village_square_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_depths",
+    "path": "Assets/MapArt/chapter1/cave_depths.png",
+    "type": "map-art",
+    "source": "Top-down 2D environment aligned by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_depths_foreground",
+    "path": "Assets/MapArt/chapter1/cave_depths_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
     "id": "mapart.chapter1_cave_entrance",
     "path": "Assets/MapArt/chapter1/cave_entrance.png",
     "type": "map-art",
@@ -715,24 +751,6 @@
     "path": "Assets/MapArt/chapter1/cave_mines_foreground.png",
     "type": "map-art",
     "source": "Deterministic transparent cave overhang layer generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_cave_depths",
-    "path": "Assets/MapArt/chapter1/cave_depths.png",
-    "type": "map-art",
-    "source": "Top-down 2D environment aligned by Tools/MapArtPipeline",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_village_square",
-    "path": "Assets/MapArt/chapter1/village_square.png",
-    "type": "map-art",
-    "source": "Top-down 2D environment aligned by Tools/MapArtPipeline",
     "license": "ai-static",
     "downloadedAt": "2026-07-12",
     "author": "AI-generated, integrated by Rift Expedition project"
