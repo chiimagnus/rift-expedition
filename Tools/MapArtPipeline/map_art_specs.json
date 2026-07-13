@@ -160,9 +160,9 @@
         "id": 109,
         "name": "东侧商铺",
         "x": 830,
-        "y": 150,
+        "y": 160,
         "width": 162,
-        "height": 302,
+        "height": 292,
         "blocksMovement": true,
         "blocksSight": true
       },

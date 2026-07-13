@@ -4,7 +4,7 @@
     <property name="areaName" value="裂隙村广场" />
     <property name="assetId" value="tileset.chapter1_village" />
     <property name="artAssetId" value="mapart.chapter1_village_square" />
-    <property name="artPipelineVersion" value="1" />
+    <property name="artPipelineVersion" value="3" />
   </properties>
   <tileset firstgid="1" name="chapter1_village_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
     <image source="../../Assets/Tilesets/chapter1_village_tileset.png" width="256" height="32" />
@@ -152,7 +152,7 @@
         <property name="blocksSight" value="true" />
       </properties>
     </object>
-    <object id="109" name="东侧商铺" x="830" y="150" width="162" height="302">
+    <object id="109" name="东侧商铺" x="830" y="160" width="162" height="292">
       <properties>
         <property name="blocksMovement" value="true" />
         <property name="blocksSight" value="true" />
