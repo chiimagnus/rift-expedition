@@ -3,6 +3,7 @@ import Foundation
 public enum ContentValidationError: Error, Equatable, CustomStringConvertible, Sendable {
     case duplicateID(kind: String, id: String)
     case missingReference(owner: String, field: String, id: String)
+    case invalidClass(owner: String, id: String, reason: String)
     case invalidItem(owner: String, id: String, reason: String)
     case invalidQuest(owner: String, id: String, reason: String)
     case invalidSkill(owner: String, id: String, reason: String)
@@ -14,6 +15,8 @@ public enum ContentValidationError: Error, Equatable, CustomStringConvertible, S
             "Duplicate \(kind) id: \(id)"
         case let .missingReference(owner, field, id):
             "Missing reference in \(owner).\(field): \(id)"
+        case let .invalidClass(owner, id, reason):
+            "Invalid class in \(owner): \(id) (\(reason))"
         case let .invalidItem(owner, id, reason):
             "Invalid item in \(owner): \(id) (\(reason))"
         case let .invalidQuest(owner, id, reason):
@@ -104,35 +107,122 @@ public enum ContentValidator {
             }
         }
 
+        let itemsByID = catalog.items.reduce(into: [String: ItemDefinition]()) { result, item in
+            if result[item.id] == nil { result[item.id] = item }
+        }
+
         for classDefinition in catalog.classes {
-            for skillID in classDefinition.initialSkillIDs where !skillIDs.contains(skillID) {
-                errors.append(.missingReference(owner: "class:\(classDefinition.id)", field: "initialSkillIDs", id: skillID))
+            let owner = "class:\(classDefinition.id)"
+            if isBlank(classDefinition.id) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "id must not be blank"))
             }
-            for itemID in [
-                classDefinition.defaultEquipment.weaponID,
-                classDefinition.defaultEquipment.armorID,
-                classDefinition.defaultEquipment.accessoryID
-            ].compactMap({ $0 }) where !itemIDs.contains(itemID) {
-                errors.append(.missingReference(owner: "class:\(classDefinition.id)", field: "defaultEquipment", id: itemID))
+            if isBlank(classDefinition.displayName) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "displayName must not be blank"))
+            }
+            if classDefinition.initialSkillIDs.isEmpty {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialSkillIDs must not be empty"))
+            }
+            if hasDuplicates(classDefinition.initialSkillIDs) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialSkillIDs must not contain duplicates"))
+            }
+            for skillID in classDefinition.initialSkillIDs {
+                if isBlank(skillID) {
+                    errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialSkillIDs must not contain blank ids"))
+                } else if !skillIDs.contains(skillID) {
+                    errors.append(.missingReference(owner: owner, field: "initialSkillIDs", id: skillID))
+                }
+            }
+            let equipmentReferences: [(field: String, id: String?, slot: EquipmentSlot)] = [
+                ("weaponID", classDefinition.defaultEquipment.weaponID, .weapon),
+                ("armorID", classDefinition.defaultEquipment.armorID, .armor),
+                ("accessoryID", classDefinition.defaultEquipment.accessoryID, .accessory)
+            ]
+            for reference in equipmentReferences {
+                guard let itemID = reference.id else { continue }
+                guard !isBlank(itemID) else {
+                    errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "defaultEquipment.\(reference.field) must not be blank"))
+                    continue
+                }
+                guard let item = itemsByID[itemID] else {
+                    errors.append(.missingReference(owner: owner, field: "defaultEquipment.\(reference.field)", id: itemID))
+                    continue
+                }
+                guard item.kind == .equipment, let equipment = item.equipment else {
+                    errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "defaultEquipment.\(reference.field) must reference equipment"))
+                    continue
+                }
+                if equipment.slot != reference.slot {
+                    errors.append(.invalidClass(
+                        owner: owner,
+                        id: classDefinition.id,
+                        reason: "defaultEquipment.\(reference.field) expected \(reference.slot.rawValue), got \(equipment.slot.rawValue)"
+                    ))
+                }
             }
         }
 
-        for item in catalog.items where item.kind == .equipment && item.equipment == nil {
-            errors.append(.invalidItem(owner: "item:\(item.id)", id: item.id, reason: "equipment item requires equipment definition"))
-        }
-        for item in catalog.items where item.kind == .consumable {
-            guard let skillID = item.skillID else {
-                errors.append(.invalidItem(owner: "item:\(item.id)", id: item.id, reason: "consumable item requires skillID"))
-                continue
+        for item in catalog.items {
+            let owner = "item:\(item.id)"
+            if isBlank(item.id) {
+                errors.append(.invalidItem(owner: owner, id: item.id, reason: "id must not be blank"))
             }
-            if !skillIDs.contains(skillID) {
-                errors.append(.missingReference(owner: "item:\(item.id)", field: "skillID", id: skillID))
+            if isBlank(item.displayName) {
+                errors.append(.invalidItem(owner: owner, id: item.id, reason: "displayName must not be blank"))
+            }
+            switch item.kind {
+            case .equipment:
+                if item.skillID != nil {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "equipment item forbids skillID"))
+                }
+                guard let equipment = item.equipment else {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "equipment item requires equipment definition"))
+                    continue
+                }
+                if equipment.id != item.id {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "equipment id must match item id"))
+                }
+                if isBlank(equipment.displayName) {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "equipment displayName must not be blank"))
+                }
+            case .consumable:
+                if item.equipment != nil {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "consumable item forbids equipment definition"))
+                }
+                guard let rawSkillID = item.skillID else {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "consumable item requires skillID"))
+                    continue
+                }
+                let skillID = rawSkillID.trimmingCharacters(in: .whitespacesAndNewlines)
+                if skillID.isEmpty {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "consumable skillID must not be blank"))
+                } else if !skillIDs.contains(skillID) {
+                    errors.append(.missingReference(owner: owner, field: "skillID", id: skillID))
+                }
+            case .quest:
+                if item.equipment != nil || item.skillID != nil {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "quest item forbids equipment and skillID"))
+                }
             }
         }
 
         let questIDs = Set(catalog.quests.map(\.id))
         for dialogue in catalog.dialogues {
             let owner = "dialogue:\(dialogue.id)"
+            if isBlank(dialogue.id) {
+                errors.append(.invalidDialogue(owner: owner, id: dialogue.id, reason: "id must not be blank"))
+            }
+            if isBlank(dialogue.speakerName) {
+                errors.append(.invalidDialogue(owner: owner, id: dialogue.id, reason: "speakerName must not be blank"))
+            }
+            if dialogue.lines.isEmpty {
+                errors.append(.invalidDialogue(owner: owner, id: dialogue.id, reason: "lines must not be empty"))
+            }
+            for (index, line) in dialogue.lines.enumerated() where isBlank(line) {
+                errors.append(.invalidDialogue(owner: owner, id: dialogue.id, reason: "line \(index) must not be blank"))
+            }
+            if dialogue.options.isEmpty {
+                errors.append(.invalidDialogue(owner: owner, id: dialogue.id, reason: "options must not be empty"))
+            }
             errors.append(contentsOf: duplicateErrors(
                 dialogue.options.map(\.id),
                 kind: "dialogue option in \(dialogue.id)"
@@ -174,31 +264,78 @@ public enum ContentValidator {
         }
 
         for quest in catalog.quests {
-            if Set(quest.requiredItemIDs).count != quest.requiredItemIDs.count {
+            let owner = "quest:\(quest.id)"
+            for (field, value) in [
+                ("id", quest.id),
+                ("chapterID", quest.chapterID),
+                ("title", quest.title),
+                ("summary", quest.summary),
+                ("locationHint", quest.locationHint),
+                ("startDialogID", quest.startDialogID),
+                ("turnInDialogID", quest.turnInDialogID)
+            ] where isBlank(value) {
+                errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "\(field) must not be blank"))
+            }
+            if quest.objectives.isEmpty {
+                errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "objectives must not be empty"))
+            }
+            if quest.objectives.contains(where: isBlank) {
+                errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "objectives must not contain blank values"))
+            }
+            if hasDuplicates(quest.objectives) {
+                errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "objectives must not contain duplicates"))
+            }
+            if hasDuplicates(quest.requiredItemIDs) {
                 errors.append(.invalidQuest(
-                    owner: "quest:\(quest.id)",
+                    owner: owner,
                     id: quest.id,
                     reason: "requiredItemIDs must not contain duplicates"
                 ))
             }
-            for itemID in quest.requiredItemIDs where !itemIDs.contains(itemID) {
-                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "requiredItemIDs", id: itemID))
+            if hasDuplicates(quest.rewardItemIDs) {
+                errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "rewardItemIDs must not contain duplicates"))
+            }
+            if hasDuplicates(quest.rewardSkillIDs) {
+                errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "rewardSkillIDs must not contain duplicates"))
+            }
+            for itemID in quest.requiredItemIDs {
+                if isBlank(itemID) {
+                    errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "requiredItemIDs must not contain blank ids"))
+                } else if !itemIDs.contains(itemID) {
+                    errors.append(.missingReference(owner: owner, field: "requiredItemIDs", id: itemID))
+                }
             }
             if !dialogueIDs.contains(quest.startDialogID) {
-                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "startDialogID", id: quest.startDialogID))
+                errors.append(.missingReference(owner: owner, field: "startDialogID", id: quest.startDialogID))
             }
             if !dialogueIDs.contains(quest.turnInDialogID) {
-                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "turnInDialogID", id: quest.turnInDialogID))
+                errors.append(.missingReference(owner: owner, field: "turnInDialogID", id: quest.turnInDialogID))
             }
-            for itemID in quest.rewardItemIDs where !itemIDs.contains(itemID) {
-                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "rewardItemIDs", id: itemID))
+            for itemID in quest.rewardItemIDs {
+                if isBlank(itemID) {
+                    errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "rewardItemIDs must not contain blank ids"))
+                } else if !itemIDs.contains(itemID) {
+                    errors.append(.missingReference(owner: owner, field: "rewardItemIDs", id: itemID))
+                }
             }
-            for skillID in quest.rewardSkillIDs where !skillIDs.contains(skillID) {
-                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "rewardSkillIDs", id: skillID))
+            for skillID in quest.rewardSkillIDs {
+                if isBlank(skillID) {
+                    errors.append(.invalidQuest(owner: owner, id: quest.id, reason: "rewardSkillIDs must not contain blank ids"))
+                } else if !skillIDs.contains(skillID) {
+                    errors.append(.missingReference(owner: owner, field: "rewardSkillIDs", id: skillID))
+                }
             }
         }
 
         return errors
+    }
+
+    private static func isBlank(_ value: String) -> Bool {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private static func hasDuplicates(_ values: [String]) -> Bool {
+        Set(values).count != values.count
     }
 
     private static func duplicateErrors(_ ids: [String], kind: String) -> [ContentValidationError] {

@@ -312,6 +312,214 @@ final class ContentValidatorTests: XCTestCase {
         }
     }
 
+    func testBlankTopLevelContentFieldsAreRejected() {
+        let stats = Stats(
+            maxHealth: 10,
+            health: 10,
+            attack: 1,
+            defense: 1,
+            evasion: 1,
+            magic: 1,
+            maxActionPoints: 4,
+            actionPoints: 4
+        )
+        let skill = SkillDefinition(
+            id: "slash",
+            displayName: "斩击",
+            actionPointCost: 1,
+            range: 1,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: true,
+            effects: [.damage(1)]
+        )
+        let quest = QuestDefinition(
+            id: " ",
+            chapterID: " ",
+            title: " ",
+            summary: " ",
+            isMainQuest: false,
+            locationHint: " ",
+            objectives: [" "],
+            startDialogID: " ",
+            turnInDialogID: " ",
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
+        )
+        let catalog = ContentCatalog(
+            classes: [
+                ClassDefinition(
+                    id: " ",
+                    displayName: " ",
+                    initialStats: stats,
+                    initialSkillIDs: ["slash"],
+                    defaultEquipment: EquipmentLoadout()
+                )
+            ],
+            skills: [skill],
+            items: [ItemDefinition(id: " ", displayName: " ", kind: .quest)],
+            quests: [quest],
+            dialogues: [DialogDefinition(id: " ", speakerName: " ", lines: [" "], options: [])]
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+        for expected in [
+            "Invalid class", "id must not be blank", "displayName must not be blank",
+            "Invalid item", "Invalid quest", "chapterID must not be blank",
+            "title must not be blank", "summary must not be blank",
+            "locationHint must not be blank", "objectives must not contain blank values",
+            "Invalid dialogue", "speakerName must not be blank", "line 0 must not be blank",
+            "options must not be empty"
+        ] {
+            XCTAssertTrue(message.contains(expected), expected)
+        }
+    }
+
+    func testEquipmentIdentityAndDefaultSlotMustMatch() {
+        let stats = Stats(
+            maxHealth: 10,
+            health: 10,
+            attack: 1,
+            defense: 1,
+            evasion: 1,
+            magic: 1,
+            maxActionPoints: 4,
+            actionPoints: 4
+        )
+        let skill = SkillDefinition(
+            id: "slash",
+            displayName: "斩击",
+            actionPointCost: 1,
+            range: 1,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: true,
+            effects: [.damage(1)]
+        )
+        let item = ItemDefinition(
+            id: "training_sword",
+            displayName: "训练剑",
+            kind: .equipment,
+            equipment: EquipmentDefinition(
+                id: "mismatched_internal_id",
+                displayName: "训练剑",
+                slot: .armor
+            )
+        )
+        let catalog = ContentCatalog(
+            classes: [
+                ClassDefinition(
+                    id: "warrior",
+                    displayName: "战士",
+                    initialStats: stats,
+                    initialSkillIDs: ["slash"],
+                    defaultEquipment: EquipmentLoadout(weaponID: "training_sword")
+                )
+            ],
+            skills: [skill],
+            items: [item],
+            quests: [],
+            dialogues: []
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+        XCTAssertTrue(message.contains("equipment id must match item id"))
+        XCTAssertTrue(message.contains("defaultEquipment.weaponID expected weapon, got armor"))
+    }
+
+    func testDuplicateSkillsObjectivesAndRewardsAreRejected() {
+        let stats = Stats(
+            maxHealth: 10,
+            health: 10,
+            attack: 1,
+            defense: 1,
+            evasion: 1,
+            magic: 1,
+            maxActionPoints: 4,
+            actionPoints: 4
+        )
+        let skill = SkillDefinition(
+            id: "slash",
+            displayName: "斩击",
+            actionPointCost: 1,
+            range: 1,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: true,
+            effects: [.damage(1)]
+        )
+        let quest = QuestDefinition(
+            id: "duplicates",
+            chapterID: "chapter1",
+            title: "重复任务",
+            summary: "测试重复列表",
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["同一目标", "同一目标"],
+            startDialogID: "start",
+            turnInDialogID: "turn_in",
+            requiredItemIDs: [],
+            rewardItemIDs: ["reward", "reward"],
+            rewardSkillIDs: ["slash", "slash"]
+        )
+        let close = DialogOptionDefinition(id: "close", title: "关闭", action: .close)
+        let catalog = ContentCatalog(
+            classes: [
+                ClassDefinition(
+                    id: "warrior",
+                    displayName: "战士",
+                    initialStats: stats,
+                    initialSkillIDs: ["slash", "slash"],
+                    defaultEquipment: EquipmentLoadout()
+                )
+            ],
+            skills: [skill],
+            items: [ItemDefinition(id: "reward", displayName: "奖励", kind: .quest)],
+            quests: [quest],
+            dialogues: [
+                DialogDefinition(id: "start", speakerName: "NPC", lines: ["开始"], options: [close]),
+                DialogDefinition(id: "turn_in", speakerName: "NPC", lines: ["完成"], options: [close])
+            ]
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+        XCTAssertTrue(message.contains("initialSkillIDs must not contain duplicates"))
+        XCTAssertTrue(message.contains("objectives must not contain duplicates"))
+        XCTAssertTrue(message.contains("rewardItemIDs must not contain duplicates"))
+        XCTAssertTrue(message.contains("rewardSkillIDs must not contain duplicates"))
+    }
+
+    func testItemKindsRejectForeignPayloads() {
+        let skill = SkillDefinition(
+            id: "heal",
+            displayName: "治疗",
+            actionPointCost: 1,
+            range: 1,
+            target: .ally,
+            affectsAllies: true,
+            canBeDodged: false,
+            effects: [.heal(1)]
+        )
+        let equipmentPayload = EquipmentDefinition(id: "payload", displayName: "载荷", slot: .weapon)
+        let catalog = ContentCatalog(
+            classes: [],
+            skills: [skill],
+            items: [
+                ItemDefinition(id: "bad_equipment", displayName: "错误装备", kind: .equipment, equipment: equipmentPayload, skillID: "heal"),
+                ItemDefinition(id: "bad_consumable", displayName: "错误消耗品", kind: .consumable, equipment: equipmentPayload, skillID: "heal"),
+                ItemDefinition(id: "bad_quest", displayName: "错误任务物", kind: .quest, equipment: equipmentPayload, skillID: "heal")
+            ],
+            quests: [],
+            dialogues: []
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+        XCTAssertTrue(message.contains("equipment item forbids skillID"))
+        XCTAssertTrue(message.contains("consumable item forbids equipment definition"))
+        XCTAssertTrue(message.contains("quest item forbids equipment and skillID"))
+    }
+
     func testChapterOneClassesHaveThreeValidInitialSkillsAndEquipment() throws {
         let catalog = try ContentLoader.load(from: projectDataDirectory())
 
