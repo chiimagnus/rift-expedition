@@ -74,9 +74,14 @@ final class DialogViewModelTests: XCTestCase {
             chapterID: "chapter1",
             title: "血债",
             summary: "查清旧矿洞。",
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["完成测试目标"],
             startDialogID: "elder_intro",
             turnInDialogID: "elder_return",
-            requiredItemIDs: []
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
         )
     }
 }

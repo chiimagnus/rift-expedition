@@ -70,6 +70,32 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(skill.id, "firebolt")
         XCTAssertEqual(weapon.slot, .weapon)
     }
+    func testQuestMissingAnyStrictMetadataFieldIsRejected() throws {
+        let complete: [String: Any] = [
+            "id": "strict",
+            "chapterID": "chapter1",
+            "title": "严格任务",
+            "summary": "完整字段",
+            "isMainQuest": false,
+            "locationHint": "测试地点",
+            "objectives": ["完成测试目标"],
+            "startDialogID": "start",
+            "turnInDialogID": "turn_in",
+            "requiredItemIDs": [],
+            "rewardItemIDs": [],
+            "rewardSkillIDs": []
+        ]
+        for field in [
+            "chapterID", "title", "summary", "isMainQuest", "locationHint", "objectives",
+            "startDialogID", "turnInDialogID", "requiredItemIDs", "rewardItemIDs", "rewardSkillIDs"
+        ] {
+            var object = complete
+            object.removeValue(forKey: field)
+            let data = try JSONSerialization.data(withJSONObject: object)
+            XCTAssertThrowsError(try JSONDecoder().decode(QuestDefinition.self, from: data), field)
+        }
+    }
+
     func testQuestWithoutRequiredItemsIsRejected() {
         let json = #"{"id":"invalid","title":"Invalid","summary":"Missing requirements","startDialogID":"start","rewardItemIDs":[],"rewardSkillIDs":[]}"#
 

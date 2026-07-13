@@ -88,18 +88,14 @@ public enum ChapterFlowValidator {
                 issues: &issues
             )
 
-            if let turnInDialogID = quest.turnInDialogID {
-                validateDialog(
-                    id: turnInDialogID,
-                    expectedAction: "completeQuest",
-                    questID: quest.id,
-                    role: "turn-in",
-                    dialogsByID: dialogsByID,
-                    issues: &issues
-                )
-            } else {
-                issues.append(.init(message: "Quest \(quest.id) has no turn-in dialog."))
-            }
+            validateDialog(
+                id: quest.turnInDialogID,
+                expectedAction: "completeQuest",
+                questID: quest.id,
+                role: "turn-in",
+                dialogsByID: dialogsByID,
+                issues: &issues
+            )
 
             for itemID in quest.rewardItemIDs where !itemIDs.contains(itemID) {
                 issues.append(.init(message: "Quest \(quest.id) rewards missing item: \(itemID)"))
@@ -172,8 +168,8 @@ public enum ChapterFlowValidator {
 
         return ChapterFlowValidationResult(
             questCount: quests.count,
-            mainQuestCount: quests.filter { $0.isMainQuest == true }.count,
-            sideQuestCount: quests.filter { $0.isMainQuest != true }.count,
+            mainQuestCount: quests.filter(\.isMainQuest).count,
+            sideQuestCount: quests.filter { !$0.isMainQuest }.count,
             encounterReferenceCount: mapEncounterReferences.count,
             requiredItemCount: quests.reduce(0) { $0 + $1.requiredItemIDs.count },
             issues: issues.sorted { $0.message < $1.message }
@@ -244,9 +240,13 @@ private struct IDRecord: Decodable {
 private struct QuestRecord: Decodable {
     var id: String
     var chapterID: String
-    var isMainQuest: Bool?
+    var title: String
+    var summary: String
+    var isMainQuest: Bool
+    var locationHint: String
+    var objectives: [String]
     var startDialogID: String
-    var turnInDialogID: String?
+    var turnInDialogID: String
     var requiredItemIDs: [String]
     var rewardItemIDs: [String]
     var rewardSkillIDs: [String]

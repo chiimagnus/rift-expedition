@@ -318,7 +318,11 @@ private final class ChapterFixture {
         quests.append([
             "id": "future_quest",
             "chapterID": "chapter2",
+            "title": "Future Quest",
+            "summary": "Future chapter fixture",
             "isMainQuest": true,
+            "locationHint": "Future area",
+            "objectives": ["Complete the future fixture"],
             "startDialogID": "future_start",
             "turnInDialogID": "future_turnin",
             "requiredItemIDs": ["future_item"],
@@ -349,7 +353,11 @@ private final class ChapterFixture {
         [
             "id": id,
             "chapterID": "chapter1",
+            "title": id,
+            "summary": "Fixture quest \(id)",
             "isMainQuest": main,
+            "locationHint": "Fixture area",
+            "objectives": ["Complete fixture quest \(id)"],
             "startDialogID": start,
             "turnInDialogID": turnIn,
             "requiredItemIDs": ChapterFlowValidatorRequiredItems.items(for: id),

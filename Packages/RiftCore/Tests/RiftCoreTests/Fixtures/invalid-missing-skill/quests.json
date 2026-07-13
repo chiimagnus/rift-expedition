@@ -12,6 +12,11 @@
       "slash"
     ],
     "requiredItemIDs": [],
-    "chapterID": "chapter1"
+    "chapterID": "chapter1",
+    "isMainQuest": true,
+    "locationHint": "测试地点",
+    "objectives": [
+      "完成测试目标"
+    ]
   }
 ]

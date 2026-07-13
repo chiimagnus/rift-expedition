@@ -187,8 +187,8 @@ public enum ContentValidator {
             if !dialogueIDs.contains(quest.startDialogID) {
                 errors.append(.missingReference(owner: "quest:\(quest.id)", field: "startDialogID", id: quest.startDialogID))
             }
-            if let turnInDialogID = quest.turnInDialogID, !dialogueIDs.contains(turnInDialogID) {
-                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "turnInDialogID", id: turnInDialogID))
+            if !dialogueIDs.contains(quest.turnInDialogID) {
+                errors.append(.missingReference(owner: "quest:\(quest.id)", field: "turnInDialogID", id: quest.turnInDialogID))
             }
             for itemID in quest.rewardItemIDs where !itemIDs.contains(itemID) {
                 errors.append(.missingReference(owner: "quest:\(quest.id)", field: "rewardItemIDs", id: itemID))

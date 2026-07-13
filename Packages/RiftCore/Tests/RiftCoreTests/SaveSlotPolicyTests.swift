@@ -503,8 +503,14 @@ final class SaveContentValidatorTests: XCTestCase {
                     chapterID: "chapter1",
                     title: "任务",
                     summary: "任务",
+                    isMainQuest: false,
+                    locationHint: "测试地点",
+                    objectives: ["完成测试目标"],
                     startDialogID: "dialog",
-                    requiredItemIDs: []
+                    turnInDialogID: "turn_in",
+                    requiredItemIDs: [],
+                    rewardItemIDs: [],
+                    rewardSkillIDs: []
                 )
             ],
             dialogues: [

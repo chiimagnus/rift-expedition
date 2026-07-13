@@ -18,7 +18,7 @@ public struct QuestLogEntry: Codable, Equatable, Identifiable, Sendable {
     public var objective: String
     public var status: QuestStatus
     public var isMainQuest: Bool
-    public var locationHint: String?
+    public var locationHint: String
     public var objectives: [String]
 
     public init(
@@ -26,9 +26,9 @@ public struct QuestLogEntry: Codable, Equatable, Identifiable, Sendable {
         title: String,
         objective: String,
         status: QuestStatus,
-        isMainQuest: Bool = false,
-        locationHint: String? = nil,
-        objectives: [String] = []
+        isMainQuest: Bool,
+        locationHint: String,
+        objectives: [String]
     ) {
         self.id = id
         self.title = title
@@ -94,9 +94,9 @@ public enum QuestEngine {
                 title: definition.title,
                 objective: objective,
                 status: status,
-                isMainQuest: definition.isMainQuest ?? false,
+                isMainQuest: definition.isMainQuest,
                 locationHint: definition.locationHint,
-                objectives: definition.objectives ?? []
+                objectives: definition.objectives
             )
         }
     }

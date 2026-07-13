@@ -57,8 +57,14 @@ final class ContentValidatorTests: XCTestCase {
             chapterID: "chapter1",
             title: "血债",
             summary: "测试",
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["完成测试目标"],
             startDialogID: "broken_dialog",
-            requiredItemIDs: []
+            turnInDialogID: "turn_in",
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
         )
         let dialogue = DialogDefinition(
             id: "broken_dialog",
@@ -245,9 +251,14 @@ final class ContentValidatorTests: XCTestCase {
             chapterID: "chapter1",
             title: "缺失交付物",
             summary: "测试",
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["完成测试目标"],
             startDialogID: "start",
             turnInDialogID: "turn_in",
-            requiredItemIDs: ["missing_ledger"]
+            requiredItemIDs: ["missing_ledger"],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
         )
         let catalog = ContentCatalog(
             classes: [],
@@ -274,9 +285,14 @@ final class ContentValidatorTests: XCTestCase {
             chapterID: "chapter1",
             title: "重复交付物",
             summary: "测试",
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["完成测试目标"],
             startDialogID: "start",
             turnInDialogID: "turn_in",
-            requiredItemIDs: ["ledger", "ledger"]
+            requiredItemIDs: ["ledger", "ledger"],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
         )
         let catalog = ContentCatalog(
             classes: [],

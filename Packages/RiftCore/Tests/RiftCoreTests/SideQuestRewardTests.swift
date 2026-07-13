@@ -34,14 +34,14 @@ final class SideQuestRewardTests: XCTestCase {
         let itemIDs = Set(catalog.items.map(\.id))
         let runtimeDialogs = try loadRuntimeDialogs()
         let runtimeDialogsByID = Dictionary(uniqueKeysWithValues: runtimeDialogs.map { ($0.id, $0) })
-        let sideQuests = catalog.quests.filter { $0.isMainQuest != true }
+        let sideQuests = catalog.quests.filter { !$0.isMainQuest }
 
         XCTAssertEqual(Set(sideQuests.map(\.id)), ["bitterroot_medicine", "scorched_vow", "miners_last_shift"])
         for quest in sideQuests {
             XCTAssertTrue(quest.rewardItemIDs.allSatisfy(itemIDs.contains), quest.id)
             let startDialog = try XCTUnwrap(runtimeDialogsByID[quest.startDialogID], quest.id)
             XCTAssertTrue(startDialog.options.contains { $0.action == "acceptQuest" && $0.questID == quest.id }, quest.id)
-            let turnInID = try XCTUnwrap(quest.turnInDialogID, quest.id)
+            let turnInID = quest.turnInDialogID
             let turnInDialog = try XCTUnwrap(runtimeDialogsByID[turnInID], quest.id)
             XCTAssertTrue(turnInDialog.options.contains { $0.action == "completeQuest" && $0.questID == quest.id }, quest.id)
         }

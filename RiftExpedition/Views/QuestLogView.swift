@@ -94,11 +94,11 @@ struct QuestLogView: View {
                 Spacer()
             }
 
-            if let locationHint = entry.locationHint, !completed {
+            if !completed {
                 HStack(spacing: 8) {
                     Image(systemName: "map.fill")
                         .foregroundStyle(RiftPalette.riftBlue)
-                    Text(locationHint)
+                    Text(entry.locationHint)
                         .font(.caption.weight(.bold))
                         .foregroundStyle(RiftPalette.textBrown)
                 }
