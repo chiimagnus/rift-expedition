@@ -112,7 +112,7 @@ struct GameRootView: View {
 
                     Text("一场被嫁祸给怪物的失踪案，一本足以摧毁村庄秩序的矿账，以及封层另一侧正在苏醒的回声。")
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                         .lineSpacing(5)
                         .frame(maxWidth: 610, alignment: .leading)
                         .padding(.top, 12)
@@ -168,7 +168,7 @@ struct GameRootView: View {
 
                     Text(viewModel.statusText)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                         .padding(.top, 14)
 
                     if let contentError = viewModel.contentLoadErrorMessage {
@@ -241,14 +241,14 @@ struct GameRootView: View {
             dossierRow(icon: "mountain.2.fill", title: "旧元素矿洞", detail: "封层破裂，真相埋在洞心")
 
             Rectangle()
-                .fill(RiftPalette.outline.opacity(0.35))
+                .fill(RiftPalette.border.opacity(0.35))
                 .frame(height: 1)
 
             HStack {
                 Label("建议", systemImage: "lightbulb.fill")
                     .foregroundStyle(RiftPalette.ember)
                 Text("选择职责互补的两名成员。")
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             }
             .font(.caption.weight(.semibold))
         }
@@ -266,10 +266,10 @@ struct GameRootView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.callout.weight(.bold))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             }
             Spacer()
         }
@@ -314,7 +314,7 @@ struct GameRootView: View {
             }
 
             Rectangle()
-                .fill(RiftPalette.outline.opacity(0.42))
+                .fill(RiftPalette.border.opacity(0.42))
                 .frame(width: 1, height: 40)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -324,12 +324,12 @@ struct GameRootView: View {
                     .foregroundStyle(RiftPalette.ember)
                 Text(activeQuest?.title ?? viewModel.statusText)
                     .font(.callout.weight(.bold))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                     .lineLimit(1)
                 if let hint = activeQuest?.locationHint {
                     Text(hint)
                         .font(.caption)
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                         .lineLimit(1)
                 }
             }
@@ -347,7 +347,7 @@ struct GameRootView: View {
             Text("远征小队")
                 .font(.caption2.weight(.black))
                 .tracking(1.2)
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
 
             ForEach(viewModel.party) { actor in
                 HStack(spacing: 10) {
@@ -356,11 +356,11 @@ struct GameRootView: View {
                         HStack {
                             Text(actor.displayName)
                                 .font(.callout.weight(.bold))
-                                .foregroundStyle(RiftPalette.textBrown)
+                                .foregroundStyle(RiftPalette.frost)
                             Spacer()
                             Text("Lv.\(actor.level)")
                                 .font(.caption2.monospaced().weight(.bold))
-                                .foregroundStyle(RiftPalette.textBrownLight)
+                                .foregroundStyle(RiftPalette.muted)
                         }
                         RiftMetricBar(
                             value: actor.stats.maxHealth == 0 ? 0 : Double(actor.stats.health) / Double(actor.stats.maxHealth),
@@ -369,7 +369,7 @@ struct GameRootView: View {
                         )
                         Text("\(actor.stats.health) / \(actor.stats.maxHealth) HP")
                             .font(.caption2.monospacedDigit().weight(.semibold))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                     }
                     .frame(width: 150)
                 }
@@ -398,11 +398,11 @@ struct GameRootView: View {
             Text("切换队长")
         }
         .font(.caption.weight(.semibold))
-        .foregroundStyle(RiftPalette.textBrownLight)
+        .foregroundStyle(RiftPalette.muted)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(.black.opacity(0.42), in: Capsule())
-        .overlay(Capsule().stroke(RiftPalette.outline.opacity(0.34), lineWidth: 1))
+        .overlay(Capsule().stroke(RiftPalette.border.opacity(0.34), lineWidth: 1))
     }
 
     private func explorationButton(_ icon: String, title: String, action: @escaping () -> Void) -> some View {
@@ -442,9 +442,9 @@ struct GameRootView: View {
             RiftLogoMark(size: 66)
             Text(viewModel.appState.title)
                 .font(.largeTitle.bold())
-                .foregroundStyle(RiftPalette.textBrown)
+                .foregroundStyle(RiftPalette.frost)
             Text(viewModel.statusText)
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
             Button("返回主菜单") {
                 viewModel.returnToMainMenu()
             }

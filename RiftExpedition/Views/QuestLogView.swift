@@ -22,7 +22,7 @@ struct QuestLogView: View {
                     Text("与村民交谈或调查异常地点，新的线索会记录在这里。")
                         .font(.caption)
                 }
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
                 .frame(maxWidth: .infinity, minHeight: 260)
             } else {
                 let activeEntries = entries.filter { $0.status == .active }
@@ -56,7 +56,7 @@ struct QuestLogView: View {
                 .foregroundStyle(tint)
             Text(title)
                 .font(.headline.weight(.black))
-                .foregroundStyle(RiftPalette.textBrown)
+                .foregroundStyle(RiftPalette.frost)
             RiftStatusPill(text: "\(count)", tint: tint)
             Spacer()
         }
@@ -87,7 +87,7 @@ struct QuestLogView: View {
                         .foregroundStyle(RiftPalette.frost)
                     Text(entry.objective)
                         .font(.callout)
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                         .lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -100,7 +100,7 @@ struct QuestLogView: View {
                         .foregroundStyle(RiftPalette.riftBlue)
                     Text(entry.locationHint)
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                 }
                 .padding(10)
                 .background(RiftPalette.riftBlue.opacity(0.08), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
@@ -111,7 +111,7 @@ struct QuestLogView: View {
                     Text("调查步骤")
                         .font(.caption2.weight(.black))
                         .tracking(1)
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
 
                     ForEach(Array(entry.objectives.enumerated()), id: \.offset) { index, objective in
                         HStack(alignment: .top, spacing: 10) {
@@ -120,14 +120,14 @@ struct QuestLogView: View {
                                     .fill(completed ? RiftPalette.success : (index == 0 ? tint : RiftPalette.raised))
                                 Text("\(index + 1)")
                                     .font(.caption2.monospaced().weight(.black))
-                                    .foregroundStyle(completed || index == 0 ? RiftPalette.void : RiftPalette.textBrownLight)
+                                    .foregroundStyle(completed || index == 0 ? RiftPalette.void : RiftPalette.muted)
                             }
                             .frame(width: 23, height: 23)
 
                             Text(objective)
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(completed ? RiftPalette.textBrownLight : RiftPalette.textBrown)
-                                .strikethrough(completed, color: RiftPalette.textBrownLight)
+                                .foregroundStyle(completed ? RiftPalette.muted : RiftPalette.frost)
+                                .strikethrough(completed, color: RiftPalette.muted)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
@@ -138,7 +138,7 @@ struct QuestLogView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 17, style: .continuous)
-                .fill(LinearGradient(colors: [tint.opacity(0.09), RiftPalette.parchmentShade], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [tint.opacity(0.09), RiftPalette.panelRaised], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(tint.opacity(0.38), lineWidth: 1.1))
         )
         .opacity(completed ? 0.78 : 1)

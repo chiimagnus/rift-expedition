@@ -19,20 +19,12 @@ enum RiftPalette {
     static let danger = Color(red: 0.92, green: 0.25, blue: 0.30)
     static let success = Color(red: 0.26, green: 0.78, blue: 0.58)
 
-    // Compatibility aliases used throughout the current views.
-    static let woodDark = void
-    static let woodMid = obsidian
-    static let parchment = Color(red: 0.075, green: 0.095, blue: 0.13)
-    static let parchmentShade = Color(red: 0.105, green: 0.13, blue: 0.17)
-    static let outline = Color(red: 0.33, green: 0.43, blue: 0.53)
-    static let bannerRed = riftViolet
-    static let bannerRedDark = Color(red: 0.31, green: 0.16, blue: 0.60)
-    static let goldButton = ember
-    static let goldButtonDark = Color(red: 0.69, green: 0.34, blue: 0.10)
-    static let textBrown = frost
-    static let textBrownLight = muted
-    static let accentGreen = success
-    static let accentGreenDark = Color(red: 0.12, green: 0.56, blue: 0.43)
+    static let panel = Color(red: 0.075, green: 0.095, blue: 0.13)
+    static let panelRaised = Color(red: 0.105, green: 0.13, blue: 0.17)
+    static let border = Color(red: 0.33, green: 0.43, blue: 0.53)
+    static let riftVioletDeep = Color(red: 0.31, green: 0.16, blue: 0.60)
+    static let emberDeep = Color(red: 0.69, green: 0.34, blue: 0.10)
+    static let successDeep = Color(red: 0.12, green: 0.56, blue: 0.43)
 }
 
 // MARK: - Atmospheric background
@@ -146,7 +138,7 @@ struct RiftBannerTitle: View {
                 .font(.system(size: 19, weight: .black, design: .rounded))
                 .tracking(1.2)
         }
-        .foregroundStyle(RiftPalette.textBrown)
+        .foregroundStyle(RiftPalette.frost)
         .padding(.horizontal, 18)
         .padding(.vertical, 11)
         .background(
@@ -179,7 +171,7 @@ private struct RiftParchmentPanelModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [RiftPalette.raised.opacity(0.96), RiftPalette.parchment.opacity(0.98)],
+                            colors: [RiftPalette.raised.opacity(0.96), RiftPalette.panel.opacity(0.98)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -188,7 +180,7 @@ private struct RiftParchmentPanelModifier: ViewModifier {
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .stroke(
                                 LinearGradient(
-                                    colors: [RiftPalette.riftBlue.opacity(0.38), RiftPalette.outline.opacity(0.45), RiftPalette.riftViolet.opacity(0.30)],
+                                    colors: [RiftPalette.riftBlue.opacity(0.38), RiftPalette.border.opacity(0.45), RiftPalette.riftViolet.opacity(0.30)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
@@ -255,7 +247,7 @@ struct RiftPanelScaffold<Content: View>: View {
                     if let subtitle {
                         Text(subtitle)
                             .font(.callout.weight(.medium))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
@@ -317,7 +309,7 @@ struct RiftSectionHeader: View {
                 }
                 Text(title)
                     .font(.headline.weight(.heavy))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
             }
             Spacer()
         }
@@ -375,7 +367,7 @@ struct RiftKeycap: View {
             .padding(.horizontal, 7)
             .padding(.vertical, 4)
             .background(RiftPalette.raised, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(RiftPalette.outline.opacity(0.8), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(RiftPalette.border.opacity(0.8), lineWidth: 1))
     }
 }
 
@@ -408,15 +400,15 @@ struct RiftSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.bold))
-            .foregroundStyle(RiftPalette.textBrown)
+            .foregroundStyle(RiftPalette.frost)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(configuration.isPressed ? RiftPalette.raised : RiftPalette.parchmentShade)
+                    .fill(configuration.isPressed ? RiftPalette.raised : RiftPalette.panelRaised)
                     .overlay(
                         RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .stroke(RiftPalette.outline.opacity(configuration.isPressed ? 0.9 : 0.55), lineWidth: 1)
+                            .stroke(RiftPalette.border.opacity(configuration.isPressed ? 0.9 : 0.55), lineWidth: 1)
                     )
             )
             .opacity(isEnabled ? 1 : 0.36)
@@ -430,11 +422,11 @@ struct RiftGhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.bold))
-            .foregroundStyle(RiftPalette.textBrownLight)
+            .foregroundStyle(RiftPalette.muted)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(configuration.isPressed ? RiftPalette.raised : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(RiftPalette.outline.opacity(0.35), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(RiftPalette.border.opacity(0.35), lineWidth: 1))
             .opacity(isEnabled ? 1 : 0.35)
     }
 }
@@ -448,16 +440,16 @@ struct RiftActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.bold))
-            .foregroundStyle(isSelected ? .white : RiftPalette.textBrown)
+            .foregroundStyle(isSelected ? .white : RiftPalette.frost)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(minWidth: 74, minHeight: 48)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(isSelected ? tint.opacity(0.24) : RiftPalette.parchmentShade)
+                    .fill(isSelected ? tint.opacity(0.24) : RiftPalette.panelRaised)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(isSelected ? tint : RiftPalette.outline.opacity(0.48), lineWidth: isSelected ? 1.8 : 1)
+                            .stroke(isSelected ? tint : RiftPalette.border.opacity(0.48), lineWidth: isSelected ? 1.8 : 1)
                     )
             )
             .shadow(color: isSelected ? tint.opacity(0.30) : .clear, radius: 10)
@@ -472,15 +464,15 @@ struct RiftTabButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.subheadline.weight(.bold))
-            .foregroundStyle(isSelected ? .white : RiftPalette.textBrownLight)
+            .foregroundStyle(isSelected ? .white : RiftPalette.muted)
             .padding(.horizontal, 15)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(isSelected ? RiftPalette.riftViolet.opacity(0.30) : RiftPalette.parchmentShade.opacity(0.75))
+                    .fill(isSelected ? RiftPalette.riftViolet.opacity(0.30) : RiftPalette.panelRaised.opacity(0.75))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(isSelected ? RiftPalette.riftBlue.opacity(0.85) : RiftPalette.outline.opacity(0.34), lineWidth: isSelected ? 1.5 : 1)
+                            .stroke(isSelected ? RiftPalette.riftBlue.opacity(0.85) : RiftPalette.border.opacity(0.34), lineWidth: isSelected ? 1.5 : 1)
                     )
             )
             .opacity(configuration.isPressed ? 0.72 : 1)
@@ -498,8 +490,8 @@ struct RiftEquipSlotView: View {
         VStack(spacing: 5) {
             ZStack {
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(RiftPalette.parchmentShade)
-                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(RiftPalette.outline.opacity(0.72), lineWidth: 1.2))
+                    .fill(RiftPalette.panelRaised)
+                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(RiftPalette.border.opacity(0.72), lineWidth: 1.2))
                 Image(systemName: icon)
                     .font(.system(size: 21, weight: .bold))
                     .foregroundStyle(itemName == "未装备" ? RiftPalette.muted : RiftPalette.riftBlue)
@@ -509,11 +501,11 @@ struct RiftEquipSlotView: View {
             Text(label.uppercased())
                 .font(.caption2.weight(.black))
                 .tracking(0.8)
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
 
             Text(itemName)
                 .font(.caption2.weight(.bold))
-                .foregroundStyle(itemName == "未装备" ? RiftPalette.textBrownLight : RiftPalette.textBrown)
+                .foregroundStyle(itemName == "未装备" ? RiftPalette.muted : RiftPalette.frost)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(width: 84)
@@ -525,7 +517,7 @@ struct RiftEquipSlotView: View {
 
 struct RiftItemGridSlot: View {
     var icon: String?
-    var tint: Color = RiftPalette.accentGreen
+    var tint: Color = RiftPalette.success
     var quantity: Int = 0
     var isSelected: Bool = false
     var rarity: ItemRarity? = nil
@@ -533,7 +525,7 @@ struct RiftItemGridSlot: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(icon == nil ? RiftPalette.parchmentShade.opacity(0.35) : RiftPalette.parchmentShade)
+                .fill(icon == nil ? RiftPalette.panelRaised.opacity(0.35) : RiftPalette.panelRaised)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(isSelected ? RiftPalette.riftBlue : rarityColor.opacity(icon == nil ? 0.25 : 0.78), lineWidth: isSelected ? 2.2 : 1.2)
@@ -739,7 +731,7 @@ struct RiftActorPortrait: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: size * 0.20, style: .continuous)
-                        .stroke(isActive ? RiftPalette.riftBlue : RiftPalette.outline.opacity(0.75), lineWidth: isActive ? 2 : 1.2)
+                        .stroke(isActive ? RiftPalette.riftBlue : RiftPalette.border.opacity(0.75), lineWidth: isActive ? 2 : 1.2)
                 )
 
             if let portrait = RiftActorArt.portraitFrame(forClassID: classID) {
@@ -816,18 +808,18 @@ struct RiftDialogOptionButtonStyle: ButtonStyle {
                 .foregroundStyle(RiftPalette.riftBlue)
             configuration.label
                 .font(.callout.weight(.bold))
-                .foregroundStyle(RiftPalette.textBrown)
+                .foregroundStyle(RiftPalette.frost)
             Spacer()
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
         }
         .padding(.horizontal, 15)
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(configuration.isPressed ? RiftPalette.riftViolet.opacity(0.20) : RiftPalette.parchmentShade)
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(RiftPalette.outline.opacity(0.46), lineWidth: 1))
+                .fill(configuration.isPressed ? RiftPalette.riftViolet.opacity(0.20) : RiftPalette.panelRaised)
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(RiftPalette.border.opacity(0.46), lineWidth: 1))
         )
         .scaleEffect(configuration.isPressed ? 0.99 : 1)
     }
@@ -862,7 +854,7 @@ enum RiftClassIconography {
         case "rogue":
             RiftPalette.riftViolet
         default:
-            RiftPalette.textBrownLight
+            RiftPalette.muted
         }
     }
 }

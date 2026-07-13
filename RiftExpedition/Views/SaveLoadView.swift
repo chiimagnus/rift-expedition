@@ -43,7 +43,7 @@ struct SaveLoadView: View {
                     .foregroundStyle(messageTint)
                 Text(viewModel.message)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                 Spacer()
             }
             .padding(11)
@@ -90,7 +90,7 @@ struct SaveLoadView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(LinearGradient(colors: [tint.opacity(0.06), RiftPalette.parchmentShade.opacity(0.80)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [tint.opacity(0.06), RiftPalette.panelRaised.opacity(0.80)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(tint.opacity(0.26), lineWidth: 1))
         )
     }
@@ -112,7 +112,7 @@ struct SaveLoadView: View {
                 HStack(spacing: 7) {
                     Text(row.title)
                         .font(.callout.weight(.black))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                     if row.isCorrupt {
                         RiftStatusPill(text: "损坏", tint: RiftPalette.danger)
                     } else if row.canLoad {
@@ -121,7 +121,7 @@ struct SaveLoadView: View {
                 }
                 Text(row.detail)
                     .font(.caption)
-                    .foregroundStyle(row.isCorrupt ? RiftPalette.danger : RiftPalette.textBrownLight)
+                    .foregroundStyle(row.isCorrupt ? RiftPalette.danger : RiftPalette.muted)
                     .lineLimit(2)
             }
 

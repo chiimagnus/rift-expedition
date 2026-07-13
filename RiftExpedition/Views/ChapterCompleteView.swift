@@ -19,7 +19,7 @@ struct ChapterCompleteView: View {
 
                     Text("沈砚洗清了外来法师的罪名，顾怀恩的私印成为全村都看见的证据。旧矿洞暂时安静下来，但封层深处的幼体仍在呼吸。")
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                         .lineSpacing(6)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: 560, alignment: .leading)
@@ -96,10 +96,10 @@ struct ChapterCompleteView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.callout.weight(.black))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()

@@ -43,7 +43,7 @@ struct BattleHUDView: View {
             }
 
             Rectangle()
-                .fill(RiftPalette.outline.opacity(0.42))
+                .fill(RiftPalette.border.opacity(0.42))
                 .frame(width: 1, height: 38)
 
             initiativeStrip
@@ -85,7 +85,7 @@ struct BattleHUDView: View {
                         .shadow(color: isActive ? tint.opacity(0.65) : .clear, radius: 6)
                     Text(actor.displayName)
                         .font(.caption2.weight(isActive ? .black : .semibold))
-                        .foregroundStyle(isActive ? RiftPalette.frost : RiftPalette.textBrownLight)
+                        .foregroundStyle(isActive ? RiftPalette.frost : RiftPalette.muted)
                         .lineLimit(1)
                 }
                 .padding(.horizontal, 9)
@@ -95,7 +95,7 @@ struct BattleHUDView: View {
                         .fill(isActive ? tint.opacity(0.18) : RiftPalette.void.opacity(0.35))
                         .overlay(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .stroke(isActive ? tint.opacity(0.85) : RiftPalette.outline.opacity(0.24), lineWidth: isActive ? 1.3 : 1)
+                                .stroke(isActive ? tint.opacity(0.85) : RiftPalette.border.opacity(0.24), lineWidth: isActive ? 1.3 : 1)
                         )
                 )
                 .opacity(actor.stats.health > 0 ? 1 : 0.42)
@@ -121,7 +121,7 @@ struct BattleHUDView: View {
                             .foregroundStyle(factionTint(actor.faction))
                         Text("等级 \(actor.level)")
                             .font(.caption2.monospaced().weight(.semibold))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                     }
                 }
 
@@ -140,7 +140,7 @@ struct BattleHUDView: View {
                             .monospacedDigit()
                     }
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
 
                     HStack(spacing: 5) {
                         ForEach(0..<max(actor.stats.maxActionPoints, 1), id: \.self) { index in
@@ -159,7 +159,7 @@ struct BattleHUDView: View {
                 }
             } else {
                 Text("等待行动序列结算。")
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             }
         }
         .padding(16)
@@ -220,7 +220,7 @@ struct BattleHUDView: View {
                     .foregroundStyle(statusTint)
                 Text(viewModel.statusText)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                     .lineLimit(2)
                 Spacer()
                 Button {
@@ -248,7 +248,7 @@ struct BattleHUDView: View {
             }
 
             Rectangle()
-                .fill(RiftPalette.outline.opacity(0.28))
+                .fill(RiftPalette.border.opacity(0.28))
                 .frame(height: 1)
 
             Button {
@@ -283,21 +283,21 @@ struct BattleHUDView: View {
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2)
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                 }
                 Text("消耗品")
                     .font(.subheadline.weight(.black))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                 Text(viewModel.consumableRows.isEmpty ? "背包为空" : "战斗补给")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             }
             .padding(11)
             .frame(width: 126, height: 86, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(RiftPalette.parchmentShade)
-                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(RiftPalette.outline.opacity(0.45), lineWidth: 1))
+                    .fill(RiftPalette.panelRaised)
+                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(RiftPalette.border.opacity(0.45), lineWidth: 1))
             )
         }
         .menuStyle(.borderlessButton)
@@ -351,11 +351,11 @@ struct BattleHUDView: View {
                 }
                 Text(title)
                     .font(.subheadline.weight(.black))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                     .lineLimit(1)
                 Text(subtitle)
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                     .lineLimit(1)
             }
             .padding(11)
@@ -383,12 +383,12 @@ struct BattleHUDView: View {
                 HStack {
                     Text(actor.displayName)
                         .font(.caption.weight(active ? .black : .bold))
-                        .foregroundStyle(active ? RiftPalette.frost : RiftPalette.textBrown)
+                        .foregroundStyle(active ? RiftPalette.frost : RiftPalette.frost)
                         .lineLimit(1)
                     Spacer()
                     Text("\(actor.stats.health)")
                         .font(.caption2.monospacedDigit().weight(.bold))
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                 }
                 RiftMetricBar(
                     value: actor.stats.maxHealth == 0 ? 0 : Double(actor.stats.health) / Double(actor.stats.maxHealth),
@@ -416,7 +416,7 @@ struct BattleHUDView: View {
                 Text(valueText).monospacedDigit()
             }
             .font(.caption.weight(.bold))
-            .foregroundStyle(RiftPalette.textBrownLight)
+            .foregroundStyle(RiftPalette.muted)
             RiftMetricBar(value: ratio, tint: tint, height: 7)
         }
     }

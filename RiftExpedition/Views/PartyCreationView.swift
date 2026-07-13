@@ -40,7 +40,7 @@ struct PartyCreationView: View {
 
                 Text(viewModel.canStart ? "编成已锁定，可以进入第一章" : "还需要选择 \(2 - viewModel.selectedClassIDs.count) 名成员")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
 
                 Button {
                     onConfirm()
@@ -69,7 +69,7 @@ struct PartyCreationView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(classDefinition.title ?? classDefinition.displayName)
                             .font(.title3.weight(.black))
-                            .foregroundStyle(RiftPalette.textBrown)
+                            .foregroundStyle(RiftPalette.frost)
 
                         Text("\(viewModel.adventurerName(for: classDefinition.id)) · \(classDefinition.displayName)")
                             .font(.subheadline.weight(.bold))
@@ -77,7 +77,7 @@ struct PartyCreationView: View {
 
                         Text(classDefinition.combatRole ?? "战术成员")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                     }
 
                     Spacer()
@@ -94,16 +94,16 @@ struct PartyCreationView: View {
                     } else {
                         Image(systemName: "plus")
                             .font(.caption.weight(.black))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                             .frame(width: 30, height: 30)
                             .background(RiftPalette.raised, in: Circle())
-                            .overlay(Circle().stroke(RiftPalette.outline.opacity(0.5), lineWidth: 1))
+                            .overlay(Circle().stroke(RiftPalette.border.opacity(0.5), lineWidth: 1))
                     }
                 }
 
                 Text(classDefinition.description ?? "一名准备进入裂隙村的远征者。")
                     .font(.callout)
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -120,7 +120,7 @@ struct PartyCreationView: View {
                         .foregroundStyle(tint)
                     Text(viewModel.skillSummary(for: classDefinition))
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                         .lineLimit(2)
                     Spacer()
                     RiftStatusPill(text: "4 AP", tint: RiftPalette.ember)
@@ -132,14 +132,14 @@ struct PartyCreationView: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [tint.opacity(selected ? 0.16 : 0.06), RiftPalette.parchmentShade],
+                            colors: [tint.opacity(selected ? 0.16 : 0.06), RiftPalette.panelRaised],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(selected ? tint : RiftPalette.outline.opacity(0.42), lineWidth: selected ? 2 : 1)
+                            .stroke(selected ? tint : RiftPalette.border.opacity(0.42), lineWidth: selected ? 2 : 1)
                     )
             )
             .shadow(color: selected ? tint.opacity(0.20) : .clear, radius: 18, y: 8)
@@ -159,10 +159,10 @@ struct PartyCreationView: View {
                 Spacer(minLength: 2)
                 Text("\(value)")
                     .monospacedDigit()
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
             }
             .font(.caption2.weight(.bold))
-            .foregroundStyle(RiftPalette.textBrownLight)
+            .foregroundStyle(RiftPalette.muted)
 
             RiftMetricBar(value: Double(value) / Double(maximum), tint: tint, height: 4)
         }

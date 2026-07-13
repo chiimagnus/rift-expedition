@@ -32,7 +32,7 @@ struct CharacterSheetView: View {
                         .monospacedDigit()
                 }
                 .font(.caption.weight(.bold))
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
                 RiftMetricBar(
                     value: actor.stats.maxHealth == 0 ? 0 : Double(actor.stats.health) / Double(actor.stats.maxHealth),
                     tint: healthTint,
@@ -76,12 +76,12 @@ struct CharacterSheetView: View {
                         Image(systemName: "bolt.fill")
                             .foregroundStyle(RiftPalette.ember)
                         Text("行动点")
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                         Spacer()
                     }
                     Text("\(actor.stats.maxActionPoints) AP")
                         .font(.headline.monospacedDigit().weight(.black))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                 }
                 .padding(10)
                 .background(RiftPalette.void.opacity(0.38), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -93,7 +93,7 @@ struct CharacterSheetView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [RiftClassIconography.tint(for: actor.classID).opacity(0.09), RiftPalette.parchmentShade],
+                        colors: [RiftClassIconography.tint(for: actor.classID).opacity(0.09), RiftPalette.panelRaised],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -112,10 +112,10 @@ struct CharacterSheetView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                 Text("\(value)")
                     .font(.headline.monospacedDigit().weight(.black))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
             }
             Spacer()
             Button {
@@ -125,7 +125,7 @@ struct CharacterSheetView: View {
                     .font(.system(size: 16, weight: .bold))
             }
             .buttonStyle(.plain)
-            .foregroundStyle(actor.unspentAttributePoints > 0 ? tint : RiftPalette.textBrownLight.opacity(0.25))
+            .foregroundStyle(actor.unspentAttributePoints > 0 ? tint : RiftPalette.muted.opacity(0.25))
             .disabled(actor.unspentAttributePoints <= 0)
             .accessibilityLabel("提升\(title)")
         }

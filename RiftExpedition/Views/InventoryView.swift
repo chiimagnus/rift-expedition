@@ -65,7 +65,7 @@ struct InventoryView: View {
                     .foregroundStyle(RiftPalette.riftBlue)
                 Text(viewModel.statusText)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
@@ -96,7 +96,7 @@ struct InventoryView: View {
                 CharacterSheetView(viewModel: viewModel, actor: actor)
             } else {
                 Text("没有可查看的角色。")
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             }
         }
         .frame(width: 350, alignment: .leading)
@@ -115,7 +115,7 @@ struct InventoryView: View {
                     Text("探索、任务和战斗奖励会出现在这里。")
                         .font(.caption)
                 }
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
                 .frame(maxWidth: .infinity, minHeight: 260)
                 .background(RiftPalette.void.opacity(0.24), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             } else {
@@ -168,7 +168,7 @@ struct InventoryView: View {
                             .foregroundStyle(RiftPalette.frost)
                         Text("等级 \(actor.level) · \(classLabel(actor.classID))")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                         HStack(spacing: 6) {
                             RiftStatusPill(text: "\(actor.stats.maxActionPoints) AP", tint: RiftPalette.ember)
                             RiftStatusPill(text: "魔法 \(actor.stats.magic)", tint: RiftPalette.riftBlue)
@@ -181,7 +181,7 @@ struct InventoryView: View {
                     let skills = viewModel.skills(for: actor)
                     if skills.isEmpty {
                         Text("尚未学会技能。")
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                     } else {
                         ScrollView {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
@@ -219,7 +219,7 @@ struct InventoryView: View {
         } label: {
             RiftItemGridSlot(
                 icon: definition.map(RiftItemIconography.icon(for:)),
-                tint: definition.map(RiftItemIconography.tint(for:)) ?? RiftPalette.textBrownLight,
+                tint: definition.map(RiftItemIconography.tint(for:)) ?? RiftPalette.muted,
                 quantity: row.count,
                 isSelected: isSelected,
                 rarity: definition?.rarity
@@ -239,7 +239,7 @@ struct InventoryView: View {
             HStack(alignment: .top, spacing: 12) {
                 RiftItemGridSlot(
                     icon: definition.map(RiftItemIconography.icon(for:)),
-                    tint: definition.map(RiftItemIconography.tint(for:)) ?? RiftPalette.textBrownLight,
+                    tint: definition.map(RiftItemIconography.tint(for:)) ?? RiftPalette.muted,
                     quantity: row.count,
                     rarity: rarity
                 )
@@ -257,7 +257,7 @@ struct InventoryView: View {
 
             Text(definition?.description ?? "这件物品尚未留下可供查阅的记录。")
                 .font(.callout)
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -270,7 +270,7 @@ struct InventoryView: View {
                             .foregroundStyle(RiftPalette.riftBlue)
                         Text(comparison)
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(RiftPalette.textBrownLight)
+                            .foregroundStyle(RiftPalette.muted)
                     }
                     .padding(10)
                     .background(RiftPalette.riftBlue.opacity(0.08), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
@@ -282,7 +282,7 @@ struct InventoryView: View {
             HStack {
                 Text("持有 ×\(row.count)")
                     .font(.caption.monospacedDigit().weight(.bold))
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                 Spacer()
                 Button {
                     viewModel.equip(itemID: row.id)
@@ -298,7 +298,7 @@ struct InventoryView: View {
         .frame(maxWidth: .infinity, minHeight: 310, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 17, style: .continuous)
-                .fill(LinearGradient(colors: [rarityTint.opacity(0.09), RiftPalette.parchmentShade], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [rarityTint.opacity(0.09), RiftPalette.panelRaised], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(rarityTint.opacity(0.42), lineWidth: 1.2))
         )
     }
@@ -318,7 +318,7 @@ struct InventoryView: View {
             if values.isEmpty {
                 Text("无额外属性")
                     .font(.caption)
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 7)], spacing: 7) {
                     ForEach(Array(values.enumerated()), id: \.offset) { _, value in
@@ -326,7 +326,7 @@ struct InventoryView: View {
                             Image(systemName: value.2)
                                 .foregroundStyle(RiftPalette.riftBlue)
                             Text(value.0)
-                                .foregroundStyle(RiftPalette.textBrownLight)
+                                .foregroundStyle(RiftPalette.muted)
                             Spacer()
                             Text(value.1 > 0 ? "+\(value.1)" : "\(value.1)")
                                 .monospacedDigit()
@@ -341,7 +341,7 @@ struct InventoryView: View {
         } else {
             Text(item.kind == .consumable ? "可在战斗中作为战术补给使用。" : "关键任务物品，无法装备或丢弃。")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
         }
     }
 
@@ -362,10 +362,10 @@ struct InventoryView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(skill.displayName)
                         .font(.headline.weight(.black))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                     Text("目标：\(skill.targetName)")
                         .font(.caption)
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                 }
                 Spacer()
                 RiftStatusPill(text: "\(skill.actionPointCost) AP", tint: RiftPalette.ember)
@@ -373,7 +373,7 @@ struct InventoryView: View {
 
             Text(skill.description)
                 .font(.caption)
-                .foregroundStyle(RiftPalette.textBrownLight)
+                .foregroundStyle(RiftPalette.muted)
                 .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -383,13 +383,13 @@ struct InventoryView: View {
                 Text(skill.targetName)
             }
             .font(.caption2.weight(.bold))
-            .foregroundStyle(RiftPalette.textBrownLight)
+            .foregroundStyle(RiftPalette.muted)
         }
         .padding(14)
         .frame(maxWidth: .infinity, minHeight: 164, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(LinearGradient(colors: [tint.opacity(0.10), RiftPalette.parchmentShade], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [tint.opacity(0.10), RiftPalette.panelRaised], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(tint.opacity(0.38), lineWidth: 1))
         )
         .accessibilityElement(children: .combine)

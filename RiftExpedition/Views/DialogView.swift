@@ -25,7 +25,7 @@ struct DialogView: View {
                 VStack(spacing: 14) {
                     RiftLogoMark(size: 58)
                     Text(viewModel.message)
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                     Button("返回探索", action: onClose)
                         .buttonStyle(RiftPrimaryButtonStyle())
                 }
@@ -77,20 +77,20 @@ private struct CinematicDialogContent: View {
 
                     Text("\(min(lineIndex + 1, max(dialog.lines.count, 1))) / \(max(dialog.lines.count, 1))")
                         .font(.caption.monospacedDigit().weight(.bold))
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 18)
                 .padding(.bottom, 12)
 
                 Rectangle()
-                    .fill(LinearGradient(colors: [speakerTint.opacity(0.7), RiftPalette.outline.opacity(0.25), .clear], startPoint: .leading, endPoint: .trailing))
+                    .fill(LinearGradient(colors: [speakerTint.opacity(0.7), RiftPalette.border.opacity(0.25), .clear], startPoint: .leading, endPoint: .trailing))
                     .frame(height: 1)
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text(currentLine)
                         .font(.system(size: 20, weight: .medium, design: .rounded))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                         .lineSpacing(7)
                         .fixedSize(horizontal: false, vertical: true)
                         .id(lineIndex)

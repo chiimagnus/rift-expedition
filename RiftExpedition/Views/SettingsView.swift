@@ -133,10 +133,10 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.headline.weight(.black))
-                    .foregroundStyle(RiftPalette.textBrown)
+                    .foregroundStyle(RiftPalette.frost)
                 Text(detail)
                     .font(.caption)
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
@@ -162,10 +162,10 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(.headline.weight(.black))
-                        .foregroundStyle(RiftPalette.textBrown)
+                        .foregroundStyle(RiftPalette.frost)
                     Text(detail)
                         .font(.caption)
-                        .foregroundStyle(RiftPalette.textBrownLight)
+                        .foregroundStyle(RiftPalette.muted)
                 }
                 Spacer()
                 RiftStatusPill(text: displayValue, tint: tint)
@@ -201,7 +201,7 @@ struct SettingsView: View {
             keyRow("D", "显示调试叠层", icon: "ladybug.fill")
 
             Rectangle()
-                .fill(RiftPalette.outline.opacity(0.28))
+                .fill(RiftPalette.border.opacity(0.28))
                 .frame(height: 1)
 
             VStack(alignment: .leading, spacing: 7) {
@@ -210,14 +210,14 @@ struct SettingsView: View {
                     .foregroundStyle(RiftPalette.riftBlue)
                 Text("关键状态同时使用文字、图标和颜色表达；无需依赖单一颜色判断战斗信息。")
                     .font(.caption)
-                    .foregroundStyle(RiftPalette.textBrownLight)
+                    .foregroundStyle(RiftPalette.muted)
                     .lineSpacing(3)
             }
         }
         .padding(17)
         .background(
             RoundedRectangle(cornerRadius: 17, style: .continuous)
-                .fill(LinearGradient(colors: [RiftPalette.riftBlue.opacity(0.07), RiftPalette.parchmentShade], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(LinearGradient(colors: [RiftPalette.riftBlue.opacity(0.07), RiftPalette.panelRaised], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(RoundedRectangle(cornerRadius: 17, style: .continuous).stroke(RiftPalette.riftBlue.opacity(0.28), lineWidth: 1))
         )
     }
@@ -232,7 +232,7 @@ struct SettingsView: View {
                 .frame(width: 19)
             Text(description)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(RiftPalette.textBrown)
+                .foregroundStyle(RiftPalette.frost)
             Spacer()
         }
     }
