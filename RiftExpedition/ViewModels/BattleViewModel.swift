@@ -60,10 +60,10 @@ struct BattlePresentationEvent: Equatable, Identifiable {
     var action: ActorAnimationKind
     var direction: ActorAnimationDirection
     var targetActorID: String?
-    var sourcePoint: CGPoint? = nil
+    var sourcePoint: CGPoint?
     var effectPoint: CGPoint?
-    var effectStyle: BattleEffectStyle? = nil
-    var feedback: BattleFeedback? = nil
+    var effectStyle: BattleEffectStyle?
+    var feedback: BattleFeedback?
 }
 
 struct BattleSceneSnapshot: Equatable {
@@ -637,8 +637,10 @@ final class BattleViewModel {
             action: .walk,
             direction: direction,
             targetActorID: nil,
+            sourcePoint: nil,
             effectPoint: nil,
-            effectStyle: nil
+            effectStyle: nil,
+            feedback: nil
         )
     }
 
@@ -647,10 +649,10 @@ final class BattleViewModel {
         action: ActorAnimationKind,
         direction: ActorAnimationDirection,
         targetActorID: String?,
-        sourcePoint: CGPoint? = nil,
+        sourcePoint: CGPoint?,
         effectPoint: CGPoint?,
-        effectStyle: BattleEffectStyle? = nil,
-        feedback: BattleFeedback? = nil
+        effectStyle: BattleEffectStyle?,
+        feedback: BattleFeedback?
     ) {
         presentationEvents.append(BattlePresentationEvent(
             id: nextPresentationEventID,

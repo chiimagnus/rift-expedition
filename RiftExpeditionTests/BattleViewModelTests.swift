@@ -124,7 +124,10 @@ final class BattleViewModelTests: XCTestCase {
                 action: .hurt,
                 direction: .left,
                 targetActorID: "player",
-                effectPoint: nil
+                sourcePoint: nil,
+                effectPoint: nil,
+                effectStyle: nil,
+                feedback: nil
             )
         ])
         XCTAssertEqual(cues, [.skillCast, .attackHit])
@@ -154,7 +157,10 @@ final class BattleViewModelTests: XCTestCase {
             action: .walk,
             direction: .right,
             targetActorID: nil,
-            effectPoint: nil
+            sourcePoint: nil,
+            effectPoint: nil,
+            effectStyle: nil,
+            feedback: nil
         ))
     }
 
@@ -369,7 +375,10 @@ final class BattleViewModelTests: XCTestCase {
                 action: .hurt,
                 direction: .right,
                 targetActorID: "boar",
-                effectPoint: nil
+                sourcePoint: nil,
+                effectPoint: nil,
+                effectStyle: nil,
+                feedback: nil
             )
         ])
     }

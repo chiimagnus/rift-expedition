@@ -191,7 +191,10 @@ final class AppSmokeTests: XCTestCase {
                     action: .attack,
                     direction: .right,
                     targetActorID: "player",
-                    effectPoint: CGPoint(x: 128, y: 100)
+                    sourcePoint: nil,
+                    effectPoint: CGPoint(x: 128, y: 100),
+                    effectStyle: nil,
+                    feedback: nil
                 )
             ]
         )
