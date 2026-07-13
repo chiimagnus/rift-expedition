@@ -38,12 +38,19 @@ public struct ChapterFlowValidationResult: Equatable, Sendable {
 }
 
 public enum ChapterFlowValidator {
-    public static func validateIfPresent(resourcesRoot: URL, maps: [TiledMap]) throws -> ChapterFlowValidationResult? {
+    public static func validateIfPresent(
+        resourcesRoot: URL,
+        maps: [TiledMap],
+        chapterID: String? = nil
+    ) throws -> ChapterFlowValidationResult? {
         let dataRoot = resourcesRoot.appending(path: "Data")
         let questsURL = dataRoot.appending(path: "quests.json")
         guard FileManager.default.fileExists(atPath: questsURL.path) else { return nil }
 
-        let quests = try decode([QuestRecord].self, from: questsURL)
+        let allQuests = try decode([QuestRecord].self, from: questsURL)
+        let quests = chapterID.map { selectedChapterID in
+            allQuests.filter { $0.chapterID == selectedChapterID }
+        } ?? allQuests
         let dialogs = try decode([DialogRecord].self, from: dataRoot.appending(path: "dialogs.json"))
         let encounters = try decode([IDRecord].self, from: dataRoot.appending(path: "encounters.json"))
         let items = try decode([IDRecord].self, from: dataRoot.appending(path: "items.json"))
@@ -164,6 +171,7 @@ private struct IDRecord: Decodable {
 
 private struct QuestRecord: Decodable {
     var id: String
+    var chapterID: String
     var isMainQuest: Bool?
     var startDialogID: String
     var turnInDialogID: String?

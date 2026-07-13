@@ -158,7 +158,11 @@ do {
         : nil
     let worldResults = try WorldGraphValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
     let mapReferenceResult = try MapReferenceValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
-    let chapterFlowResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: scopedResults.map(\.map))
+    let chapterFlowResult = try ChapterFlowValidator.validateIfPresent(
+        resourcesRoot: arguments.resourcesRoot,
+        maps: scopedResults.map(\.map),
+        chapterID: arguments.chapterID
+    )
 
     if let previewDirectory = arguments.previewDirectory {
         for result in results {

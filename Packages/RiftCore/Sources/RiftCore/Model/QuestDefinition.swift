@@ -1,5 +1,6 @@
 public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
     public var id: String
+    public var chapterID: String
     public var title: String
     public var summary: String
     public var isMainQuest: Bool?
@@ -13,6 +14,7 @@ public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
 
     public init(
         id: String,
+        chapterID: String,
         title: String,
         summary: String,
         isMainQuest: Bool? = nil,
@@ -25,6 +27,7 @@ public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
         rewardSkillIDs: [String] = []
     ) {
         self.id = id
+        self.chapterID = chapterID
         self.title = title
         self.summary = summary
         self.isMainQuest = isMainQuest
@@ -39,6 +42,7 @@ public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case id
+        case chapterID
         case title
         case summary
         case isMainQuest
@@ -54,6 +58,7 @@ public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
+        chapterID = try container.decode(String.self, forKey: .chapterID)
         title = try container.decode(String.self, forKey: .title)
         summary = try container.decode(String.self, forKey: .summary)
         isMainQuest = try container.decodeIfPresent(Bool.self, forKey: .isMainQuest)

@@ -21,7 +21,8 @@
     ],
     "requiredItemIDs": [
       "element_ore_ledger"
-    ]
+    ],
+    "chapterID": "chapter1"
   },
   {
     "id": "bitterroot_medicine",
@@ -43,7 +44,8 @@
     ],
     "requiredItemIDs": [
       "bitterroot_herb"
-    ]
+    ],
+    "chapterID": "chapter1"
   },
   {
     "id": "scorched_vow",
@@ -64,7 +66,8 @@
     ],
     "requiredItemIDs": [
       "scorched_ring"
-    ]
+    ],
+    "chapterID": "chapter1"
   },
   {
     "id": "miners_last_shift",
@@ -85,6 +88,7 @@
     ],
     "requiredItemIDs": [
       "miner_gauntlets"
-    ]
+    ],
+    "chapterID": "chapter1"
   }
 ]

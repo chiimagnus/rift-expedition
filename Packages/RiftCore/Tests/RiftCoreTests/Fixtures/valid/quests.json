@@ -11,6 +11,7 @@
     "rewardSkillIDs": [
       "slash"
     ],
-    "requiredItemIDs": []
+    "requiredItemIDs": [],
+    "chapterID": "chapter1"
   }
 ]

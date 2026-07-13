@@ -5,6 +5,7 @@ final class QuestEngineTests: XCTestCase {
     func testAcceptingAndCompletingQuestUpdatesStateDeterministically() throws {
         let quest = QuestDefinition(
             id: "blood_debt",
+            chapterID: "chapter1",
             title: "血债",
             summary: "和村长确认旧矿洞线索。",
             startDialogID: "elder_intro",
@@ -23,6 +24,7 @@ final class QuestEngineTests: XCTestCase {
     func testCompletingInactiveQuestFails() {
         let quest = QuestDefinition(
             id: "blood_debt",
+            chapterID: "chapter1",
             title: "血债",
             summary: "和村长确认旧矿洞线索。",
             startDialogID: "elder_intro",

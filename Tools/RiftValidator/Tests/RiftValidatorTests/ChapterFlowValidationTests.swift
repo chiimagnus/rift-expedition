@@ -10,7 +10,8 @@ struct ChapterFlowValidationTests {
 
         let optionalResult = try ChapterFlowValidator.validateIfPresent(
             resourcesRoot: fixture.root,
-            maps: fixture.validMaps
+            maps: fixture.validMaps,
+            chapterID: "chapter1"
         )
         let result = try #require(optionalResult)
 
@@ -29,7 +30,7 @@ struct ChapterFlowValidationTests {
         try fixture.replaceDialogAction(dialogID: "elder_return", action: "close")
 
         let maps = [fixture.makeMap(itemIDs: ["bitterroot_herb", "scorched_ring", "miner_gauntlets"], encounterID: "boar_intro")]
-        let optionalResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: fixture.root, maps: maps)
+        let optionalResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: fixture.root, maps: maps, chapterID: "chapter1")
         let result = try #require(optionalResult)
 
         #expect(result.issues.contains { $0.message.contains("elder_return lacks matching completeQuest") })
@@ -49,6 +50,23 @@ struct ChapterFlowValidationTests {
         #expect(scoped.map(\.map.areaID) == ["chapter_area"])
     }
 
+    @Test func chapterSelectionIgnoresQuestsFromOtherChapters() throws {
+        let fixture = try ChapterFixture()
+        defer { fixture.remove() }
+        try fixture.writeValidData()
+        try fixture.appendFutureChapterQuest()
+
+        let optionalResult = try ChapterFlowValidator.validateIfPresent(
+            resourcesRoot: fixture.root,
+            maps: fixture.validMaps,
+            chapterID: "chapter1"
+        )
+        let result = try #require(optionalResult)
+
+        #expect(result.isValid)
+        #expect(result.questCount == 4)
+    }
+
     @Test func detectsMissingRewardsAndEncounterReferences() throws {
         let fixture = try ChapterFixture()
         defer { fixture.remove() }
@@ -56,7 +74,7 @@ struct ChapterFlowValidationTests {
         try fixture.replaceQuestRewards(itemID: "missing_item", skillID: "missing_skill")
 
         let maps = [fixture.makeMap(itemIDs: fixture.requiredItemIDs, encounterID: "missing_encounter")]
-        let optionalResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: fixture.root, maps: maps)
+        let optionalResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: fixture.root, maps: maps, chapterID: "chapter1")
         let result = try #require(optionalResult)
 
         #expect(result.issues.contains { $0.message.contains("rewards missing item: missing_item") })
@@ -166,6 +184,22 @@ private final class ChapterFixture {
         try writeJSON(records, named: "quests.json")
     }
 
+    func appendFutureChapterQuest() throws {
+        let questsURL = dataRoot.appending(path: "quests.json")
+        var quests = try JSONSerialization.jsonObject(with: Data(contentsOf: questsURL)) as! [[String: Any]]
+        quests.append([
+            "id": "future_quest",
+            "chapterID": "chapter2",
+            "isMainQuest": true,
+            "startDialogID": "missing_future_start",
+            "turnInDialogID": "missing_future_turnin",
+            "requiredItemIDs": ["future_item"],
+            "rewardItemIDs": [],
+            "rewardSkillIDs": []
+        ])
+        try writeJSON(quests, named: "quests.json")
+    }
+
     func remove() {
         try? FileManager.default.removeItem(at: root)
     }
@@ -180,6 +214,7 @@ private final class ChapterFixture {
     ) -> [String: Any] {
         [
             "id": id,
+            "chapterID": "chapter1",
             "isMainQuest": main,
             "startDialogID": start,
             "turnInDialogID": turnIn,

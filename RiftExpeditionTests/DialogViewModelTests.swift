@@ -39,6 +39,7 @@ final class DialogViewModelTests: XCTestCase {
     private var quest: QuestDefinition {
         QuestDefinition(
             id: "blood_debt",
+            chapterID: "chapter1",
             title: "血债",
             summary: "查清旧矿洞。",
             startDialogID: "elder_intro",
