@@ -36,6 +36,19 @@ struct ChapterFlowValidationTests {
         #expect(result.issues.contains { $0.message.contains("element_ore_ledger") && $0.message.contains("unobtainable") })
     }
 
+    @Test func chapterScopeExcludesMapsFromOtherWorldGraphs() {
+        let chapterMap = TiledMap(areaID: "chapter_area", width: 32, height: 32, objectGroups: [:])
+        let futureMap = TiledMap(areaID: "future_area", width: 32, height: 32, objectGroups: [:])
+        let allResults = [
+            MapValidationResult(map: chapterMap, issues: []),
+            MapValidationResult(map: futureMap, issues: [])
+        ]
+
+        let scoped = scopedMapResults(allResults, chapterAreaIDs: ["chapter_area"])
+
+        #expect(scoped.map(\.map.areaID) == ["chapter_area"])
+    }
+
     @Test func detectsMissingRewardsAndEncounterReferences() throws {
         let fixture = try ChapterFixture()
         defer { fixture.remove() }
@@ -49,6 +62,18 @@ struct ChapterFlowValidationTests {
         #expect(result.issues.contains { $0.message.contains("rewards missing item: missing_item") })
         #expect(result.issues.contains { $0.message.contains("rewards missing skill: missing_skill") })
         #expect(result.issues.contains { $0.message.contains("references missing encounter: missing_encounter") })
+    }
+}
+
+private enum ChapterFlowValidatorRequiredItems {
+    static func items(for questID: String) -> [String] {
+        switch questID {
+        case "blood_debt": ["element_ore_ledger"]
+        case "bitterroot_medicine": ["bitterroot_herb"]
+        case "scorched_vow": ["scorched_ring"]
+        case "miners_last_shift": ["miner_gauntlets"]
+        default: []
+        }
     }
 }
 
@@ -158,6 +183,7 @@ private final class ChapterFixture {
             "isMainQuest": main,
             "startDialogID": start,
             "turnInDialogID": turnIn,
+            "requiredItemIDs": ChapterFlowValidatorRequiredItems.items(for: id),
             "rewardItemIDs": rewards,
             "rewardSkillIDs": skills
         ]

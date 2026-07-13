@@ -38,15 +38,6 @@ public struct ChapterFlowValidationResult: Equatable, Sendable {
 }
 
 public enum ChapterFlowValidator {
-    /// The current runtime owns these turn-in requirements in GameSessionViewModel.
-    /// Keep this compact contract synchronized until quest requirements move into data.
-    public static let requiredItemIDsByQuestID: [String: [String]] = [
-        "blood_debt": ["element_ore_ledger"],
-        "bitterroot_medicine": ["bitterroot_herb"],
-        "scorched_vow": ["scorched_ring"],
-        "miners_last_shift": ["miner_gauntlets"]
-    ]
-
     public static func validateIfPresent(resourcesRoot: URL, maps: [TiledMap]) throws -> ChapterFlowValidationResult? {
         let dataRoot = resourcesRoot.appending(path: "Data")
         let questsURL = dataRoot.appending(path: "quests.json")
@@ -105,7 +96,7 @@ public enum ChapterFlowValidator {
                 issues.append(.init(message: "Quest \(quest.id) rewards missing skill: \(skillID)"))
             }
 
-            for requiredItemID in requiredItemIDsByQuestID[quest.id, default: []] {
+            for requiredItemID in quest.requiredItemIDs {
                 if !itemIDs.contains(requiredItemID) {
                     issues.append(.init(message: "Quest \(quest.id) requires undefined item: \(requiredItemID)"))
                 } else if !mapItemIDs.contains(requiredItemID) {
@@ -114,9 +105,6 @@ public enum ChapterFlowValidator {
             }
         }
 
-        for configuredQuestID in requiredItemIDsByQuestID.keys where !questIDs.contains(configuredQuestID) {
-            issues.append(.init(message: "Turn-in item contract references missing quest: \(configuredQuestID)"))
-        }
 
         for (areaID, tiledID, encounterID) in mapEncounterReferences where !encounterIDs.contains(encounterID) {
             issues.append(.init(message: "\(areaID) encounter object \(tiledID) references missing encounter: \(encounterID)"))
@@ -140,7 +128,7 @@ public enum ChapterFlowValidator {
             mainQuestCount: quests.filter { $0.isMainQuest == true }.count,
             sideQuestCount: quests.filter { $0.isMainQuest != true }.count,
             encounterReferenceCount: mapEncounterReferences.count,
-            requiredItemCount: quests.reduce(0) { $0 + requiredItemIDsByQuestID[$1.id, default: []].count },
+            requiredItemCount: quests.reduce(0) { $0 + $1.requiredItemIDs.count },
             issues: issues.sorted { $0.message < $1.message }
         )
     }
@@ -179,6 +167,7 @@ private struct QuestRecord: Decodable {
     var isMainQuest: Bool?
     var startDialogID: String
     var turnInDialogID: String?
+    var requiredItemIDs: [String]
     var rewardItemIDs: [String]
     var rewardSkillIDs: [String]
 }

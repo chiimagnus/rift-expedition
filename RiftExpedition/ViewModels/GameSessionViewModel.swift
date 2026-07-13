@@ -482,20 +482,7 @@ final class GameSessionViewModel {
     }
 
     private func questTurnInItemIDs(for questID: String) -> [String] {
-        // ponytail（有意为之的技术债）：章节任务目前仍使用轻量手写映射；
-        // 等任务量进一步上涨，再统一迁移到更完整的数据驱动结构里。
-        switch questID {
-        case "blood_debt":
-            return ["element_ore_ledger"]
-        case "bitterroot_medicine":
-            return ["bitterroot_herb"]
-        case "scorched_vow":
-            return ["scorched_ring"]
-        case "miners_last_shift":
-            return ["miner_gauntlets"]
-        default:
-            return []
-        }
+        questDefinitions.first(where: { $0.id == questID })?.requiredItemIDs ?? []
     }
 
     private func itemName(_ itemID: String) -> String {

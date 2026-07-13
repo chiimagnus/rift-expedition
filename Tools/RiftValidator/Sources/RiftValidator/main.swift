@@ -123,6 +123,11 @@ func chapterAreaIDs(resourcesRoot: URL, chapterID: String?) throws -> Set<String
     return Set(graph.areas.map(\.id))
 }
 
+func scopedMapResults(_ allResults: [MapValidationResult], chapterAreaIDs: Set<String>?) -> [MapValidationResult] {
+    guard let chapterAreaIDs else { return allResults }
+    return allResults.filter { chapterAreaIDs.contains($0.map.areaID) }
+}
+
 func scopeTitle(arguments: Arguments) -> String {
     if let areaID = arguments.areaID {
         return "区域 \(areaID)"
@@ -141,11 +146,7 @@ do {
     let urls = try mapURLs(resourcesRoot: arguments.resourcesRoot, areaID: nil)
     let allResults = try MapValidator.validate(urls: urls)
     let chapterAreaIDs = try chapterAreaIDs(resourcesRoot: arguments.resourcesRoot, chapterID: arguments.chapterID)
-    let scopedResults = if let chapterAreaIDs {
-        allResults.filter { chapterAreaIDs.contains($0.map.areaID) }
-    } else {
-        allResults
-    }
+    let scopedResults = scopedMapResults(allResults, chapterAreaIDs: chapterAreaIDs)
     let results = if let areaID = arguments.areaID {
         scopedResults.filter { $0.map.areaID == areaID }
     } else {
@@ -157,7 +158,7 @@ do {
         : nil
     let worldResults = try WorldGraphValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
     let mapReferenceResult = try MapReferenceValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
-    let chapterFlowResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
+    let chapterFlowResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: scopedResults.map(\.map))
 
     if let previewDirectory = arguments.previewDirectory {
         for result in results {
