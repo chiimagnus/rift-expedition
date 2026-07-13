@@ -664,9 +664,6 @@ final class BattleViewModel {
             feedback: feedback
         ))
         nextPresentationEventID += 1
-        if presentationEvents.count > 8 {
-            presentationEvents.removeFirst(presentationEvents.count - 8)
-        }
     }
 
     private func emitSkillEvents(
