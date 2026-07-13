@@ -214,4 +214,116 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertEqual(battleLayer.children.filter { $0.name == "battleActor_player" }.count, 1)
         XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_1" }.count, 1)
     }
+
+    func testBattleProjectileAndFeedbackNodesDoNotDuplicate() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+        let snapshot = BattleSceneSnapshot(
+            actors: [
+                BattleActorMarker(
+                    id: "archer",
+                    displayName: "弓手",
+                    factionName: "队友",
+                    visualID: "actor_archer",
+                    facing: .right,
+                    baseAction: .idle,
+                    position: CGPoint(x: 100, y: 100),
+                    health: 12,
+                    maxHealth: 12,
+                    actionPoints: 3,
+                    maxActionPoints: 4,
+                    isActive: true,
+                    isTargetable: false,
+                    isDefeated: false
+                ),
+                BattleActorMarker(
+                    id: "target",
+                    displayName: "目标",
+                    factionName: "敌人",
+                    visualID: "enemy_human_melee",
+                    facing: .left,
+                    baseAction: .idle,
+                    position: CGPoint(x: 260, y: 100),
+                    health: 6,
+                    maxHealth: 12,
+                    actionPoints: 4,
+                    maxActionPoints: 4,
+                    isActive: false,
+                    isTargetable: true,
+                    isDefeated: false
+                )
+            ],
+            surfaces: [],
+            activeActorID: "archer",
+            selectedAction: .skill("test_shot"),
+            moveRadius: 0,
+            presentationEvents: [
+                BattlePresentationEvent(
+                    id: 7,
+                    actorID: "archer",
+                    action: .attack,
+                    direction: .right,
+                    targetActorID: "target",
+                    sourcePoint: CGPoint(x: 100, y: 100),
+                    effectPoint: CGPoint(x: 260, y: 100),
+                    effectStyle: .projectile,
+                    feedback: .damage(amount: 6, defeated: false)
+                )
+            ]
+        )
+
+        scene.renderBattle(snapshot)
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let battleLayer = try XCTUnwrap(worldLayer.childNode(withName: "battleLayer"))
+        let effect = try XCTUnwrap(battleLayer.childNode(withName: "battleEffect_7"))
+        XCTAssertNotNil(effect.childNode(withName: "battleProjectile_7"))
+        let feedback = try XCTUnwrap(effect.childNode(withName: "battleFeedback_7") as? SKLabelNode)
+        XCTAssertEqual(feedback.text, "−6")
+
+        scene.renderBattle(snapshot)
+
+        XCTAssertEqual(battleLayer.children.filter { $0.name == "battleEffect_7" }.count, 1)
+    }
+
+    func testDefeatedBattleActorUsesCollapsedPose() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+        let snapshot = BattleSceneSnapshot(
+            actors: [
+                BattleActorMarker(
+                    id: "fallen",
+                    displayName: "倒下的敌人",
+                    factionName: "敌人",
+                    visualID: "enemy_human_melee",
+                    facing: .left,
+                    baseAction: .idle,
+                    position: CGPoint(x: 220, y: 140),
+                    health: 0,
+                    maxHealth: 12,
+                    actionPoints: 0,
+                    maxActionPoints: 4,
+                    isActive: false,
+                    isTargetable: false,
+                    isDefeated: true
+                )
+            ],
+            surfaces: [],
+            activeActorID: nil,
+            selectedAction: .move,
+            moveRadius: 0,
+            presentationEvents: []
+        )
+
+        scene.renderBattle(snapshot)
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        let battleLayer = try XCTUnwrap(worldLayer.childNode(withName: "battleLayer"))
+        let actorNode = try XCTUnwrap(battleLayer.childNode(withName: "battleActor_fallen"))
+        let sprite = try XCTUnwrap(actorNode.childNode(withName: "battleActorSprite_fallen") as? SKSpriteNode)
+        XCTAssertEqual(sprite.zRotation, -.pi / 2, accuracy: 0.001)
+        XCTAssertEqual(sprite.position.y, -18, accuracy: 0.001)
+        XCTAssertEqual(sprite.alpha, 0.62, accuracy: 0.001)
+        XCTAssertNil(sprite.action(forKey: "actorAnimation"))
+    }
+
 }

@@ -165,9 +165,13 @@ final class GameScene: SKScene {
         }
         for event in snapshot.presentationEvents {
             playBattlePresentationEvent(event, actors: snapshot.actors)
-            guard let point = event.effectPoint, !renderedBattleEffectIDs.contains(event.id) else { continue }
+            guard !renderedBattleEffectIDs.contains(event.id),
+                  let effectNode = makeBattleEffectNode(for: event)
+            else {
+                continue
+            }
             renderedBattleEffectIDs.insert(event.id)
-            layer.addChild(makeEffectNode(at: point, style: event.effectStyle, eventID: event.id))
+            layer.addChild(effectNode)
         }
     }
 
@@ -402,7 +406,7 @@ final class GameScene: SKScene {
 
     private func updateBattleActorNode(_ container: SKNode, actor: BattleActorMarker) {
         container.position = actor.position
-        container.alpha = actor.isDefeated ? 0.42 : 1
+        container.alpha = actor.isDefeated ? 0.72 : 1
         for child in container.children where child.name?.hasPrefix("battleActorSprite_") != true {
             child.removeFromParent()
         }
@@ -410,14 +414,21 @@ final class GameScene: SKScene {
             sprite.size = CGSize(width: 58, height: 58)
             sprite.zPosition = 1
             let nodeKey = "battle:\(actor.id)"
-            if nodeAnimationKeys[nodeKey]?.hasPrefix("event:") != true {
-                playActorAnimation(
-                    on: sprite,
-                    nodeKey: nodeKey,
-                    visualID: actor.visualID,
-                    action: actor.baseAction,
-                    direction: actor.facing
-                )
+            if actor.isDefeated {
+                applyDefeatedPose(to: sprite, nodeKey: nodeKey, actor: actor)
+            } else {
+                sprite.position = .zero
+                sprite.zRotation = 0
+                sprite.alpha = 1
+                if nodeAnimationKeys[nodeKey]?.hasPrefix("event:") != true {
+                    playActorAnimation(
+                        on: sprite,
+                        nodeKey: nodeKey,
+                        visualID: actor.visualID,
+                        action: actor.baseAction,
+                        direction: actor.facing
+                    )
+                }
             }
         }
 
@@ -486,13 +497,17 @@ final class GameScene: SKScene {
             .animate(with: frames, timePerFrame: 0.12),
             .run { [weak self, weak sprite] in
                 guard let self, let sprite else { return }
-                self.playActorAnimation(
-                    on: sprite,
-                    nodeKey: nodeKey,
-                    visualID: actor.visualID,
-                    action: .idle,
-                    direction: actor.facing
-                )
+                if actor.isDefeated {
+                    self.applyDefeatedPose(to: sprite, nodeKey: nodeKey, actor: actor)
+                } else {
+                    self.playActorAnimation(
+                        on: sprite,
+                        nodeKey: nodeKey,
+                        visualID: actor.visualID,
+                        action: .idle,
+                        direction: actor.facing
+                    )
+                }
             }
         ]), withKey: "actorAnimation")
 
@@ -509,12 +524,6 @@ final class GameScene: SKScene {
                 .moveBy(x: -3, y: 1, duration: 0.04)
             ]), withKey: "impactRecoil")
 
-            worldLayer.removeAction(forKey: "impactShake")
-            worldLayer.run(.sequence([
-                .moveBy(x: 3, y: 1, duration: 0.025),
-                .moveBy(x: -6, y: -2, duration: 0.035),
-                .moveBy(x: 3, y: 1, duration: 0.045)
-            ]), withKey: "impactShake")
         }
     }
 
@@ -529,11 +538,110 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func makeEffectNode(at point: CGPoint, style: BattleEffectStyle?, eventID: Int? = nil) -> SKNode {
+    private func makeBattleEffectNode(for event: BattlePresentationEvent) -> SKNode? {
+        guard event.effectPoint != nil || event.feedback != nil else { return nil }
+
         let container = SKNode()
-        container.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
-        container.position = point
+        container.name = "battleEffect_\(event.id)"
         container.zPosition = 20
+
+        let impactPoint = event.effectPoint ?? event.sourcePoint ?? .zero
+        let travelDuration = projectileTravelDuration(for: event)
+        if travelDuration > 0,
+           let sourcePoint = event.sourcePoint,
+           let effectPoint = event.effectPoint {
+            let projectile = makeProjectileNode(style: event.effectStyle, eventID: event.id)
+            projectile.position = sourcePoint
+            projectile.zRotation = atan2(effectPoint.y - sourcePoint.y, effectPoint.x - sourcePoint.x)
+            projectile.run(.sequence([
+                .move(to: effectPoint, duration: travelDuration),
+                .removeFromParent()
+            ]))
+            container.addChild(projectile)
+        }
+
+        let shouldShowImpact: Bool
+        if case .some(.dodge) = event.feedback {
+            shouldShowImpact = false
+        } else {
+            shouldShowImpact = event.effectPoint != nil
+        }
+
+        if shouldShowImpact {
+            if travelDuration > 0 {
+                container.run(.sequence([
+                    .wait(forDuration: travelDuration),
+                    .run { [weak self, weak container] in
+                        guard let self, let container else { return }
+                        container.addChild(self.makeImpactNode(at: impactPoint, style: event.effectStyle))
+                    }
+                ]), withKey: "impact")
+            } else {
+                container.addChild(makeImpactNode(at: impactPoint, style: event.effectStyle))
+            }
+        }
+
+        if let feedback = event.feedback {
+            let feedbackNode = makeFeedbackNode(
+                feedback,
+                at: impactPoint,
+                eventID: event.id,
+                delay: travelDuration
+            )
+            container.addChild(feedbackNode)
+            let shake = SKAction.run { [weak self] in
+                self?.runImpactShake(for: feedback)
+            }
+            container.run(.sequence([.wait(forDuration: travelDuration), shake]), withKey: "feedbackImpact")
+        }
+
+        container.run(.sequence([
+            .wait(forDuration: travelDuration + 0.72),
+            .removeFromParent()
+        ]))
+        return container
+    }
+
+    private func projectileTravelDuration(for event: BattlePresentationEvent) -> TimeInterval {
+        guard let sourcePoint = event.sourcePoint,
+              let effectPoint = event.effectPoint,
+              sourcePoint != effectPoint
+        else {
+            return 0
+        }
+        switch event.effectStyle {
+        case .projectile, .arcane, .fire, .poison:
+            let distance = hypot(effectPoint.x - sourcePoint.x, effectPoint.y - sourcePoint.y)
+            return min(max(TimeInterval(distance / 720), 0.12), 0.34)
+        case .strike, .heal, .none:
+            return 0
+        }
+    }
+
+    private func makeProjectileNode(style: BattleEffectStyle?, eventID: Int) -> SKNode {
+        let node = SKNode()
+        node.name = "battleProjectile_\(eventID)"
+        let palette = effectPalette(for: style)
+
+        let trail = SKShapeNode(rectOf: CGSize(width: 22, height: 4), cornerRadius: 2)
+        trail.position = CGPoint(x: -9, y: 0)
+        trail.fillColor = palette.ring.withAlphaComponent(0.52)
+        trail.strokeColor = .clear
+        trail.glowWidth = 3
+        node.addChild(trail)
+
+        let core = SKShapeNode(circleOfRadius: style == .projectile ? 4 : 6)
+        core.fillColor = palette.core
+        core.strokeColor = palette.stroke
+        core.lineWidth = 1
+        core.glowWidth = 5
+        node.addChild(core)
+        return node
+    }
+
+    private func makeImpactNode(at point: CGPoint, style: BattleEffectStyle?) -> SKNode {
+        let container = SKNode()
+        container.position = point
 
         let palette = effectPalette(for: style)
         let coreRadius: CGFloat = style == .projectile ? 7 : 9
@@ -591,9 +699,70 @@ final class GameScene: SKScene {
                 bar.run(.sequence([.fadeOut(withDuration: 0.22), .removeFromParent()]))
             }
         }
-
-        container.run(.sequence([.wait(forDuration: 0.28), .removeFromParent()]))
         return container
+    }
+
+    private func makeFeedbackNode(
+        _ feedback: BattleFeedback,
+        at point: CGPoint,
+        eventID: Int,
+        delay: TimeInterval
+    ) -> SKLabelNode {
+        let label = SKLabelNode()
+        label.name = "battleFeedback_\(eventID)"
+        label.position = CGPoint(x: point.x, y: point.y + 42)
+        label.fontName = "PingFangSC-Semibold"
+        label.fontSize = 18
+        label.verticalAlignmentMode = .center
+        label.horizontalAlignmentMode = .center
+        label.zPosition = 28
+
+        switch feedback {
+        case let .damage(amount, defeated):
+            label.text = defeated ? "−\(amount) · 击倒" : "−\(amount)"
+            label.fontColor = SKColor(red: 1.0, green: 0.42, blue: 0.28, alpha: 1)
+        case let .healing(amount):
+            label.text = "+\(amount)"
+            label.fontColor = SKColor(red: 0.42, green: 1.0, blue: 0.72, alpha: 1)
+        case .dodge:
+            label.text = "闪避"
+            label.fontColor = SKColor(red: 0.72, green: 0.90, blue: 1.0, alpha: 1)
+        }
+
+        label.alpha = 0
+        label.run(.sequence([
+            .wait(forDuration: delay),
+            .fadeIn(withDuration: 0.01),
+            .group([
+                .moveBy(x: 0, y: 24, duration: 0.42),
+                .sequence([.wait(forDuration: 0.20), .fadeOut(withDuration: 0.22)])
+            ])
+        ]))
+        return label
+    }
+
+    private func runImpactShake(for feedback: BattleFeedback) {
+        guard case let .damage(amount, _) = feedback else { return }
+        let strength = min(max(CGFloat(amount) / 5, 1), 3.2)
+        worldLayer.removeAction(forKey: "impactShake")
+        worldLayer.run(.sequence([
+            .moveBy(x: strength, y: strength * 0.35, duration: 0.025),
+            .moveBy(x: -strength * 2, y: -strength * 0.7, duration: 0.035),
+            .moveBy(x: strength, y: strength * 0.35, duration: 0.045)
+        ]), withKey: "impactShake")
+    }
+
+    private func applyDefeatedPose(to sprite: SKSpriteNode, nodeKey: String, actor: BattleActorMarker) {
+        sprite.removeAction(forKey: "actorAnimation")
+        sprite.removeAction(forKey: "impactFlash")
+        sprite.position = CGPoint(x: 0, y: -18)
+        sprite.zRotation = -.pi / 2
+        sprite.alpha = 0.62
+        if let frames = animationFrames(visualID: actor.visualID, action: .hurt, direction: actor.facing),
+           let finalFrame = frames.last {
+            sprite.texture = finalFrame
+        }
+        nodeAnimationKeys[nodeKey] = "defeated"
     }
 
     private func effectPalette(for style: BattleEffectStyle?) -> (core: SKColor, stroke: SKColor, ring: SKColor, sparkA: SKColor, sparkB: SKColor) {
