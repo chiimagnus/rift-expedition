@@ -270,15 +270,6 @@
     "author": "Rift Expedition project"
   },
   {
-    "id": "audio.cave_drip",
-    "path": "Assets/Audio/cave_drip.wav",
-    "type": "audio",
-    "source": "local procedurally generated WAV cave cue",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
     "id": "spritesheet.actor_warrior_anim",
     "path": "Assets/Characters/actor_warrior_anim.png",
     "type": "spritesheet",

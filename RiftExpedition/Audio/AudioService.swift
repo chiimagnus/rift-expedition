@@ -27,7 +27,6 @@ enum AudioCue: String, CaseIterable {
     case questComplete = "quest_complete"
     case chapterComplete = "chapter_complete"
 
-    case caveDrip = "cave_drip"
     case villageTheme = "village_theme_loop"
     case wildsTheme = "wilds_theme_loop"
     case caveTheme = "cave_theme_loop"
@@ -324,8 +323,8 @@ final class AudioService {
              .villageLayer, .wildsLayer, .caveLayer,
              .battleTheme, .battleLayer:
             busVolume = musicVolume
-        case .caveDrip, .villageAmbience, .riverAmbience,
-             .wildsAmbience, .caveDripLoop, .caveRumble:
+        case .villageAmbience, .riverAmbience, .wildsAmbience,
+             .caveDripLoop, .caveRumble:
             busVolume = ambienceVolume
         case .uiClick, .attackHit, .skillCast, .battleStart,
              .battleVictory, .chestOpen, .healDrink,

@@ -270,7 +270,7 @@ final class GameSessionViewModelTests: XCTestCase {
         session.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(playersByCue[.wildsTheme]?.stopCount, 1)
         XCTAssertEqual(playersByCue[.caveTheme]?.playCount, 1)
-        XCTAssertEqual(playersByCue[.caveDrip]?.playCount, 1)
+        XCTAssertEqual(playersByCue[.caveDripLoop]?.playCount, 1)
     }
 
     func testLeaderEnteringExitChangesArea() throws {
