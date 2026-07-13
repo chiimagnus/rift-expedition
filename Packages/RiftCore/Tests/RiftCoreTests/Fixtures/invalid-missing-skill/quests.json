@@ -5,7 +5,18 @@
     "summary": "村长说你的失踪与旧矿洞有关。",
     "startDialogID": "elder_intro",
     "turnInDialogID": "elder_return",
-    "rewardItemIDs": ["rusted_sword"],
-    "rewardSkillIDs": ["slash"]
+    "rewardItemIDs": [
+      "rusted_sword"
+    ],
+    "rewardSkillIDs": [
+      "slash"
+    ],
+    "requiredItemIDs": [],
+    "chapterID": "chapter1",
+    "isMainQuest": true,
+    "locationHint": "测试地点",
+    "objectives": [
+      "完成测试目标"
+    ]
   }
 ]

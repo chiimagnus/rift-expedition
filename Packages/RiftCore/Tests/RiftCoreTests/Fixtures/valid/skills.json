@@ -6,6 +6,14 @@
     "range": 1.5,
     "target": "enemy",
     "affectsAllies": false,
-    "canBeDodged": true
+    "canBeDodged": true,
+    "effects": [
+      {
+        "damage": {
+          "_0": 8
+        }
+      }
+    ],
+    "description": "测试技能说明"
   }
 ]

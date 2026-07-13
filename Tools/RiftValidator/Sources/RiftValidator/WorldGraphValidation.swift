@@ -26,7 +26,11 @@ public struct WorldGraphValidationResult: Equatable, Sendable {
 }
 
 public enum WorldGraphValidator {
-    public static func validateIfPresent(resourcesRoot: URL, maps: [TiledMap]) throws -> [WorldGraphValidationResult] {
+    public static func validateIfPresent(
+        resourcesRoot: URL,
+        maps: [TiledMap],
+        worldID: String? = nil
+    ) throws -> [WorldGraphValidationResult] {
         let worldsRoot = resourcesRoot.appending(path: "Data/worlds")
         guard let contents = try? FileManager.default.contentsOfDirectory(
             at: worldsRoot,
@@ -36,24 +40,61 @@ public enum WorldGraphValidator {
         }
 
         let decoder = JSONDecoder()
-        return try contents
+        if let worldID {
+            let selectedURL = worldsRoot.appending(path: "\(worldID).json")
+            guard FileManager.default.fileExists(atPath: selectedURL.path) else {
+                return []
+            }
+            let graph = try decoder.decode(
+                ChapterWorldGraph.self,
+                from: Data(contentsOf: selectedURL)
+            )
+            guard graph.id == worldID else {
+                return [WorldGraphValidationResult(
+                    worldID: worldID,
+                    issues: [WorldGraphValidationIssue(
+                        message: "World graph id mismatch: expected \(worldID), found \(graph.id)"
+                    )]
+                )]
+            }
+            return [validate(graph, maps: maps)]
+        }
+
+        let graphs = try contents
             .filter { $0.pathExtension == "json" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .map { url in
-                let graph = try decoder.decode(ChapterWorldGraph.self, from: Data(contentsOf: url))
-                return validate(graph, maps: maps)
+                try decoder.decode(ChapterWorldGraph.self, from: Data(contentsOf: url))
             }
+        return graphs.map { validate($0, maps: maps) }
     }
 
     static func validate(_ graph: ChapterWorldGraph, maps: [TiledMap]) -> WorldGraphValidationResult {
-        let mapIndex = Dictionary(uniqueKeysWithValues: maps.map { ($0.areaID, $0) })
+        let mapGroups = Dictionary(grouping: maps, by: \.areaID)
+        let mapIndex = mapGroups.compactMapValues(\.first)
         let graphAreaIDs = graph.areas.map(\.id)
         let graphAreaIDSet = Set(graphAreaIDs)
-        let spawnIndex = Dictionary(uniqueKeysWithValues: maps.map { map in
-            (map.areaID, Set(map.objectGroups["spawn", default: []].compactMap { $0.properties["id"] }))
-        })
+        let spawnIndex = mapGroups.mapValues { maps in
+            Set(maps.flatMap { $0.objectGroups["spawn", default: []].compactMap { $0.properties["id"] } })
+        }
         var issues: [WorldGraphValidationIssue] = []
 
+        if isBlank(graph.id) {
+            issues.append(.init(message: "World id must not be blank"))
+        }
+        if isBlank(graph.title) {
+            issues.append(.init(message: "World title must not be blank"))
+        }
+        if isBlank(graph.startAreaId) {
+            issues.append(.init(message: "World startAreaId must not be blank"))
+        }
+        if isBlank(graph.startSpawnId) {
+            issues.append(.init(message: "World startSpawnId must not be blank"))
+        }
+
+        for duplicate in mapGroups.filter({ $0.value.count > 1 }).keys.sorted() {
+            issues.append(WorldGraphValidationIssue(message: "Duplicate TMX map area id: \(duplicate)"))
+        }
         for duplicate in duplicates(in: graphAreaIDs) {
             issues.append(WorldGraphValidationIssue(message: "Duplicate world area id: \(duplicate)"))
         }
@@ -65,10 +106,34 @@ public enum WorldGraphValidator {
         }
 
         for area in graph.areas {
+            if isBlank(area.id) {
+                issues.append(.init(message: "World area id must not be blank"))
+            }
+            if isBlank(area.displayName) {
+                issues.append(.init(message: "World area \(area.id) displayName must not be blank"))
+            }
+            if isBlank(area.biome) {
+                issues.append(.init(message: "World area \(area.id) biome must not be blank"))
+            }
+            if isBlank(area.mapPath) {
+                issues.append(.init(message: "World area \(area.id) mapPath must not be blank"))
+            }
+            for duplicateExitID in duplicates(in: area.exits.map(\.id)) {
+                issues.append(.init(message: "Duplicate world exit id in \(area.id): \(duplicateExitID)"))
+            }
             if mapIndex[area.id] == nil {
                 issues.append(WorldGraphValidationIssue(message: "World area has no TMX map: \(area.id)"))
             }
             for exit in area.exits {
+                if isBlank(exit.id) {
+                    issues.append(.init(message: "World exit id in \(area.id) must not be blank"))
+                }
+                if isBlank(exit.targetAreaId) {
+                    issues.append(.init(message: "World exit \(area.id).\(exit.id) targetAreaId must not be blank"))
+                }
+                if isBlank(exit.targetSpawnId) {
+                    issues.append(.init(message: "World exit \(area.id).\(exit.id) targetSpawnId must not be blank"))
+                }
                 if !graphAreaIDSet.contains(exit.targetAreaId) {
                     issues.append(WorldGraphValidationIssue(message: "World exit \(area.id).\(exit.id) targets missing area: \(exit.targetAreaId)"))
                 }
@@ -96,9 +161,9 @@ public enum WorldGraphValidator {
     }
 
     private static func reachableAreas(from start: String, in graph: ChapterWorldGraph) -> Set<String> {
-        let adjacency = Dictionary(uniqueKeysWithValues: graph.areas.map { area in
-            (area.id, Set(area.exits.map(\.targetAreaId)))
-        })
+        let adjacency = Dictionary(grouping: graph.areas, by: \.id).mapValues { areas in
+            Set(areas.flatMap { $0.exits.map(\.targetAreaId) })
+        }
         var visited: Set<String> = []
         var queue = [start]
 
@@ -109,6 +174,10 @@ public enum WorldGraphValidator {
         }
 
         return visited
+    }
+
+    private static func isBlank(_ value: String) -> Bool {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private static func duplicates(in values: [String]) -> [String] {

@@ -22,6 +22,8 @@ final class GameScene: SKScene {
     private let worldLayer = SKNode()
     private var tilemap: SKTilemap?
     private var loadedAreaID: String?
+    private var loadedMapMetadata: TiledMapMetadata?
+    private var worldPresentation: ExplorationWorldPresentation?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKNode] = [:]
     private var staticObjectLayer: SKNode?
@@ -164,9 +166,13 @@ final class GameScene: SKScene {
         }
         for event in snapshot.presentationEvents {
             playBattlePresentationEvent(event, actors: snapshot.actors)
-            guard let point = event.effectPoint, !renderedBattleEffectIDs.contains(event.id) else { continue }
+            guard !renderedBattleEffectIDs.contains(event.id),
+                  let effectNode = makeBattleEffectNode(for: event)
+            else {
+                continue
+            }
             renderedBattleEffectIDs.insert(event.id)
-            layer.addChild(makeEffectNode(at: point, eventID: event.id))
+            layer.addChild(effectNode)
         }
     }
 
@@ -181,6 +187,14 @@ final class GameScene: SKScene {
         return layer
     }
 
+    func renderExplorationWorld(_ presentation: ExplorationWorldPresentation) {
+        worldPresentation = presentation
+        guard presentation.areaID == loadedAreaID, let loadedMapMetadata else {
+            return
+        }
+        renderStaticObjects(metadata: loadedMapMetadata, presentation: presentation)
+    }
+
     func loadMap(areaID: String) {
         guard loadedAreaID != areaID else { return }
 
@@ -188,20 +202,39 @@ final class GameScene: SKScene {
         tilemap = nil
         staticObjectLayer?.removeFromParent()
         staticObjectLayer = nil
+        loadedMapMetadata = nil
 
         do {
-            let (loadedMap, metadata) = try TiledMapLoader.load(areaID: areaID)
+            let (loadedMap, metadata) = try TiledMapLoader.load(areaID: areaID, bundle: assetBundle)
             loadedMap.position = .zero
             loadedMap.zPosition = 1
+            configureMapArtLayers(in: loadedMap)
             worldLayer.addChild(loadedMap)
             tilemap = loadedMap
             loadedAreaID = areaID
-            renderStaticObjects(metadata: metadata)
+            loadedMapMetadata = metadata
+            let presentation = worldPresentation?.areaID == areaID ? worldPresentation : nil
+            renderStaticObjects(metadata: metadata, presentation: presentation)
             layoutWorld()
         } catch {
             loadedAreaID = nil
             layoutWorld()
             GameLog.map.error("\(areaID, privacy: .public).tmx 加载失败")
+        }
+    }
+
+    private func configureMapArtLayers(in tilemap: SKTilemap) {
+        for imageLayer in tilemap.imageLayers() {
+            switch imageLayer.layerName {
+            case "background_art":
+                imageLayer.zPosition = -10
+            case let name where name.hasPrefix("foreground_"):
+                // Foreground art is authored as a transparent image layer and can
+                // occlude actors without changing collision or interaction data.
+                imageLayer.zPosition = 760
+            default:
+                break
+            }
         }
     }
 
@@ -250,13 +283,35 @@ final class GameScene: SKScene {
     private func markClick(at point: CGPoint) {
         worldLayer.childNode(withName: "clickMarker")?.removeFromParent()
 
-        let marker = SKShapeNode(circleOfRadius: 10)
+        let marker = SKNode()
         marker.name = "clickMarker"
         marker.position = point
-        marker.fillColor = SKColor(red: 0.86, green: 0.73, blue: 0.34, alpha: 0.85)
-        marker.strokeColor = .white
-        marker.lineWidth = 2
         marker.zPosition = 560
+
+        let outerRing = SKShapeNode(circleOfRadius: 13)
+        outerRing.fillColor = .clear
+        outerRing.strokeColor = SKColor(red: 0.20, green: 0.82, blue: 1.0, alpha: 0.95)
+        outerRing.lineWidth = 2
+        outerRing.glowWidth = 5
+        marker.addChild(outerRing)
+
+        let innerDiamond = SKShapeNode(rectOf: CGSize(width: 8, height: 8), cornerRadius: 1)
+        innerDiamond.zRotation = .pi / 4
+        innerDiamond.fillColor = SKColor(red: 0.66, green: 0.34, blue: 1.0, alpha: 0.9)
+        innerDiamond.strokeColor = .white.withAlphaComponent(0.85)
+        innerDiamond.lineWidth = 1
+        marker.addChild(innerDiamond)
+
+        outerRing.run(.group([
+            .scale(to: 2.25, duration: 0.42),
+            .fadeOut(withDuration: 0.42)
+        ]))
+        innerDiamond.run(.sequence([
+            .scale(to: 1.35, duration: 0.10),
+            .scale(to: 0.75, duration: 0.22),
+            .fadeOut(withDuration: 0.10)
+        ]))
+        marker.run(.sequence([.wait(forDuration: 0.46), .removeFromParent()]))
         worldLayer.addChild(marker)
     }
 
@@ -303,7 +358,10 @@ final class GameScene: SKScene {
         }
     }
 
-    private func renderStaticObjects(metadata: TiledMapMetadata) {
+    private func renderStaticObjects(
+        metadata: TiledMapMetadata,
+        presentation: ExplorationWorldPresentation?
+    ) {
         staticObjectLayer?.removeFromParent()
         nodeAnimationKeys = nodeAnimationKeys.filter { !$0.key.hasPrefix("npc:") }
         let layer = SKNode()
@@ -319,31 +377,36 @@ final class GameScene: SKScene {
         staticObjectLayer = layer
 
         for surface in metadata.surfaces {
-            guard let type = SurfaceTypeColor(rawValue: surface.surfaceType) else { continue }
-            layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))
-        }
-        for obstacle in metadata.navObstacles where obstacle.blocksMovement {
-            if let node = makeVisibleObstacleNode(obstacle) {
-                layer.addChild(node)
-            }
+            layer.addChild(
+                makeStaticSurfaceNode(
+                    frame: surface.frame,
+                    color: SurfaceTypeColor(surface.surfaceType).color
+                )
+            )
         }
         for exit in metadata.exits {
             layer.addChild(makeExitMarker(exit))
         }
-        for trigger in metadata.triggers {
+        for trigger in metadata.triggers where presentation?.shows(trigger: trigger) != false {
             layer.addChild(makeTriggerMarker(trigger))
         }
         // 遭遇触发区（伏击点）必须始终显示，没有例外。这个项目的设计里没有「隐藏伏击」这种
         // 玩法（所有遭遇战都是地图上固定安排好的，不是随机出现的——见 Docs/chapter1-worldgraph.md），
         // 所以如果触发区完全看不见，那是渲染上的 bug，不是故意藏起来防剧透。
-        for encounter in metadata.encounterTriggers {
+        for encounter in metadata.encounterTriggers where presentation?.shows(encounter: encounter) != false {
             layer.addChild(makeEncounterMarker(encounter))
         }
         for npc in metadata.npcs {
             layer.addChild(makeNPCSprite(npc))
         }
-        for item in metadata.items {
-            layer.addChild(makeMapSprite(name: spriteName(forMapItem: item), position: item.position, size: CGSize(width: 48, height: 48)))
+        for item in metadata.items where presentation?.shows(item: item) != false {
+            let node = makeMapSprite(
+                name: spriteName(forMapItem: item),
+                position: item.position,
+                size: CGSize(width: 48, height: 48)
+            )
+            node.name = "mapItem_\(item.tiledID)"
+            layer.addChild(node)
         }
     }
 
@@ -359,7 +422,7 @@ final class GameScene: SKScene {
 
     private func updateBattleActorNode(_ container: SKNode, actor: BattleActorMarker) {
         container.position = actor.position
-        container.alpha = actor.isDefeated ? 0.42 : 1
+        container.alpha = actor.isDefeated ? 0.72 : 1
         for child in container.children where child.name?.hasPrefix("battleActorSprite_") != true {
             child.removeFromParent()
         }
@@ -367,14 +430,21 @@ final class GameScene: SKScene {
             sprite.size = CGSize(width: 58, height: 58)
             sprite.zPosition = 1
             let nodeKey = "battle:\(actor.id)"
-            if nodeAnimationKeys[nodeKey]?.hasPrefix("event:") != true {
-                playActorAnimation(
-                    on: sprite,
-                    nodeKey: nodeKey,
-                    visualID: actor.visualID,
-                    action: actor.baseAction,
-                    direction: actor.facing
-                )
+            if actor.isDefeated {
+                applyDefeatedPose(to: sprite, nodeKey: nodeKey, actor: actor)
+            } else {
+                sprite.position = .zero
+                sprite.zRotation = 0
+                sprite.alpha = 1
+                if nodeAnimationKeys[nodeKey]?.hasPrefix("event:") != true {
+                    playActorAnimation(
+                        on: sprite,
+                        nodeKey: nodeKey,
+                        visualID: actor.visualID,
+                        action: actor.baseAction,
+                        direction: actor.facing
+                    )
+                }
             }
         }
 
@@ -388,6 +458,12 @@ final class GameScene: SKScene {
             : actor.isActive ? SKColor(red: 0.84, green: 0.73, blue: 0.42, alpha: 1) : .white.withAlphaComponent(0.35)
         ring.lineWidth = actor.isTargetable || actor.isActive ? 4 : 2
         ring.zPosition = -1
+        if actor.isActive {
+            ring.run(.repeatForever(.sequence([
+                .group([.scale(to: 1.12, duration: 0.48), .fadeAlpha(to: 0.56, duration: 0.48)]),
+                .group([.scale(to: 1.0, duration: 0.48), .fadeAlpha(to: 1.0, duration: 0.48)])
+            ])))
+        }
         container.addChild(ring)
 
         let healthBack = SKShapeNode(rectOf: CGSize(width: 52, height: 6), cornerRadius: 3)
@@ -437,15 +513,34 @@ final class GameScene: SKScene {
             .animate(with: frames, timePerFrame: 0.12),
             .run { [weak self, weak sprite] in
                 guard let self, let sprite else { return }
-                self.playActorAnimation(
-                    on: sprite,
-                    nodeKey: nodeKey,
-                    visualID: actor.visualID,
-                    action: .idle,
-                    direction: actor.facing
-                )
+                if actor.isDefeated {
+                    self.applyDefeatedPose(to: sprite, nodeKey: nodeKey, actor: actor)
+                } else {
+                    self.playActorAnimation(
+                        on: sprite,
+                        nodeKey: nodeKey,
+                        visualID: actor.visualID,
+                        action: .idle,
+                        direction: actor.facing
+                    )
+                }
             }
         ]), withKey: "actorAnimation")
+
+        if event.action == .hurt {
+            sprite.run(.sequence([
+                .colorize(with: .white, colorBlendFactor: 1, duration: 0.02),
+                .wait(forDuration: 0.045),
+                .colorize(withColorBlendFactor: 0, duration: 0.08)
+            ]), withKey: "impactFlash")
+
+            node.run(.sequence([
+                .moveBy(x: -4, y: 1, duration: 0.025),
+                .moveBy(x: 7, y: -2, duration: 0.035),
+                .moveBy(x: -3, y: 1, duration: 0.04)
+            ]), withKey: "impactRecoil")
+
+        }
     }
 
     private func makeMoveRangeNode(center: CGPoint, radius: CGFloat) -> SKNode {
@@ -459,21 +554,284 @@ final class GameScene: SKScene {
         return node
     }
 
-    private func makeEffectNode(at point: CGPoint, eventID: Int? = nil) -> SKNode {
-        let node = SKShapeNode(circleOfRadius: 18)
-        node.name = eventID.map { "battleEffect_\($0)" } ?? "battleEffect"
-        node.position = point
-        node.fillColor = SKColor(red: 1.0, green: 0.46, blue: 0.14, alpha: 0.42)
-        node.strokeColor = SKColor(red: 1.0, green: 0.86, blue: 0.38, alpha: 0.9)
-        node.lineWidth = 3
-        node.run(.sequence([
-            .group([
-                .scale(to: 2.0, duration: 0.18),
-                .fadeOut(withDuration: 0.18)
-            ]),
+    private func makeBattleEffectNode(for event: BattlePresentationEvent) -> SKNode? {
+        guard event.effectPoint != nil || event.feedback != nil else { return nil }
+
+        let container = SKNode()
+        container.name = "battleEffect_\(event.id)"
+        container.zPosition = 20
+
+        let impactPoint = event.effectPoint ?? event.sourcePoint ?? .zero
+        let travelDuration = projectileTravelDuration(for: event)
+        if travelDuration > 0,
+           let sourcePoint = event.sourcePoint,
+           let effectPoint = event.effectPoint {
+            let projectile = makeProjectileNode(style: event.effectStyle, eventID: event.id)
+            projectile.position = sourcePoint
+            projectile.zRotation = atan2(effectPoint.y - sourcePoint.y, effectPoint.x - sourcePoint.x)
+            projectile.run(.sequence([
+                .move(to: effectPoint, duration: travelDuration),
+                .removeFromParent()
+            ]))
+            container.addChild(projectile)
+        }
+
+        let shouldShowImpact: Bool
+        if case .some(.dodge) = event.feedback {
+            shouldShowImpact = false
+        } else {
+            shouldShowImpact = event.effectPoint != nil
+        }
+
+        if shouldShowImpact {
+            if travelDuration > 0 {
+                container.run(.sequence([
+                    .wait(forDuration: travelDuration),
+                    .run { [weak self, weak container] in
+                        guard let self, let container else { return }
+                        container.addChild(self.makeImpactNode(at: impactPoint, style: event.effectStyle))
+                    }
+                ]), withKey: "impact")
+            } else {
+                container.addChild(makeImpactNode(at: impactPoint, style: event.effectStyle))
+            }
+        }
+
+        if let feedback = event.feedback {
+            let feedbackNode = makeFeedbackNode(
+                feedback,
+                at: impactPoint,
+                eventID: event.id,
+                delay: travelDuration
+            )
+            container.addChild(feedbackNode)
+            let shake = SKAction.run { [weak self] in
+                self?.runImpactShake(for: feedback)
+            }
+            container.run(.sequence([.wait(forDuration: travelDuration), shake]), withKey: "feedbackImpact")
+        }
+
+        container.run(.sequence([
+            .wait(forDuration: travelDuration + 0.72),
             .removeFromParent()
         ]))
+        return container
+    }
+
+    private func projectileTravelDuration(for event: BattlePresentationEvent) -> TimeInterval {
+        guard let sourcePoint = event.sourcePoint,
+              let effectPoint = event.effectPoint,
+              sourcePoint != effectPoint
+        else {
+            return 0
+        }
+        switch event.effectStyle {
+        case .projectile, .arcane, .fire, .poison:
+            let distance = hypot(effectPoint.x - sourcePoint.x, effectPoint.y - sourcePoint.y)
+            return min(max(TimeInterval(distance / 720), 0.12), 0.34)
+        case .strike, .heal, .none:
+            return 0
+        }
+    }
+
+    private func makeProjectileNode(style: BattleEffectStyle?, eventID: Int) -> SKNode {
+        let node = SKNode()
+        node.name = "battleProjectile_\(eventID)"
+        let palette = effectPalette(for: style)
+
+        let trail = SKShapeNode(rectOf: CGSize(width: 22, height: 4), cornerRadius: 2)
+        trail.position = CGPoint(x: -9, y: 0)
+        trail.fillColor = palette.ring.withAlphaComponent(0.52)
+        trail.strokeColor = .clear
+        trail.glowWidth = 3
+        node.addChild(trail)
+
+        let core = SKShapeNode(circleOfRadius: style == .projectile ? 4 : 6)
+        core.fillColor = palette.core
+        core.strokeColor = palette.stroke
+        core.lineWidth = 1
+        core.glowWidth = 5
+        node.addChild(core)
         return node
+    }
+
+    private func makeImpactNode(at point: CGPoint, style: BattleEffectStyle?) -> SKNode {
+        let container = SKNode()
+        container.position = point
+
+        let palette = effectPalette(for: style)
+        let coreRadius: CGFloat = style == .projectile ? 7 : 9
+        let ringRadius: CGFloat = style == .heal ? 16 : 18
+
+        let core = SKShapeNode(circleOfRadius: coreRadius)
+        core.fillColor = palette.core
+        core.strokeColor = palette.stroke
+        core.lineWidth = 1
+        core.glowWidth = 6
+        container.addChild(core)
+
+        let ring = SKShapeNode(circleOfRadius: ringRadius)
+        ring.fillColor = .clear
+        ring.strokeColor = palette.ring
+        ring.lineWidth = style == .heal ? 2 : 3
+        ring.glowWidth = 4
+        container.addChild(ring)
+
+        core.run(.group([
+            .scale(to: style == .heal ? 0.35 : 0.2, duration: 0.20),
+            .fadeOut(withDuration: 0.20)
+        ]))
+        ring.run(.group([
+            .scale(to: style == .projectile ? 1.9 : 2.35, duration: 0.24),
+            .fadeOut(withDuration: 0.24)
+        ]))
+
+        for index in 0..<8 {
+            let spark = SKShapeNode(circleOfRadius: index.isMultiple(of: 2) ? 2.4 : 1.5)
+            spark.fillColor = index.isMultiple(of: 2) ? palette.sparkA : palette.sparkB
+            spark.strokeColor = .clear
+            let angle = CGFloat(index) / 8 * .pi * 2
+            let distance: CGFloat = style == .heal ? (index.isMultiple(of: 2) ? 28 : 22) : (index.isMultiple(of: 2) ? 34 : 25)
+            let movement = style == .projectile
+                ? CGVector(dx: cos(angle) * distance * 0.8, dy: sin(angle) * distance * 0.55)
+                : CGVector(dx: cos(angle) * distance, dy: sin(angle) * distance)
+            spark.run(.sequence([
+                .group([
+                    .moveBy(x: movement.dx, y: movement.dy, duration: 0.22),
+                    .scale(to: 0.15, duration: 0.22),
+                    .fadeOut(withDuration: 0.22)
+                ]),
+                .removeFromParent()
+            ]))
+            container.addChild(spark)
+        }
+
+        if style == .heal {
+            for index in 0..<2 {
+                let bar = SKShapeNode(rectOf: CGSize(width: index == 0 ? 12 : 4, height: index == 0 ? 4 : 12), cornerRadius: 1)
+                bar.fillColor = palette.stroke
+                bar.strokeColor = .clear
+                container.addChild(bar)
+                bar.run(.sequence([.fadeOut(withDuration: 0.22), .removeFromParent()]))
+            }
+        }
+        return container
+    }
+
+    private func makeFeedbackNode(
+        _ feedback: BattleFeedback,
+        at point: CGPoint,
+        eventID: Int,
+        delay: TimeInterval
+    ) -> SKLabelNode {
+        let label = SKLabelNode()
+        label.name = "battleFeedback_\(eventID)"
+        label.position = CGPoint(x: point.x, y: point.y + 42)
+        label.fontName = "PingFangSC-Semibold"
+        label.fontSize = 18
+        label.verticalAlignmentMode = .center
+        label.horizontalAlignmentMode = .center
+        label.zPosition = 28
+
+        switch feedback {
+        case let .damage(amount, defeated):
+            label.text = defeated ? "−\(amount) · 击倒" : "−\(amount)"
+            label.fontColor = SKColor(red: 1.0, green: 0.42, blue: 0.28, alpha: 1)
+        case let .healing(amount):
+            label.text = "+\(amount)"
+            label.fontColor = SKColor(red: 0.42, green: 1.0, blue: 0.72, alpha: 1)
+        case .dodge:
+            label.text = "闪避"
+            label.fontColor = SKColor(red: 0.72, green: 0.90, blue: 1.0, alpha: 1)
+        }
+
+        label.alpha = 0
+        label.run(.sequence([
+            .wait(forDuration: delay),
+            .fadeIn(withDuration: 0.01),
+            .group([
+                .moveBy(x: 0, y: 24, duration: 0.42),
+                .sequence([.wait(forDuration: 0.20), .fadeOut(withDuration: 0.22)])
+            ])
+        ]))
+        return label
+    }
+
+    private func runImpactShake(for feedback: BattleFeedback) {
+        guard case let .damage(amount, _) = feedback else { return }
+        let strength = min(max(CGFloat(amount) / 5, 1), 3.2)
+        worldLayer.removeAction(forKey: "impactShake")
+        worldLayer.run(.sequence([
+            .moveBy(x: strength, y: strength * 0.35, duration: 0.025),
+            .moveBy(x: -strength * 2, y: -strength * 0.7, duration: 0.035),
+            .moveBy(x: strength, y: strength * 0.35, duration: 0.045)
+        ]), withKey: "impactShake")
+    }
+
+    private func applyDefeatedPose(to sprite: SKSpriteNode, nodeKey: String, actor: BattleActorMarker) {
+        sprite.removeAction(forKey: "actorAnimation")
+        sprite.removeAction(forKey: "impactFlash")
+        sprite.position = CGPoint(x: 0, y: -18)
+        sprite.zRotation = -.pi / 2
+        sprite.alpha = 0.62
+        if let frames = animationFrames(visualID: actor.visualID, action: .hurt, direction: actor.facing),
+           let finalFrame = frames.last {
+            sprite.texture = finalFrame
+        }
+        nodeAnimationKeys[nodeKey] = "defeated"
+    }
+
+    private func effectPalette(for style: BattleEffectStyle?) -> (core: SKColor, stroke: SKColor, ring: SKColor, sparkA: SKColor, sparkB: SKColor) {
+        switch style ?? .strike {
+        case .strike:
+            return (
+                SKColor(red: 1.0, green: 0.88, blue: 0.62, alpha: 0.92),
+                .white,
+                SKColor(red: 1.0, green: 0.42, blue: 0.16, alpha: 0.95),
+                SKColor(red: 1.0, green: 0.70, blue: 0.20, alpha: 0.95),
+                SKColor(red: 0.42, green: 0.84, blue: 1.0, alpha: 0.9)
+            )
+        case .projectile:
+            return (
+                SKColor(red: 0.72, green: 0.92, blue: 1.0, alpha: 0.92),
+                .white,
+                SKColor(red: 0.33, green: 0.73, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.82, green: 0.95, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.32, green: 0.72, blue: 1.0, alpha: 0.9)
+            )
+        case .arcane:
+            return (
+                SKColor(red: 0.88, green: 0.75, blue: 1.0, alpha: 0.94),
+                .white,
+                SKColor(red: 0.62, green: 0.42, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.95, green: 0.86, blue: 1.0, alpha: 0.95),
+                SKColor(red: 0.50, green: 0.72, blue: 1.0, alpha: 0.9)
+            )
+        case .fire:
+            return (
+                SKColor(red: 1.0, green: 0.78, blue: 0.32, alpha: 0.94),
+                .white,
+                SKColor(red: 1.0, green: 0.36, blue: 0.14, alpha: 0.96),
+                SKColor(red: 1.0, green: 0.55, blue: 0.20, alpha: 0.95),
+                SKColor(red: 1.0, green: 0.86, blue: 0.42, alpha: 0.9)
+            )
+        case .poison:
+            return (
+                SKColor(red: 0.72, green: 0.94, blue: 0.50, alpha: 0.94),
+                .white,
+                SKColor(red: 0.36, green: 0.78, blue: 0.28, alpha: 0.96),
+                SKColor(red: 0.60, green: 0.94, blue: 0.42, alpha: 0.95),
+                SKColor(red: 0.90, green: 1.0, blue: 0.62, alpha: 0.9)
+            )
+        case .heal:
+            return (
+                SKColor(red: 0.62, green: 1.0, blue: 0.86, alpha: 0.94),
+                .white,
+                SKColor(red: 0.22, green: 0.82, blue: 0.68, alpha: 0.96),
+                SKColor(red: 0.72, green: 1.0, blue: 0.90, alpha: 0.95),
+                SKColor(red: 0.42, green: 0.94, blue: 0.82, alpha: 0.9)
+            )
+        }
     }
 
     private func makeSurfaceNode(_ surface: BattleSurfaceMarker) -> SKNode {
@@ -487,38 +845,6 @@ final class GameScene: SKScene {
         node.lineWidth = 2
         node.zPosition = -5
         return node
-    }
-
-    private func makeVisibleObstacleNode(_ obstacle: NavigationObstacle) -> SKNode? {
-        guard shouldRenderAsProp(obstacle) else { return nil }
-
-        // ponytail（有意为之的技术债）：目前只画好了 prop_chest（箱子）/prop_woodpile（木堆）
-        // 两张图，所以像水井、碎石堆、矿堆、残墙之类的独立障碍物暂时都先借用同一张占位贴图。
-        // 等以后 assets-manifest.json 里给每种障碍物都登记了专属美术资源，再回来换掉。
-        let sprite = SKSpriteNode(texture: texture(named: "prop_woodpile"))
-        sprite.name = "obstacleProp_\(obstacle.tiledID)"
-        sprite.size = CGSize(width: max(obstacle.frame.width, 42), height: max(obstacle.frame.height, 42))
-        sprite.position = CGPoint(x: obstacle.frame.midX, y: obstacle.frame.midY)
-        return sprite
-    }
-
-    // 这是第一章所有 .tmx 地图里出现过的真实障碍物名字（搜索所有 navObstacle 对象组得到），
-    // 不包含每张地图都有的四面边界墙（北/南/西/东边界/村墙/浅河边界/河岸护栏）——
-    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，不管在不在这个名单里，
-    // 都会被下面的尺寸判断规则排除掉。
-    private static let obstaclePropNameFragments = [
-        "倒木", "木料", "篱笆", "货车", "废木堆",
-        "石井", "旧告示墙", "裂隙核心", "塌陷石带", "坍塌矿架",
-        "毒雾裂缝", "矿车轨道断口", "元素矿堆", "断塔石影", "塌墙", "旧炉台"
-    ]
-
-    private func shouldRenderAsProp(_ obstacle: NavigationObstacle) -> Bool {
-        // 尺寸上限从 192x96 调大了，这样比较高/比较宽的真实障碍物（比如坍塌矿架 128x192、
-        // 裂隙核心 160x160）也能算进来；同时又远小于每张地图边界墙的尺寸（边界墙至少有一边
-        // 大于等于 480），所以边界墙无论如何都还是会被排除掉。
-        guard obstacle.frame.width <= 280, obstacle.frame.height <= 220 else { return false }
-        guard let name = obstacle.name else { return false }
-        return Self.obstaclePropNameFragments.contains { name.localizedStandardContains($0) }
     }
 
     private func makeExitMarker(_ exit: MapExit) -> SKNode {

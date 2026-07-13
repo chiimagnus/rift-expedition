@@ -5,13 +5,6 @@ import XCTest
 
 @MainActor
 final class EncounterTriggerServiceTests: XCTestCase {
-    func testBundledEncounterDefinitionsDecode() {
-        let encounters = EncounterTriggerService.loadDefinitions()
-
-        XCTAssertEqual(encounters.first?.id, "boar_intro")
-        XCTAssertEqual(encounters.first?.enemies.first?.displayName, "受惊野猪")
-    }
-
     func testEnteringTriggerStartsBattleOnce() throws {
         var service = EncounterTriggerService(
             triggers: [
@@ -25,13 +18,127 @@ final class EncounterTriggerServiceTests: XCTestCase {
             encounters: [encounter]
         )
 
-        XCTAssertNil(service.encounter(at: CGPoint(x: 20, y: 20)))
-        XCTAssertEqual(service.encounter(at: CGPoint(x: 110, y: 110))?.id, "boar_intro")
-        XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertNil(service.pendingEncounter(at: CGPoint(x: 20, y: 20)))
+        let pending = service.pendingEncounter(at: CGPoint(x: 110, y: 110))
+        XCTAssertEqual(pending?.definition.id, "boar_intro")
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+
+        service.markTriggered(tiledID: try XCTUnwrap(pending?.trigger.tiledID))
+        XCTAssertNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
     }
 
-    func testVerticalSliceMetadataReadsEncounterTrigger() throws {
-        let metadata = try TiledMapLoader.loadMetadata(url: verticalSliceURL(), areaID: "vertical_slice")
+    func testMissingEncounterDefinitionDoesNotConsumeTrigger() throws {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 99,
+                    encounterID: "missing_encounter",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: []
+        )
+
+        XCTAssertNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+        XCTAssertNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+    }
+
+    func testMissingDefinitionDoesNotShadowOverlappingValidTrigger() throws {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 98,
+                    encounterID: "missing_encounter",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                ),
+                MapEncounterTrigger(
+                    tiledID: 99,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: [encounter]
+        )
+
+        let pending = service.pendingEncounter(at: CGPoint(x: 110, y: 110))
+
+        XCTAssertEqual(pending?.definition.id, "boar_intro")
+        XCTAssertEqual(pending?.trigger.tiledID, 99)
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+    }
+
+    func testSameEncounterDefinitionCanBeUsedByTwoMapObjects() throws {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 41,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                ),
+                MapEncounterTrigger(
+                    tiledID: 42,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 200, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: [encounter]
+        )
+
+        XCTAssertEqual(service.pendingEncounter(at: CGPoint(x: 110, y: 110))?.definition.id, "boar_intro")
+        service.markTriggered(tiledID: 41)
+        XCTAssertEqual(service.pendingEncounter(at: CGPoint(x: 210, y: 110))?.definition.id, "boar_intro")
+        service.markTriggered(tiledID: 42)
+        XCTAssertEqual(service.triggeredTiledIDs, [41, 42])
+    }
+
+    func testPendingEncounterIsNotConsumedUntilExplicitlyMarked() throws {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 41,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: [encounter]
+        )
+
+        XCTAssertNotNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertNotNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+
+        service.markTriggered(tiledID: 41)
+        XCTAssertNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
+    }
+
+    func testPretriggeredTiledObjectDoesNotStartAgain() throws {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 41,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: [encounter],
+            triggeredTiledIDs: [41]
+        )
+
+        XCTAssertNil(service.pendingEncounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertEqual(service.triggeredTiledIDs, [41])
+    }
+
+    func testChapterMapMetadataReadsEncounterTrigger() throws {
+        let metadata = try TiledMapLoader.loadMetadata(url: villageOutskirtsURL(), areaID: "village_outskirts")
 
         XCTAssertEqual(metadata.encounterTriggers.first?.encounterID, "boar_intro")
     }
@@ -61,10 +168,10 @@ final class EncounterTriggerServiceTests: XCTestCase {
         )
     }
 
-    private func verticalSliceURL() -> URL {
+    private func villageOutskirtsURL() -> URL {
         URL(filePath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appending(path: "RiftExpedition/Resources/Maps/vertical_slice.tmx")
+            .appending(path: "RiftExpedition/Resources/Maps/chapter1/village_outskirts.tmx")
     }
 }

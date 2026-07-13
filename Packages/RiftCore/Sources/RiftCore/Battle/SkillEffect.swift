@@ -3,28 +3,40 @@ public enum SkillEffect: Codable, Equatable, Sendable {
     case heal(Int)
     case applyStatus(statusID: String, durationTurns: Int)
     case createSurface(surfaceID: String, durationTurns: Int)
-    case move(distance: Double)
-    case summon(actorID: String)
+}
+
+public struct ResolvedStatusEffect: Equatable, Sendable {
+    public var statusID: String
+    public var durationTurns: Int
+
+    public init(statusID: String, durationTurns: Int) {
+        self.statusID = statusID
+        self.durationTurns = durationTurns
+    }
+}
+
+public struct ResolvedSurfaceEffect: Equatable, Sendable {
+    public var surfaceID: String
+    public var durationTurns: Int
+
+    public init(surfaceID: String, durationTurns: Int) {
+        self.surfaceID = surfaceID
+        self.durationTurns = durationTurns
+    }
 }
 
 public struct SkillResolution: Equatable, Sendable {
     public var didDodge: Bool
-    public var appliedStatuses: [String]
-    public var createdSurfaces: [String]
-    public var summonedActorIDs: [String]
-    public var movedDistance: Double
+    public var appliedStatuses: [ResolvedStatusEffect]
+    public var createdSurfaces: [ResolvedSurfaceEffect]
 
     public init(
         didDodge: Bool = false,
-        appliedStatuses: [String] = [],
-        createdSurfaces: [String] = [],
-        summonedActorIDs: [String] = [],
-        movedDistance: Double = 0
+        appliedStatuses: [ResolvedStatusEffect] = [],
+        createdSurfaces: [ResolvedSurfaceEffect] = []
     ) {
         self.didDodge = didDodge
         self.appliedStatuses = appliedStatuses
         self.createdSurfaces = createdSurfaces
-        self.summonedActorIDs = summonedActorIDs
-        self.movedDistance = movedDistance
     }
 }

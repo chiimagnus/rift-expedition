@@ -876,7 +876,7 @@ public class SKTileLayer: TiledLayerObject {
         log("rendering static tile layer '\(layerName)' at \(staticRect.shortDescription)", level: .debug)
         
         #if os(macOS)
-        var staticImage = NSImage(size: sizeInPoints)
+        let staticImage = NSImage(size: sizeInPoints)
         staticImage.lockFocus()
         
         let context = NSGraphicsContext.current!

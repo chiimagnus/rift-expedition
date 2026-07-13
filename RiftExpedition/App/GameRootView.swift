@@ -1,8 +1,10 @@
+import RiftCore
 import SpriteKit
 import SwiftUI
 
 struct GameRootView: View {
     let viewModel: GameSessionViewModel
+    @State private var menuReady = false
 
     var body: some View {
         ZStack {
@@ -23,7 +25,9 @@ struct GameRootView: View {
                 DialogView(
                     viewModel: viewModel.dialogViewModel,
                     onClose: viewModel.closePanel,
-                    onCompleteQuest: viewModel.applyQuestRewards,
+                    onQuestCompletionRequested: { questID in
+                        _ = viewModel.completeQuest(questID: questID)
+                    },
                     onStartBattle: viewModel.beginBattleFromDialog
                 )
             case .questLog:
@@ -77,72 +81,197 @@ struct GameRootView: View {
         }
         .scaleEffect(viewModel.uiScale)
         .frame(minWidth: 960, minHeight: 540)
+        .animation(.easeInOut(duration: 0.22), value: viewModel.appState)
     }
 
-    // 整个游戏壳层统一使用木纹背景，与羊皮纸面板/旗帜标题牌搭配，构成手绘卡通奇幻风的统一视觉语言。
     private var background: some View {
         RiftWoodBackground()
     }
 
     private var mainMenu: some View {
-        RiftPanelScaffold(
-            title: "裂隙远征",
-            subtitle: "村庄、野外与洞穴之间，第一章的谎言正等着被拆穿。",
-            maxWidth: 1_080
-        ) {
-            HStack(alignment: .top, spacing: 42) {
-                VStack(alignment: .leading, spacing: 14) {
+        GeometryReader { proxy in
+            HStack(spacing: 54) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 14) {
+                        RiftLogoMark(size: 50)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("RIFT EXPEDITION")
+                                .font(.caption.weight(.black))
+                                .tracking(3.2)
+                                .foregroundStyle(RiftPalette.riftBlue)
+                            Text("裂隙远征")
+                                .font(.system(size: min(proxy.size.width * 0.072, 72), weight: .black, design: .rounded))
+                                .foregroundStyle(RiftPalette.frost)
+                        }
+                    }
+
                     Text("第一章 · 裂隙村的谎言")
                         .font(.title2.weight(.heavy))
-                        .foregroundStyle(RiftPalette.textBrown)
-                    Text("组建两人小队，在村庄、野外与洞穴中追查一份足以撕裂裂隙村的账本。")
-                        .font(.body)
-                        .foregroundStyle(RiftPalette.textBrownLight)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(RiftPalette.ember)
+                        .padding(.top, 22)
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Button("开始新远征") {
+                    Text("一场被嫁祸给怪物的失踪案，一本足以摧毁村庄秩序的矿账，以及封层另一侧正在苏醒的回声。")
+                        .font(.title3.weight(.medium))
+                        .foregroundStyle(RiftPalette.muted)
+                        .lineSpacing(5)
+                        .frame(maxWidth: 610, alignment: .leading)
+                        .padding(.top, 12)
+
+                    HStack(spacing: 8) {
+                        RiftStatusPill(text: "双人小队", tint: RiftPalette.riftBlue, icon: "person.2.fill")
+                        RiftStatusPill(text: "自由距离回合制", tint: RiftPalette.riftViolet, icon: "scope")
+                        RiftStatusPill(text: "45–60 分钟章节", tint: RiftPalette.ember, icon: "clock.fill")
+                    }
+                    .padding(.top, 20)
+
+                    VStack(spacing: 10) {
+                        Button {
                             viewModel.startNewGame()
+                        } label: {
+                            HStack {
+                                Label("开始新远征", systemImage: "play.fill")
+                                Spacer()
+                                Text("ENTER")
+                                    .font(.caption2.monospaced().weight(.black))
+                            }
+                            .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(RiftPrimaryButtonStyle())
                         .keyboardShortcut(.defaultAction)
-                        .accessibilityLabel("开始新游戏")
+                        .disabled(viewModel.contentLoadErrorMessage != nil)
 
-                        Button("继续 / 读取存档") {
+                        Button {
                             viewModel.openSaveLoad()
+                        } label: {
+                            HStack {
+                                Label("继续 / 读取存档", systemImage: "arrow.clockwise")
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(RiftSecondaryButtonStyle())
-                        .accessibilityLabel("读取或管理存档")
+                        .disabled(viewModel.contentLoadErrorMessage != nil)
 
-                        Button("设置") {
+                        Button {
                             viewModel.openSettings()
+                        } label: {
+                            HStack {
+                                Label("系统与无障碍设置", systemImage: "slider.horizontal.3")
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(RiftSecondaryButtonStyle())
-                        .accessibilityLabel("打开设置")
                     }
-                }
+                    .frame(maxWidth: 360)
+                    .padding(.top, 30)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Label("回合制战术战斗", systemImage: "scope")
-                    Label("自由距离、视线与整数 AP", systemImage: "ruler")
-                    Label("共享背包与角色成长", systemImage: "backpack")
-                    Label("5 个手动存档 + 安全自动存档", systemImage: "square.and.arrow.down")
+                    Text(viewModel.statusText)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(RiftPalette.muted)
+                        .padding(.top, 14)
+
+                    if let contentError = viewModel.contentLoadErrorMessage {
+                        Label(contentError, systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(RiftPalette.danger)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 520, alignment: .leading)
+                            .padding(.top, 8)
+                    }
+
+                    Spacer(minLength: 24)
+
+                    HStack(spacing: 12) {
+                        Text("CHAPTER BUILD 01")
+                        Circle().frame(width: 3, height: 3)
+                        Text("MACOS NATIVE")
+                        Circle().frame(width: 3, height: 3)
+                        Text("中文")
+                    }
+                    .font(.caption2.monospaced().weight(.bold))
+                    .foregroundStyle(RiftPalette.steel)
                 }
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(RiftPalette.textBrown)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(RiftPalette.parchmentShade)
-                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(RiftPalette.outline.opacity(0.45), lineWidth: 1.5))
-                )
-            }
-            .frame(minHeight: 300)
+                .offset(x: menuReady ? 0 : -24)
+                .opacity(menuReady ? 1 : 0)
 
-            Text(viewModel.statusText)
-                .font(.callout.weight(.medium))
-                .foregroundStyle(RiftPalette.textBrownLight)
+                expeditionDossier
+                    .frame(width: min(max(proxy.size.width * 0.31, 310), 420))
+                    .offset(x: menuReady ? 0 : 28)
+                    .opacity(menuReady ? 1 : 0)
+            }
+            .padding(.horizontal, max(52, proxy.size.width * 0.07))
+            .padding(.vertical, 52)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.72)) {
+                    menuReady = true
+                }
+            }
+        }
+    }
+
+    private var expeditionDossier: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            RiftSectionHeader("远征简报", eyebrow: "CHAPTER INTEL", systemImage: "map.fill")
+
+            ZStack(alignment: .bottomLeading) {
+                RiftIllustrationCard(
+                    illustrationID: "chapter1_village_square",
+                    height: 210,
+                    overlayTint: RiftPalette.riftViolet,
+                    cornerRadius: 16
+                )
+                VStack(alignment: .leading, spacing: 10) {
+                    RiftLogoMark(size: 52)
+                    Text("第一章：失踪的新娘")
+                        .font(.title3.weight(.black))
+                        .foregroundStyle(.white)
+                    Text("纯 2D 卡通手绘内容版：原创立绘、环境关键画与更强音景已经接入。")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.82))
+                        .fixedSize(horizontal: false, vertical: true)
+                    RiftStatusPill(text: "建议时长 · 20~30 分钟", tint: RiftPalette.riftBlue, icon: "clock.fill")
+                }
+                .padding(18)
+            }
+
+            dossierRow(icon: "building.columns.fill", title: "裂隙村", detail: "表面平静，河水已被矿脉污染")
+            dossierRow(icon: "figure.hiking", title: "断塔荒野", detail: "脚印、偷猎者与失控野兽")
+            dossierRow(icon: "mountain.2.fill", title: "旧元素矿洞", detail: "封层破裂，真相埋在洞心")
+
+            Rectangle()
+                .fill(RiftPalette.border.opacity(0.35))
+                .frame(height: 1)
+
+            HStack {
+                Label("建议", systemImage: "lightbulb.fill")
+                    .foregroundStyle(RiftPalette.ember)
+                Text("选择职责互补的两名成员。")
+                    .foregroundStyle(RiftPalette.muted)
+            }
+            .font(.caption.weight(.semibold))
+        }
+        .padding(22)
+        .riftParchmentPanel(cornerRadius: 22)
+    }
+
+    private func dossierRow(icon: String, title: String, detail: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(RiftPalette.riftBlue)
+                .frame(width: 34, height: 34)
+                .background(RiftPalette.riftBlue.opacity(0.10), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.callout.weight(.bold))
+                    .foregroundStyle(RiftPalette.frost)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(RiftPalette.muted)
+            }
+            Spacer()
         }
     }
 
@@ -151,67 +280,149 @@ struct GameRootView: View {
             GameSceneView(viewModel: viewModel)
                 .ignoresSafeArea()
 
+            LinearGradient(colors: [.black.opacity(0.32), .clear, .black.opacity(0.36)], startPoint: .top, endPoint: .bottom)
+                .allowsHitTesting(false)
+
             VStack(spacing: 0) {
-                HStack(alignment: .top, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("探索 · \(viewModel.currentAreaDisplayName)")
-                            .font(.headline.weight(.heavy))
-                        Text(viewModel.statusText)
-                            .font(.caption)
-                            .lineLimit(2)
-                    }
-                    .foregroundStyle(RiftPalette.textBrown)
-
-                    Spacer()
-
-                    HStack(spacing: 6) {
-                        explorationButton("backpack.fill", title: "队伍档案", action: viewModel.openInventory)
-                        explorationButton("list.bullet.rectangle", title: "任务日志", action: viewModel.openQuestLog)
-                        explorationButton("square.and.arrow.down", title: "存档", action: viewModel.openSaveLoad)
-                        explorationButton("gearshape.fill", title: "设置", action: viewModel.openSettings)
-                    }
-                }
-                .padding(12)
-                .riftParchmentPanel(cornerRadius: 16)
-
-                HStack(spacing: 8) {
-                    ForEach(viewModel.party) { actor in
-                        HStack(spacing: 6) {
-                            RiftActorPortrait(classID: actor.classID, size: 32)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(actor.displayName).font(.caption.weight(.bold))
-                                Text("\(actor.stats.health)/\(actor.stats.maxHealth) HP")
-                                    .font(.caption2.monospacedDigit())
-                            }
-                        }
-                        .foregroundStyle(RiftPalette.textBrown)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 5)
-                        .background(RiftPalette.parchment.opacity(0.94), in: Capsule())
-                    }
-                }
-                .padding(.top, 8)
-
+                explorationHeader
                 Spacer()
+                HStack(alignment: .bottom, spacing: 14) {
+                    partyStatusPanel
+                    Spacer()
+                    explorationHint
+                    Spacer()
+                    utilityRail
+                }
             }
-            .padding()
+            .padding(18)
         }
+    }
+
+    private var explorationHeader: some View {
+        HStack(alignment: .center, spacing: 16) {
+            HStack(spacing: 12) {
+                RiftLogoMark(size: 38)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(currentBiomeLabel.uppercased())
+                        .font(.caption2.weight(.black))
+                        .tracking(1.6)
+                        .foregroundStyle(RiftPalette.riftBlue)
+                    Text(viewModel.currentAreaDisplayName)
+                        .font(.title3.weight(.black))
+                        .foregroundStyle(RiftPalette.frost)
+                }
+            }
+
+            Rectangle()
+                .fill(RiftPalette.border.opacity(0.42))
+                .frame(width: 1, height: 40)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(activeQuest?.isMainQuest == true ? "主线目标" : "当前行动")
+                    .font(.caption2.weight(.black))
+                    .tracking(1)
+                    .foregroundStyle(RiftPalette.ember)
+                Text(activeQuest?.title ?? viewModel.statusText)
+                    .font(.callout.weight(.bold))
+                    .foregroundStyle(RiftPalette.frost)
+                    .lineLimit(1)
+                if let hint = activeQuest?.locationHint {
+                    Text(hint)
+                        .font(.caption)
+                        .foregroundStyle(RiftPalette.muted)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            RiftStatusPill(text: "探索中", tint: RiftPalette.success, icon: "location.fill")
+        }
+        .padding(14)
+        .riftParchmentPanel(cornerRadius: 16)
+    }
+
+    private var partyStatusPanel: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text("远征小队")
+                .font(.caption2.weight(.black))
+                .tracking(1.2)
+                .foregroundStyle(RiftPalette.muted)
+
+            ForEach(viewModel.party) { actor in
+                HStack(spacing: 10) {
+                    RiftActorPortrait(classID: actor.classID, size: 46)
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack {
+                            Text(actor.displayName)
+                                .font(.callout.weight(.bold))
+                                .foregroundStyle(RiftPalette.frost)
+                            Spacer()
+                            Text("Lv.\(actor.level)")
+                                .font(.caption2.monospaced().weight(.bold))
+                                .foregroundStyle(RiftPalette.muted)
+                        }
+                        RiftMetricBar(
+                            value: actor.stats.maxHealth == 0 ? 0 : Double(actor.stats.health) / Double(actor.stats.maxHealth),
+                            tint: healthTint(for: actor),
+                            height: 6
+                        )
+                        Text("\(actor.stats.health) / \(actor.stats.maxHealth) HP")
+                            .font(.caption2.monospacedDigit().weight(.semibold))
+                            .foregroundStyle(RiftPalette.muted)
+                    }
+                    .frame(width: 150)
+                }
+            }
+        }
+        .padding(13)
+        .riftParchmentPanel(cornerRadius: 15)
+    }
+
+    private var utilityRail: some View {
+        HStack(spacing: 6) {
+            explorationButton("person.crop.rectangle.stack.fill", title: "队伍档案", action: viewModel.openInventory)
+            explorationButton("list.bullet.clipboard.fill", title: "任务日志", action: viewModel.openQuestLog)
+            explorationButton("square.and.arrow.down.fill", title: "存档", action: viewModel.openSaveLoad)
+            explorationButton("gearshape.fill", title: "设置", action: viewModel.openSettings)
+        }
+        .padding(8)
+        .riftParchmentPanel(cornerRadius: 14)
+    }
+
+    private var explorationHint: some View {
+        HStack(spacing: 9) {
+            RiftKeycap(text: "LMB")
+            Text("移动 / 互动")
+            RiftKeycap(text: "TAB")
+            Text("切换队长")
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(RiftPalette.muted)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.black.opacity(0.42), in: Capsule())
+        .overlay(Capsule().stroke(RiftPalette.border.opacity(0.34), lineWidth: 1))
     }
 
     private func explorationButton(_ icon: String, title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.callout.weight(.bold))
-                .frame(width: 28, height: 28)
+                .frame(width: 30, height: 28)
         }
-        .buttonStyle(RiftSecondaryButtonStyle())
+        .buttonStyle(RiftGhostButtonStyle())
+        .help(title)
         .accessibilityLabel(title)
     }
 
     private var battle: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack {
             GameSceneView(viewModel: viewModel)
                 .ignoresSafeArea()
+
+            LinearGradient(colors: [.black.opacity(0.26), .clear, .black.opacity(0.46)], startPoint: .top, endPoint: .bottom)
+                .allowsHitTesting(false)
 
             if let battleViewModel = viewModel.battleViewModel {
                 BattleHUDView(
@@ -219,7 +430,7 @@ struct GameRootView: View {
                     onFinishBattle: viewModel.finishBattle,
                     onReturnToMenu: viewModel.returnToMainMenu
                 )
-                .padding()
+                .padding(18)
             } else {
                 simpleStatePanel
             }
@@ -228,22 +439,38 @@ struct GameRootView: View {
 
     private var simpleStatePanel: some View {
         VStack(spacing: 16) {
+            RiftLogoMark(size: 66)
             Text(viewModel.appState.title)
                 .font(.largeTitle.bold())
-                .foregroundStyle(RiftPalette.textBrown)
-
+                .foregroundStyle(RiftPalette.frost)
             Text(viewModel.statusText)
-                .foregroundStyle(RiftPalette.textBrownLight)
-
+                .foregroundStyle(RiftPalette.muted)
             Button("返回主菜单") {
                 viewModel.returnToMainMenu()
             }
             .buttonStyle(RiftPrimaryButtonStyle())
-            .accessibilityLabel("返回主菜单")
         }
         .frame(maxWidth: 520)
         .padding(40)
-        .riftParchmentPanel(cornerRadius: 18)
+        .riftParchmentPanel(cornerRadius: 20)
+    }
+
+    private var activeQuest: QuestLogEntry? {
+        viewModel.dialogViewModel.questLogEntries.first(where: { $0.status == .active })
+    }
+
+    private var currentBiomeLabel: String {
+        if viewModel.currentAreaID.contains("cave") { return "旧矿洞" }
+        if viewModel.currentAreaID.contains("wilds") { return "断塔荒野" }
+        return "裂隙村"
+    }
+
+    private func healthTint(for actor: Actor) -> Color {
+        guard actor.stats.maxHealth > 0 else { return RiftPalette.danger }
+        let ratio = Double(actor.stats.health) / Double(actor.stats.maxHealth)
+        if ratio < 0.3 { return RiftPalette.danger }
+        if ratio < 0.6 { return RiftPalette.ember }
+        return RiftPalette.success
     }
 }
 
@@ -280,17 +507,21 @@ private struct GameSceneView: View {
                 scene.loadMap(areaID: areaID)
                 renderSceneState()
             }
+            .onChange(of: viewModel.explorationWorldPresentation) { _, presentation in
+                scene.renderExplorationWorld(presentation)
+            }
             .onChange(of: viewModel.explorationController) { _, controller in
                 guard viewModel.appState == .exploration else { return }
                 scene.renderParty(controller.members, leaderID: controller.leaderID)
             }
             .onChange(of: viewModel.battleViewModel?.sceneSnapshot) { _, snapshot in
-                scene.renderBattle(snapshot)
+                renderBattleSnapshot(snapshot)
             }
     }
 
     private func renderSceneState() {
         scene.isWorldInputEnabled = viewModel.appState == .exploration || viewModel.appState == .battle
+        scene.renderExplorationWorld(viewModel.explorationWorldPresentation)
         if viewModel.appState == .exploration {
             scene.renderParty(
                 viewModel.explorationController.members,
@@ -299,7 +530,13 @@ private struct GameSceneView: View {
             scene.renderBattle(nil)
         } else if viewModel.appState == .battle {
             scene.renderParty([], leaderID: nil)
-            scene.renderBattle(viewModel.battleViewModel?.sceneSnapshot)
+            renderBattleSnapshot(viewModel.battleViewModel?.sceneSnapshot)
         }
+    }
+
+    private func renderBattleSnapshot(_ snapshot: BattleSceneSnapshot?) {
+        scene.renderBattle(snapshot)
+        guard let lastEventID = snapshot?.presentationEvents.last?.id else { return }
+        viewModel.battleViewModel?.acknowledgePresentationEvents(through: lastEventID)
     }
 }

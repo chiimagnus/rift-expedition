@@ -191,11 +191,12 @@ open class SKTiledScene: SKScene, SKPhysicsContactDelegate, TiledSceneDelegate, 
         let relativeURL = URL(fileURLWithPath: filename, relativeTo: dirname)
 
         self.setup(tmxFile: relativeURL.relativePath,
-                        inDirectory: (relativeURL.baseURL == nil) ? nil : relativeURL.baseURL!.path,
-                        withTilesets: withTilesets,
-                        ignoreProperties: ignoreProperties,
-                        loggingLevel: loggingLevel,
-                        completion)
+                   delegate: delegate,
+                   inDirectory: relativeURL.baseURL?.path,
+                   withTilesets: withTilesets,
+                   ignoreProperties: ignoreProperties,
+                   loggingLevel: loggingLevel,
+                   completion)
     }
 
     /// Load and setup a named TMX file, with optional tilesets. Allows for an optional completion handler.
@@ -226,10 +227,9 @@ open class SKTiledScene: SKScene, SKPhysicsContactDelegate, TiledSceneDelegate, 
         self.loggingLevel = loggingLevel
         self.tilemap = nil
 
-        weak var weakSelf = self
-        
-        // if the user has passed a custom tilemap delegate, use that instead
-        let tilemapDelegate = delegate ?? weakSelf
+        // If the user has passed a custom tilemap delegate, use that instead.
+        // A temporary strong reference here cannot form a retain cycle.
+        let tilemapDelegate = delegate ?? self
 
         if let tilemap = load(tmxFile: tmxFile,
                               delegate: tilemapDelegate,
@@ -241,11 +241,9 @@ open class SKTiledScene: SKScene, SKPhysicsContactDelegate, TiledSceneDelegate, 
 
             backgroundColor = tilemap.backgroundColor ?? SKColor.clear
 
-            // if let _ = weakSelf?.view {}
-
             // add the tilemap to the world container node.
             worldNode.addChild(tilemap, fadeIn: 0.2)
-            weakSelf!.tilemap = tilemap
+            self.tilemap = tilemap
 
             // tilemap will be notified of camera changes
             cameraNode?.addDelegate(tilemap)
@@ -440,7 +438,7 @@ extension SKTiledScene: TiledSceneCameraDelegate {
     /// Called when the scene receives a double-tap event **(iOS only)**.
     ///
     /// - Parameter location: touch event location.
-    open func sceneDoubleTapped(location: CGPoint) {}
+    public func sceneDoubleTapped(location: CGPoint) {}
     #endif
 
     // MARK: - Delegate Methods
@@ -574,7 +572,7 @@ extension SKTiledScene {
     ///   - loggingLevel: logging verbosity.
     ///   - completion: optional completion handler.
     @available(*, deprecated, renamed: "setup(url:delegate:withTilesets:ignoreProperties:loggingLevel:_:)")
-    open func setup(url: URL,
+    public func setup(url: URL,
                     withTilesets: [SKTileset] = [],
                     ignoreProperties: Bool = false,
                     loggingLevel: LoggingLevel = TiledGlobals.default.loggingLevel,
@@ -600,7 +598,7 @@ extension SKTiledScene {
     ///   - loggingLevel: logging verbosity.
     ///   - completion: optional completion handler.
     @available(*, deprecated, renamed: "setup(tmxFile:delegate:inDirectory:withTilesets:ignoreProperties:loggingLevel:_:)")
-    open func setup(tmxFile: String,
+    public func setup(tmxFile: String,
                     inDirectory: String? = nil,
                     withTilesets tilesets: [SKTileset] = [],
                     ignoreProperties: Bool = false,

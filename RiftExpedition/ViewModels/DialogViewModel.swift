@@ -2,50 +2,29 @@ import Foundation
 import Observation
 import RiftCore
 
-struct DialogScript: Codable, Equatable, Identifiable {
-    var id: String
-    var speakerName: String
-    var lines: [String]
-    var options: [DialogOption]
-}
-
-struct DialogOption: Codable, Equatable, Identifiable {
-    var id: String
-    var title: String
-    var action: DialogAction
-    var questID: String?
-    var encounterID: String?
-}
-
-enum DialogAction: String, Codable, Equatable {
-    case acceptQuest
-    case completeQuest
-    case startBattle
-    case close
-}
 
 enum DialogOutcome: Equatable {
     case none
     case close
-    case completedQuest(String)
+    case questCompletionRequested(String)
     case startBattle(String)
 }
 
 @MainActor
 @Observable
 final class DialogViewModel {
-    private let scriptsByID: [String: DialogScript]
+    private let scriptsByID: [String: DialogDefinition]
     private let questDefinitions: [QuestDefinition]
     private let session: GameSessionState
-    var activeDialog: DialogScript?
+    var activeDialog: DialogDefinition?
     var message = "还没有对话。"
 
     init(
-        scripts: [DialogScript],
+        scripts: [DialogDefinition],
         questDefinitions: [QuestDefinition],
         session: GameSessionState = GameSessionState()
     ) {
-        var indexedScripts: [String: DialogScript] = [:]
+        var indexedScripts: [String: DialogDefinition] = [:]
         for script in scripts where indexedScripts[script.id] == nil {
             indexedScripts[script.id] = script
         }
@@ -71,7 +50,7 @@ final class DialogViewModel {
         return true
     }
 
-    func choose(_ option: DialogOption) -> DialogOutcome {
+    func choose(_ option: DialogOptionDefinition) -> DialogOutcome {
         do {
             switch option.action {
             case .acceptQuest:
@@ -85,16 +64,11 @@ final class DialogViewModel {
                 }
                 return .none
             case .completeQuest:
-                if let questID = option.questID {
-                    session.questState = try QuestEngine.complete(
-                        questID: questID,
-                        in: session.questState,
-                        definitions: questDefinitions
-                    )
-                    message = "任务已完成。"
-                    return .completedQuest(questID)
+                guard let questID = option.questID else {
+                    message = "任务交付配置无效。"
+                    return .none
                 }
-                return .none
+                return .questCompletionRequested(questID)
             case .startBattle:
                 guard let encounterID = option.encounterID else { return .none }
                 return .startBattle(encounterID)
@@ -107,13 +81,4 @@ final class DialogViewModel {
         }
     }
 
-    static func loadScripts(from bundle: Bundle = .main) -> [DialogScript] {
-        guard let url = bundle.url(forResource: "dialogs", withExtension: "json", subdirectory: "Data"),
-              let data = try? Data(contentsOf: url),
-              let scripts = try? JSONDecoder().decode([DialogScript].self, from: data)
-        else {
-            return []
-        }
-        return scripts
-    }
 }

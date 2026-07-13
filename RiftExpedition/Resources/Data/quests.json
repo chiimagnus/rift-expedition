@@ -1,20 +1,94 @@
 [
   {
     "id": "blood_debt",
-    "title": "血债：失踪的新娘",
-    "summary": "沈砚在婚宴前失踪，未婚夫梁铮诬陷外来法师；你们需要沿村外脚印、野路线索和旧矿洞账册查明真相，揭穿村长顾怀恩偷采元素矿引发污染。",
+    "title": "主线 · 血债：失踪的新娘",
+    "summary": "沈砚在婚宴前失踪。梁铮把罪名推给外来法师，村长顾怀恩却封锁旧矿洞。沿村外脚印、河水污染和元素矿账册追查真相，证明这场灾难并非怪物造成。",
     "startDialogID": "elder_intro",
     "turnInDialogID": "elder_return",
-    "rewardItemIDs": ["rift_shard_amulet"],
-    "rewardSkillIDs": ["water_orb"]
+    "rewardItemIDs": [
+      "rift_shard_amulet"
+    ],
+    "rewardSkillIDs": [
+      "water_orb"
+    ],
+    "isMainQuest": true,
+    "locationHint": "当前方向：村外东门 → 断塔野路 → 旧矿洞",
+    "objectives": [
+      "询问梁铮与村中守卫，确认失踪时间线",
+      "沿野路寻找沈砚留下的痕迹",
+      "进入旧矿洞并取得元素矿账册",
+      "找到沈砚，带证据回村揭穿顾怀恩"
+    ],
+    "requiredItemIDs": [
+      "element_ore_ledger"
+    ],
+    "chapterID": "chapter1"
   },
   {
     "id": "bitterroot_medicine",
-    "title": "苦根草药",
-    "summary": "药师林婆需要野外河湾的苦根草，以压住村民身上的毒热。",
+    "title": "支线 · 苦根草药",
+    "summary": "矿脉污染让村中孩子出现毒热。前往苦根河湾采回一束苦根草，交给药师林婆熬制解毒剂。",
     "startDialogID": "healer_request",
     "turnInDialogID": "healer_return",
-    "rewardItemIDs": ["minor_healing_draught", "river_charm"],
-    "rewardSkillIDs": []
+    "rewardItemIDs": [
+      "minor_healing_draught",
+      "river_charm"
+    ],
+    "rewardSkillIDs": [],
+    "isMainQuest": false,
+    "locationHint": "当前方向：村庄河岸 → 苦根河湾",
+    "objectives": [
+      "与林婆确认病症与药材特征",
+      "在苦根河湾采集苦根草",
+      "返回药铺交付药材"
+    ],
+    "requiredItemIDs": [
+      "bitterroot_herb"
+    ],
+    "chapterID": "chapter1"
+  },
+  {
+    "id": "scorched_vow",
+    "title": "支线 · 灰烬中的誓言",
+    "summary": "梁铮想找回被人扔进断塔火堆的订婚戒。那枚烧黑的银戒或许无法挽回婚约，却能补全沈砚失踪前最后一次争执。",
+    "startDialogID": "fiance_ring_request",
+    "turnInDialogID": "fiance_ring_return",
+    "rewardItemIDs": [
+      "lucky_thread"
+    ],
+    "rewardSkillIDs": [],
+    "isMainQuest": false,
+    "locationHint": "当前方向：断塔野路 → 旧驿站废墟",
+    "objectives": [
+      "与梁铮确认订婚戒的去向",
+      "在旧驿站废墟找到烧黑的银戒",
+      "把银戒交还给梁铮"
+    ],
+    "requiredItemIDs": [
+      "scorched_ring"
+    ],
+    "chapterID": "chapter1"
+  },
+  {
+    "id": "miners_last_shift",
+    "title": "支线 · 矿工的最后一班",
+    "summary": "守卫阿砾需要一件能确认失踪矿工身份的遗物。深入元素矿道寻找矿工铁护手，并把它带回村口。",
+    "startDialogID": "guard_gauntlets_request",
+    "turnInDialogID": "guard_gauntlets_return",
+    "rewardItemIDs": [
+      "minor_healing_draught"
+    ],
+    "rewardSkillIDs": [],
+    "isMainQuest": false,
+    "locationHint": "当前方向：旧矿洞入口 → 元素矿道",
+    "objectives": [
+      "向阿砾询问失踪矿工的特征",
+      "在元素矿道找到矿工铁护手",
+      "把护手交给阿砾"
+    ],
+    "requiredItemIDs": [
+      "miner_gauntlets"
+    ],
+    "chapterID": "chapter1"
   }
 ]

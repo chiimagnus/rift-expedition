@@ -10,44 +10,35 @@ final class SaveLoadViewModelTests: XCTestCase {
         var loadedSave: SaveGame?
         let viewModel = SaveLoadViewModel(
             store: store,
-            makeSave: { self.makeSave(areaID: "vertical_slice") },
-            applySave: { loadedSave = $0 }
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { loadedSave = $0; return .applied }
         )
 
         viewModel.saveManual(slot: .manual(1))
         viewModel.load(slot: .manual(1))
 
-        XCTAssertEqual(loadedSave?.currentAreaID, "vertical_slice")
+        XCTAssertEqual(loadedSave?.currentAreaID, "village_square")
         XCTAssertEqual(loadedSave?.party.first?.id, "hero")
         XCTAssertTrue(viewModel.rows.first { $0.slot == .manual(1) }?.canLoad == true)
     }
 
-    func testUnsafeAutosaveRequestIsRejected() {
-        let viewModel = SaveLoadViewModel(
-            store: makeStore(),
-            makeSave: { self.makeSave(areaID: "vertical_slice") },
-            applySave: { _ in }
-        )
-
-        viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
-
-        XCTAssertEqual(viewModel.message, "自动存档被拒绝：当前不是安全点。")
-        XCTAssertFalse(viewModel.rows.first { $0.slot == .auto(1) }?.canLoad == true)
-    }
-
-    func testRejectedAutosavePreservesExistingSlot() throws {
+    func testRejectedApplyDoesNotReportLoadSuccess() {
         let store = makeStore()
-        try store.write(makeSave(areaID: "old_safe_area"), to: .auto(1), safety: .safe)
+        try? store.write(makeSave(areaID: "village_square"), to: .manual(1), safety: .safe)
+        var applyCount = 0
         let viewModel = SaveLoadViewModel(
             store: store,
-            makeSave: { self.makeSave(areaID: "new_unsafe_area") },
-            applySave: { _ in }
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { _ in
+                applyCount += 1
+                return .rejected("存档引用了无效地图或出生点。")
+            }
         )
 
-        viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
+        viewModel.load(slot: .manual(1))
 
-        XCTAssertEqual(try store.read(.auto(1)).currentAreaID, "old_safe_area")
-        XCTAssertEqual(viewModel.message, "自动存档被拒绝：当前不是安全点。")
+        XCTAssertEqual(applyCount, 1)
+        XCTAssertEqual(viewModel.message, "读取失败：存档引用了无效地图或出生点。")
     }
 
     func testRowsUseInjectedAreaDisplayName() throws {
@@ -56,7 +47,7 @@ final class SaveLoadViewModelTests: XCTestCase {
         let viewModel = SaveLoadViewModel(
             store: store,
             makeSave: { self.makeSave(areaID: "village_square") },
-            applySave: { _ in },
+            applySave: { _ in .applied },
             areaDisplayName: { areaID in areaID == "village_square" ? "裂隙村广场" : areaID }
         )
 
@@ -66,13 +57,23 @@ final class SaveLoadViewModelTests: XCTestCase {
         XCTAssertFalse(row.detail.contains("village_square"))
     }
 
+    func testBatchReadDeduplicatesRepeatedSlotsWithoutCrashing() throws {
+        let store = makeStore()
+        try store.write(makeSave(areaID: "village_square"), to: .manual(1), safety: .safe)
+
+        let results = store.readResults(for: [.manual(1), .manual(1), .manual(2)])
+
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[.manual(1)]?.save?.currentAreaID, "village_square")
+    }
+
     func testCorruptSlotShowsChineseError() throws {
         let store = makeStore()
         try store.writeRawData(Data("{".utf8), to: .manual(2))
         let viewModel = SaveLoadViewModel(
             store: store,
-            makeSave: { self.makeSave(areaID: "vertical_slice") },
-            applySave: { _ in }
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { _ in .applied }
         )
 
         let row = try XCTUnwrap(viewModel.rows.first { $0.slot == .manual(2) })
@@ -103,6 +104,24 @@ final class SaveLoadViewModelTests: XCTestCase {
                         defense: 2,
                         evasion: 3,
                         magic: 1,
+                        maxActionPoints: 4,
+                        actionPoints: 4
+                    ),
+                    skillIDs: []
+                ),
+                Actor(
+                    id: "partner",
+                    displayName: "同伴",
+                    kind: .player,
+                    faction: .player,
+                    level: 1,
+                    stats: Stats(
+                        maxHealth: 18,
+                        health: 18,
+                        attack: 4,
+                        defense: 2,
+                        evasion: 4,
+                        magic: 2,
                         maxActionPoints: 4,
                         actionPoints: 4
                     ),

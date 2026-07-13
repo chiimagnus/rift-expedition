@@ -13,7 +13,7 @@ final class SkillResolverTests: XCTestCase {
             skill: damageSkill(canBeDodged: false),
             casterID: "hero",
             targetID: "wolf",
-            context: TargetingContext(distance: 1, hasLineOfSight: true, isAlly: false),
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
             in: &state,
             random: &random
         )
@@ -29,6 +29,7 @@ final class SkillResolverTests: XCTestCase {
         let heal = SkillDefinition(
             id: "mend",
             displayName: "包扎",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 4,
             target: .ally,
@@ -41,7 +42,7 @@ final class SkillResolverTests: XCTestCase {
             skill: heal,
             casterID: "hero",
             targetID: "hero",
-            context: TargetingContext(distance: 0, hasLineOfSight: true, isAlly: true),
+            context: TargetingContext(distance: 0, hasLineOfSight: true),
             in: &state,
             random: &random
         )
@@ -60,11 +61,106 @@ final class SkillResolverTests: XCTestCase {
             skill: damageSkill(canBeDodged: false),
             casterID: "hero",
             targetID: "ally",
-            context: TargetingContext(distance: 1, hasLineOfSight: true, isAlly: true),
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
             in: &state,
             random: &random
         )) { error in
-            XCTAssertEqual(error as? TargetingError, .allyNotAllowed)
+            XCTAssertEqual(
+                error as? TargetingError,
+                .invalidTarget(expected: .enemy, actual: .ally)
+            )
+        }
+    }
+
+    func testSelfOnlyAndAllyTargetsAreEnforcedByCoreRules() throws {
+        var state = BattleState(actors: [
+            makeActor(id: "hero", faction: .player),
+            makeActor(id: "ally", faction: .player),
+            makeActor(id: "wolf", faction: .animal)
+        ])
+        var random = SeededRandomSource(seed: 7)
+        let selfSkill = SkillDefinition(
+            id: "guard",
+            displayName: "防御",
+            description: "测试技能说明",
+            actionPointCost: 1,
+            range: 0,
+            target: .selfOnly,
+            affectsAllies: true,
+            canBeDodged: false,
+            effects: [.heal(1)]
+        )
+        let allySkill = SkillDefinition(
+            id: "mend",
+            displayName: "治疗",
+            description: "测试技能说明",
+            actionPointCost: 1,
+            range: 4,
+            target: .ally,
+            affectsAllies: true,
+            canBeDodged: false,
+            effects: [.heal(1)]
+        )
+
+        XCTAssertThrowsError(try SkillResolver.resolve(
+            skill: selfSkill,
+            casterID: "hero",
+            targetID: "ally",
+            context: TargetingContext(distance: 0, hasLineOfSight: true),
+            in: &state,
+            random: &random
+        )) { error in
+            XCTAssertEqual(
+                error as? TargetingError,
+                .invalidTarget(expected: .selfOnly, actual: .ally)
+            )
+        }
+
+        XCTAssertThrowsError(try SkillResolver.resolve(
+            skill: allySkill,
+            casterID: "hero",
+            targetID: "wolf",
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
+            in: &state,
+            random: &random
+        )) { error in
+            XCTAssertEqual(
+                error as? TargetingError,
+                .invalidTarget(expected: .ally, actual: .enemy)
+            )
+        }
+    }
+
+    func testInconsistentSkillTargetConfigurationIsRejected() throws {
+        var state = BattleState(actors: [
+            makeActor(id: "hero", faction: .player),
+            makeActor(id: "ally", faction: .player)
+        ])
+        var random = SeededRandomSource(seed: 7)
+        let invalidSkill = SkillDefinition(
+            id: "broken_mend",
+            displayName: "错误治疗",
+            description: "测试技能说明",
+            actionPointCost: 1,
+            range: 4,
+            target: .ally,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.heal(1)]
+        )
+
+        XCTAssertThrowsError(try SkillResolver.resolve(
+            skill: invalidSkill,
+            casterID: "hero",
+            targetID: "ally",
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
+            in: &state,
+            random: &random
+        )) { error in
+            XCTAssertEqual(
+                error as? TargetingError,
+                .invalidSkillTargetConfiguration(skillID: "broken_mend")
+            )
         }
     }
 
@@ -79,7 +175,7 @@ final class SkillResolverTests: XCTestCase {
             skill: damageSkill(canBeDodged: true),
             casterID: "hero",
             targetID: "rogue",
-            context: TargetingContext(distance: 1, hasLineOfSight: true, isAlly: false),
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
             in: &state,
             random: &random
         )
@@ -88,10 +184,52 @@ final class SkillResolverTests: XCTestCase {
         XCTAssertEqual(state.actor(id: "rogue")?.stats.health, 20)
     }
 
+    func testStatusAndSurfaceDurationsArePreservedAndStatusIsApplied() throws {
+        var state = BattleState(actors: [
+            makeActor(id: "hero", faction: .player),
+            makeActor(id: "wolf", faction: .animal)
+        ])
+        var random = SeededRandomSource(seed: 7)
+        let skill = SkillDefinition(
+            id: "venom_pool",
+            displayName: "毒池",
+            description: "测试技能说明",
+            actionPointCost: 2,
+            range: 4,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [
+                .applyStatus(statusID: "poisoned", durationTurns: 3),
+                .createSurface(surfaceID: "poison", durationTurns: 2)
+            ]
+        )
+
+        let resolution = try SkillResolver.resolve(
+            skill: skill,
+            casterID: "hero",
+            targetID: "wolf",
+            context: TargetingContext(distance: 2, hasLineOfSight: true),
+            in: &state,
+            random: &random
+        )
+
+        XCTAssertEqual(resolution.appliedStatuses, [
+            ResolvedStatusEffect(statusID: "poisoned", durationTurns: 3)
+        ])
+        XCTAssertEqual(resolution.createdSurfaces, [
+            ResolvedSurfaceEffect(surfaceID: "poison", durationTurns: 2)
+        ])
+        XCTAssertEqual(state.actor(id: "wolf")?.statuses, [
+            StatusEffect(type: .poisoned, remainingTurns: 3)
+        ])
+    }
+
     private func damageSkill(canBeDodged: Bool) -> SkillDefinition {
         SkillDefinition(
             id: "slash",
             displayName: "劈砍",
+            description: "测试技能说明",
             actionPointCost: 2,
             range: 1.5,
             target: .enemy,

@@ -4,27 +4,67 @@ import XCTest
 final class BattleEngineTests: XCTestCase {
     func testActionFailsWhenAPIsInsufficient() throws {
         var engine = BattleEngine(state: BattleState(actors: [
-            makeActor(id: "hero", faction: .player, actionPoints: 1),
+            makeActor(id: "hero", faction: .player, actionPoints: 1, skillIDs: ["heavy_slash"]),
             makeActor(id: "wolf", faction: .animal)
         ]))
         let skill = SkillDefinition(
             id: "heavy_slash",
             displayName: "重劈",
+            description: "测试技能说明",
             actionPointCost: 2,
             range: 1.5,
             target: .enemy,
             affectsAllies: false,
-            canBeDodged: true
+            canBeDodged: true,
+            effects: [.damage(8)]
         )
+        var random = SeededRandomSource(seed: 1)
 
-        XCTAssertThrowsError(try engine.useSkill(actorID: "hero", skill: skill)) { error in
+        XCTAssertThrowsError(try engine.useSkill(
+            actorID: "hero",
+            targetID: "wolf",
+            skill: skill,
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
+            random: &random
+        )) { error in
             XCTAssertEqual(error as? BattleActionError, .insufficientActionPoints(required: 2, available: 1))
         }
     }
 
+    func testNegativeActionPointCostIsRejectedWithoutIncreasingAP() throws {
+        var engine = BattleEngine(state: BattleState(actors: [
+            makeActor(id: "hero", faction: .player, actionPoints: 2, skillIDs: ["broken_skill"]),
+            makeActor(id: "wolf", faction: .animal)
+        ]))
+        let skill = SkillDefinition(
+            id: "broken_skill",
+            displayName: "错误技能",
+            description: "测试技能说明",
+            actionPointCost: -2,
+            range: 1,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.damage(1)]
+        )
+        var random = SeededRandomSource(seed: 1)
+
+        XCTAssertThrowsError(try engine.useSkill(
+            actorID: "hero",
+            targetID: "wolf",
+            skill: skill,
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
+            random: &random
+        )) { error in
+            XCTAssertEqual(error as? BattleActionError, .invalidActionPointCost(-2))
+        }
+        XCTAssertEqual(engine.state.actor(id: "hero")?.stats.actionPoints, 2)
+        XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.health, 20)
+    }
+
     func testEndTurnResetsNextActorAP() throws {
         var engine = BattleEngine(state: BattleState(actors: [
-            makeActor(id: "hero", faction: .player, actionPoints: 4),
+            makeActor(id: "hero", faction: .player, actionPoints: 4, skillIDs: ["slash"]),
             makeActor(id: "wolf", faction: .animal, actionPoints: 0)
         ]))
 
@@ -34,6 +74,37 @@ final class BattleEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.actionPoints, 4)
     }
 
+    func testEndTurnSkipsDefeatedActors() throws {
+        var engine = BattleEngine(state: BattleState(actors: [
+            makeActor(id: "hero", faction: .player),
+            makeActor(id: "fallen", faction: .player, health: 0, actionPoints: 0),
+            makeActor(id: "wolf", faction: .animal, actionPoints: 0)
+        ]))
+
+        try engine.endTurn()
+
+        XCTAssertEqual(engine.state.activeActorID, "wolf")
+        XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.actionPoints, 4)
+    }
+
+    func testEndTurnTicksStatusesAndCanEndBattle() throws {
+        var poisonedWolf = makeActor(id: "wolf", faction: .animal, health: 2)
+        poisonedWolf.statuses = [StatusEffect(type: .poisoned, remainingTurns: 1)]
+        var state = BattleState(actors: [
+            poisonedWolf,
+            makeActor(id: "hero", faction: .player)
+        ])
+        state.turnOrder = TurnOrder(actorIDs: ["wolf", "hero"])
+        var engine = BattleEngine(state: state)
+
+        try engine.endTurn()
+
+        XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.health, 0)
+        XCTAssertEqual(engine.state.actor(id: "wolf")?.statuses, [])
+        XCTAssertEqual(engine.state.outcome, .victory)
+        XCTAssertEqual(engine.state.activeActorID, "wolf")
+    }
+
     func testMovementUsesStartingDistancePerAPValue() throws {
         // 小范围测试计划：在这个最小可玩版本里，一个回合应该刚好能走到相邻的一个战术点位。
         // 如果移动距离太大，就调低 movementDistancePerAPStartingValue；太小就调高。
@@ -41,15 +112,31 @@ final class BattleEngineTests: XCTestCase {
         XCTAssertEqual(APRules.movementCost(forDistance: APRules.movementDistancePerAPStartingValue + 0.1), 2)
     }
 
+    func testInvalidMovementDistancesAreRejectedWithoutSpendingAP() throws {
+        for distance in [0.0, -1.0, .nan, .infinity, -.infinity] {
+            var engine = BattleEngine(state: BattleState(actors: [
+                makeActor(id: "hero", faction: .player, actionPoints: 4),
+                makeActor(id: "wolf", faction: .animal)
+            ]))
+
+            XCTAssertThrowsError(try engine.move(actorID: "hero", distance: distance)) { error in
+                XCTAssertEqual(error as? BattleActionError, .invalidMovementDistance)
+            }
+            XCTAssertEqual(engine.state.actor(id: "hero")?.stats.actionPoints, 4)
+            XCTAssertEqual(APRules.movementCost(forDistance: distance), 0)
+        }
+    }
+
     func testTargetedSkillSpendsAPAndAppliesEffects() throws {
         var engine = BattleEngine(state: BattleState(actors: [
-            makeActor(id: "hero", faction: .player, actionPoints: 4),
+            makeActor(id: "hero", faction: .player, actionPoints: 4, skillIDs: ["slash"]),
             makeActor(id: "wolf", faction: .animal, health: 20)
         ]))
         var random = SeededRandomSource(seed: 7)
         let skill = SkillDefinition(
             id: "slash",
             displayName: "劈砍",
+            description: "测试技能说明",
             actionPointCost: 2,
             range: 1.5,
             target: .enemy,
@@ -62,12 +149,69 @@ final class BattleEngineTests: XCTestCase {
             actorID: "hero",
             targetID: "wolf",
             skill: skill,
-            context: TargetingContext(distance: 1, hasLineOfSight: true, isAlly: false),
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
             random: &random
         )
 
         XCTAssertEqual(engine.state.actor(id: "hero")?.stats.actionPoints, 2)
         XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.health, 14)
+    }
+
+    func testActorCannotUseSkillItHasNotLearned() throws {
+        var engine = BattleEngine(state: BattleState(actors: [
+            makeActor(id: "hero", faction: .player, actionPoints: 4, skillIDs: []),
+            makeActor(id: "wolf", faction: .animal, health: 20)
+        ]))
+        let skill = SkillDefinition(
+            id: "slash",
+            displayName: "劈砍",
+            description: "测试技能说明",
+            actionPointCost: 2,
+            range: 1.5,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.damage(8)]
+        )
+        var random = SeededRandomSource(seed: 7)
+
+        XCTAssertThrowsError(try engine.useSkill(
+            actorID: "hero",
+            targetID: "wolf",
+            skill: skill,
+            context: TargetingContext(distance: 1, hasLineOfSight: true),
+            random: &random
+        )) { error in
+            XCTAssertEqual(
+                error as? BattleActionError,
+                .skillNotKnown(actorID: "hero", skillID: "slash")
+            )
+        }
+        XCTAssertEqual(engine.state.actor(id: "hero")?.stats.actionPoints, 4)
+        XCTAssertEqual(engine.state.actor(id: "wolf")?.stats.health, 20)
+    }
+
+    func testBattleStartsWithFirstLivingActorWhenEarlierActorIsDefeated() {
+        let state = BattleState(actors: [
+            makeActor(id: "fallen", faction: .player, health: 0),
+            makeActor(id: "hero", faction: .player, health: 20),
+            makeActor(id: "wolf", faction: .animal, health: 20)
+        ])
+
+        XCTAssertEqual(state.activeActorID, "hero")
+        XCTAssertEqual(state.outcome, .ongoing)
+    }
+
+    func testBattleWithNoLivingActorsIsTerminalAndRejectsTurnAdvance() {
+        var engine = BattleEngine(state: BattleState(actors: [
+            makeActor(id: "fallen_hero", faction: .player, health: 0),
+            makeActor(id: "fallen_wolf", faction: .animal, health: 0)
+        ]))
+
+        XCTAssertEqual(engine.state.outcome, .defeat)
+        XCTAssertThrowsError(try engine.endTurn()) { error in
+            XCTAssertEqual(error as? BattleActionError, .battleAlreadyEnded(.defeat))
+        }
     }
 
     func testAllPlayerActorsDownMeansDefeat() {
@@ -84,7 +228,8 @@ final class BattleEngineTests: XCTestCase {
         id: String,
         faction: Faction,
         health: Int = 20,
-        actionPoints: Int = 4
+        actionPoints: Int = 4,
+        skillIDs: [String] = ["bite"]
     ) -> Actor {
         Actor(
             id: id,
@@ -102,7 +247,7 @@ final class BattleEngineTests: XCTestCase {
                 maxActionPoints: 4,
                 actionPoints: actionPoints
             ),
-            skillIDs: ["bite"]
+            skillIDs: skillIDs
         )
     }
 }

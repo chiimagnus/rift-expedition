@@ -32,8 +32,12 @@ public enum MapReferenceValidator {
         let encounters = try ids(from: dataRoot.appending(path: "encounters.json"))
         let items = try ids(from: dataRoot.appending(path: "items.json"))
         let dialogs = try ids(from: dataRoot.appending(path: "dialogs.json"))
-        let npcs = (try? ids(from: dataRoot.appending(path: "npcs.json"))) ?? []
-        var issues: [MapReferenceValidationIssue] = []
+        let npcsURL = dataRoot.appending(path: "npcs.json")
+        let npcResult = FileManager.default.fileExists(atPath: npcsURL.path)
+            ? try npcIDsAndIssues(from: npcsURL)
+            : (ids: Set<String>(), issues: [])
+        let npcs = npcResult.ids
+        var issues = npcResult.issues
 
         for map in maps {
             for object in map.objectGroups["encounter", default: []] {
@@ -53,12 +57,27 @@ public enum MapReferenceValidator {
                 }
             }
             for object in map.objectGroups["trigger", default: []] {
-                guard let action = object.properties["action"],
-                      let dialogID = action.removingPrefix("dialogue:")
-                else { continue }
-                if !dialogs.contains(dialogID) {
-                    issues.append(MapReferenceValidationIssue(message: "\(map.areaID) trigger object \(object.tiledID) references missing dialog: \(dialogID)"))
+                guard let rawAction = object.properties["action"] else { continue }
+                let action = rawAction.trimmingCharacters(in: .whitespacesAndNewlines)
+                if action == "chapterComplete" {
+                    continue
                 }
+                if let rawDialogID = action.removingPrefix("dialogue:") {
+                    let dialogID = rawDialogID.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if dialogID.isEmpty {
+                        issues.append(MapReferenceValidationIssue(
+                            message: "\(map.areaID) trigger object \(object.tiledID) has empty dialogue action"
+                        ))
+                    } else if !dialogs.contains(dialogID) {
+                        issues.append(MapReferenceValidationIssue(
+                            message: "\(map.areaID) trigger object \(object.tiledID) references missing dialog: \(dialogID)"
+                        ))
+                    }
+                    continue
+                }
+                issues.append(MapReferenceValidationIssue(
+                    message: "\(map.areaID) trigger object \(object.tiledID) has unsupported action: \(action)"
+                ))
             }
         }
 
@@ -69,10 +88,36 @@ public enum MapReferenceValidator {
         let records = try JSONDecoder().decode([IDRecord].self, from: Data(contentsOf: url))
         return Set(records.map(\.id))
     }
+
+    private static func npcIDsAndIssues(
+        from url: URL
+    ) throws -> (ids: Set<String>, issues: [MapReferenceValidationIssue]) {
+        let records = try JSONDecoder().decode([NPCReferenceRecord].self, from: Data(contentsOf: url))
+        var ids: Set<String> = []
+        var issues: [MapReferenceValidationIssue] = []
+        for record in records {
+            if record.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                issues.append(.init(message: "NPC id must not be blank"))
+                continue
+            }
+            if record.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                issues.append(.init(message: "NPC \(record.id) displayName must not be blank"))
+            }
+            if !ids.insert(record.id).inserted {
+                issues.append(.init(message: "Duplicate NPC id: \(record.id)"))
+            }
+        }
+        return (ids, issues)
+    }
 }
 
 private struct IDRecord: Decodable {
     var id: String
+}
+
+private struct NPCReferenceRecord: Decodable {
+    var id: String
+    var displayName: String
 }
 
 private extension String {

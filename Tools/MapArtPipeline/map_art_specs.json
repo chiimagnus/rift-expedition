@@ -1,0 +1,383 @@
+{
+  "village_square": {
+    "source": "Tools/MapArtPipeline/Sources/village_square_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/village_square.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_square.png",
+    "assetID": "mapart.chapter1_village_square",
+    "layerName": "background_art",
+    "crop": "center",
+    "objectOverrides": {
+      "spawn": {
+        "id:start": {
+          "x": 250,
+          "y": 350
+        },
+        "id:from_riverside": {
+          "x": 520,
+          "y": 570
+        },
+        "id:from_outskirts": {
+          "x": 920,
+          "y": 112
+        }
+      },
+      "npc": {
+        "actorId:mayor": {
+          "x": 470,
+          "y": 155,
+          "width": 36,
+          "height": 36
+        },
+        "actorId:fiance": {
+          "x": 700,
+          "y": 330,
+          "width": 36,
+          "height": 36
+        },
+        "actorId:gate_guard": {
+          "x": 875,
+          "y": 112,
+          "width": 36,
+          "height": 36
+        }
+      },
+      "trigger": {
+        "triggerId:village_square_notice": {
+          "x": 520,
+          "y": 258,
+          "width": 180,
+          "height": 54
+        }
+      },
+      "exit": {
+        "targetAreaId:village_riverside": {
+          "x": 480,
+          "y": 608,
+          "width": 96,
+          "height": 32
+        },
+        "targetAreaId:village_outskirts": {
+          "x": 960,
+          "y": 64,
+          "width": 32,
+          "height": 96
+        }
+      }
+    },
+    "replaceObstacles": [
+      {
+        "id": 100,
+        "name": "北侧边界",
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 28,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 101,
+        "name": "西侧边界",
+        "x": 0,
+        "y": 0,
+        "width": 28,
+        "height": 640,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 102,
+        "name": "东侧上边界",
+        "x": 992,
+        "y": 0,
+        "width": 32,
+        "height": 64,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 103,
+        "name": "东侧下边界",
+        "x": 992,
+        "y": 160,
+        "width": 32,
+        "height": 480,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 104,
+        "name": "南侧左边界",
+        "x": 0,
+        "y": 608,
+        "width": 480,
+        "height": 32,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 105,
+        "name": "南侧右边界",
+        "x": 576,
+        "y": 608,
+        "width": 448,
+        "height": 32,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 106,
+        "name": "西北民居",
+        "x": 28,
+        "y": 28,
+        "width": 342,
+        "height": 212,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 107,
+        "name": "北侧议事屋",
+        "x": 552,
+        "y": 28,
+        "width": 230,
+        "height": 112,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 108,
+        "name": "西侧民居",
+        "x": 28,
+        "y": 182,
+        "width": 198,
+        "height": 230,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 109,
+        "name": "东侧商铺",
+        "x": 830,
+        "y": 160,
+        "width": 162,
+        "height": 292,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 110,
+        "name": "西南民居",
+        "x": 28,
+        "y": 468,
+        "width": 350,
+        "height": 140,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 111,
+        "name": "东南民居",
+        "x": 650,
+        "y": 438,
+        "width": 342,
+        "height": 170,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 112,
+        "name": "公告亭",
+        "x": 518,
+        "y": 168,
+        "width": 184,
+        "height": 92,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 113,
+        "name": "中央井台",
+        "x": 390,
+        "y": 304,
+        "width": 178,
+        "height": 150,
+        "blocksMovement": true,
+        "blocksSight": true
+      },
+      {
+        "id": 114,
+        "name": "废弃货车",
+        "x": 112,
+        "y": 430,
+        "width": 146,
+        "height": 82,
+        "blocksMovement": true,
+        "blocksSight": false
+      }
+    ],
+    "status": "ready",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/village_square_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_square_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_village_square_foreground",
+    "foregroundLayerName": "foreground_roofs",
+    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "sourceDescription": "AI-generated top-down 2D concept art aligned to the chapter-one TMX layout by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "author": "AI-generated with built-in image generation; integrated by Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "village_riverside": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/village_riverside_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/village_riverside.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_riverside.png",
+    "assetID": "mapart.chapter1_village_riverside",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/village_riverside_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_riverside_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_village_riverside_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "village_outskirts": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/village_outskirts_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/village_outskirts.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_outskirts.png",
+    "assetID": "mapart.chapter1_village_outskirts",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/village_outskirts_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_outskirts_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_village_outskirts_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "wilds_road": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/wilds_road_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_road.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_road.png",
+    "assetID": "mapart.chapter1_wilds_road",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_road_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_road_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_wilds_road_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "wilds_ruins": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/wilds_ruins_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_ruins.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_ruins.png",
+    "assetID": "mapart.chapter1_wilds_ruins",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_ruins_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_ruins_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_wilds_ruins_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "wilds_riverbank": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/wilds_riverbank_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_riverbank.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_riverbank.png",
+    "assetID": "mapart.chapter1_wilds_riverbank",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_riverbank_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_riverbank_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_wilds_riverbank_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "cave_entrance": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/cave_entrance_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_entrance.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_entrance.png",
+    "assetID": "mapart.chapter1_cave_entrance",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/cave_entrance_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_entrance_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_cave_entrance_foreground",
+    "foregroundLayerName": "foreground_overhang",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "cave_mines": {
+    "status": "ready",
+    "source": "Tools/MapArtPipeline/Sources/cave_mines_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_mines.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_mines.png",
+    "assetID": "mapart.chapter1_cave_mines",
+    "layerName": "background_art",
+    "crop": "center",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/cave_mines_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_mines_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_cave_mines_foreground",
+    "foregroundLayerName": "foreground_overhang",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  },
+  "cave_depths": {
+    "source": "Tools/MapArtPipeline/Sources/cave_depths_source.png",
+    "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_depths.tmx",
+    "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_depths.png",
+    "assetID": "mapart.chapter1_cave_depths",
+    "layerName": "background_art",
+    "crop": "center",
+    "status": "ready",
+    "foregroundSource": "Tools/MapArtPipeline/Sources/cave_depths_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_depths_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_cave_depths_foreground",
+    "foregroundLayerName": "foreground_overhang",
+    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "sourceDescription": "AI-generated top-down 2D concept art aligned to the chapter-one TMX layout by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "author": "AI-generated with built-in image generation; integrated by Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
+  }
+}

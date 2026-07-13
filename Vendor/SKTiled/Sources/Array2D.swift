@@ -64,8 +64,8 @@ struct Array2D<T> {
     ///
     /// - Parameter obj: node.
     /// - Returns: array contains the given node.
-    func contains<T : Equatable>(_ obj: T) -> Bool {
-        let filtered = self.items.filter {$0 as? T == obj}
+    func contains<Element: Equatable>(_ obj: Element) -> Bool {
+        let filtered = self.items.filter { $0 as? Element == obj }
         return filtered.isEmpty == false
     }
     

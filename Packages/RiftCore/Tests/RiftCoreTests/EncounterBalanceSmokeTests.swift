@@ -6,13 +6,14 @@ final class EncounterBalanceSmokeTests: XCTestCase {
     func testChapterOneFixedEncounterSetAndOpeningActionsAreValid() throws {
         let catalog = try ContentLoader.load(from: projectDataDirectory())
         let skillsByID = Dictionary(uniqueKeysWithValues: catalog.skills.map { ($0.id, $0) })
-        let encounters = try loadEncounters()
+        let encounters = catalog.encounters
         let expectedEncounterIDs: Set<String> = [
             "boar_intro",
             "road_bandit_ambush",
             "cave_vermin",
             "cave_miners",
-            "rift_custodian"
+            "rift_custodian",
+            "river_taint_surge"
         ]
 
         XCTAssertEqual(Set(encounters.map(\.id)), expectedEncounterIDs)
@@ -35,7 +36,7 @@ final class EncounterBalanceSmokeTests: XCTestCase {
     }
 
     private func smokeOpeningAction(
-        _ encounter: EncounterFixture,
+        _ encounter: EncounterDefinition,
         skillsByID: [String: SkillDefinition],
         file: StaticString = #filePath,
         line: UInt = #line
@@ -66,8 +67,7 @@ final class EncounterBalanceSmokeTests: XCTestCase {
         var random = SeededRandomSource(seed: 20260706)
         let context = TargetingContext(
             distance: min(max(skill.range, 0.1), 1.0),
-            hasLineOfSight: true,
-            isAlly: false
+            hasLineOfSight: true
         )
 
         do {
@@ -81,12 +81,6 @@ final class EncounterBalanceSmokeTests: XCTestCase {
         } catch {
             XCTFail("\(encounter.id) opening action failed: \(error)", file: file, line: line)
         }
-    }
-
-    private func loadEncounters() throws -> [EncounterFixture] {
-        let url = projectDataDirectory().appending(path: "encounters.json")
-        let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode([EncounterFixture].self, from: data)
     }
 
     private func chapterMapEncounterIDs() throws -> Set<String> {
@@ -121,10 +115,4 @@ final class EncounterBalanceSmokeTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
     }
-}
-
-private struct EncounterFixture: Decodable {
-    var id: String
-    var displayName: String
-    var enemies: [Actor]
 }

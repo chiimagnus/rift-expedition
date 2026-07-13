@@ -26,6 +26,7 @@ struct ExplorationController: Equatable {
     /// 以及 GameSessionViewModel 额外加进来的 NPC 占位）。只有这里登记过的障碍物才会
     /// 影响寻路和碰撞——纯装饰性的障碍物（blocksMovement=false）完全不会拦人。
     private var obstacles: [NavigationObstacle] = []
+    private var playableFrame: CGRect?
 
     var leaderID: String? {
         guard members.indices.contains(leaderIndex) else { return nil }
@@ -49,28 +50,44 @@ struct ExplorationController: Equatable {
     /// 之前这里完全是空的——移动只看直线距离，不管路上有没有障碍物，
     /// 所以障碍物纯粹是摆设，玩家可以直接穿过去。现在移动前会先绕开这些障碍物寻路，
     /// 每一步也会再做一次兰底碰撞检查，确保任何人都不能穿墙。
-    mutating func setObstacles(_ obstacles: [NavigationObstacle]) {
+    mutating func configureNavigation(
+        obstacles: [NavigationObstacle],
+        playableFrame: CGRect
+    ) {
         self.obstacles = obstacles.filter(\.blocksMovement)
+        let standardizedFrame = playableFrame.standardized
+        self.playableFrame = standardizedFrame.width > 0 && standardizedFrame.height > 0
+            ? standardizedFrame
+            : nil
     }
 
-    mutating func setLeaderDestination(_ destination: CGPoint) {
-        guard members.indices.contains(leaderIndex) else { return }
+    @discardableResult
+    mutating func setLeaderDestination(_ destination: CGPoint) -> Bool {
+        guard members.indices.contains(leaderIndex), isInsidePlayableFrame(destination) else {
+            return false
+        }
 
         let start = members[leaderIndex].position
+        if distance(from: start, to: destination) < 1 {
+            members[leaderIndex].target = nil
+            members[leaderIndex].waypoints = []
+            refreshFollowerTargets(leaderDestination: destination)
+            return true
+        }
+
         var route = NavigationService(obstacles: obstacles, agentRadius: Float(agentRadius))
             .path(from: start, to: destination)
         if route.first == start {
             route.removeFirst()
         }
-        if route.isEmpty {
-            route = [destination]
+        guard !route.isEmpty, route.allSatisfy(isInsidePlayableFrame) else {
+            return false
         }
 
         members[leaderIndex].waypoints = route
-        members[leaderIndex].target = members[leaderIndex].waypoints.isEmpty
-            ? nil
-            : members[leaderIndex].waypoints.removeFirst()
+        members[leaderIndex].target = members[leaderIndex].waypoints.removeFirst()
         refreshFollowerTargets(leaderDestination: destination)
+        return true
     }
 
     mutating func switchToNextLeader() {
@@ -125,10 +142,11 @@ struct ExplorationController: Equatable {
         var followerRank = 1
 
         for index in members.indices where index != leaderIndex {
-            members[index].target = CGPoint(
+            let desiredTarget = CGPoint(
                 x: leaderDestination.x - direction.x * followDistance * CGFloat(followerRank),
                 y: leaderDestination.y - direction.y * followDistance * CGFloat(followerRank)
             )
+            members[index].target = clampedToPlayableFrame(desiredTarget)
             followerRank += 1
         }
     }
@@ -198,7 +216,23 @@ struct ExplorationController: Equatable {
     }
 
     private func isBlocked(_ point: CGPoint) -> Bool {
-        obstacles.contains { $0.frame.insetBy(dx: -agentRadius, dy: -agentRadius).contains(point) }
+        guard isInsidePlayableFrame(point) else { return true }
+        return obstacles.contains { $0.frame.insetBy(dx: -agentRadius, dy: -agentRadius).contains(point) }
+    }
+
+    private func isInsidePlayableFrame(_ point: CGPoint) -> Bool {
+        guard let playableFrame else { return false }
+        return playableFrame.insetBy(dx: agentRadius, dy: agentRadius).contains(point)
+    }
+
+    private func clampedToPlayableFrame(_ point: CGPoint) -> CGPoint {
+        guard let playableFrame else { return point }
+        let inset = playableFrame.insetBy(dx: agentRadius, dy: agentRadius)
+        guard inset.width > 0, inset.height > 0 else { return point }
+        return CGPoint(
+            x: min(max(point.x, inset.minX), inset.maxX),
+            y: min(max(point.y, inset.minY), inset.maxY)
+        )
     }
 
     private func normalizedVector(from start: CGPoint, to end: CGPoint) -> CGPoint? {

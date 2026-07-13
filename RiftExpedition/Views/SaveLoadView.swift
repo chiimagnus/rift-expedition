@@ -8,20 +8,47 @@ struct SaveLoadView: View {
 
     var body: some View {
         RiftPanelScaffold(
-            title: "存档",
-            subtitle: "5 个手动槽，5 个自动槽；自动存档只允许安全点写入。",
+            title: "远征记录",
+            subtitle: "手动记录用于关键决策前备份；自动记录只会在安全节点写入。",
             closeLabel: "返回",
             onClose: onClose,
-            maxWidth: 1040
+            maxWidth: 1_080
         ) {
-            HStack(alignment: .top, spacing: 18) {
-                slotColumn("手动存档", rows: viewModel.rows.filter { $0.slot.kind == .manual })
-                slotColumn("自动存档", rows: viewModel.rows.filter { $0.slot.kind == .auto })
+            HStack(spacing: 10) {
+                RiftStatusPill(text: "5 个手动槽", tint: RiftPalette.riftBlue, icon: "square.and.arrow.down.fill")
+                RiftStatusPill(text: "5 个自动槽", tint: RiftPalette.riftViolet, icon: "clock.arrow.circlepath")
+                Spacer()
+                RiftStatusPill(text: "本地存档", tint: RiftPalette.success, icon: "internaldrive.fill")
             }
 
-            Text(viewModel.message)
-                .font(.callout.weight(.semibold))
-                .foregroundStyle(RiftPalette.bannerRed)
+            HStack(alignment: .top, spacing: 18) {
+                slotColumn(
+                    "手动记录",
+                    eyebrow: "MANUAL ARCHIVE",
+                    icon: "bookmark.fill",
+                    tint: RiftPalette.riftBlue,
+                    rows: viewModel.rows.filter { $0.slot.kind == .manual }
+                )
+                slotColumn(
+                    "自动记录",
+                    eyebrow: "SAFEPOINT ARCHIVE",
+                    icon: "clock.fill",
+                    tint: RiftPalette.riftViolet,
+                    rows: viewModel.rows.filter { $0.slot.kind == .auto }
+                )
+            }
+
+            HStack(spacing: 9) {
+                Image(systemName: messageIcon)
+                    .foregroundStyle(messageTint)
+                Text(viewModel.message)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(RiftPalette.frost)
+                Spacer()
+            }
+            .padding(11)
+            .background(messageTint.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(messageTint.opacity(0.25), lineWidth: 1))
         }
         .confirmationDialog(
             "覆盖这个手动存档？",
@@ -45,68 +72,108 @@ struct SaveLoadView: View {
         }
     }
 
-    private func slotColumn(_ title: String, rows: [SaveSlotRow]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(RiftPalette.textBrown)
+    private func slotColumn(
+        _ title: String,
+        eyebrow: String,
+        icon: String,
+        tint: Color,
+        rows: [SaveSlotRow]
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 11) {
+            RiftSectionHeader(title, eyebrow: eyebrow, systemImage: icon)
 
             ForEach(rows) { row in
-                slotRow(row)
+                slotRow(row, tint: tint)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(RiftPalette.parchmentShade.opacity(0.55))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(RiftPalette.outline.opacity(0.4), lineWidth: 1.5)
-                )
+                .fill(LinearGradient(colors: [tint.opacity(0.06), RiftPalette.panelRaised.opacity(0.80)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(tint.opacity(0.26), lineWidth: 1))
         )
     }
 
-    private func slotRow(_ row: SaveSlotRow) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(row.title)
-                    .font(.callout.weight(.bold))
-                    .foregroundStyle(RiftPalette.textBrown)
+    private func slotRow(_ row: SaveSlotRow, tint: Color) -> some View {
+        let stateTint = row.isCorrupt ? RiftPalette.danger : (row.canLoad ? tint : RiftPalette.steel)
+
+        return HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(stateTint.opacity(0.13))
+                Image(systemName: row.isCorrupt ? "exclamationmark.triangle.fill" : (row.canLoad ? "doc.text.fill" : "doc.badge.plus"))
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(stateTint)
+            }
+            .frame(width: 42, height: 42)
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 7) {
+                    Text(row.title)
+                        .font(.callout.weight(.black))
+                        .foregroundStyle(RiftPalette.frost)
+                    if row.isCorrupt {
+                        RiftStatusPill(text: "损坏", tint: RiftPalette.danger)
+                    } else if row.canLoad {
+                        RiftStatusPill(text: "可读取", tint: RiftPalette.success)
+                    }
+                }
                 Text(row.detail)
                     .font(.caption)
-                    .foregroundStyle(row.isCorrupt ? RiftPalette.bannerRed : RiftPalette.textBrownLight)
+                    .foregroundStyle(row.isCorrupt ? RiftPalette.danger : RiftPalette.muted)
+                    .lineLimit(2)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             if row.slot.kind == .manual {
-                Button(row.canLoad ? "覆盖" : "保存") {
+                Button {
                     if row.canLoad {
                         overwriteSlot = row.slot
                     } else {
                         viewModel.saveManual(slot: row.slot)
                     }
+                } label: {
+                    Image(systemName: row.canLoad ? "arrow.triangle.2.circlepath" : "square.and.arrow.down.fill")
                 }
-                .buttonStyle(RiftSecondaryButtonStyle())
+                .buttonStyle(RiftGhostButtonStyle())
+                .help(row.canLoad ? "覆盖存档" : "保存到此槽")
                 .accessibilityLabel("保存到\(row.title)")
             }
 
-            Button("读取") {
+            Button {
                 viewModel.load(slot: row.slot)
+            } label: {
+                Image(systemName: "play.fill")
             }
-            .buttonStyle(RiftPrimaryButtonStyle())
+            .buttonStyle(RiftActionButtonStyle(isSelected: row.canLoad, tint: tint))
             .disabled(!row.canLoad)
+            .help("读取存档")
             .accessibilityLabel("读取\(row.title)")
         }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(RiftPalette.parchment)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(row.isCorrupt ? RiftPalette.bannerRed.opacity(0.6) : RiftPalette.outline.opacity(0.35), lineWidth: 1.5)
-                )
-        )
+        .padding(11)
+        .background(RiftPalette.void.opacity(0.38), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(stateTint.opacity(row.canLoad || row.isCorrupt ? 0.34 : 0.16), lineWidth: 1))
+    }
+
+    private var messageTint: Color {
+        if viewModel.message.contains("失败") || viewModel.message.contains("损坏") || viewModel.message.contains("拒绝") {
+            return RiftPalette.danger
+        }
+        if viewModel.message.contains("已") {
+            return RiftPalette.success
+        }
+        return RiftPalette.riftBlue
+    }
+
+    private var messageIcon: String {
+        if viewModel.message.contains("失败") || viewModel.message.contains("损坏") || viewModel.message.contains("拒绝") {
+            return "exclamationmark.triangle.fill"
+        }
+        if viewModel.message.contains("已") {
+            return "checkmark.seal.fill"
+        }
+        return "info.circle.fill"
     }
 }

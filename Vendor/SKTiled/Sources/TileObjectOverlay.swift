@@ -145,9 +145,9 @@ extension TileObjectOverlay: TiledSceneCameraDelegate {
         let newZoomedLineWidth = TiledGlobals.default.debugDisplayOptions.lineWidth + zoomLineWidthPadding
         lineWidth = newZoomedLineWidth
         let isAntialiased = newZoom < 1
-        weak var weakSelf = self
-        renderQueue.async {
-            for proxy in weakSelf!.objects {
+        renderQueue.async { [weak self] in
+            guard let self else { return }
+            for proxy in self.objects {
                 proxy.zoomLevel = newZoom
                 proxy.baseLineWidth = self.lineWidth
                 proxy.isAntialiased = isAntialiased

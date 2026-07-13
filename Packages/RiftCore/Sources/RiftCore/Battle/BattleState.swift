@@ -11,7 +11,8 @@ public struct BattleState: Codable, Equatable, Sendable {
 
     public init(actors: [Actor], round: Int = 1) {
         self.actors = actors
-        self.turnOrder = TurnOrder(actorIDs: actors.map(\.id))
+        let firstLivingIndex = actors.firstIndex { $0.stats.health > 0 } ?? 0
+        self.turnOrder = TurnOrder(actorIDs: actors.map(\.id), activeIndex: firstLivingIndex)
         self.round = round
     }
 

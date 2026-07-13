@@ -14,14 +14,61 @@ final class ChapterCompleteViewModelTests: XCTestCase {
         let accept = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "blood_debt" })
         XCTAssertEqual(session.dialogViewModel.choose(accept), .none)
 
+        var inventory = session.inventory
+        inventory.addItem(id: "element_ore_ledger")
+        session.inventory = inventory
+
         XCTAssertTrue(session.dialogViewModel.start(dialogID: "elder_return"))
         let complete = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "blood_debt" })
-        XCTAssertEqual(session.dialogViewModel.choose(complete), .completedQuest("blood_debt"))
+        XCTAssertEqual(session.dialogViewModel.choose(complete), .questCompletionRequested("blood_debt"))
 
-        session.applyQuestRewards(questID: "blood_debt")
+        session.completeQuest(questID: "blood_debt")
 
         XCTAssertEqual(session.appState, .chapterComplete)
         XCTAssertTrue(session.statusText.contains("第一章完成"))
+    }
+
+    func testChapterCompletionUsesQuestMetadataInsteadOfLegacyQuestID() {
+        let renamedMainQuest = QuestDefinition(
+            id: "renamed_main_quest",
+            chapterID: "chapter1",
+            title: "改名后的主线",
+            summary: "完成章节。",
+            isMainQuest: true,
+            locationHint: "村庄",
+            objectives: ["完成目标"],
+            startDialogID: "start",
+            turnInDialogID: "finish",
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
+        )
+        let sideQuest = QuestDefinition(
+            id: "optional_side_quest",
+            chapterID: "chapter1",
+            title: "支线",
+            summary: "可选目标。",
+            isMainQuest: false,
+            locationHint: "河岸",
+            objectives: ["探索"],
+            startDialogID: "side_start",
+            turnInDialogID: "side_finish",
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
+        )
+        let questState = QuestState(statuses: ["renamed_main_quest": .completed])
+
+        XCTAssertTrue(GameSessionViewModel.chapterIsComplete(
+            chapterID: "chapter1",
+            questState: questState,
+            questDefinitions: [renamedMainQuest, sideQuest]
+        ))
+        XCTAssertFalse(GameSessionViewModel.chapterIsComplete(
+            chapterID: "chapter2",
+            questState: questState,
+            questDefinitions: [renamedMainQuest, sideQuest]
+        ))
     }
 
     func testMapTriggerOpensDialogueWhenLeaderEntersTriggerFrame() throws {

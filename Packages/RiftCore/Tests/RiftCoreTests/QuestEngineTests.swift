@@ -5,10 +5,17 @@ final class QuestEngineTests: XCTestCase {
     func testAcceptingAndCompletingQuestUpdatesStateDeterministically() throws {
         let quest = QuestDefinition(
             id: "blood_debt",
+            chapterID: "chapter1",
             title: "血债",
             summary: "和村长确认旧矿洞线索。",
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["完成测试目标"],
             startDialogID: "elder_intro",
-            turnInDialogID: "elder_return"
+            turnInDialogID: "elder_return",
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
         )
 
         let accepted = try QuestEngine.accept(questID: "blood_debt", in: QuestState(), definitions: [quest])
@@ -22,9 +29,17 @@ final class QuestEngineTests: XCTestCase {
     func testCompletingInactiveQuestFails() {
         let quest = QuestDefinition(
             id: "blood_debt",
+            chapterID: "chapter1",
             title: "血债",
             summary: "和村长确认旧矿洞线索。",
-            startDialogID: "elder_intro"
+            isMainQuest: false,
+            locationHint: "测试地点",
+            objectives: ["完成测试目标"],
+            startDialogID: "elder_intro",
+            turnInDialogID: "turn_in",
+            requiredItemIDs: [],
+            rewardItemIDs: [],
+            rewardSkillIDs: []
         )
 
         XCTAssertThrowsError(try QuestEngine.complete(questID: "blood_debt", in: QuestState(), definitions: [quest])) { error in

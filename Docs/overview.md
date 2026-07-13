@@ -29,3 +29,6 @@ Debug 构建可通过 -uiState 启动参数直接展示 party、exploration、in
 - 出现日期一律用 `YYYY-MM-DD`，不写相对日期描述。
 
 本次文档同步的基线（commit、生成时间、已知覆盖缺口）记录在 [`GENERATION.md`](GENERATION.md)，下次同步文档前先看这里，只更新受代码改动影响的页面。
+
+
+- [`aaa-interface-upgrade.md`](aaa-interface-upgrade.md)：本轮界面、叙事、角色、装备与交互升级记录及验收基线。

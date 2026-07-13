@@ -2638,8 +2638,8 @@ public class SKTilemap: SKNode, CustomReflectable, TiledMappableGeometryType, Ti
     /// Called when the map isolation mode changes.
     internal func updateGeometryIsolationMode() {
 
-        var doShowTiles = isolationMode.contains(.tiles) || isolationMode.contains(.none)
-        var doShowObjects = isolationMode.contains(.objects) || isolationMode.contains(.none)
+        let doShowTiles = isolationMode.contains(.tiles) || isolationMode.contains(.none)
+        let doShowObjects = isolationMode.contains(.objects) || isolationMode.contains(.none)
 
         let doShowTextObjects = isolationMode.contains(.textObjects)
         let doShowTileObjects = isolationMode.contains(.tileObjects)
@@ -3029,7 +3029,6 @@ public class SKTilemap: SKNode, CustomReflectable, TiledMappableGeometryType, Ti
 
 
         let focusedLayerIsIsolated = !focusedLayer.isHidden
-        let actionString = (focusedLayerIsIsolated == true) ? "de-isolating" : "isolating"
         let focusedParentLayers = focusedLayer.parentLayers
 
         for layer in getLayers() {
@@ -3705,10 +3704,6 @@ extension SKTilemap: TiledSceneCameraDelegate {
     ///
     /// - Parameter newPosition: updated camera position.
     public func cameraPositionChanged(newPosition: CGPoint) {
-        defer {
-            cameraPosition = newPosition
-        }
-        
         #if DEVELOPMENT_MODE
         // dampen the movement speed
         let dampen: CGFloat = 0.5
@@ -3729,6 +3724,7 @@ extension SKTilemap: TiledSceneCameraDelegate {
             }
         }
         #endif
+        cameraPosition = newPosition
     }
 
     /// Called when the camera zoom changes.

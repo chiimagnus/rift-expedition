@@ -14,7 +14,9 @@
         "evasion": 0,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "剑脊布满旧锈，但重心仍然可靠。村庄守卫退役后留下的制式武器。"
   },
   {
     "id": "padded_armor",
@@ -31,7 +33,9 @@
         "evasion": 0,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "缝了三层粗麻与旧棉，挡不住重击，却能让第一次失误不至于致命。"
   },
   {
     "id": "training_buckle",
@@ -48,7 +52,9 @@
         "evasion": 0,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "守卫操练时使用的沉重腰扣，提醒佩戴者把重心留在脚下。"
   },
   {
     "id": "worn_bow",
@@ -65,7 +71,9 @@
         "evasion": 1,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "弓臂被雨水泡出浅纹，弦却被主人反复上蜡，仍能维持稳定弹性。"
   },
   {
     "id": "scout_jacket",
@@ -82,7 +90,9 @@
         "evasion": 2,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "轻薄短衣便于穿过灌木和断墙，袖口藏着磨旧的路线记号。"
   },
   {
     "id": "fletching_ring",
@@ -99,7 +109,9 @@
         "evasion": 1,
         "magic": 0
       }
-    }
+    },
+    "rarity": "uncommon",
+    "description": "羽匠用来校准箭羽的铜戒，细小刻度能帮助射手控制出手节奏。"
   },
   {
     "id": "cracked_staff",
@@ -116,7 +128,9 @@
         "evasion": 0,
         "magic": 2
       }
-    }
+    },
+    "rarity": "common",
+    "description": "法杖表面的裂缝会在元素靠近时发亮，像一道尚未愈合的伤口。"
   },
   {
     "id": "apprentice_robe",
@@ -133,7 +147,9 @@
         "evasion": 0,
         "magic": 1
       }
-    }
+    },
+    "rarity": "common",
+    "description": "学院旧袍经过多次改短，内衬仍留有用于稳定施法呼吸的针脚。"
   },
   {
     "id": "ember_focus",
@@ -150,7 +166,9 @@
         "evasion": 0,
         "magic": 2
       }
-    }
+    },
+    "rarity": "uncommon",
+    "description": "烧融的镜片封住一粒不灭余烬，使最微弱的火花也能找到落点。"
   },
   {
     "id": "chipped_dagger",
@@ -167,7 +185,9 @@
         "evasion": 2,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "刀尖有缺口，握柄却贴合手掌。它更适合迅速结束问题，而非正面决斗。"
   },
   {
     "id": "shadow_cloak",
@@ -184,7 +204,9 @@
         "evasion": 3,
         "magic": 0
       }
-    }
+    },
+    "rarity": "common",
+    "description": "吸光的深色披衣没有真正的魔法，只是懂得如何让人忽略它。"
   },
   {
     "id": "lucky_thread",
@@ -201,7 +223,9 @@
         "evasion": 2,
         "magic": 0
       }
-    }
+    },
+    "rarity": "uncommon",
+    "description": "系在腕间的红线结，据说每断一根线，就替主人挡下一次坏运气。"
   },
   {
     "id": "river_charm",
@@ -218,22 +242,30 @@
         "evasion": 1,
         "magic": 1
       }
-    }
+    },
+    "rarity": "rare",
+    "description": "林婆年轻时从河底捞出的银坠。靠近污染水脉时，会像心跳一样轻轻震动。"
   },
   {
     "id": "torn_bridal_ribbon",
     "displayName": "撕裂的婚纱缎带",
-    "kind": "quest"
+    "kind": "quest",
+    "rarity": "uncommon",
+    "description": "染着泥和矿灰的婚纱缎带。撕裂边缘朝向旧矿洞，说明沈砚并非从村里被拖走。"
   },
   {
     "id": "bitterroot_herb",
     "displayName": "苦根草",
-    "kind": "quest"
+    "kind": "quest",
+    "rarity": "uncommon",
+    "description": "生长在污染水脉边缘的苦根草，根须吸满刺鼻矿味，却能压住裂隙毒热。"
   },
   {
     "id": "element_ore_ledger",
     "displayName": "元素矿账册",
-    "kind": "quest"
+    "kind": "quest",
+    "rarity": "rare",
+    "description": "顾怀恩私印封住的运输账册。数字本身不流血，却足以让整个村庄改写记忆。"
   },
   {
     "id": "scorched_ring",
@@ -250,7 +282,9 @@
         "evasion": 1,
         "magic": 2
       }
-    }
+    },
+    "rarity": "rare",
+    "description": "被火焰舔黑的银戒，内圈刻着被磨掉一半的誓言。"
   },
   {
     "id": "miner_gauntlets",
@@ -267,7 +301,9 @@
         "evasion": 0,
         "magic": 0
       }
-    }
+    },
+    "rarity": "uncommon",
+    "description": "旧矿工用铁片加固的护手，指节处残留着元素矿粉。"
   },
   {
     "id": "rift_shard_amulet",
@@ -284,12 +320,16 @@
         "evasion": 1,
         "magic": 3
       }
-    }
+    },
+    "rarity": "epic",
+    "description": "从封层裂口剥落的碎晶。它不再低鸣，却会在谎言被说出口时泛起冷光。"
   },
   {
     "id": "minor_healing_draught",
     "displayName": "止血药剂",
     "kind": "consumable",
-    "skillID": "minor_healing_draught"
+    "skillID": "minor_healing_draught",
+    "rarity": "uncommon",
+    "description": "林婆调制的止血药剂。辛辣、发苦，但能在战斗中迅速拉回生命线。"
   }
 ]

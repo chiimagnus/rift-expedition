@@ -42,7 +42,8 @@ public enum ElementResolver {
             .filter { $0.remainingTurns > 0 }
     }
 
-    private static func applyStatus(_ status: StatusType, turns: Int, to actor: inout Actor) {
+    public static func applyStatus(_ status: StatusType, turns: Int, to actor: inout Actor) {
+        guard turns > 0 else { return }
         removeStatus(status, from: &actor)
         actor.statuses.append(StatusEffect(type: status, remainingTurns: turns))
     }

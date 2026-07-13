@@ -14,7 +14,9 @@
         "evasion": 0,
         "magic": 0
       }
-    }
+    },
+    "description": "测试物品说明",
+    "rarity": "common"
   },
   {
     "id": "padded_armor",
@@ -31,6 +33,8 @@
         "evasion": 0,
         "magic": 0
       }
-    }
+    },
+    "description": "测试物品说明",
+    "rarity": "common"
   }
 ]

@@ -9,6 +9,21 @@ enum BattleActionChoice: Equatable {
     case consumable(String)
 }
 
+enum BattleEffectStyle: String, Equatable {
+    case strike
+    case projectile
+    case arcane
+    case fire
+    case poison
+    case heal
+}
+
+enum BattleFeedback: Equatable {
+    case damage(amount: Int, defeated: Bool)
+    case healing(amount: Int)
+    case dodge
+}
+
 struct BattleConsumableRow: Equatable, Identifiable {
     var id: String
     var displayName: String
@@ -20,6 +35,7 @@ struct BattleSurfaceMarker: Equatable, Identifiable {
     var id: String
     var frame: CGRect
     var surfaceType: SurfaceType
+    var remainingRounds: Int? = nil
 }
 
 struct BattleActorMarker: Equatable, Identifiable {
@@ -45,7 +61,10 @@ struct BattlePresentationEvent: Equatable, Identifiable {
     var action: ActorAnimationKind
     var direction: ActorAnimationDirection
     var targetActorID: String?
+    var sourcePoint: CGPoint?
     var effectPoint: CGPoint?
+    var effectStyle: BattleEffectStyle?
+    var feedback: BattleFeedback?
 }
 
 struct BattleSceneSnapshot: Equatable {
@@ -68,6 +87,7 @@ final class BattleViewModel {
     private let skillsByID: [String: SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
     private let hasLineOfSight: (CGPoint, CGPoint) -> Bool
+    private let isMovementAllowed: (CGPoint, CGPoint) -> Bool
     private let onAudioCue: (AudioCue) -> Void
     private var random = SeededRandomSource(seed: 20260706)
 
@@ -79,6 +99,7 @@ final class BattleViewModel {
     var surfaces: [BattleSurfaceMarker]
     var inventory: PartyInventory
     private var nextPresentationEventID = 1
+    private var nextDynamicSurfaceSequence = 1
     private var presentationEvents: [BattlePresentationEvent] = []
 
     init(
@@ -89,6 +110,7 @@ final class BattleViewModel {
         initialPositions: [String: CGPoint] = [:],
         surfaces: [BattleSurfaceMarker] = [],
         hasLineOfSight: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true },
+        isMovementAllowed: @escaping (CGPoint, CGPoint) -> Bool = { _, _ in true },
         onAudioCue: @escaping (AudioCue) -> Void = { _ in }
     ) {
         engine = BattleEngine(state: state)
@@ -100,10 +122,15 @@ final class BattleViewModel {
         skillsByID = indexedSkills
         self.itemDefinitions = itemDefinitions
         actorPositions = Self.makeInitialPositions(for: state.actors, overrides: initialPositions)
-        actorFacings = Dictionary(uniqueKeysWithValues: state.actors.map { ($0.id, ActorAnimationDirection.down) })
+        actorFacings = state.actors.reduce(into: [:]) { facings, actor in
+            if facings[actor.id] == nil {
+                facings[actor.id] = .down
+            }
+        }
         self.inventory = inventory
         self.surfaces = surfaces
         self.hasLineOfSight = hasLineOfSight
+        self.isMovementAllowed = isMovementAllowed
         self.onAudioCue = onAudioCue
     }
 
@@ -183,6 +210,10 @@ final class BattleViewModel {
         )
     }
 
+    func acknowledgePresentationEvents(through eventID: Int) {
+        presentationEvents.removeAll { $0.id <= eventID }
+    }
+
     var consumableRows: [BattleConsumableRow] {
         itemDefinitions
             .filter { $0.kind == .consumable && inventory.count(of: $0.id) > 0 }
@@ -238,12 +269,18 @@ final class BattleViewModel {
             return
         }
 
+        guard isMovementAllowed(start, destination) else {
+            statusText = "目标位置不可达。"
+            return
+        }
+
         let distance = battleDistance(from: start, to: destination)
         do {
             try engine.move(actorID: actor.id, distance: distance)
             actorPositions[actor.id] = destination
             emitMovementEvent(actorID: actor.id, from: start, to: destination)
-            statusText = "\(actor.displayName) 移动，消耗 \(APRules.movementCost(forDistance: distance)) AP。"
+            let enteredSurface = applySurfaceAtDestination(actorID: actor.id, point: destination)
+            statusText = "\(actor.displayName) 移动，消耗 \(APRules.movementCost(forDistance: distance)) AP。\(surfaceEntryText(enteredSurface))"
             targetPrompt = "可继续移动、选择技能或结束回合。"
         } catch {
             statusText = readableError(error)
@@ -270,6 +307,10 @@ final class BattleViewModel {
         }
         guard actor.faction == .player else {
             statusText = "当前不是玩家回合。"
+            return
+        }
+        guard actor.skillIDs.contains(id) else {
+            statusText = "当前角色尚未掌握该技能。"
             return
         }
         guard actor.stats.actionPoints >= skill.actionPointCost else {
@@ -306,7 +347,7 @@ final class BattleViewModel {
         }
 
         selectedAction = .consumable(id)
-        targetPrompt = "点击队友使用「\(item.displayName)」。"
+        targetPrompt = consumableTargetPrompt(itemName: item.displayName, skill: skill)
     }
 
     func handleWorldClick(_ point: CGPoint) {
@@ -329,12 +370,12 @@ final class BattleViewModel {
             statusText = "请先选择技能。"
             return
         }
-        perform(skill: skill, targetID: targetID, label: skill.displayName)
+        perform(skill: skill, targetID: targetID, label: skill.displayName, action: selectedAction)
     }
 
     func endTurn() {
         do {
-            try engine.endTurn()
+            try advanceTurn()
             if let enemyStatus = performEnemyTurnsIfNeeded() {
                 statusText = enemyStatus
             } else if let activeActor {
@@ -352,13 +393,14 @@ final class BattleViewModel {
     private var selectedSkill: SkillDefinition? {
         switch selectedAction {
         case .move:
-            nil
+            return nil
         case .basicAttack:
-            activeSkills.first
+            return activeSkills.first
         case let .skill(id):
-            skillsByID[id]
+            guard let activeActor, activeActor.skillIDs.contains(id) else { return nil }
+            return skillsByID[id]
         case let .consumable(id):
-            consumableItem(id: id)?.skillID.flatMap { skillsByID[$0] }
+            return consumableItem(id: id)?.skillID.flatMap { skillsByID[$0] }
         }
     }
 
@@ -383,13 +425,15 @@ final class BattleViewModel {
                 context: EnemyAIContext(
                     skills: skillDefinitions,
                     distancesByTargetID: distances(from: actor),
+                    lineOfSightByTargetID: lineOfSight(from: actor),
                     movementDistance: APRules.movementDistancePerAPStartingValue
                 )
             )
             lastStatus = performEnemyAction(action, actor: actor)
+            guard state.outcome == .ongoing else { break }
 
             do {
-                try engine.endTurn()
+                try advanceTurn()
             } catch {
                 return readableError(error)
             }
@@ -401,18 +445,27 @@ final class BattleViewModel {
         do {
             switch action {
             case let .moveToward(targetID, distance):
-                try engine.move(actorID: actor.id, distance: distance)
-                move(actorID: actor.id, toward: targetID, distance: distance)
-                return "\(actor.displayName) 逼近 \(actorName(targetID))。"
+                let result = try performEnemyMove(actorID: actor.id, targetID: targetID, distance: distance, movingAway: false)
+                guard result.moved else {
+                    return "\(actor.displayName) 的前路被阻挡。"
+                }
+                return "\(actor.displayName) 逼近 \(actorName(targetID))。\(surfaceEntryText(result.surface))"
             case let .moveAway(targetID, distance):
-                try engine.move(actorID: actor.id, distance: distance)
-                move(actorID: actor.id, awayFrom: targetID, distance: distance)
-                return "\(actor.displayName) 与 \(actorName(targetID)) 拉开距离。"
+                let result = try performEnemyMove(actorID: actor.id, targetID: targetID, distance: distance, movingAway: true)
+                guard result.moved else {
+                    return "\(actor.displayName) 无法继续后撤。"
+                }
+                return "\(actor.displayName) 与 \(actorName(targetID)) 拉开距离。\(surfaceEntryText(result.surface))"
             case let .useSkill(skillID, targetID):
                 guard let skill = skillsByID[skillID] else {
                     return "\(actor.displayName) 没有找到可用技能。"
                 }
-                return perform(skill: skill, targetID: targetID, label: skill.displayName)
+                return perform(
+                    skill: skill,
+                    targetID: targetID,
+                    label: skill.displayName,
+                    action: .skill(skill.id)
+                )
             case .endTurn:
                 return "\(actor.displayName) 结束回合。"
             }
@@ -422,7 +475,12 @@ final class BattleViewModel {
     }
 
     @discardableResult
-    private func perform(skill: SkillDefinition, targetID: String, label: String) -> String {
+    private func perform(
+        skill: SkillDefinition,
+        targetID: String,
+        label: String,
+        action: BattleActionChoice
+    ) -> String {
         guard let actor = activeActor else {
             statusText = "没有可行动角色。"
             return statusText
@@ -435,12 +493,12 @@ final class BattleViewModel {
             statusText = "没有找到目标。"
             return statusText
         }
-        if case let .consumable(itemID) = selectedAction, inventory.count(of: itemID) <= 0 {
+        if case let .consumable(itemID) = action, inventory.count(of: itemID) <= 0 {
             statusText = "背包中没有该消耗品。"
             return statusText
         }
-        guard isAllowedTarget(target, for: skill, caster: actor) else {
-            statusText = "该目标不能被当前行动影响。"
+        guard target.stats.health > 0 else {
+            statusText = "该目标已经无法行动。"
             return statusText
         }
         guard let casterPosition = actorPositions[actor.id], let targetPosition = actorPositions[targetID] else {
@@ -450,12 +508,9 @@ final class BattleViewModel {
 
         let context = TargetingContext(
             distance: battleDistance(from: casterPosition, to: targetPosition),
-            hasLineOfSight: hasLineOfSight(casterPosition, targetPosition),
-            isAlly: isAlly(target.faction, of: actor.faction)
+            hasLineOfSight: hasLineOfSight(casterPosition, targetPosition)
         )
         let beforeHealth = target.stats.health
-        let actionBeforeResolution = selectedAction
-
         do {
             let resolution = try engine.useSkill(
                 actorID: actor.id,
@@ -466,22 +521,31 @@ final class BattleViewModel {
             )
             let afterHealth = state.actor(id: targetID)?.stats.health ?? beforeHealth
             let damage = max(0, beforeHealth - afterHealth)
+            let healing = max(0, afterHealth - beforeHealth)
+            let targetWasDefeated = afterHealth <= 0
             let surfaceText = applyCreatedSurfaces(resolution.createdSurfaces, at: targetPosition, targetID: targetID)
-            consumeSelectedItemIfNeeded()
+            consumeItemIfNeeded(for: action)
             emitSkillEvents(
                 actorID: actor.id,
                 targetID: targetID,
+                action: action,
+                skill: skill,
+                actorClassID: actor.classID,
                 casterPosition: casterPosition,
                 targetPosition: targetPosition,
                 didDodge: resolution.didDodge,
-                damage: damage
+                damage: damage,
+                healing: healing,
+                targetWasDefeated: targetWasDefeated
             )
-            emitAudioCues(action: actionBeforeResolution, damage: damage)
+            emitAudioCues(action: action, damage: damage, healing: healing)
 
             if resolution.didDodge {
                 statusText = "\(target.displayName) 闪避了 \(label)。"
             } else if damage > 0 {
                 statusText = "\(actor.displayName) 对 \(target.displayName) 使用\(label)，造成 \(damage) 点伤害。\(surfaceText)"
+            } else if healing > 0 {
+                statusText = "\(actor.displayName) 对 \(target.displayName) 使用\(label)，恢复 \(healing) 点生命。\(surfaceText)"
             } else {
                 statusText = "\(actor.displayName) 使用\(label)。\(surfaceText)"
             }
@@ -493,14 +557,19 @@ final class BattleViewModel {
         }
     }
 
-    private func applyCreatedSurfaces(_ surfaceIDs: [String], at point: CGPoint, targetID: String) -> String {
+    private func applyCreatedSurfaces(
+        _ createdSurfaces: [ResolvedSurfaceEffect],
+        at point: CGPoint,
+        targetID: String
+    ) -> String {
         var messages: [String] = []
-        for surfaceID in surfaceIDs {
-            guard let incoming = SurfaceType(rawValue: surfaceID) else { continue }
+        for createdSurface in createdSurfaces {
+            guard let incoming = SurfaceType(rawValue: createdSurface.surfaceID) else { continue }
             if let index = surfaces.firstIndex(where: { $0.frame.contains(point) }) {
                 let existing = surfaces[index].surfaceType
                 if let result = ElementResolver.surfaceAfterApplying(incoming, to: existing) {
                     surfaces[index].surfaceType = result
+                    surfaces[index].remainingRounds = createdSurface.durationTurns
                     applySurface(result, to: targetID)
                     if existing == .oil && result == .fire {
                         messages.append("油污被点燃。")
@@ -508,15 +577,30 @@ final class BattleViewModel {
                 }
             } else {
                 let frame = CGRect(x: point.x - 28, y: point.y - 28, width: 56, height: 56)
-                surfaces.append(BattleSurfaceMarker(id: "surface_\(surfaces.count + 1)", frame: frame, surfaceType: incoming))
+                surfaces.append(BattleSurfaceMarker(
+                    id: makeDynamicSurfaceID(),
+                    frame: frame,
+                    surfaceType: incoming,
+                    remainingRounds: createdSurface.durationTurns
+                ))
                 applySurface(incoming, to: targetID)
             }
         }
         return messages.joined(separator: "")
     }
 
-    private func consumeSelectedItemIfNeeded() {
-        guard case let .consumable(itemID) = selectedAction else { return }
+    private func makeDynamicSurfaceID() -> String {
+        while true {
+            let candidate = "dynamic_surface_\(nextDynamicSurfaceSequence)"
+            nextDynamicSurfaceSequence += 1
+            if !surfaces.contains(where: { $0.id == candidate }) {
+                return candidate
+            }
+        }
+    }
+
+    private func consumeItemIfNeeded(for action: BattleActionChoice) {
+        guard case let .consumable(itemID) = action else { return }
         do {
             try inventory.removeItem(id: itemID)
             if inventory.count(of: itemID) == 0 {
@@ -536,6 +620,41 @@ final class BattleViewModel {
         engine = BattleEngine(state: currentState)
     }
 
+    private func applySurfaceAtDestination(actorID: String, point: CGPoint) -> SurfaceType? {
+        guard let surface = surfaces.first(where: { $0.frame.contains(point) }) else { return nil }
+        applySurface(surface.surfaceType, to: actorID)
+        return surface.surfaceType
+    }
+
+    private func surfaceEntryText(_ surface: SurfaceType?) -> String {
+        switch surface {
+        case .water:
+            "进入水地表。"
+        case .oil:
+            "进入油地表。"
+        case .poison:
+            "进入毒性地表。"
+        case .fire:
+            "进入火焰地表。"
+        case nil:
+            ""
+        }
+    }
+
+    private func advanceTurn() throws {
+        let previousRound = state.round
+        try engine.endTurn()
+        if state.round > previousRound {
+            surfaces = surfaces.compactMap { surface in
+                guard let remainingRounds = surface.remainingRounds else { return surface }
+                guard remainingRounds > 1 else { return nil }
+                var updated = surface
+                updated.remainingRounds = remainingRounds - 1
+                return updated
+            }
+        }
+    }
+
     private func actorID(at point: CGPoint) -> String? {
         state.actors
             .filter { $0.stats.health > 0 }
@@ -549,22 +668,24 @@ final class BattleViewModel {
     }
 
     private func canTarget(_ actor: Actor) -> Bool {
-        guard let activeActor, let skill = selectedSkill else { return false }
-        return isAllowedTarget(actor, for: skill, caster: activeActor)
-    }
-
-    private func isAllowedTarget(_ target: Actor, for skill: SkillDefinition, caster: Actor) -> Bool {
-        guard target.stats.health > 0 else { return false }
-        switch skill.target {
-        case .selfOnly:
-            return target.id == caster.id
-        case .ally:
-            return isAlly(target.faction, of: caster.faction)
-        case .enemy:
-            return isOpponent(target.faction, of: caster.faction)
-        case .point:
-            return true
+        guard actor.stats.health > 0,
+              let activeActor,
+              let skill = selectedSkill,
+              let casterPosition = actorPositions[activeActor.id],
+              let targetPosition = actorPositions[actor.id]
+        else {
+            return false
         }
+        let context = TargetingContext(
+            distance: battleDistance(from: casterPosition, to: targetPosition),
+            hasLineOfSight: hasLineOfSight(casterPosition, targetPosition)
+        )
+        return (try? TargetingRules.validate(
+            skill: skill,
+            caster: activeActor,
+            target: actor,
+            context: context
+        )) != nil
     }
 
     private func canSpend(actionPointCost: Int) -> Bool {
@@ -583,25 +704,50 @@ final class BattleViewModel {
 
     private func distances(from actor: Actor) -> [String: Double] {
         guard let origin = actorPositions[actor.id] else { return [:] }
-        return Dictionary(uniqueKeysWithValues: state.actors.compactMap { target in
-            guard target.id != actor.id, let position = actorPositions[target.id] else { return nil }
-            return (target.id, battleDistance(from: origin, to: position))
-        })
+        return state.actors.reduce(into: [:]) { distances, target in
+            guard target.id != actor.id,
+                  distances[target.id] == nil,
+                  let position = actorPositions[target.id]
+            else { return }
+            distances[target.id] = battleDistance(from: origin, to: position)
+        }
     }
 
-    private func move(actorID: String, toward targetID: String, distance: Double) {
-        guard let start = actorPositions[actorID], let target = actorPositions[targetID] else { return }
-        let destination = movedPoint(from: start, toward: target, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
-        actorPositions[actorID] = destination
-        emitMovementEvent(actorID: actorID, from: start, to: destination)
+    private func lineOfSight(from actor: Actor) -> [String: Bool] {
+        guard let origin = actorPositions[actor.id] else { return [:] }
+        return state.actors.reduce(into: [:]) { visibility, target in
+            guard target.id != actor.id,
+                  visibility[target.id] == nil,
+                  let position = actorPositions[target.id]
+            else { return }
+            visibility[target.id] = hasLineOfSight(origin, position)
+        }
     }
 
-    private func move(actorID: String, awayFrom targetID: String, distance: Double) {
-        guard let start = actorPositions[actorID], let target = actorPositions[targetID] else { return }
-        let reflected = CGPoint(x: start.x + (start.x - target.x), y: start.y + (start.y - target.y))
-        let destination = movedPoint(from: start, toward: reflected, distance: CGFloat(distance) * Self.pixelsPerBattleUnit)
+    private func performEnemyMove(
+        actorID: String,
+        targetID: String,
+        distance: Double,
+        movingAway: Bool
+    ) throws -> (moved: Bool, surface: SurfaceType?) {
+        guard let start = actorPositions[actorID], let target = actorPositions[targetID] else {
+            return (false, nil)
+        }
+        let directionTarget = movingAway
+            ? CGPoint(x: start.x + (start.x - target.x), y: start.y + (start.y - target.y))
+            : target
+        let destination = movedPoint(
+            from: start,
+            toward: directionTarget,
+            distance: CGFloat(distance) * Self.pixelsPerBattleUnit
+        )
+        guard isMovementAllowed(start, destination) else { return (false, nil) }
+
+        try engine.move(actorID: actorID, distance: distance)
         actorPositions[actorID] = destination
         emitMovementEvent(actorID: actorID, from: start, to: destination)
+        let enteredSurface = applySurfaceAtDestination(actorID: actorID, point: destination)
+        return (true, enteredSurface)
     }
 
     private func emitMovementEvent(actorID: String, from start: CGPoint, to end: CGPoint) {
@@ -612,7 +758,10 @@ final class BattleViewModel {
             action: .walk,
             direction: direction,
             targetActorID: nil,
-            effectPoint: nil
+            sourcePoint: nil,
+            effectPoint: nil,
+            effectStyle: nil,
+            feedback: nil
         )
     }
 
@@ -621,7 +770,10 @@ final class BattleViewModel {
         action: ActorAnimationKind,
         direction: ActorAnimationDirection,
         targetActorID: String?,
-        effectPoint: CGPoint?
+        sourcePoint: CGPoint?,
+        effectPoint: CGPoint?,
+        effectStyle: BattleEffectStyle?,
+        feedback: BattleFeedback?
     ) {
         presentationEvents.append(BattlePresentationEvent(
             id: nextPresentationEventID,
@@ -629,32 +781,51 @@ final class BattleViewModel {
             action: action,
             direction: direction,
             targetActorID: targetActorID,
-            effectPoint: effectPoint
+            sourcePoint: sourcePoint,
+            effectPoint: effectPoint,
+            effectStyle: effectStyle,
+            feedback: feedback
         ))
         nextPresentationEventID += 1
-        if presentationEvents.count > 8 {
-            presentationEvents.removeFirst(presentationEvents.count - 8)
-        }
     }
 
     private func emitSkillEvents(
         actorID: String,
         targetID: String,
+        action: BattleActionChoice,
+        skill: SkillDefinition,
+        actorClassID: String?,
         casterPosition: CGPoint,
         targetPosition: CGPoint,
         didDodge: Bool,
-        damage: Int
+        damage: Int,
+        healing: Int,
+        targetWasDefeated: Bool
     ) {
         let attackDirection = animationDirection(from: casterPosition, to: targetPosition)
             ?? actorFacings[actorID]
             ?? .down
+        let effectStyle = presentationStyle(for: action, skill: skill, actorClassID: actorClassID)
+        let feedback: BattleFeedback? = if didDodge {
+            .dodge
+        } else if damage > 0 {
+            .damage(amount: damage, defeated: targetWasDefeated)
+        } else if healing > 0 {
+            .healing(amount: healing)
+        } else {
+            nil
+        }
+
         actorFacings[actorID] = attackDirection
         appendPresentationEvent(
             actorID: actorID,
             action: .attack,
             direction: attackDirection,
             targetActorID: targetID,
-            effectPoint: targetPosition
+            sourcePoint: casterPosition,
+            effectPoint: targetPosition,
+            effectStyle: effectStyle,
+            feedback: feedback
         )
 
         guard !didDodge, damage > 0 else { return }
@@ -667,12 +838,69 @@ final class BattleViewModel {
             action: .hurt,
             direction: hurtDirection,
             targetActorID: actorID,
-            effectPoint: targetPosition
+            sourcePoint: nil,
+            effectPoint: nil,
+            effectStyle: nil,
+            feedback: nil
         )
     }
 
-    private func emitAudioCues(action: BattleActionChoice, damage: Int) {
-        if case .consumable = action {
+    private func presentationStyle(
+        for action: BattleActionChoice,
+        skill: SkillDefinition,
+        actorClassID: String?
+    ) -> BattleEffectStyle {
+        if skill.effects.contains(where: { effect in
+            if case .heal = effect { return true }
+            return false
+        }) {
+            return .heal
+        }
+        if skill.effects.contains(where: { effect in
+            switch effect {
+            case let .createSurface(surfaceID, _):
+                return surfaceID == "poison"
+            case let .applyStatus(statusID, _):
+                return statusID == "poisoned"
+            default:
+                return false
+            }
+        }) {
+            return .poison
+        }
+        if skill.effects.contains(where: { effect in
+            switch effect {
+            case let .createSurface(surfaceID, _):
+                return surfaceID == "fire"
+            case let .applyStatus(statusID, _):
+                return statusID == "burning"
+            default:
+                return false
+            }
+        }) {
+            return .fire
+        }
+
+        switch action {
+        case .move:
+            return .strike
+        case .basicAttack:
+            return skill.range > 3 ? .projectile : .strike
+        case .consumable:
+            return skill.target == .enemy || skill.range > 3 ? .projectile : .arcane
+        case .skill:
+            if skill.range > 3.5 || actorClassID == "archer" {
+                return .projectile
+            }
+            if actorClassID == "mage" || skill.id.contains("spark") || skill.id.contains("orb") || skill.id.contains("light") {
+                return .arcane
+            }
+            return .strike
+        }
+    }
+
+    private func emitAudioCues(action: BattleActionChoice, damage: Int, healing: Int) {
+        if case .consumable = action, healing > 0 {
             onAudioCue(.healDrink)
         } else {
             onAudioCue(.skillCast)
@@ -680,6 +908,18 @@ final class BattleViewModel {
         if damage > 0 {
             onAudioCue(.attackHit)
         }
+    }
+
+    private func consumableTargetPrompt(itemName: String, skill: SkillDefinition) -> String {
+        let targetName = switch skill.target {
+        case .selfOnly:
+            "当前角色"
+        case .ally:
+            "队友"
+        case .enemy:
+            "敌人"
+        }
+        return "点击\(targetName)使用「\(itemName)」。"
     }
 
     private func animationDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {
@@ -748,6 +988,12 @@ final class BattleViewModel {
             return "没有找到角色。"
         case .notActorsTurn(_, _):
             return "当前不是该角色的回合。"
+        case .skillNotKnown:
+            return "当前角色尚未掌握该技能。"
+        case .invalidActionPointCost:
+            return "行动点消耗配置无效。"
+        case .invalidMovementDistance:
+            return "移动距离必须大于零。"
         case let .insufficientActionPoints(required, available):
             return "AP 不足：需要 \(required)，当前 \(available)。"
         }
@@ -759,8 +1005,17 @@ final class BattleViewModel {
             return "距离太远：最大 \(maxRange.formatted(.number.precision(.fractionLength(1))))，当前 \(actual.formatted(.number.precision(.fractionLength(1))))。"
         case .blockedLineOfSight:
             return "视线被障碍挡住。"
-        case .allyNotAllowed:
-            return "该技能不能影响队友。"
+        case .invalidSkillTargetConfiguration:
+            return "技能目标配置无效。"
+        case let .invalidTarget(expected, _):
+            switch expected {
+            case .selfOnly:
+                return "该技能只能以施法者自身为目标。"
+            case .ally:
+                return "该技能只能以队友为目标。"
+            case .enemy:
+                return "该技能只能以敌人为目标。"
+            }
         }
     }
 
@@ -788,17 +1043,4 @@ final class BattleViewModel {
         return positions
     }
 
-    private func isAlly(_ faction: Faction, of actorFaction: Faction) -> Bool {
-        if actorFaction == .player {
-            return faction == .player
-        }
-        return faction != .player
-    }
-
-    private func isOpponent(_ faction: Faction, of actorFaction: Faction) -> Bool {
-        if actorFaction == .player {
-            return faction == .hostile || faction == .animal || faction == .monster
-        }
-        return faction == .player
-    }
 }

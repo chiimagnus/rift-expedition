@@ -24,22 +24,99 @@ final class ProgressionInventoryTests: XCTestCase {
         var inventory = PartyInventory()
         inventory.addItem(id: "rusted_sword")
         var actor = makeActor()
+        let sword = ItemDefinition(
+            id: "rusted_sword",
+            displayName: "锈剑",
+            description: "测试物品说明",
+            rarity: .common,
+            kind: .equipment,
+            equipment: EquipmentDefinition(
+                id: "rusted_sword",
+                displayName: "锈剑",
+                slot: .weapon,
+                modifiers: StatModifiers(attack: 2)
+            )
+        )
 
         try EquipmentRules.equip(
             itemID: "rusted_sword",
             on: &actor,
             inventory: inventory,
-            items: [
-                ItemDefinition(
-                    id: "rusted_sword",
-                    displayName: "锈剑",
-                    kind: .equipment,
-                    equipment: EquipmentDefinition(id: "rusted_sword", displayName: "锈剑", slot: .weapon)
-                )
-            ]
+            equippedByOtherActors: 0,
+            items: [sword]
         )
 
         XCTAssertEqual(actor.equipment.weaponID, "rusted_sword")
+        XCTAssertEqual(actor.stats.attack, 7)
+    }
+
+    func testReplacingEquipmentRemovesOldModifiersBeforeAddingNewOnes() throws {
+        let oldSword = equipmentItem(id: "old_sword", slot: .weapon, modifiers: StatModifiers(attack: 2))
+        let newSword = equipmentItem(id: "new_sword", slot: .weapon, modifiers: StatModifiers(attack: 4))
+        let inventory = try PartyInventory(itemCounts: ["old_sword": 1, "new_sword": 1])
+        var actor = makeActor()
+        actor.equipment.weaponID = "old_sword"
+        try EquipmentRules.applyEquippedModifiers(to: &actor, items: [oldSword, newSword])
+
+        try EquipmentRules.equip(
+            itemID: "new_sword",
+            on: &actor,
+            inventory: inventory,
+            equippedByOtherActors: 0,
+            items: [oldSword, newSword]
+        )
+
+        XCTAssertEqual(actor.equipment.weaponID, "new_sword")
+        XCTAssertEqual(actor.stats.attack, 9)
+    }
+
+    func testInitialLoadoutModifiersAdjustHealthAndCombatStats() throws {
+        let armor = equipmentItem(
+            id: "armor",
+            slot: .armor,
+            modifiers: StatModifiers(maxHealth: 4, defense: 2)
+        )
+        var actor = makeActor()
+        actor.equipment.armorID = "armor"
+
+        try EquipmentRules.applyEquippedModifiers(to: &actor, items: [armor])
+
+        XCTAssertEqual(actor.stats.maxHealth, 24)
+        XCTAssertEqual(actor.stats.health, 24)
+        XCTAssertEqual(actor.stats.defense, 4)
+    }
+
+    func testEquippingRequiresASeparateInventoryCopyForEachActor() throws {
+        let inventory = try PartyInventory(itemCounts: ["rusted_sword": 1])
+        var actor = makeActor()
+
+        XCTAssertThrowsError(
+            try EquipmentRules.equip(
+                itemID: "rusted_sword",
+                on: &actor,
+                inventory: inventory,
+                equippedByOtherActors: 1,
+                items: [
+                    ItemDefinition(
+                        id: "rusted_sword",
+                        displayName: "锈剑",
+                        description: "测试物品说明",
+                        rarity: .common,
+                        kind: .equipment,
+                        equipment: EquipmentDefinition(
+                            id: "rusted_sword",
+                            displayName: "锈剑",
+                            slot: .weapon
+                        )
+                    )
+                ]
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? EquipmentError,
+                .insufficientCopies(itemID: "rusted_sword", required: 2, available: 1)
+            )
+        }
     }
 
     private func makeActor(unspentAttributePoints: Int = 0) -> Actor {
@@ -61,6 +138,26 @@ final class ProgressionInventoryTests: XCTestCase {
                 actionPoints: 4
             ),
             skillIDs: []
+        )
+    }
+
+    private func equipmentItem(
+        id: String,
+        slot: EquipmentSlot,
+        modifiers: StatModifiers
+    ) -> ItemDefinition {
+        ItemDefinition(
+            id: id,
+            displayName: id,
+            description: "测试物品说明",
+            rarity: .common,
+            kind: .equipment,
+            equipment: EquipmentDefinition(
+                id: id,
+                displayName: id,
+                slot: slot,
+                modifiers: modifiers
+            )
         )
     }
 }
