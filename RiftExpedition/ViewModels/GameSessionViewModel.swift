@@ -342,13 +342,16 @@ final class GameSessionViewModel {
         statusText = "手动存档与自动存档将在此管理。"
     }
 
-    func openDialog(_ dialogID: String) {
+    @discardableResult
+    func openDialog(_ dialogID: String) -> Bool {
         audioService.play(.uiClick)
-        if dialogViewModel.start(dialogID: dialogID) {
-            appState = .dialogue
-        } else {
+        guard dialogViewModel.start(dialogID: dialogID) else {
             statusText = "没有找到对话。"
+            return false
         }
+
+        appState = .dialogue
+        return true
     }
 
     func openQuestLog() {
@@ -1047,11 +1050,12 @@ final class GameSessionViewModel {
         let key = mapTriggerKey(trigger)
         guard !session.firedMapTriggerKeys.contains(key) else { return }
 
-        session.firedMapTriggerKeys.insert(key)
         if let dialogID = dialogID(fromTriggerAction: trigger.action) {
-            openDialog(dialogID)
+            guard openDialog(dialogID) else { return }
+            session.firedMapTriggerKeys.insert(key)
         } else if trigger.action == "chapterComplete" {
             completeChapter()
+            session.firedMapTriggerKeys.insert(key)
         } else {
             statusText = "未知地图触发。"
         }

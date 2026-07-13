@@ -89,6 +89,56 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertTrue(session.statusText.contains("地图加载失败"))
     }
 
+    func testMissingDialogueMapTriggerRemainsRetryable() {
+        let trigger = MapTrigger(
+            tiledID: 7,
+            triggerID: "missing_dialogue",
+            action: "dialogue:does_not_exist",
+            frame: CGRect(x: 40, y: 40, width: 32, height: 32)
+        )
+        let start = MapSpawn(tiledID: 1, id: "start", position: trigger.frame.center)
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                testMapMetadata(areaID: areaID, spawns: [start], triggers: [trigger])
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+        startTestParty(in: session)
+        session.explorationController.configureParty(session.party, at: trigger.frame.center)
+
+        session.gameScene(GameScene(size: CGSize(width: 1, height: 1)), didClickWorld: trigger.frame.center)
+
+        XCTAssertFalse(session.session.firedMapTriggerKeys.contains("village_square:7"))
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertEqual(session.statusText, "没有找到对话。")
+    }
+
+    func testSuccessfulDialogueMapTriggerIsConsumedAfterOpeningDialogue() {
+        let trigger = MapTrigger(
+            tiledID: 8,
+            triggerID: "elder_intro_trigger",
+            action: "dialogue:elder_intro",
+            frame: CGRect(x: 40, y: 40, width: 32, height: 32)
+        )
+        let start = MapSpawn(tiledID: 1, id: "start", position: trigger.frame.center)
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                testMapMetadata(areaID: areaID, spawns: [start], triggers: [trigger])
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+        startTestParty(in: session)
+        session.explorationController.configureParty(session.party, at: trigger.frame.center)
+
+        session.gameScene(GameScene(size: CGSize(width: 1, height: 1)), didClickWorld: trigger.frame.center)
+
+        XCTAssertTrue(session.session.firedMapTriggerKeys.contains("village_square:8"))
+        XCTAssertEqual(session.appState, .dialogue)
+        XCTAssertEqual(session.dialogViewModel.activeDialog?.id, "elder_intro")
+    }
+
     func testAreaIDsMapToRegionalBGMCues() {
         XCTAssertEqual(AudioService.bgmCue(for: "village_square"), .villageTheme)
         XCTAssertEqual(AudioService.bgmCue(for: "village_riverside"), .villageTheme)
@@ -802,7 +852,8 @@ final class GameSessionViewModelTests: XCTestCase {
     private func testMapMetadata(
         areaID: String,
         spawns: [MapSpawn],
-        exits: [MapExit] = []
+        exits: [MapExit] = [],
+        triggers: [MapTrigger] = []
     ) -> TiledMapMetadata {
         TiledMapMetadata(
             areaID: areaID,
@@ -811,7 +862,7 @@ final class GameSessionViewModelTests: XCTestCase {
             npcs: [],
             navObstacles: [],
             encounterTriggers: [],
-            triggers: [],
+            triggers: triggers,
             exits: exits,
             surfaces: [],
             items: []
