@@ -79,6 +79,19 @@ public enum WorldGraphValidator {
         }
         var issues: [WorldGraphValidationIssue] = []
 
+        if isBlank(graph.id) {
+            issues.append(.init(message: "World id must not be blank"))
+        }
+        if isBlank(graph.title) {
+            issues.append(.init(message: "World title must not be blank"))
+        }
+        if isBlank(graph.startAreaId) {
+            issues.append(.init(message: "World startAreaId must not be blank"))
+        }
+        if isBlank(graph.startSpawnId) {
+            issues.append(.init(message: "World startSpawnId must not be blank"))
+        }
+
         for duplicate in mapGroups.filter({ $0.value.count > 1 }).keys.sorted() {
             issues.append(WorldGraphValidationIssue(message: "Duplicate TMX map area id: \(duplicate)"))
         }
@@ -93,10 +106,34 @@ public enum WorldGraphValidator {
         }
 
         for area in graph.areas {
+            if isBlank(area.id) {
+                issues.append(.init(message: "World area id must not be blank"))
+            }
+            if isBlank(area.displayName) {
+                issues.append(.init(message: "World area \(area.id) displayName must not be blank"))
+            }
+            if isBlank(area.biome) {
+                issues.append(.init(message: "World area \(area.id) biome must not be blank"))
+            }
+            if isBlank(area.mapPath) {
+                issues.append(.init(message: "World area \(area.id) mapPath must not be blank"))
+            }
+            for duplicateExitID in duplicates(in: area.exits.map(\.id)) {
+                issues.append(.init(message: "Duplicate world exit id in \(area.id): \(duplicateExitID)"))
+            }
             if mapIndex[area.id] == nil {
                 issues.append(WorldGraphValidationIssue(message: "World area has no TMX map: \(area.id)"))
             }
             for exit in area.exits {
+                if isBlank(exit.id) {
+                    issues.append(.init(message: "World exit id in \(area.id) must not be blank"))
+                }
+                if isBlank(exit.targetAreaId) {
+                    issues.append(.init(message: "World exit \(area.id).\(exit.id) targetAreaId must not be blank"))
+                }
+                if isBlank(exit.targetSpawnId) {
+                    issues.append(.init(message: "World exit \(area.id).\(exit.id) targetSpawnId must not be blank"))
+                }
                 if !graphAreaIDSet.contains(exit.targetAreaId) {
                     issues.append(WorldGraphValidationIssue(message: "World exit \(area.id).\(exit.id) targets missing area: \(exit.targetAreaId)"))
                 }
@@ -137,6 +174,10 @@ public enum WorldGraphValidator {
         }
 
         return visited
+    }
+
+    private static func isBlank(_ value: String) -> Bool {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private static func duplicates(in values: [String]) -> [String] {

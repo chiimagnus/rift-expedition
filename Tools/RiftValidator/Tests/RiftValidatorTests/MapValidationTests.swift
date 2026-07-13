@@ -43,6 +43,79 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(result.reportMarkdown().contains("npc object 2 center is inside movement obstacle"))
     }
 
+    func testGameplayObjectsMustStayInsideMapBounds() throws {
+        let source = try String(contentsOf: fixture("valid-map"), encoding: .utf8)
+        let invalid = source.replacingOccurrences(
+            of: #"<object id="8" x="224" y="96">"#,
+            with: #"<object id="8" x="336" y="96">"#
+        )
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appending(path: "out-of-bounds-object.tmx")
+        try invalid.write(to: url, atomically: true, encoding: .utf8)
+
+        let result = try MapValidator.validate(url: url)
+
+        XCTAssertTrue(result.issues.contains {
+            $0.message == "item object 8 is outside map bounds"
+        })
+    }
+
+    func testSpawnMustNotOverlapExit() throws {
+        let source = try String(contentsOf: fixture("valid-map"), encoding: .utf8)
+        let invalid = source.replacingOccurrences(
+            of: #"<object id="5" x="288" y="160">"#,
+            with: #"<object id="5" x="16" y="16" width="64" height="64">"#
+        )
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appending(path: "spawn-exit-overlap.tmx")
+        try invalid.write(to: url, atomically: true, encoding: .utf8)
+
+        let result = try MapValidator.validate(url: url)
+
+        XCTAssertTrue(result.issues.contains {
+            $0.message == "spawn object 1 overlaps exit object 5"
+        })
+    }
+
+    func testEverySpawnMustReachTheMapExit() throws {
+        var source = try String(contentsOf: fixture("valid-map"), encoding: .utf8)
+        source = source.replacingOccurrences(
+            of: "    </object>\n  </objectgroup>\n  <objectgroup name=\"npc\">",
+            with: "    </object>\n    <object id=\"9\" x=\"256\" y=\"32\">\n      <properties><property name=\"id\" value=\"isolated\"/></properties>\n    </object>\n  </objectgroup>\n  <objectgroup name=\"npc\">"
+        )
+        source = source.replacingOccurrences(
+            of: #"<object id="5" x="288" y="160">"#,
+            with: #"<object id="5" x="64" y="160">"#
+        )
+        source = source.replacingOccurrences(
+            of: #"<object id="6" x="96" y="96" width="64" height="64">"#,
+            with: #"<object id="6" x="144" y="0" width="32" height="320">"#
+        )
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appending(path: "isolated-spawn.tmx")
+        try source.write(to: url, atomically: true, encoding: .utf8)
+
+        let result = try MapValidator.validate(url: url)
+
+        XCTAssertFalse(result.isValid)
+        XCTAssertTrue(
+            result.reportMarkdown().contains("Unreachable exit valid-map from spawn isolated"),
+            result.reportMarkdown()
+        )
+    }
+
     func testCrossAreaExitCanTargetSpawnInAnotherMap() throws {
         let results = try MapValidator.validate(urls: [
             fixture("cross-a"),
@@ -185,6 +258,41 @@ final class MapValidationTests: XCTestCase {
 
         XCTAssertTrue(result.issues.contains { $0.message == "Duplicate TMX map area id: duplicate" })
         XCTAssertTrue(result.issues.contains { $0.message == "Duplicate world area id: duplicate" })
+    }
+
+    func testWorldGraphRejectsBlankMetadataAndDuplicateExitIDs() {
+        let graph = ChapterWorldGraph(
+            id: " ",
+            title: " ",
+            startAreaId: " ",
+            startSpawnId: " ",
+            areas: [
+                ChapterWorldArea(
+                    id: "area",
+                    displayName: " ",
+                    biome: " ",
+                    mapPath: " ",
+                    exits: [
+                        ChapterWorldExit(id: "same", targetAreaId: " ", targetSpawnId: " "),
+                        ChapterWorldExit(id: "same", targetAreaId: "missing", targetSpawnId: "entry")
+                    ]
+                )
+            ]
+        )
+
+        let result = WorldGraphValidator.validate(graph, maps: [map("area", spawns: ["entry"])])
+        let messages = Set(result.issues.map(\.message))
+
+        XCTAssertTrue(messages.contains("World id must not be blank"))
+        XCTAssertTrue(messages.contains("World title must not be blank"))
+        XCTAssertTrue(messages.contains("World startAreaId must not be blank"))
+        XCTAssertTrue(messages.contains("World startSpawnId must not be blank"))
+        XCTAssertTrue(messages.contains("World area area displayName must not be blank"))
+        XCTAssertTrue(messages.contains("World area area biome must not be blank"))
+        XCTAssertTrue(messages.contains("World area area mapPath must not be blank"))
+        XCTAssertTrue(messages.contains("Duplicate world exit id in area: same"))
+        XCTAssertTrue(messages.contains("World exit area.same targetAreaId must not be blank"))
+        XCTAssertTrue(messages.contains("World exit area.same targetSpawnId must not be blank"))
     }
 
     func testWorldGraphDetectsDisconnectedArea() {
@@ -330,6 +438,33 @@ final class MapValidationTests: XCTestCase {
         try "{ malformed".write(to: dataRoot.appending(path: "npcs.json"), atomically: true, encoding: .utf8)
 
         XCTAssertThrowsError(try MapReferenceValidator.validateIfPresent(resourcesRoot: root, maps: []))
+    }
+
+    func testMapReferenceValidationRejectsBlankAndDuplicateNPCMetadata() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let dataRoot = root.appending(path: "Data")
+        try FileManager.default.createDirectory(at: dataRoot, withIntermediateDirectories: true)
+        try "[]".write(to: dataRoot.appending(path: "encounters.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "items.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "dialogs.json"), atomically: true, encoding: .utf8)
+        try #"""
+        [
+          {"id":" " ,"displayName":"Blank id"},
+          {"id":"mayor","displayName":" "},
+          {"id":"guard","displayName":"Guard"},
+          {"id":"guard","displayName":"Guard Copy"}
+        ]
+        """#.write(to: dataRoot.appending(path: "npcs.json"), atomically: true, encoding: .utf8)
+
+        let result = try XCTUnwrap(try MapReferenceValidator.validateIfPresent(resourcesRoot: root, maps: []))
+        let messages = Set(result.issues.map(\.message))
+
+        XCTAssertTrue(messages.contains("NPC id must not be blank"))
+        XCTAssertTrue(messages.contains("NPC mayor displayName must not be blank"))
+        XCTAssertTrue(messages.contains("Duplicate NPC id: guard"))
     }
 
     func testMapReferenceValidationRejectsUnknownAndEmptyTriggerActions() throws {

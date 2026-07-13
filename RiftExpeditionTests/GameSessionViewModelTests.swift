@@ -57,6 +57,22 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertTrue(session.contentLoadErrorMessage?.contains("重复的NPC ID：mayor") == true)
     }
 
+    func testBlankDisplayMetadataIsRejected() {
+        XCTAssertThrowsError(try GameSessionViewModel.uniqueDisplayNames(
+            [SessionDisplayRecord(id: " ", displayName: "村长")],
+            kind: "NPC"
+        )) { error in
+            XCTAssertEqual(error as? SessionMetadataError, .blankID(kind: "NPC"))
+        }
+
+        XCTAssertThrowsError(try GameSessionViewModel.uniqueDisplayNames(
+            [SessionDisplayRecord(id: "mayor", displayName: " ")],
+            kind: "NPC"
+        )) { error in
+            XCTAssertEqual(error as? SessionMetadataError, .blankDisplayName(kind: "NPC", id: "mayor"))
+        }
+    }
+
     func testFailedExitTransitionKeepsCurrentMapStateAtomic() {
         let start = MapSpawn(tiledID: 1, id: "start", position: CGPoint(x: 16, y: 16))
         let brokenExit = MapExit(
@@ -87,6 +103,97 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.currentSpawnID, "start")
         XCTAssertEqual(session.appState, .exploration)
         XCTAssertTrue(session.statusText.contains("地图加载失败"))
+    }
+
+    func testSuccessfulAreaTransitionDefersDestinationTriggersUntilNextFrame() {
+        let sourceExit = MapExit(
+            tiledID: 2,
+            name: "to_riverside",
+            targetAreaID: "village_riverside",
+            targetSpawnID: "from_square",
+            frame: CGRect(x: 48, y: 48, width: 24, height: 24)
+        )
+        let destinationTrigger = MapTrigger(
+            tiledID: 9,
+            triggerID: "arrival_dialogue",
+            action: "dialogue:elder_intro",
+            frame: CGRect(x: 40, y: 40, width: 32, height: 32)
+        )
+        let destinationSpawn = MapSpawn(
+            tiledID: 3,
+            id: "from_square",
+            position: destinationTrigger.frame.center
+        )
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                if areaID == "village_square" {
+                    return testMapMetadata(
+                        areaID: areaID,
+                        spawns: [MapSpawn(tiledID: 1, id: "start", position: CGPoint(x: 16, y: 16))],
+                        exits: [sourceExit]
+                    )
+                }
+                return testMapMetadata(
+                    areaID: areaID,
+                    spawns: [destinationSpawn],
+                    triggers: [destinationTrigger]
+                )
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+        startTestParty(in: session)
+        session.explorationController.configureParty(session.party, at: sourceExit.frame.center)
+        let scene = GameScene(size: CGSize(width: 1, height: 1))
+
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+
+        XCTAssertEqual(session.currentAreaID, "village_riverside")
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertFalse(session.session.firedMapTriggerKeys.contains("village_riverside:9"))
+
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+
+        XCTAssertEqual(session.appState, .dialogue)
+        XCTAssertTrue(session.session.firedMapTriggerKeys.contains("village_riverside:9"))
+    }
+
+    func testUnreachableMapInteractionReportsFailureInsteadOfMovement() {
+        let trigger = MapTrigger(
+            tiledID: 7,
+            triggerID: "isolated_clue",
+            action: "dialogue:elder_intro",
+            frame: CGRect(x: 240, y: 104, width: 32, height: 32)
+        )
+        let wall = NavigationObstacle(
+            tiledID: 8,
+            frame: CGRect(x: 144, y: 0, width: 32, height: 240),
+            blocksMovement: true,
+            blocksSight: true
+        )
+        let start = MapSpawn(tiledID: 1, id: "start", position: CGPoint(x: 80, y: 120))
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                testMapMetadata(
+                    areaID: areaID,
+                    spawns: [start],
+                    navObstacles: [wall],
+                    triggers: [trigger]
+                )
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+        startTestParty(in: session)
+
+        session.gameScene(
+            GameScene(size: CGSize(width: 1, height: 1)),
+            didClickWorld: trigger.frame.center
+        )
+
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertEqual(session.statusText, "无法接近 线索。")
+        XCTAssertFalse(session.session.firedMapTriggerKeys.contains("village_square:7"))
     }
 
     func testMissingDialogueMapTriggerRemainsRetryable() {
@@ -137,6 +244,62 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertTrue(session.session.firedMapTriggerKeys.contains("village_square:8"))
         XCTAssertEqual(session.appState, .dialogue)
         XCTAssertEqual(session.dialogViewModel.activeDialog?.id, "elder_intro")
+    }
+
+    func testChapterCompleteTriggerIsPersistedInCompletionAutosave() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let trigger = MapTrigger(
+            tiledID: 9,
+            triggerID: "chapter_complete",
+            action: "chapterComplete",
+            frame: CGRect(x: 40, y: 40, width: 32, height: 32)
+        )
+        let start = MapSpawn(tiledID: 1, id: "start", position: trigger.frame.center)
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            saveGameStore: store,
+            mapMetadataLoader: { areaID, _ in
+                testMapMetadata(areaID: areaID, spawns: [start], triggers: [trigger])
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+        startTestParty(in: session)
+        session.explorationController.configureParty(session.party, at: trigger.frame.center)
+
+        session.gameScene(GameScene(size: CGSize(width: 1, height: 1)), didClickWorld: trigger.frame.center)
+
+        let triggerKey = "village_square:9"
+        XCTAssertEqual(session.appState, .chapterComplete)
+        XCTAssertTrue(session.session.firedMapTriggerKeys.contains(triggerKey))
+        XCTAssertTrue(
+            store.readableAutosavesNewestFirst().contains { $0.save.firedMapTriggerKeys.contains(triggerKey) },
+            "章节完成自动存档必须包含已消费的章节完成触发器。"
+        )
+    }
+
+    func testReturnToMainMenuClearsPreviousRunState() {
+        let session = GameSessionViewModel(audioService: silentAudioService())
+        startTestParty(in: session)
+        var inventory = session.inventory
+        inventory.addItem(id: "minor_healing_draught")
+        session.inventory = inventory
+        XCTAssertEqual(session.partyCreationViewModel.selectedClassIDs.count, 2)
+        XCTAssertFalse(session.explorationController.members.isEmpty)
+
+        session.returnToMainMenu()
+
+        XCTAssertEqual(session.appState, .mainMenu)
+        XCTAssertTrue(session.party.isEmpty)
+        XCTAssertEqual(session.inventory, PartyInventory())
+        XCTAssertTrue(session.partyCreationViewModel.selectedClassIDs.isEmpty)
+        XCTAssertTrue(session.explorationController.members.isEmpty)
+        XCTAssertEqual(session.currentAreaID, "village_square")
+        XCTAssertEqual(session.currentSpawnID, "start")
     }
 
     func testAreaIDsMapToRegionalBGMCues() {
@@ -573,6 +736,43 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertTrue(session.statusText.contains("已返回主菜单"))
     }
 
+    func testBattleVictoryRestoresPartyActionPointsBeforeAutosave() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(
+            saveGameStore: store,
+            audioService: silentAudioService()
+        )
+        startTestParty(in: session)
+        try FileManager.default.removeItem(at: store.fileURL(for: .auto(1)))
+
+        var exhaustedParty = session.party
+        exhaustedParty[0].stats.actionPoints = 0
+        exhaustedParty[1].stats.actionPoints = 1
+        exhaustedParty[0].stats.health -= 1
+        session.battleViewModel = BattleViewModel(
+            state: BattleState(actors: exhaustedParty + [testEnemy(health: 0)]),
+            skills: [],
+            inventory: session.inventory
+        )
+        session.appState = .battle
+
+        session.finishBattle()
+
+        XCTAssertTrue(session.party.allSatisfy {
+            $0.stats.actionPoints == $0.stats.maxActionPoints
+        })
+        let autosave = try store.read(.auto(1))
+        XCTAssertTrue(autosave.party.allSatisfy {
+            $0.stats.actionPoints == $0.stats.maxActionPoints
+        })
+        XCTAssertEqual(autosave.party[0].stats.health, exhaustedParty[0].stats.health)
+    }
+
     func testEncounterVictoryPersistsAcrossAreaReloadAndManualLoad() throws {
         let directory = URL.temporaryDirectory
             .appending(path: "RiftExpeditionTests")
@@ -617,6 +817,35 @@ final class GameSessionViewModelTests: XCTestCase {
         loaded.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(loaded.appState, .exploration)
         XCTAssertNil(loaded.battleViewModel)
+    }
+
+    func testManualLoadBuildsEncounterServiceFromLoadedResolvedKeys() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store, audioService: silentAudioService())
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        startTestParty(in: session)
+        try move(session, through: scene, from: "village_square", to: "village_outskirts")
+
+        let trigger = try encounterTrigger(in: "village_outskirts")
+        let resolvedKey = "village_outskirts:\(trigger.tiledID)"
+        session.session.resolvedEncounterKeys = [resolvedKey]
+        session.openSaveLoad()
+        session.saveLoadViewModel?.saveManual(slot: .manual(1))
+
+        session.session.resolvedEncounterKeys = []
+        session.saveLoadViewModel?.load(slot: .manual(1))
+        XCTAssertTrue(session.session.resolvedEncounterKeys.contains(resolvedKey))
+
+        session.explorationController.configureParty(session.party, at: trigger.center)
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertNil(session.battleViewModel)
     }
 
     func testFailedBattleCreationDoesNotConsumeEncounterTrigger() throws {
@@ -695,6 +924,40 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertFalse(presentation.shows(item: MapItem(tiledID: 11, itemID: "item", position: .zero)))
         XCTAssertFalse(presentation.shows(trigger: MapTrigger(tiledID: 12, triggerID: "trigger", action: "chapterComplete", frame: .zero)))
         XCTAssertFalse(presentation.shows(encounter: MapEncounterTrigger(tiledID: 13, encounterID: "encounter", frame: .zero, radius: 0)))
+    }
+
+    func testLoadingCompletedMainQuestSaveRestoresChapterCompleteState() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let source = GameSessionViewModel(
+            saveGameStore: store,
+            audioService: silentAudioService()
+        )
+        startTestParty(in: source)
+        let save = SaveGame(
+            currentAreaID: source.currentAreaID,
+            currentSpawnID: source.currentSpawnID,
+            party: source.party,
+            inventory: source.inventory,
+            questState: QuestState(statuses: ["blood_debt": .completed])
+        )
+        try store.write(save, to: .manual(1), safety: .safe)
+
+        let restoredAudio = silentAudioService()
+        let restored = GameSessionViewModel(
+            saveGameStore: store,
+            audioService: restoredAudio
+        )
+        restored.openSaveLoad()
+        restored.saveLoadViewModel?.load(slot: .manual(1))
+
+        XCTAssertEqual(restored.appState, .chapterComplete)
+        XCTAssertEqual(restoredAudio.soundscapeState, .stopped)
+        XCTAssertEqual(restored.statusText, "已读取第一章完成存档。")
     }
 
     func testManualSavePersistsAcceptedQuestAndWorldProgress() throws {
@@ -853,6 +1116,7 @@ final class GameSessionViewModelTests: XCTestCase {
         areaID: String,
         spawns: [MapSpawn],
         exits: [MapExit] = [],
+        navObstacles: [NavigationObstacle] = [],
         triggers: [MapTrigger] = []
     ) -> TiledMapMetadata {
         TiledMapMetadata(
@@ -860,7 +1124,7 @@ final class GameSessionViewModelTests: XCTestCase {
             mapFrame: CGRect(x: 0, y: 0, width: 320, height: 240),
             spawns: spawns,
             npcs: [],
-            navObstacles: [],
+            navObstacles: navObstacles,
             encounterTriggers: [],
             triggers: triggers,
             exits: exits,

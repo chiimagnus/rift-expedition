@@ -166,6 +166,25 @@ public enum MapValidator {
             }
         }
 
+        if map.width <= 0 || map.height <= 0 {
+            issues.append(MapValidationIssue(message: "Map dimensions must be positive"))
+        }
+
+        for layerName in requiredProperties.keys.sorted() {
+            for object in map.objectGroups[layerName, default: []] {
+                let hasInvalidSize = object.width < 0 || object.height < 0
+                let isOutsideBounds = object.x < 0
+                    || object.y < 0
+                    || object.x + object.width > map.width
+                    || object.y + object.height > map.height
+                if hasInvalidSize || isOutsideBounds {
+                    issues.append(MapValidationIssue(
+                        message: "\(layerName) object \(object.tiledID) is outside map bounds"
+                    ))
+                }
+            }
+        }
+
         for npc in map.objectGroups["npc", default: []] where npc.width <= 0 || npc.height <= 0 {
             issues.append(MapValidationIssue(message: "npc object \(npc.tiledID) missing hitbox size: draw it as a rectangle with width/height"))
         }
@@ -180,9 +199,15 @@ public enum MapValidator {
 
         let movementObstacles = map.objectGroups["navObstacle", default: []]
             .filter { $0.properties["blocksMovement"] == "true" }
+        let exits = map.objectGroups["exit", default: []]
         for spawn in map.objectGroups["spawn", default: []] {
             if movementObstacles.contains(where: { $0.contains(pointX: spawn.x, y: spawn.y) }) {
                 issues.append(MapValidationIssue(message: "spawn object \(spawn.tiledID) is inside movement obstacle"))
+            }
+            for exit in exits where exit.contains(pointX: spawn.x, y: spawn.y) {
+                issues.append(MapValidationIssue(
+                    message: "spawn object \(spawn.tiledID) overlaps exit object \(exit.tiledID)"
+                ))
             }
         }
 
@@ -238,7 +263,7 @@ public enum MapValidator {
 
     private static func reachabilityIssues(in map: TiledMap) -> [MapValidationIssue] {
         let spawns = map.objectGroups["spawn", default: []]
-        guard let firstSpawn = spawns.first else { return [] }
+        guard !spawns.isEmpty else { return [] }
 
         let cellSize = 16.0
         let agentPadding = 8.0
@@ -280,40 +305,56 @@ public enum MapValidator {
             return nil
         }
 
-        guard let start = nearestOpen(to: gridPoint(x: firstSpawn.x, y: firstSpawn.y)) else {
-            return [MapValidationIssue(message: "No navigable cell near first spawn")]
-        }
-
-        var visited: Set<GridPoint> = [start]
-        var queue = [start]
-        var readIndex = 0
-        let directions = [GridPoint(x: 1, y: 0), GridPoint(x: -1, y: 0), GridPoint(x: 0, y: 1), GridPoint(x: 0, y: -1)]
-        while readIndex < queue.count {
-            let current = queue[readIndex]
-            readIndex += 1
-            for direction in directions {
-                let next = GridPoint(x: current.x + direction.x, y: current.y + direction.y)
-                guard next.x >= 0, next.y >= 0, next.x < columns, next.y < rows else { continue }
-                guard !isBlocked(next), visited.insert(next).inserted else { continue }
-                queue.append(next)
+        func reachableCells(from start: GridPoint) -> Set<GridPoint> {
+            var visited: Set<GridPoint> = [start]
+            var queue = [start]
+            var readIndex = 0
+            let directions = [
+                GridPoint(x: 1, y: 0),
+                GridPoint(x: -1, y: 0),
+                GridPoint(x: 0, y: 1),
+                GridPoint(x: 0, y: -1)
+            ]
+            while readIndex < queue.count {
+                let current = queue[readIndex]
+                readIndex += 1
+                for direction in directions {
+                    let next = GridPoint(x: current.x + direction.x, y: current.y + direction.y)
+                    guard next.x >= 0, next.y >= 0, next.x < columns, next.y < rows else { continue }
+                    guard !isBlocked(next), visited.insert(next).inserted else { continue }
+                    queue.append(next)
+                }
             }
+            return visited
         }
 
-        var issues: [MapValidationIssue] = []
-        let spawnTargets = spawns.dropFirst().map { spawn in
-            (label: "spawn \(spawn.properties["id"] ?? String(spawn.tiledID))", x: spawn.x, y: spawn.y)
-        }
-        let exitTargets = map.objectGroups["exit", default: []].map { exit in
+        let exits = map.objectGroups["exit", default: []].map { exit in
             (
                 label: "exit \(exit.properties["targetAreaId"] ?? String(exit.tiledID))",
                 x: exit.x + exit.width / 2,
                 y: exit.y + exit.height / 2
             )
         }
-        for target in spawnTargets + exitTargets {
-            guard let openTarget = nearestOpen(to: gridPoint(x: target.x, y: target.y)), visited.contains(openTarget) else {
-                issues.append(MapValidationIssue(message: "Unreachable \(target.label) from first spawn"))
+        var issues: [MapValidationIssue] = []
+
+        for sourceSpawn in spawns {
+            let sourceLabel = "spawn \(sourceSpawn.properties["id"] ?? String(sourceSpawn.tiledID))"
+            guard let start = nearestOpen(to: gridPoint(x: sourceSpawn.x, y: sourceSpawn.y)) else {
+                issues.append(MapValidationIssue(message: "No navigable cell near \(sourceLabel)"))
                 continue
+            }
+            let visited = reachableCells(from: start)
+            let otherSpawns = spawns.filter { $0.tiledID != sourceSpawn.tiledID }.map { spawn in
+                (label: "spawn \(spawn.properties["id"] ?? String(spawn.tiledID))", x: spawn.x, y: spawn.y)
+            }
+
+            for target in otherSpawns + exits {
+                guard let openTarget = nearestOpen(to: gridPoint(x: target.x, y: target.y)),
+                      visited.contains(openTarget)
+                else {
+                    issues.append(MapValidationIssue(message: "Unreachable \(target.label) from \(sourceLabel)"))
+                    continue
+                }
             }
         }
         return issues

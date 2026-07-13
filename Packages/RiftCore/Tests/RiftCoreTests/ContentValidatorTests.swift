@@ -36,6 +36,8 @@ final class ContentValidatorTests: XCTestCase {
                 ItemDefinition(
                     id: "minor_healing_draught",
                     displayName: "止血药剂",
+                    description: "测试物品说明",
+                    rarity: .common,
                     kind: .consumable,
                     skillID: "missing_heal"
                 )
@@ -148,6 +150,7 @@ final class ContentValidatorTests: XCTestCase {
             SkillDefinition(
                 id: "negative_ap",
                 displayName: "负 AP",
+                description: "测试技能说明",
                 actionPointCost: -1,
                 range: 1,
                 target: .enemy,
@@ -158,6 +161,7 @@ final class ContentValidatorTests: XCTestCase {
             SkillDefinition(
                 id: "negative_range",
                 displayName: "负射程",
+                description: "测试技能说明",
                 actionPointCost: 1,
                 range: -1,
                 target: .enemy,
@@ -168,6 +172,7 @@ final class ContentValidatorTests: XCTestCase {
             SkillDefinition(
                 id: "empty_effects",
                 displayName: "空效果",
+                description: "测试技能说明",
                 actionPointCost: 1,
                 range: 1,
                 target: .enemy,
@@ -178,6 +183,7 @@ final class ContentValidatorTests: XCTestCase {
             SkillDefinition(
                 id: "unknown_status",
                 displayName: "未知状态",
+                description: "测试技能说明",
                 actionPointCost: 1,
                 range: 1,
                 target: .enemy,
@@ -188,6 +194,7 @@ final class ContentValidatorTests: XCTestCase {
             SkillDefinition(
                 id: "unknown_surface",
                 displayName: "未知地表",
+                description: "测试技能说明",
                 actionPointCost: 1,
                 range: 1,
                 target: .enemy,
@@ -214,11 +221,47 @@ final class ContentValidatorTests: XCTestCase {
         }
     }
 
+    func testSkillTargetAndAllyConfigurationMustAgree() {
+        let skills = [
+            SkillDefinition(
+                id: "enemy_friendly_fire",
+                displayName: "错误敌方技能",
+                description: "测试技能说明",
+                actionPointCost: 1,
+                range: 1,
+                target: .enemy,
+                affectsAllies: true,
+                canBeDodged: false,
+                effects: [.damage(1)]
+            ),
+            SkillDefinition(
+                id: "ally_without_permission",
+                displayName: "错误友军技能",
+                description: "测试技能说明",
+                actionPointCost: 1,
+                range: 1,
+                target: .ally,
+                affectsAllies: false,
+                canBeDodged: false,
+                effects: [.heal(1)]
+            )
+        ]
+
+        XCTAssertThrowsError(try ContentValidator.validate(
+            ContentCatalog(classes: [], skills: skills, items: [], encounters: [], quests: [], dialogues: [])
+        )) { error in
+            let message = String(describing: error)
+            XCTAssertTrue(message.contains("enemy targets forbid affectsAllies"))
+            XCTAssertTrue(message.contains("selfOnly and ally targets require affectsAllies"))
+        }
+    }
+
     func testNonPositiveDamageAndHealingAreRejected() {
         let skills = [
             SkillDefinition(
                 id: "zero_damage",
                 displayName: "零伤害",
+                description: "测试技能说明",
                 actionPointCost: 1,
                 range: 1,
                 target: .enemy,
@@ -229,6 +272,7 @@ final class ContentValidatorTests: XCTestCase {
             SkillDefinition(
                 id: "negative_heal",
                 displayName: "负治疗",
+                description: "测试技能说明",
                 actionPointCost: 1,
                 range: 1,
                 target: .ally,
@@ -300,7 +344,7 @@ final class ContentValidatorTests: XCTestCase {
         let catalog = ContentCatalog(
             classes: [],
             skills: [],
-            items: [ItemDefinition(id: "ledger", displayName: "账册", kind: .quest)],
+            items: [ItemDefinition(id: "ledger", displayName: "账册", description: "测试物品说明", rarity: .common, kind: .quest)],
             encounters: [],
             quests: [quest],
             dialogues: [
@@ -330,6 +374,7 @@ final class ContentValidatorTests: XCTestCase {
         let skill = SkillDefinition(
             id: "slash",
             displayName: "斩击",
+            description: " ",
             actionPointCost: 1,
             range: 1,
             target: .enemy,
@@ -356,13 +401,16 @@ final class ContentValidatorTests: XCTestCase {
                 ClassDefinition(
                     id: " ",
                     displayName: " ",
+                    title: " ",
+                    combatRole: " ",
+                    description: " ",
                     initialStats: stats,
                     initialSkillIDs: ["slash"],
                     defaultEquipment: EquipmentLoadout()
                 )
             ],
             skills: [skill],
-            items: [ItemDefinition(id: " ", displayName: " ", kind: .quest)],
+            items: [ItemDefinition(id: " ", displayName: " ", description: " ", rarity: .common, kind: .quest)],
             encounters: [],
             quests: [quest],
             dialogues: [DialogDefinition(id: " ", speakerName: " ", lines: [" "], options: [])]
@@ -371,7 +419,8 @@ final class ContentValidatorTests: XCTestCase {
         let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
         for expected in [
             "Invalid class", "id must not be blank", "displayName must not be blank",
-            "Invalid item", "Invalid quest", "chapterID must not be blank",
+            "title must not be blank", "combatRole must not be blank", "description must not be blank",
+            "Invalid skill", "Invalid item", "Invalid quest", "chapterID must not be blank",
             "title must not be blank", "summary must not be blank",
             "locationHint must not be blank", "objectives must not contain blank values",
             "Invalid dialogue", "speakerName must not be blank", "line 0 must not be blank",
@@ -379,6 +428,58 @@ final class ContentValidatorTests: XCTestCase {
         ] {
             XCTAssertTrue(message.contains(expected), expected)
         }
+    }
+
+    func testInvalidClassInitialStatsAreRejected() {
+        let invalidStats = Stats(
+            maxHealth: 0,
+            health: 1,
+            attack: -1,
+            defense: 1,
+            evasion: 1,
+            magic: 1,
+            maxActionPoints: 0,
+            actionPoints: 1
+        )
+        let catalog = ContentCatalog(
+            classes: [
+                ClassDefinition(
+                    id: "broken",
+                    displayName: "错误职业",
+                    title: "错误",
+                    combatRole: "测试",
+                    description: "测试错误属性。",
+                    initialStats: invalidStats,
+                    initialSkillIDs: ["slash"],
+                    defaultEquipment: EquipmentLoadout()
+                )
+            ],
+            skills: [
+                SkillDefinition(
+                    id: "slash",
+                    displayName: "斩击",
+                    description: "测试技能说明",
+                    actionPointCost: 1,
+                    range: 1,
+                    target: .enemy,
+                    affectsAllies: false,
+                    canBeDodged: false,
+                    effects: [.damage(1)]
+                )
+            ],
+            items: [],
+            encounters: [],
+            quests: [],
+            dialogues: []
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+
+        XCTAssertTrue(message.contains("initialStats.maxHealth must be positive"))
+        XCTAssertTrue(message.contains("initialStats.health must be within 1...maxHealth"))
+        XCTAssertTrue(message.contains("initialStats combat values must be non-negative"))
+        XCTAssertTrue(message.contains("initialStats.maxActionPoints must be positive"))
+        XCTAssertTrue(message.contains("initialStats.actionPoints must be within 0...maxActionPoints"))
     }
 
     func testEquipmentIdentityAndDefaultSlotMustMatch() {
@@ -395,6 +496,7 @@ final class ContentValidatorTests: XCTestCase {
         let skill = SkillDefinition(
             id: "slash",
             displayName: "斩击",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 1,
             target: .enemy,
@@ -405,6 +507,8 @@ final class ContentValidatorTests: XCTestCase {
         let item = ItemDefinition(
             id: "training_sword",
             displayName: "训练剑",
+            description: "测试物品说明",
+            rarity: .common,
             kind: .equipment,
             equipment: EquipmentDefinition(
                 id: "mismatched_internal_id",
@@ -417,6 +521,9 @@ final class ContentValidatorTests: XCTestCase {
                 ClassDefinition(
                     id: "warrior",
                     displayName: "战士",
+                    title: "测试职业",
+                    combatRole: "测试定位",
+                    description: "测试职业说明",
                     initialStats: stats,
                     initialSkillIDs: ["slash"],
                     defaultEquipment: EquipmentLoadout(weaponID: "training_sword")
@@ -434,6 +541,34 @@ final class ContentValidatorTests: XCTestCase {
         XCTAssertTrue(message.contains("defaultEquipment.weaponID expected weapon, got armor"))
     }
 
+    func testNegativeEquipmentModifiersAreRejected() {
+        let item = ItemDefinition(
+            id: "cursed_blade",
+            displayName: "错误武器",
+            description: "测试错误装备。",
+            rarity: .common,
+            kind: .equipment,
+            equipment: EquipmentDefinition(
+                id: "cursed_blade",
+                displayName: "错误武器",
+                slot: .weapon,
+                modifiers: StatModifiers(attack: -1)
+            )
+        )
+        let catalog = ContentCatalog(
+            classes: [],
+            skills: [],
+            items: [item],
+            encounters: [],
+            quests: [],
+            dialogues: []
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+
+        XCTAssertTrue(message.contains("equipment modifiers must be non-negative"))
+    }
+
     func testDuplicateSkillsObjectivesAndRewardsAreRejected() {
         let stats = Stats(
             maxHealth: 10,
@@ -448,6 +583,7 @@ final class ContentValidatorTests: XCTestCase {
         let skill = SkillDefinition(
             id: "slash",
             displayName: "斩击",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 1,
             target: .enemy,
@@ -475,13 +611,16 @@ final class ContentValidatorTests: XCTestCase {
                 ClassDefinition(
                     id: "warrior",
                     displayName: "战士",
+                    title: "测试职业",
+                    combatRole: "测试定位",
+                    description: "测试职业说明",
                     initialStats: stats,
                     initialSkillIDs: ["slash", "slash"],
                     defaultEquipment: EquipmentLoadout()
                 )
             ],
             skills: [skill],
-            items: [ItemDefinition(id: "reward", displayName: "奖励", kind: .quest)],
+            items: [ItemDefinition(id: "reward", displayName: "奖励", description: "测试物品说明", rarity: .common, kind: .quest)],
             encounters: [],
             quests: [quest],
             dialogues: [
@@ -501,6 +640,7 @@ final class ContentValidatorTests: XCTestCase {
         let skill = SkillDefinition(
             id: "heal",
             displayName: "治疗",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 1,
             target: .ally,
@@ -513,9 +653,9 @@ final class ContentValidatorTests: XCTestCase {
             classes: [],
             skills: [skill],
             items: [
-                ItemDefinition(id: "bad_equipment", displayName: "错误装备", kind: .equipment, equipment: equipmentPayload, skillID: "heal"),
-                ItemDefinition(id: "bad_consumable", displayName: "错误消耗品", kind: .consumable, equipment: equipmentPayload, skillID: "heal"),
-                ItemDefinition(id: "bad_quest", displayName: "错误任务物", kind: .quest, equipment: equipmentPayload, skillID: "heal")
+                ItemDefinition(id: "bad_equipment", displayName: "错误装备", description: "测试物品说明", rarity: .common, kind: .equipment, equipment: equipmentPayload, skillID: "heal"),
+                ItemDefinition(id: "bad_consumable", displayName: "错误消耗品", description: "测试物品说明", rarity: .common, kind: .consumable, equipment: equipmentPayload, skillID: "heal"),
+                ItemDefinition(id: "bad_quest", displayName: "错误任务物", description: "测试物品说明", rarity: .common, kind: .quest, equipment: equipmentPayload, skillID: "heal")
             ],
             encounters: [],
             quests: [],

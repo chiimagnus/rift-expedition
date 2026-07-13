@@ -73,8 +73,8 @@ public enum ItemRarity: String, Codable, CaseIterable, Sendable {
 public struct ItemDefinition: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var displayName: String
-    public var description: String?
-    public var rarity: ItemRarity?
+    public var description: String
+    public var rarity: ItemRarity
     public var kind: ItemKind
     public var equipment: EquipmentDefinition?
     public var skillID: String?
@@ -82,8 +82,8 @@ public struct ItemDefinition: Codable, Equatable, Identifiable, Sendable {
     public init(
         id: String,
         displayName: String,
-        description: String? = nil,
-        rarity: ItemRarity? = nil,
+        description: String,
+        rarity: ItemRarity,
         kind: ItemKind,
         equipment: EquipmentDefinition? = nil,
         skillID: String? = nil

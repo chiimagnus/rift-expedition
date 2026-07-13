@@ -12,10 +12,15 @@
       "maxActionPoints": 4,
       "actionPoints": 4
     },
-    "initialSkillIDs": ["missing_skill"],
+    "initialSkillIDs": [
+      "missing_skill"
+    ],
     "defaultEquipment": {
       "weaponID": "rusted_sword",
       "armorID": "padded_armor"
-    }
+    },
+    "title": "测试职业",
+    "combatRole": "测试定位",
+    "description": "测试职业说明"
   }
 ]

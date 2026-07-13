@@ -8,11 +8,13 @@ public enum EnemyAIAction: Equatable, Sendable {
 public struct EnemyAIContext: Equatable, Sendable {
     public var skillsByID: [String: SkillDefinition]
     public var distancesByTargetID: [String: Double]
+    public var lineOfSightByTargetID: [String: Bool]
     public var movementDistance: Double
 
     public init(
         skills: [SkillDefinition],
-        distancesByTargetID: [String: Double] = [:],
+        distancesByTargetID: [String: Double],
+        lineOfSightByTargetID: [String: Bool],
         movementDistance: Double = APRules.movementDistancePerAPStartingValue
     ) {
         var indexedSkills: [String: SkillDefinition] = [:]
@@ -21,6 +23,7 @@ public struct EnemyAIContext: Equatable, Sendable {
         }
         self.skillsByID = indexedSkills
         self.distancesByTargetID = distancesByTargetID
+        self.lineOfSightByTargetID = lineOfSightByTargetID
         self.movementDistance = movementDistance
     }
 
@@ -30,6 +33,10 @@ public struct EnemyAIContext: Equatable, Sendable {
 
     public func distance(to actorID: String) -> Double {
         distancesByTargetID[actorID] ?? .greatestFiniteMagnitude
+    }
+
+    public func hasLineOfSight(to actorID: String) -> Bool {
+        lineOfSightByTargetID[actorID] == true
     }
 }
 
@@ -63,7 +70,9 @@ public enum EnemyAI {
         guard let target = closestOpponent(to: actor, in: state, context: context) else {
             return .endTurn
         }
-        if let skill = usableSkills(for: actor, context: context).first(where: { context.distance(to: target.id) <= $0.range }) {
+        if let skill = usableSkills(for: actor, context: context).first(where: {
+            canUse($0, on: target.id, context: context)
+        }) {
             return .useSkill(skillID: skill.id, targetID: target.id)
         }
         return movementAction(.moveToward(targetID: target.id, distance: context.movementDistance), actor: actor)
@@ -83,7 +92,7 @@ public enum EnemyAI {
         }
 
         let skills = usableSkills(for: actor, context: context).sorted { $0.range > $1.range }
-        if let skill = skills.first(where: { context.distance(to: target.id) <= $0.range }) {
+        if let skill = skills.first(where: { canUse($0, on: target.id, context: context) }) {
             return .useSkill(skillID: skill.id, targetID: target.id)
         }
         return movementAction(.moveToward(targetID: target.id, distance: context.movementDistance), actor: actor)
@@ -100,7 +109,7 @@ public enum EnemyAI {
             .sorted { $0.actionPointCost > $1.actionPointCost }
 
         for skill in elementalSkills {
-            if let target = targets.first(where: { context.distance(to: $0.id) <= skill.range }) {
+            if let target = targets.first(where: { canUse(skill, on: $0.id, context: context) }) {
                 return .useSkill(skillID: skill.id, targetID: target.id)
             }
         }
@@ -122,7 +131,7 @@ public enum EnemyAI {
         }
 
         let skills = usableSkills(for: actor, context: context).sorted { $0.actionPointCost > $1.actionPointCost }
-        if let skill = skills.first(where: { context.distance(to: target.id) <= $0.range }) {
+        if let skill = skills.first(where: { canUse($0, on: target.id, context: context) }) {
             return .useSkill(skillID: skill.id, targetID: target.id)
         }
         return movementAction(.moveToward(targetID: target.id, distance: context.movementDistance), actor: actor)
@@ -144,6 +153,14 @@ public enum EnemyAI {
         actor.skillIDs
             .compactMap { context.skill(id: $0) }
             .filter { $0.target == .enemy && $0.actionPointCost <= actor.stats.actionPoints }
+    }
+
+    private static func canUse(
+        _ skill: SkillDefinition,
+        on targetID: String,
+        context: EnemyAIContext
+    ) -> Bool {
+        context.distance(to: targetID) <= skill.range && context.hasLineOfSight(to: targetID)
     }
 
     private static func movementAction(_ action: EnemyAIAction, actor: Actor) -> EnemyAIAction {

@@ -11,7 +11,8 @@ final class EnemyAITests: XCTestCase {
         ])
         let context = EnemyAIContext(
             skills: [skill(id: "bite", range: 1.2)],
-            distancesByTargetID: ["far_hero": 8.0, "near_hero": 4.0]
+            distancesByTargetID: ["far_hero": 8.0, "near_hero": 4.0],
+            lineOfSightByTargetID: ["far_hero": true, "near_hero": true]
         )
 
         let action = EnemyAI.chooseAction(for: actor, tendency: .melee, in: state, context: context)
@@ -27,7 +28,8 @@ final class EnemyAITests: XCTestCase {
         ])
         let context = EnemyAIContext(
             skills: [skill(id: "shot", range: 6.0)],
-            distancesByTargetID: ["hero": 1.5]
+            distancesByTargetID: ["hero": 1.5],
+            lineOfSightByTargetID: ["hero": true]
         )
 
         let action = EnemyAI.chooseAction(for: actor, tendency: .archer, in: state, context: context)
@@ -46,7 +48,8 @@ final class EnemyAITests: XCTestCase {
                 skill(id: "slash", range: 2.0, canBeDodged: true),
                 skill(id: "spark", range: 5.0, canBeDodged: false)
             ],
-            distancesByTargetID: ["hero": 4.0]
+            distancesByTargetID: ["hero": 4.0],
+            lineOfSightByTargetID: ["hero": true]
         )
 
         let action = EnemyAI.chooseAction(for: actor, tendency: .mage, in: state, context: context)
@@ -63,12 +66,33 @@ final class EnemyAITests: XCTestCase {
         ])
         let context = EnemyAIContext(
             skills: [skill(id: "backstab", actionPointCost: 3, range: 1.5)],
-            distancesByTargetID: ["healthy_hero": 1.0, "weak_hero": 1.2]
+            distancesByTargetID: ["healthy_hero": 1.0, "weak_hero": 1.2],
+            lineOfSightByTargetID: ["healthy_hero": true, "weak_hero": true]
         )
 
         let action = EnemyAI.chooseAction(for: actor, tendency: .rogue, in: state, context: context)
 
         XCTAssertEqual(action, .useSkill(skillID: "backstab", targetID: "weak_hero"))
+    }
+
+    func testBlockedLineOfSightPreventsSkillSelection() {
+        let actor = makeActor(id: "wolf", faction: .animal, skillIDs: ["bite"])
+        let state = BattleState(actors: [
+            actor,
+            makeActor(id: "hero", faction: .player)
+        ])
+        let context = EnemyAIContext(
+            skills: [skill(id: "bite", range: 2.0)],
+            distancesByTargetID: ["hero": 1.0],
+            lineOfSightByTargetID: ["hero": false]
+        )
+
+        let action = EnemyAI.chooseAction(for: actor, tendency: .melee, in: state, context: context)
+
+        XCTAssertEqual(
+            action,
+            .moveToward(targetID: "hero", distance: APRules.movementDistancePerAPStartingValue)
+        )
     }
 
     func testNoActionPointsEndsTurn() {
@@ -79,7 +103,8 @@ final class EnemyAITests: XCTestCase {
         ])
         let context = EnemyAIContext(
             skills: [skill(id: "bite", range: 1.2)],
-            distancesByTargetID: ["hero": 4.0]
+            distancesByTargetID: ["hero": 4.0],
+            lineOfSightByTargetID: ["hero": true]
         )
 
         let action = EnemyAI.chooseAction(for: actor, tendency: .melee, in: state, context: context)
@@ -135,6 +160,7 @@ final class EnemyAITests: XCTestCase {
         SkillDefinition(
             id: id,
             displayName: id,
+            description: "测试技能说明",
             actionPointCost: actionPointCost,
             range: range,
             target: .enemy,

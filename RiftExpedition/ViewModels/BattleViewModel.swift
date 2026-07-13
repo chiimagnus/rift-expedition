@@ -309,6 +309,10 @@ final class BattleViewModel {
             statusText = "当前不是玩家回合。"
             return
         }
+        guard actor.skillIDs.contains(id) else {
+            statusText = "当前角色尚未掌握该技能。"
+            return
+        }
         guard actor.stats.actionPoints >= skill.actionPointCost else {
             statusText = readableError(BattleActionError.insufficientActionPoints(
                 required: skill.actionPointCost,
@@ -343,7 +347,7 @@ final class BattleViewModel {
         }
 
         selectedAction = .consumable(id)
-        targetPrompt = "点击队友使用「\(item.displayName)」。"
+        targetPrompt = consumableTargetPrompt(itemName: item.displayName, skill: skill)
     }
 
     func handleWorldClick(_ point: CGPoint) {
@@ -389,13 +393,14 @@ final class BattleViewModel {
     private var selectedSkill: SkillDefinition? {
         switch selectedAction {
         case .move:
-            nil
+            return nil
         case .basicAttack:
-            activeSkills.first
+            return activeSkills.first
         case let .skill(id):
-            skillsByID[id]
+            guard let activeActor, activeActor.skillIDs.contains(id) else { return nil }
+            return skillsByID[id]
         case let .consumable(id):
-            consumableItem(id: id)?.skillID.flatMap { skillsByID[$0] }
+            return consumableItem(id: id)?.skillID.flatMap { skillsByID[$0] }
         }
     }
 
@@ -420,10 +425,12 @@ final class BattleViewModel {
                 context: EnemyAIContext(
                     skills: skillDefinitions,
                     distancesByTargetID: distances(from: actor),
+                    lineOfSightByTargetID: lineOfSight(from: actor),
                     movementDistance: APRules.movementDistancePerAPStartingValue
                 )
             )
             lastStatus = performEnemyAction(action, actor: actor)
+            guard state.outcome == .ongoing else { break }
 
             do {
                 try advanceTurn()
@@ -490,8 +497,8 @@ final class BattleViewModel {
             statusText = "背包中没有该消耗品。"
             return statusText
         }
-        guard isAllowedTarget(target, for: skill, caster: actor) else {
-            statusText = "该目标不能被当前行动影响。"
+        guard target.stats.health > 0 else {
+            statusText = "该目标已经无法行动。"
             return statusText
         }
         guard let casterPosition = actorPositions[actor.id], let targetPosition = actorPositions[targetID] else {
@@ -501,8 +508,7 @@ final class BattleViewModel {
 
         let context = TargetingContext(
             distance: battleDistance(from: casterPosition, to: targetPosition),
-            hasLineOfSight: hasLineOfSight(casterPosition, targetPosition),
-            isAlly: isAlly(target.faction, of: actor.faction)
+            hasLineOfSight: hasLineOfSight(casterPosition, targetPosition)
         )
         let beforeHealth = target.stats.health
         do {
@@ -532,7 +538,7 @@ final class BattleViewModel {
                 healing: healing,
                 targetWasDefeated: targetWasDefeated
             )
-            emitAudioCues(action: action, damage: damage)
+            emitAudioCues(action: action, damage: damage, healing: healing)
 
             if resolution.didDodge {
                 statusText = "\(target.displayName) 闪避了 \(label)。"
@@ -662,20 +668,24 @@ final class BattleViewModel {
     }
 
     private func canTarget(_ actor: Actor) -> Bool {
-        guard let activeActor, let skill = selectedSkill else { return false }
-        return isAllowedTarget(actor, for: skill, caster: activeActor)
-    }
-
-    private func isAllowedTarget(_ target: Actor, for skill: SkillDefinition, caster: Actor) -> Bool {
-        guard target.stats.health > 0 else { return false }
-        switch skill.target {
-        case .selfOnly:
-            return target.id == caster.id
-        case .ally:
-            return isAlly(target.faction, of: caster.faction)
-        case .enemy:
-            return isOpponent(target.faction, of: caster.faction)
+        guard actor.stats.health > 0,
+              let activeActor,
+              let skill = selectedSkill,
+              let casterPosition = actorPositions[activeActor.id],
+              let targetPosition = actorPositions[actor.id]
+        else {
+            return false
         }
+        let context = TargetingContext(
+            distance: battleDistance(from: casterPosition, to: targetPosition),
+            hasLineOfSight: hasLineOfSight(casterPosition, targetPosition)
+        )
+        return (try? TargetingRules.validate(
+            skill: skill,
+            caster: activeActor,
+            target: actor,
+            context: context
+        )) != nil
     }
 
     private func canSpend(actionPointCost: Int) -> Bool {
@@ -700,6 +710,17 @@ final class BattleViewModel {
                   let position = actorPositions[target.id]
             else { return }
             distances[target.id] = battleDistance(from: origin, to: position)
+        }
+    }
+
+    private func lineOfSight(from actor: Actor) -> [String: Bool] {
+        guard let origin = actorPositions[actor.id] else { return [:] }
+        return state.actors.reduce(into: [:]) { visibility, target in
+            guard target.id != actor.id,
+                  visibility[target.id] == nil,
+                  let position = actorPositions[target.id]
+            else { return }
+            visibility[target.id] = hasLineOfSight(origin, position)
         }
     }
 
@@ -829,32 +850,45 @@ final class BattleViewModel {
         skill: SkillDefinition,
         actorClassID: String?
     ) -> BattleEffectStyle {
+        if skill.effects.contains(where: { effect in
+            if case .heal = effect { return true }
+            return false
+        }) {
+            return .heal
+        }
+        if skill.effects.contains(where: { effect in
+            switch effect {
+            case let .createSurface(surfaceID, _):
+                return surfaceID == "poison"
+            case let .applyStatus(statusID, _):
+                return statusID == "poisoned"
+            default:
+                return false
+            }
+        }) {
+            return .poison
+        }
+        if skill.effects.contains(where: { effect in
+            switch effect {
+            case let .createSurface(surfaceID, _):
+                return surfaceID == "fire"
+            case let .applyStatus(statusID, _):
+                return statusID == "burning"
+            default:
+                return false
+            }
+        }) {
+            return .fire
+        }
+
         switch action {
         case .move:
             return .strike
-        case .consumable:
-            return .heal
         case .basicAttack:
             return skill.range > 3 ? .projectile : .strike
+        case .consumable:
+            return skill.target == .enemy || skill.range > 3 ? .projectile : .arcane
         case .skill:
-            if skill.effects.contains(where: { effect in
-                if case .heal = effect { return true }
-                return false
-            }) {
-                return .heal
-            }
-            if skill.effects.contains(where: { effect in
-                if case let .createSurface(surfaceID: surfaceID, durationTurns: _) = effect, surfaceID == "poison" { return true }
-                return false
-            }) {
-                return .poison
-            }
-            if skill.effects.contains(where: { effect in
-                if case let .createSurface(surfaceID: surfaceID, durationTurns: _) = effect, surfaceID == "fire" { return true }
-                return false
-            }) {
-                return .fire
-            }
             if skill.range > 3.5 || actorClassID == "archer" {
                 return .projectile
             }
@@ -865,8 +899,8 @@ final class BattleViewModel {
         }
     }
 
-    private func emitAudioCues(action: BattleActionChoice, damage: Int) {
-        if case .consumable = action {
+    private func emitAudioCues(action: BattleActionChoice, damage: Int, healing: Int) {
+        if case .consumable = action, healing > 0 {
             onAudioCue(.healDrink)
         } else {
             onAudioCue(.skillCast)
@@ -874,6 +908,18 @@ final class BattleViewModel {
         if damage > 0 {
             onAudioCue(.attackHit)
         }
+    }
+
+    private func consumableTargetPrompt(itemName: String, skill: SkillDefinition) -> String {
+        let targetName = switch skill.target {
+        case .selfOnly:
+            "当前角色"
+        case .ally:
+            "队友"
+        case .enemy:
+            "敌人"
+        }
+        return "点击\(targetName)使用「\(itemName)」。"
     }
 
     private func animationDirection(from start: CGPoint, to end: CGPoint) -> ActorAnimationDirection? {
@@ -942,6 +988,12 @@ final class BattleViewModel {
             return "没有找到角色。"
         case .notActorsTurn(_, _):
             return "当前不是该角色的回合。"
+        case .skillNotKnown:
+            return "当前角色尚未掌握该技能。"
+        case .invalidActionPointCost:
+            return "行动点消耗配置无效。"
+        case .invalidMovementDistance:
+            return "移动距离必须大于零。"
         case let .insufficientActionPoints(required, available):
             return "AP 不足：需要 \(required)，当前 \(available)。"
         }
@@ -953,8 +1005,17 @@ final class BattleViewModel {
             return "距离太远：最大 \(maxRange.formatted(.number.precision(.fractionLength(1))))，当前 \(actual.formatted(.number.precision(.fractionLength(1))))。"
         case .blockedLineOfSight:
             return "视线被障碍挡住。"
-        case .allyNotAllowed:
-            return "该技能不能影响队友。"
+        case .invalidSkillTargetConfiguration:
+            return "技能目标配置无效。"
+        case let .invalidTarget(expected, _):
+            switch expected {
+            case .selfOnly:
+                return "该技能只能以施法者自身为目标。"
+            case .ally:
+                return "该技能只能以队友为目标。"
+            case .enemy:
+                return "该技能只能以敌人为目标。"
+            }
         }
     }
 
@@ -982,17 +1043,4 @@ final class BattleViewModel {
         return positions
     }
 
-    private func isAlly(_ faction: Faction, of actorFaction: Faction) -> Bool {
-        if actorFaction == .player {
-            return faction == .player
-        }
-        return faction != .player
-    }
-
-    private func isOpponent(_ faction: Faction, of actorFaction: Faction) -> Bool {
-        if actorFaction == .player {
-            return faction == .hostile || faction == .animal || faction == .monster
-        }
-        return faction == .player
-    }
 }

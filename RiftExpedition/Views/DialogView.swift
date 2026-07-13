@@ -130,7 +130,7 @@ private struct CinematicDialogContent: View {
                                 Button(option.title) {
                                     onChoose(option)
                                 }
-                                .buttonStyle(RiftDialogOptionDefinitionButtonStyle())
+                                .buttonStyle(RiftDialogOptionButtonStyle())
                                 .accessibilityLabel("对话选项：\(option.title)")
                             }
                         }

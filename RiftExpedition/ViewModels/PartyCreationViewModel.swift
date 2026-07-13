@@ -1,16 +1,26 @@
 import Observation
 import RiftCore
 
+enum PartyCreationError: Error, Equatable {
+    case unknownClass(String)
+}
+
 @MainActor
 @Observable
 final class PartyCreationViewModel {
     let availableClasses: [ClassDefinition]
     private let skillNamesByID: [String: String]
+    private let itemDefinitions: [ItemDefinition]
     var selectedClassIDs: [String] = []
 
-    init(classes: [ClassDefinition], skillNamesByID: [String: String] = [:]) {
+    init(
+        classes: [ClassDefinition],
+        skillNamesByID: [String: String] = [:],
+        itemDefinitions: [ItemDefinition]
+    ) {
         availableClasses = classes
         self.skillNamesByID = skillNamesByID
+        self.itemDefinitions = itemDefinitions
     }
 
     var canStart: Bool {
@@ -31,14 +41,18 @@ final class PartyCreationViewModel {
         selectedClassIDs.append(classID)
     }
 
-    func createParty() -> [Actor] {
+    func clearSelection() {
+        selectedClassIDs.removeAll(keepingCapacity: true)
+    }
+
+    func createParty() throws -> [Actor] {
         guard canStart else { return [] }
 
-        return selectedClassIDs.enumerated().compactMap { index, classID in
+        return try selectedClassIDs.enumerated().map { index, classID in
             guard let classDefinition = availableClasses.first(where: { $0.id == classID }) else {
-                return nil
+                throw PartyCreationError.unknownClass(classID)
             }
-            return Actor(
+            var actor = Actor(
                 id: "player_\(index + 1)",
                 displayName: adventurerName(for: classDefinition.id, fallbackIndex: index),
                 kind: .player,
@@ -49,6 +63,8 @@ final class PartyCreationViewModel {
                 skillIDs: classDefinition.initialSkillIDs,
                 equipment: classDefinition.defaultEquipment
             )
+            try EquipmentRules.applyEquippedModifiers(to: &actor, items: itemDefinitions)
+            return actor
         }
     }
 

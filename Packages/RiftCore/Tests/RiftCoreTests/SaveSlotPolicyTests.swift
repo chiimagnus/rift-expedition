@@ -92,6 +92,32 @@ final class SaveSlotPolicyTests: XCTestCase {
         }
     }
 
+    func testCurrentSchemaRejectsBlankActorDisplayName() throws {
+        var save = makeSave()
+        save.party[0].displayName = "  "
+
+        XCTAssertThrowsError(try save.validate()) { error in
+            XCTAssertEqual(
+                error as? SaveGameDecodingError,
+                .emptyActorDisplayName(actorID: "hero")
+            )
+        }
+
+        let encoded = try JSONEncoder().encode(makeSave())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        var party = try XCTUnwrap(object["party"] as? [[String: Any]])
+        party[0]["displayName"] = "\n\t"
+        object["party"] = party
+        let data = try JSONSerialization.data(withJSONObject: object)
+
+        XCTAssertThrowsError(try JSONDecoder().decode(SaveGame.self, from: data)) { error in
+            XCTAssertEqual(
+                error as? SaveGameDecodingError,
+                .emptyActorDisplayName(actorID: "hero")
+            )
+        }
+    }
+
     func testMissingCurrentSchemaFieldIsRejected() throws {
         let encoded = try JSONEncoder().encode(makeSave())
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
@@ -353,6 +379,54 @@ final class SaveContentValidatorTests: XCTestCase {
         try SaveContentValidator.validate(makeContentSave(), against: makeCatalog())
     }
 
+    func testDuplicateCatalogIDsAreRejectedWithoutCrashing() throws {
+        let baseCatalog = makeCatalog()
+        let duplicateCases: [(String, ContentCatalog)] = [
+            (
+                "warrior",
+                ContentCatalog(
+                    classes: baseCatalog.classes + baseCatalog.classes,
+                    skills: baseCatalog.skills,
+                    items: baseCatalog.items,
+                    encounters: baseCatalog.encounters,
+                    quests: baseCatalog.quests,
+                    dialogues: baseCatalog.dialogues
+                )
+            ),
+            (
+                "slash",
+                ContentCatalog(
+                    classes: baseCatalog.classes,
+                    skills: baseCatalog.skills + baseCatalog.skills,
+                    items: baseCatalog.items,
+                    encounters: baseCatalog.encounters,
+                    quests: baseCatalog.quests,
+                    dialogues: baseCatalog.dialogues
+                )
+            ),
+            (
+                "training_sword",
+                ContentCatalog(
+                    classes: baseCatalog.classes,
+                    skills: baseCatalog.skills,
+                    items: baseCatalog.items + [baseCatalog.items[0]],
+                    encounters: baseCatalog.encounters,
+                    quests: baseCatalog.quests,
+                    dialogues: baseCatalog.dialogues
+                )
+            )
+        ]
+
+        for (duplicateID, catalog) in duplicateCases {
+            XCTAssertThrowsError(try SaveContentValidator.validate(makeContentSave(), against: catalog)) { error in
+                guard case let .duplicateCatalogID(_, id) = error as? SaveContentValidationError else {
+                    return XCTFail("Expected duplicateCatalogID, got \(error)")
+                }
+                XCTAssertEqual(id, duplicateID)
+            }
+        }
+    }
+
     func testUnknownInventoryItemIsRejected() throws {
         var save = makeContentSave()
         save.inventory.addItem(id: "removed_item")
@@ -395,9 +469,24 @@ final class SaveContentValidatorTests: XCTestCase {
         XCTAssertThrowsError(try SaveContentValidator.validate(save, against: makeCatalog())) { error in
             XCTAssertEqual(
                 error as? SaveContentValidationError,
-                .equippedItemMissingFromInventory(actorID: "hero", itemID: "training_sword")
+                .equippedItemQuantityExceeded(itemID: "training_sword", required: 1, available: 0)
             )
         }
+    }
+
+    func testSharedInventoryMustContainOneCopyPerEquippedActor() throws {
+        var save = makeContentSave()
+        save.party[1].equipment.weaponID = "training_sword"
+
+        XCTAssertThrowsError(try SaveContentValidator.validate(save, against: makeCatalog())) { error in
+            XCTAssertEqual(
+                error as? SaveContentValidationError,
+                .equippedItemQuantityExceeded(itemID: "training_sword", required: 2, available: 1)
+            )
+        }
+
+        save.inventory.addItem(id: "training_sword")
+        XCTAssertNoThrow(try SaveContentValidator.validate(save, against: makeCatalog()))
     }
 
     private func makeContentSave() -> SaveGame {
@@ -466,6 +555,9 @@ final class SaveContentValidatorTests: XCTestCase {
                 ClassDefinition(
                     id: "warrior",
                     displayName: "战士",
+                    title: "测试职业",
+                    combatRole: "测试定位",
+                    description: "测试职业说明",
                     initialStats: stats,
                     initialSkillIDs: ["slash"],
                     defaultEquipment: EquipmentLoadout(weaponID: "training_sword", armorID: "cloth_armor")
@@ -475,6 +567,7 @@ final class SaveContentValidatorTests: XCTestCase {
                 SkillDefinition(
                     id: "slash",
                     displayName: "劈砍",
+                    description: "测试技能说明",
                     actionPointCost: 2,
                     range: 1.5,
                     target: .enemy,
@@ -487,12 +580,16 @@ final class SaveContentValidatorTests: XCTestCase {
                 ItemDefinition(
                     id: "training_sword",
                     displayName: "训练剑",
+                    description: "测试物品说明",
+                    rarity: .common,
                     kind: .equipment,
                     equipment: EquipmentDefinition(id: "training_sword", displayName: "训练剑", slot: .weapon)
                 ),
                 ItemDefinition(
                     id: "cloth_armor",
                     displayName: "布甲",
+                    description: "测试物品说明",
+                    rarity: .common,
                     kind: .equipment,
                     equipment: EquipmentDefinition(id: "cloth_armor", displayName: "布甲", slot: .armor)
                 )

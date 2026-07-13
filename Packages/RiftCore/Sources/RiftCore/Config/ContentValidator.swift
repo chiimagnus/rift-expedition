@@ -76,6 +76,9 @@ public enum ContentValidator {
             if skill.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 errors.append(.invalidSkill(owner: owner, id: skill.id, reason: "displayName must not be blank"))
             }
+            if isBlank(skill.description) {
+                errors.append(.invalidSkill(owner: owner, id: skill.id, reason: "description must not be blank"))
+            }
             if skill.actionPointCost <= 0 {
                 errors.append(.invalidSkill(owner: owner, id: skill.id, reason: "actionPointCost must be positive"))
             }
@@ -84,6 +87,22 @@ public enum ContentValidator {
             }
             if skill.effects.isEmpty {
                 errors.append(.invalidSkill(owner: owner, id: skill.id, reason: "effects must not be empty"))
+            }
+            switch skill.target {
+            case .selfOnly where !skill.affectsAllies, .ally where !skill.affectsAllies:
+                errors.append(.invalidSkill(
+                    owner: owner,
+                    id: skill.id,
+                    reason: "selfOnly and ally targets require affectsAllies"
+                ))
+            case .enemy where skill.affectsAllies:
+                errors.append(.invalidSkill(
+                    owner: owner,
+                    id: skill.id,
+                    reason: "enemy targets forbid affectsAllies"
+                ))
+            default:
+                break
             }
             for effect in skill.effects {
                 switch effect {
@@ -124,6 +143,31 @@ public enum ContentValidator {
             }
             if isBlank(classDefinition.displayName) {
                 errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "displayName must not be blank"))
+            }
+            if isBlank(classDefinition.title) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "title must not be blank"))
+            }
+            if isBlank(classDefinition.combatRole) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "combatRole must not be blank"))
+            }
+            if isBlank(classDefinition.description) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "description must not be blank"))
+            }
+            let stats = classDefinition.initialStats
+            if stats.maxHealth <= 0 {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialStats.maxHealth must be positive"))
+            }
+            if stats.health <= 0 || stats.health > stats.maxHealth {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialStats.health must be within 1...maxHealth"))
+            }
+            if [stats.attack, stats.defense, stats.evasion, stats.magic].contains(where: { $0 < 0 }) {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialStats combat values must be non-negative"))
+            }
+            if stats.maxActionPoints <= 0 {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialStats.maxActionPoints must be positive"))
+            }
+            if stats.actionPoints < 0 || stats.actionPoints > stats.maxActionPoints {
+                errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialStats.actionPoints must be within 0...maxActionPoints"))
             }
             if classDefinition.initialSkillIDs.isEmpty {
                 errors.append(.invalidClass(owner: owner, id: classDefinition.id, reason: "initialSkillIDs must not be empty"))
@@ -175,6 +219,9 @@ public enum ContentValidator {
             if isBlank(item.displayName) {
                 errors.append(.invalidItem(owner: owner, id: item.id, reason: "displayName must not be blank"))
             }
+            if isBlank(item.description) {
+                errors.append(.invalidItem(owner: owner, id: item.id, reason: "description must not be blank"))
+            }
             switch item.kind {
             case .equipment:
                 if item.skillID != nil {
@@ -189,6 +236,12 @@ public enum ContentValidator {
                 }
                 if isBlank(equipment.displayName) {
                     errors.append(.invalidItem(owner: owner, id: item.id, reason: "equipment displayName must not be blank"))
+                }
+                let modifiers = equipment.modifiers
+                if [modifiers.maxHealth, modifiers.attack, modifiers.defense, modifiers.evasion, modifiers.magic]
+                    .contains(where: { $0 < 0 })
+                {
+                    errors.append(.invalidItem(owner: owner, id: item.id, reason: "equipment modifiers must be non-negative"))
                 }
             case .consumable:
                 if item.equipment != nil {

@@ -5,6 +5,7 @@ public enum SaveGameDecodingError: Error, Equatable, Sendable {
     case emptyParty
     case invalidPartySize(found: Int, expected: Int)
     case emptyActorID
+    case emptyActorDisplayName(actorID: String)
     case duplicateActorID(String)
     case invalidActorProgression(actorID: String, field: String, value: Int)
     case invalidActorStat(actorID: String, field: String, value: Int)
@@ -17,7 +18,7 @@ public enum SaveGameDecodingError: Error, Equatable, Sendable {
 }
 
 public struct SaveGame: Codable, Equatable, Sendable {
-    public static let currentSchemaVersion = 3
+    public static let currentSchemaVersion = 4
 
     public var schemaVersion: Int
     public var currentAreaID: String
@@ -107,6 +108,10 @@ public struct SaveGame: Codable, Equatable, Sendable {
     }
 
     private static func validateActor(_ actor: Actor) throws {
+        guard !actor.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw SaveGameDecodingError.emptyActorDisplayName(actorID: actor.id)
+        }
+
         let progressionValues = [
             (field: "level", value: actor.level, isValid: actor.level >= 1),
             (field: "experience", value: actor.experience, isValid: actor.experience >= 0),

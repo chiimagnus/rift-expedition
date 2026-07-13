@@ -67,8 +67,7 @@ final class EncounterBalanceSmokeTests: XCTestCase {
         var random = SeededRandomSource(seed: 20260706)
         let context = TargetingContext(
             distance: min(max(skill.range, 0.1), 1.0),
-            hasLineOfSight: true,
-            isAlly: false
+            hasLineOfSight: true
         )
 
         do {

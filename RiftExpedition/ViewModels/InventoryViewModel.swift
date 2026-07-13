@@ -81,7 +81,7 @@ final class InventoryViewModel {
             return CharacterSkillRow(
                 id: skill.id,
                 displayName: skill.displayName,
-                description: skill.description ?? "尚未记录该技能的战术说明。",
+                description: skill.description,
                 actionPointCost: skill.actionPointCost,
                 range: skill.range,
                 targetName: targetName(skill.target)
@@ -117,6 +117,10 @@ final class InventoryViewModel {
                 itemID: itemID,
                 on: &actor,
                 inventory: session.inventory,
+                equippedByOtherActors: equippedCount(
+                    of: itemID,
+                    excludingActorAt: actorIndex
+                ),
                 items: itemDefinitions
             )
             session.party[actorIndex] = actor
@@ -181,6 +185,17 @@ final class InventoryViewModel {
         }
     }
 
+    private func equippedCount(of itemID: String, excludingActorAt excludedIndex: Int) -> Int {
+        session.party.enumerated().reduce(into: 0) { count, entry in
+            guard entry.offset != excludedIndex else { return }
+            count += [
+                entry.element.equipment.weaponID,
+                entry.element.equipment.armorID,
+                entry.element.equipment.accessoryID
+            ].compactMap { $0 }.filter { $0 == itemID }.count
+        }
+    }
+
     private func itemName(_ itemID: String) -> String {
         itemDefinitions.first(where: { $0.id == itemID })?.displayName ?? itemID
     }
@@ -198,12 +213,14 @@ final class InventoryViewModel {
 
     private func readableEquipmentError(_ error: EquipmentError) -> String {
         switch error {
-        case .itemNotInInventory(_):
-            return "背包中没有该物品。"
+        case let .insufficientCopies(_, required, available):
+            return "装备数量不足：需要 \(required)，背包中有 \(available)。"
         case .unknownItem(_):
             return "没有找到该物品配置。"
         case .notEquipment(_):
             return "该物品不是装备。"
+        case .invalidSlot:
+            return "装备槽位配置无效。"
         }
     }
 

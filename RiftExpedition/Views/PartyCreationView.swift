@@ -67,7 +67,7 @@ struct PartyCreationView: View {
                     RiftActorPortrait(classID: classDefinition.id, size: 88, isActive: selected)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(classDefinition.title ?? classDefinition.displayName)
+                        Text(classDefinition.title)
                             .font(.title3.weight(.black))
                             .foregroundStyle(RiftPalette.frost)
 
@@ -75,7 +75,7 @@ struct PartyCreationView: View {
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(tint)
 
-                        Text(classDefinition.combatRole ?? "战术成员")
+                        Text(classDefinition.combatRole)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(RiftPalette.muted)
                     }
@@ -101,7 +101,7 @@ struct PartyCreationView: View {
                     }
                 }
 
-                Text(classDefinition.description ?? "一名准备进入裂隙村的远征者。")
+                Text(classDefinition.description)
                     .font(.callout)
                     .foregroundStyle(RiftPalette.muted)
                     .lineLimit(3)

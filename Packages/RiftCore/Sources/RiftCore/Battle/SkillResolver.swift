@@ -7,13 +7,13 @@ public enum SkillResolver {
         in state: inout BattleState,
         random: inout R
     ) throws -> SkillResolution {
-        try TargetingRules.validate(skill: skill, context: context)
-        guard state.actor(id: casterID) != nil else {
+        guard let caster = state.actor(id: casterID) else {
             throw BattleActionError.actorNotFound(casterID)
         }
         guard let target = state.actor(id: targetID) else {
             throw BattleActionError.actorNotFound(targetID)
         }
+        try TargetingRules.validate(skill: skill, caster: caster, target: target, context: context)
 
         if skill.canBeDodged && random.roll(chancePercent: target.stats.evasion) {
             return SkillResolution(didDodge: true)

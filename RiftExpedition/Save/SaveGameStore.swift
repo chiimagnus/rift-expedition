@@ -35,10 +35,11 @@ struct SaveGameStore {
     }
 
     func readResults(for slots: [SaveSlot]) -> [SaveSlot: SaveSlotReadResult] {
-        Dictionary(uniqueKeysWithValues: slots.compactMap { slot in
-            guard let result = readResult(for: slot) else { return nil }
-            return (slot, result)
-        })
+        var results: [SaveSlot: SaveSlotReadResult] = [:]
+        for slot in slots where results[slot] == nil {
+            results[slot] = readResult(for: slot)
+        }
+        return results
     }
 
     func nextAutosaveSlot() -> SaveSlot {

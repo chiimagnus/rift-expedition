@@ -41,34 +41,6 @@ final class SaveLoadViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.message, "读取失败：存档引用了无效地图或出生点。")
     }
 
-    func testUnsafeAutosaveRequestIsRejected() {
-        let viewModel = SaveLoadViewModel(
-            store: makeStore(),
-            makeSave: { self.makeSave(areaID: "village_square") },
-            applySave: { _ in .applied }
-        )
-
-        viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
-
-        XCTAssertEqual(viewModel.message, "自动存档被拒绝：当前不是安全点。")
-        XCTAssertFalse(viewModel.rows.first { $0.slot == .auto(1) }?.canLoad == true)
-    }
-
-    func testRejectedAutosavePreservesExistingSlot() throws {
-        let store = makeStore()
-        try store.write(makeSave(areaID: "old_safe_area"), to: .auto(1), safety: .safe)
-        let viewModel = SaveLoadViewModel(
-            store: store,
-            makeSave: { self.makeSave(areaID: "new_unsafe_area") },
-            applySave: { _ in .applied }
-        )
-
-        viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
-
-        XCTAssertEqual(try store.read(.auto(1)).currentAreaID, "old_safe_area")
-        XCTAssertEqual(viewModel.message, "自动存档被拒绝：当前不是安全点。")
-    }
-
     func testRowsUseInjectedAreaDisplayName() throws {
         let store = makeStore()
         try store.write(makeSave(areaID: "village_square"), to: .manual(1), safety: .safe)
@@ -83,6 +55,16 @@ final class SaveLoadViewModelTests: XCTestCase {
 
         XCTAssertTrue(row.detail.contains("裂隙村广场"))
         XCTAssertFalse(row.detail.contains("village_square"))
+    }
+
+    func testBatchReadDeduplicatesRepeatedSlotsWithoutCrashing() throws {
+        let store = makeStore()
+        try store.write(makeSave(areaID: "village_square"), to: .manual(1), safety: .safe)
+
+        let results = store.readResults(for: [.manual(1), .manual(1), .manual(2)])
+
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[.manual(1)]?.save?.currentAreaID, "village_square")
     }
 
     func testCorruptSlotShowsChineseError() throws {

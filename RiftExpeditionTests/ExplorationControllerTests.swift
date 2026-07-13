@@ -5,7 +5,7 @@ import XCTest
 
 final class ExplorationControllerTests: XCTestCase {
     func testTabSwitchesLeader() {
-        var controller = ExplorationController()
+        var controller = controllerFixture()
         controller.configureParty(actorFixtures, at: CGPoint(x: 100, y: 100))
 
         controller.switchToNextLeader()
@@ -14,7 +14,7 @@ final class ExplorationControllerTests: XCTestCase {
     }
 
     func testFollowerTargetUpdatesAfterLeaderPathChanges() throws {
-        var controller = ExplorationController()
+        var controller = controllerFixture()
         controller.configureParty(actorFixtures, at: CGPoint(x: 100, y: 100))
 
         controller.setLeaderDestination(CGPoint(x: 300, y: 100))
@@ -24,7 +24,7 @@ final class ExplorationControllerTests: XCTestCase {
     }
 
     func testAdvanceMovesLeaderTowardTarget() throws {
-        var controller = ExplorationController()
+        var controller = controllerFixture()
         controller.configureParty(actorFixtures, at: CGPoint(x: 100, y: 100))
 
         controller.setLeaderDestination(CGPoint(x: 300, y: 100))
@@ -36,7 +36,7 @@ final class ExplorationControllerTests: XCTestCase {
     }
 
     func testAdvanceUpdatesFacingOnMajorMovementAxis() throws {
-        var controller = ExplorationController()
+        var controller = controllerFixture()
         controller.moveSpeed = 100
         controller.configureParty([actor(id: "player_1", displayName: "战士1")], at: CGPoint(x: 100, y: 100))
 
@@ -58,19 +58,22 @@ final class ExplorationControllerTests: XCTestCase {
     }
 
     func testAdvanceKeepsFacingWhenMovementIsBlocked() throws {
-        var controller = ExplorationController()
+        var controller = controllerFixture()
         controller.moveSpeed = 100
         controller.agentRadius = 0
         controller.configureParty([actor(id: "player_1", displayName: "战士1")], at: CGPoint(x: 100, y: 100))
         controller.setLeaderDestination(CGPoint(x: 140, y: 100))
-        controller.setObstacles([
-            NavigationObstacle(
-                tiledID: 1,
-                frame: CGRect(x: 120, y: 90, width: 30, height: 30),
-                blocksMovement: true,
-                blocksSight: false
-            )
-        ])
+        controller.configureNavigation(
+            obstacles: [
+                NavigationObstacle(
+                    tiledID: 1,
+                    frame: CGRect(x: 120, y: 90, width: 30, height: 30),
+                    blocksMovement: true,
+                    blocksSight: false
+                )
+            ],
+            playableFrame: testPlayableFrame
+        )
 
         controller.advance(deltaTime: 0.25)
 
@@ -78,8 +81,44 @@ final class ExplorationControllerTests: XCTestCase {
         XCTAssertEqual(controller.members[0].facing, .right)
     }
 
-    func testConfigurePartyCarriesClassIDForRendering() throws {
+    func testDestinationOutsidePlayableFrameIsRejectedWithoutMovingParty() throws {
+        var controller = controllerFixture()
+        controller.configureParty(actorFixtures, at: CGPoint(x: 100, y: 100))
+
+        XCTAssertFalse(controller.setLeaderDestination(CGPoint(x: -10, y: 100)))
+        controller.advance(deltaTime: 1)
+
+        let leader = try XCTUnwrap(controller.members.first { $0.actorID == "player_1" })
+        XCTAssertEqual(leader.position, CGPoint(x: 100, y: 100))
+        XCTAssertNil(leader.target)
+    }
+
+    func testRouteThatEscapesPlayableFrameIsRejected() throws {
         var controller = ExplorationController()
+        controller.configureNavigation(
+            obstacles: [
+                NavigationObstacle(
+                    tiledID: 1,
+                    frame: CGRect(x: 180, y: 0, width: 40, height: 300),
+                    blocksMovement: true,
+                    blocksSight: true
+                )
+            ],
+            playableFrame: testPlayableFrame
+        )
+        controller.configureParty(
+            [actor(id: "player_1", displayName: "战士1")],
+            at: CGPoint(x: 100, y: 150)
+        )
+
+        XCTAssertFalse(controller.setLeaderDestination(CGPoint(x: 300, y: 150)))
+        let leader = try XCTUnwrap(controller.members.first)
+        XCTAssertNil(leader.target)
+        XCTAssertTrue(leader.waypoints.isEmpty)
+    }
+
+    func testConfigurePartyCarriesClassIDForRendering() throws {
+        var controller = controllerFixture()
         controller.configureParty(
             [
                 actor(id: "player_1", displayName: "战士1", classID: "warrior"),
@@ -92,6 +131,17 @@ final class ExplorationControllerTests: XCTestCase {
         let follower = try XCTUnwrap(controller.members.first { $0.actorID == "player_2" })
         XCTAssertEqual(leader.classID, "warrior")
         XCTAssertEqual(follower.classID, "mage")
+    }
+
+
+    private var testPlayableFrame: CGRect {
+        CGRect(x: 0, y: 0, width: 400, height: 300)
+    }
+
+    private func controllerFixture() -> ExplorationController {
+        var controller = ExplorationController()
+        controller.configureNavigation(obstacles: [], playableFrame: testPlayableFrame)
+        return controller
     }
 
     private var actorFixtures: [Actor] {

@@ -133,6 +133,21 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(cues, [.skillCast, .attackHit])
     }
 
+    func testCannotSelectSkillTheActiveActorHasNotLearned() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [heavySlash]
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+
+        XCTAssertEqual(viewModel.selectedAction, .move)
+        XCTAssertEqual(viewModel.statusText, "当前角色尚未掌握该技能。")
+    }
+
     func testMoveToClickedPointSpendsAPAndUpdatesPosition() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
@@ -207,6 +222,80 @@ final class BattleViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.map(\.id), [3])
     }
 
+    func testInvalidMovementDistanceReportsReadableError() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 220, y: 100)
+            ]
+        )
+
+        viewModel.performMove(to: CGPoint(x: 100, y: 100))
+
+        XCTAssertEqual(viewModel.statusText, "移动距离必须大于零。")
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 4)
+    }
+
+    func testInvalidTargetReportsReadableErrorWithoutSpendingAP() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
+                actor(id: "partner", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "partner": CGPoint(x: 120, y: 100),
+                "boar": CGPoint(x: 220, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+        viewModel.performSelectedAction(targetID: "partner")
+
+        XCTAssertEqual(viewModel.statusText, "该技能只能以敌人为目标。")
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 4)
+    }
+
+    func testInvalidSkillTargetConfigurationReportsReadableError() {
+        let brokenSkill = SkillDefinition(
+            id: "broken_heal",
+            displayName: "错误治疗",
+            description: "用于测试无效目标配置。",
+            actionPointCost: 1,
+            range: 2,
+            target: .ally,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.heal(1)]
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["broken_heal"]),
+                actor(id: "partner", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [brokenSkill],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "partner": CGPoint(x: 120, y: 100),
+                "boar": CGPoint(x: 220, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "broken_heal")
+        viewModel.performSelectedAction(targetID: "partner")
+
+        XCTAssertEqual(viewModel.statusText, "技能目标配置无效。")
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 4)
+    }
+
     func testOutOfRangeTargetDoesNotSpendAP() {
         let viewModel = BattleViewModel(
             state: BattleState(actors: [
@@ -232,6 +321,8 @@ final class BattleViewModelTests: XCTestCase {
         let potion = ItemDefinition(
             id: "minor_healing_draught",
             displayName: "止血药剂",
+            description: "测试物品说明",
+            rarity: .common,
             kind: .consumable,
             skillID: "minor_healing_draught"
         )
@@ -271,6 +362,54 @@ final class BattleViewModelTests: XCTestCase {
             )
         ])
         XCTAssertEqual(cues, [.healDrink])
+    }
+
+    func testDamagingConsumableUsesDamageFeedbackAndCastAudio() throws {
+        var cues: [AudioCue] = []
+        let fireBombSkill = SkillDefinition(
+            id: "fire_bomb_skill",
+            displayName: "火焰瓶",
+            description: "对敌人造成伤害。",
+            actionPointCost: 1,
+            range: 4,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.damage(5)]
+        )
+        let fireBomb = ItemDefinition(
+            id: "fire_bomb",
+            displayName: "火焰瓶",
+            description: "投向敌人的一次性武器。",
+            rarity: .common,
+            kind: .consumable,
+            skillID: fireBombSkill.id
+        )
+        let inventory = try PartyInventory(itemCounts: [fireBomb.id: 1])
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, health: 12, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [fireBombSkill],
+            inventory: inventory,
+            itemDefinitions: [fireBomb],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 180, y: 100)
+            ],
+            onAudioCue: { cues.append($0) }
+        )
+
+        viewModel.selectConsumable(id: fireBomb.id)
+        XCTAssertEqual(viewModel.targetPrompt, "点击敌人使用「火焰瓶」。")
+        viewModel.performSelectedAction(targetID: "boar")
+
+        XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.health, 7)
+        XCTAssertEqual(viewModel.inventory.count(of: fireBomb.id), 0)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.first?.effectStyle, .projectile)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.first?.feedback, .damage(amount: 5, defeated: false))
+        XCTAssertEqual(cues, [.skillCast, .attackHit])
     }
 
     func testDodgedPlayerSkillEmitsAttackWithoutHurt() {
@@ -405,10 +544,59 @@ final class BattleViewModelTests: XCTestCase {
     }
 
 
+    func testTargetHighlightRejectsEnemyOutsideSkillRange() {
+        let shortStrike = SkillDefinition(
+            id: "short_strike",
+            displayName: "短击",
+            description: "近距离测试攻击",
+            actionPointCost: 1,
+            range: 1,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.damage(4)]
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["short_strike"]),
+                actor(id: "far_enemy", faction: .hostile, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [shortStrike],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "far_enemy": CGPoint(x: 200, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "short_strike")
+
+        XCTAssertFalse(viewModel.sceneSnapshot.actors.first { $0.id == "far_enemy" }?.isTargetable == true)
+    }
+
+    func testTargetHighlightRejectsEnemyBehindBlockedLineOfSight() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["heavy_slash"]),
+                actor(id: "blocked_enemy", faction: .hostile, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "blocked_enemy": CGPoint(x: 120, y: 100)
+            ],
+            hasLineOfSight: { _, _ in false }
+        )
+
+        viewModel.performSkill(id: "heavy_slash")
+
+        XCTAssertFalse(viewModel.sceneSnapshot.actors.first { $0.id == "blocked_enemy" }?.isTargetable == true)
+    }
+
     func testRangedSkillCarriesSourcePointAndProjectileStyle() {
         let shot = SkillDefinition(
             id: "test_shot",
             displayName: "试射",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 8,
             target: .enemy,
@@ -460,10 +648,33 @@ final class BattleViewModelTests: XCTestCase {
         )
     }
 
+    func testLethalEnemyActionStopsBeforeAdvancingTerminalBattle() {
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, health: 4, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: ["heavy_slash"])
+            ]),
+            skills: [heavySlash],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.endTurn()
+
+        XCTAssertEqual(viewModel.state.outcome, .defeat)
+        XCTAssertEqual(viewModel.state.activeActorID, "boar")
+        XCTAssertEqual(viewModel.statusText, "boar 对 player 使用重劈，造成 4 点伤害。")
+        XCTAssertFalse(viewModel.statusText.contains("战斗已经结束"))
+    }
+
     func testEnemySkillDoesNotConsumePlayersSelectedConsumable() {
         let potion = ItemDefinition(
             id: "minor_healing_draught",
             displayName: "止血药剂",
+            description: "测试物品说明",
+            rarity: .common,
             kind: .consumable,
             skillID: "minor_healing_draught"
         )
@@ -570,6 +781,7 @@ final class BattleViewModelTests: XCTestCase {
         let poisonPool = SkillDefinition(
             id: "poison_pool",
             displayName: "毒池",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 4,
             target: .enemy,
@@ -614,6 +826,7 @@ final class BattleViewModelTests: XCTestCase {
         let poisonPool = SkillDefinition(
             id: "poison_pool",
             displayName: "毒池",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 4,
             target: .enemy,
@@ -647,6 +860,7 @@ final class BattleViewModelTests: XCTestCase {
         SkillDefinition(
             id: "heavy_slash",
             displayName: "重劈",
+            description: "测试技能说明",
             actionPointCost: 3,
             range: 2,
             target: .enemy,
@@ -660,6 +874,7 @@ final class BattleViewModelTests: XCTestCase {
         SkillDefinition(
             id: "minor_healing_draught",
             displayName: "止血药剂",
+            description: "测试技能说明",
             actionPointCost: 1,
             range: 2.5,
             target: .ally,

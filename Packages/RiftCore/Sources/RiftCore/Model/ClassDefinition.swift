@@ -1,9 +1,9 @@
 public struct ClassDefinition: Codable, Equatable, Identifiable, Sendable {
     public var id: String
     public var displayName: String
-    public var title: String?
-    public var combatRole: String?
-    public var description: String?
+    public var title: String
+    public var combatRole: String
+    public var description: String
     public var initialStats: Stats
     public var initialSkillIDs: [String]
     public var defaultEquipment: EquipmentLoadout
@@ -11,9 +11,9 @@ public struct ClassDefinition: Codable, Equatable, Identifiable, Sendable {
     public init(
         id: String,
         displayName: String,
-        title: String? = nil,
-        combatRole: String? = nil,
-        description: String? = nil,
+        title: String,
+        combatRole: String,
+        description: String,
         initialStats: Stats,
         initialSkillIDs: [String],
         defaultEquipment: EquipmentLoadout

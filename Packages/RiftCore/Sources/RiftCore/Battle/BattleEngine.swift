@@ -3,7 +3,9 @@ public enum BattleActionError: Error, Equatable, Sendable {
     case noActiveActor
     case actorNotFound(String)
     case notActorsTurn(expected: String, actual: String)
+    case skillNotKnown(actorID: String, skillID: String)
     case invalidActionPointCost(Int)
+    case invalidMovementDistance
     case insufficientActionPoints(required: Int, available: Int)
 }
 
@@ -15,6 +17,9 @@ public struct BattleEngine: Sendable {
     }
 
     public mutating func move(actorID: String, distance: Double) throws {
+        guard distance.isFinite, distance > 0 else {
+            throw BattleActionError.invalidMovementDistance
+        }
         try spendActionPoints(actorID: actorID, cost: APRules.movementCost(forDistance: distance))
     }
 
@@ -26,13 +31,16 @@ public struct BattleEngine: Sendable {
         random: inout R
     ) throws -> SkillResolution {
         try ensureBattleIsOngoing()
-        guard state.actor(id: actorID) != nil else {
+        guard let caster = state.actor(id: actorID) else {
             throw BattleActionError.actorNotFound(actorID)
         }
-        guard state.actor(id: targetID) != nil else {
+        guard let target = state.actor(id: targetID) else {
             throw BattleActionError.actorNotFound(targetID)
         }
-        try TargetingRules.validate(skill: skill, context: context)
+        guard caster.skillIDs.contains(skill.id) else {
+            throw BattleActionError.skillNotKnown(actorID: actorID, skillID: skill.id)
+        }
+        try TargetingRules.validate(skill: skill, caster: caster, target: target, context: context)
         try spendActionPoints(actorID: actorID, cost: skill.actionPointCost)
         return try SkillResolver.resolve(
             skill: skill,

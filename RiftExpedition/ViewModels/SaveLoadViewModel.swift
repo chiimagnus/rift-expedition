@@ -68,25 +68,6 @@ final class SaveLoadViewModel {
         }
     }
 
-    func requestAutosave(slot: SaveSlot = .auto(1), safety: SaveSafety) {
-        guard slot.kind == .auto else {
-            message = "请选择自动存档槽。"
-            return
-        }
-        guard let save = makeSave() else {
-            message = "当前没有可自动保存的队伍。"
-            return
-        }
-
-        do {
-            try store.write(save, to: slot, safety: safety)
-            message = "\(slotTitle(slot)) 已自动保存。"
-            refresh()
-        } catch {
-            message = readableError(error)
-        }
-    }
-
     func load(slot: SaveSlot) {
         do {
             let save = try store.read(slot)

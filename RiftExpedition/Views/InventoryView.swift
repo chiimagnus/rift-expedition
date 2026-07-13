@@ -255,7 +255,7 @@ struct InventoryView: View {
                 }
             }
 
-            Text(definition?.description ?? "这件物品尚未留下可供查阅的记录。")
+            Text(definition?.description ?? "没有找到物品配置。")
                 .font(.callout)
                 .foregroundStyle(RiftPalette.muted)
                 .lineSpacing(4)

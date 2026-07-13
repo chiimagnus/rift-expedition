@@ -41,6 +41,8 @@ struct SessionDisplayMetadata: Equatable {
 
 enum SessionMetadataError: Error, Equatable, CustomStringConvertible {
     case missingResource(String)
+    case blankID(kind: String)
+    case blankDisplayName(kind: String, id: String)
     case duplicateID(kind: String, id: String)
     case missingSpawn(areaID: String, spawnID: String)
 
@@ -48,6 +50,10 @@ enum SessionMetadataError: Error, Equatable, CustomStringConvertible {
         switch self {
         case let .missingResource(path):
             "缺少资源：\(path)"
+        case let .blankID(kind):
+            "\(kind) ID 不能为空。"
+        case let .blankDisplayName(kind, id):
+            "\(kind) \(id) 的显示名称不能为空。"
         case let .duplicateID(kind, id):
             "重复的\(kind) ID：\(id)"
         case let .missingSpawn(areaID, spawnID):
@@ -78,7 +84,7 @@ private struct SessionAreaDisplayDocument: Decodable {
     var areas: [SessionDisplayRecord]
 }
 
-private struct SessionDisplayRecord: Decodable {
+struct SessionDisplayRecord: Decodable {
     var id: String
     var displayName: String
 }
@@ -114,6 +120,7 @@ struct ExplorationWorldPresentation: Equatable {
 @MainActor
 @Observable
 final class GameSessionViewModel {
+    private static let currentChapterID = "chapter1"
     var appState: AppState = .mainMenu
     var statusText = "裂隙正在沉睡。"
     var contentLoadErrorMessage: String?
@@ -231,7 +238,12 @@ final class GameSessionViewModel {
         for classID in demoParty {
             partyCreationViewModel.toggleSelection(classID)
         }
-        party = partyCreationViewModel.createParty()
+        do {
+            party = try partyCreationViewModel.createParty()
+        } catch {
+            statusText = "调试队伍创建失败：\(error)"
+            return
+        }
         inventory = Self.makeStartingInventory(for: party)
         for item in itemDefinitions.prefix(12) {
             inventory.addItem(id: item.id)
@@ -287,7 +299,13 @@ final class GameSessionViewModel {
             statusText = contentLoadErrorMessage ?? "内容加载失败。"
             return
         }
-        let createdParty = partyCreationViewModel.createParty()
+        let createdParty: [Actor]
+        do {
+            createdParty = try partyCreationViewModel.createParty()
+        } catch {
+            statusText = "队伍装备初始化失败：\(error)"
+            return
+        }
         guard createdParty.count == 2 else {
             statusText = "请选择两名不同职业。"
             return
@@ -295,7 +313,11 @@ final class GameSessionViewModel {
 
         let preparedMap: PreparedSessionMap
         do {
-            preparedMap = try prepareMap(areaID: "village_square", spawnID: "start")
+            preparedMap = try prepareMap(
+                areaID: "village_square",
+                spawnID: "start",
+                resolvedEncounterKeys: []
+            )
         } catch {
             statusText = "地图加载失败：\(error)"
             return
@@ -431,7 +453,14 @@ final class GameSessionViewModel {
         audioService.play(.questComplete)
         statusText = rewardNames.isEmpty ? "任务已完成。" : "任务完成，获得：\(rewardNames)。"
         dialogViewModel.message = statusText
-        if questID == "blood_debt" {
+        if quest.isMainQuest,
+           quest.chapterID == Self.currentChapterID,
+           Self.chapterIsComplete(
+               chapterID: Self.currentChapterID,
+               questState: completedQuestState,
+               questDefinitions: questDefinitions
+           )
+        {
             completeChapter()
         }
         return true
@@ -463,6 +492,7 @@ final class GameSessionViewModel {
                     if revived.stats.health <= 0 {
                         revived.stats.health = max(1, revived.stats.maxHealth / 2)
                     }
+                    revived.stats.actionPoints = revived.stats.maxActionPoints
                     return revived
             }
             party = survivingParty
@@ -491,10 +521,18 @@ final class GameSessionViewModel {
         battleViewModel = nil
         inventoryViewModel = nil
         saveLoadViewModel = nil
+        party = []
+        inventory = PartyInventory()
         session.questState = QuestState()
         session.collectedMapItemKeys = []
         session.firedMapTriggerKeys = []
         session.resolvedEncounterKeys = []
+        partyCreationViewModel.clearSelection()
+        explorationController = ExplorationController()
+        currentAreaID = "village_square"
+        currentSpawnID = "start"
+        currentMapMetadata = nil
+        encounterTriggerService = nil
         activeEncounterKey = nil
     }
 
@@ -554,7 +592,11 @@ final class GameSessionViewModel {
 
         let preparedMap: PreparedSessionMap
         do {
-            preparedMap = try prepareMap(areaID: save.currentAreaID, spawnID: save.currentSpawnID)
+            preparedMap = try prepareMap(
+                areaID: save.currentAreaID,
+                spawnID: save.currentSpawnID,
+                resolvedEncounterKeys: Set(save.resolvedEncounterKeys)
+            )
         } catch {
             let reason = "存档地图加载失败：\(error)"
             statusText = reason
@@ -577,10 +619,32 @@ final class GameSessionViewModel {
         }
         commitMap(preparedMap)
         battleViewModel = nil
-        appState = .exploration
-        audioService.playExplorationSoundscape(for: currentAreaID)
-        statusText = "已读取存档。"
+        if Self.chapterIsComplete(
+            chapterID: Self.currentChapterID,
+            questState: save.questState,
+            questDefinitions: questDefinitions
+        ) {
+            audioService.stopSoundscape()
+            appState = .chapterComplete
+            statusText = "已读取第一章完成存档。"
+        } else {
+            appState = .exploration
+            audioService.playExplorationSoundscape(for: currentAreaID)
+            statusText = "已读取存档。"
+        }
         return .applied
+    }
+
+    static func chapterIsComplete(
+        chapterID: String,
+        questState: QuestState,
+        questDefinitions: [QuestDefinition]
+    ) -> Bool {
+        let chapterMainQuests = questDefinitions.filter {
+            $0.chapterID == chapterID && $0.isMainQuest
+        }
+        guard !chapterMainQuests.isEmpty else { return false }
+        return chapterMainQuests.allSatisfy { questState.statuses[$0.id] == .completed }
     }
 
     @discardableResult
@@ -637,12 +701,16 @@ final class GameSessionViewModel {
 
     private static func makePartyCreation(from catalog: ContentCatalog) -> PartyCreationViewModel {
         let skillNames: [String: String] = Dictionary(uniqueKeysWithValues: catalog.skills.map { ($0.id, $0.displayName) })
-        return PartyCreationViewModel(classes: catalog.classes, skillNamesByID: skillNames)
+        return PartyCreationViewModel(
+            classes: catalog.classes,
+            skillNamesByID: skillNames,
+            itemDefinitions: catalog.items
+        )
     }
 
     static func loadDisplayMetadata(from bundle: Bundle) throws -> SessionDisplayMetadata {
         guard let areasURL = bundle.url(
-            forResource: "chapter1",
+            forResource: currentChapterID,
             withExtension: "json",
             subdirectory: "Data/worlds"
         ) else {
@@ -671,12 +739,18 @@ final class GameSessionViewModel {
         )
     }
 
-    private static func uniqueDisplayNames(
+    static func uniqueDisplayNames(
         _ records: [SessionDisplayRecord],
         kind: String
     ) throws -> [String: String] {
         var result: [String: String] = [:]
         for record in records {
+            guard !record.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw SessionMetadataError.blankID(kind: kind)
+            }
+            guard !record.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw SessionMetadataError.blankDisplayName(kind: kind, id: record.id)
+            }
             guard result[record.id] == nil else {
                 throw SessionMetadataError.duplicateID(kind: kind, id: record.id)
             }
@@ -812,7 +886,11 @@ final class GameSessionViewModel {
         }
     }
 
-    private func prepareMap(areaID: String, spawnID: String) throws -> PreparedSessionMap {
+    private func prepareMap(
+        areaID: String,
+        spawnID: String,
+        resolvedEncounterKeys: Set<String>
+    ) throws -> PreparedSessionMap {
         let metadata = try mapMetadataLoader(areaID, contentBundle)
         guard let spawn = metadata.spawns.first(where: { $0.id == spawnID }) else {
             throw SessionMetadataError.missingSpawn(areaID: areaID, spawnID: spawnID)
@@ -820,7 +898,7 @@ final class GameSessionViewModel {
         let triggerService = EncounterTriggerService(
             triggers: metadata.encounterTriggers,
             encounters: contentCatalog.encounters,
-            triggeredTiledIDs: resolvedEncounterTiledIDs(in: areaID)
+            triggeredTiledIDs: tiledIDs(in: resolvedEncounterKeys, areaID: areaID)
         )
         return PreparedSessionMap(
             areaID: areaID,
@@ -839,7 +917,10 @@ final class GameSessionViewModel {
         if appState == .exploration {
             audioService.playExplorationSoundscape(for: prepared.areaID)
         }
-        explorationController.setObstacles(movementObstacles(for: prepared.metadata))
+        explorationController.configureNavigation(
+            obstacles: movementObstacles(for: prepared.metadata),
+            playableFrame: prepared.metadata.mapFrame
+        )
         if !party.isEmpty {
             explorationController.configureParty(party, at: prepared.spawnPosition)
         }
@@ -848,7 +929,11 @@ final class GameSessionViewModel {
     @discardableResult
     private func loadArea(_ areaID: String, spawnID: String) -> Bool {
         do {
-            commitMap(try prepareMap(areaID: areaID, spawnID: spawnID))
+            commitMap(try prepareMap(
+                areaID: areaID,
+                spawnID: spawnID,
+                resolvedEncounterKeys: session.resolvedEncounterKeys
+            ))
             return true
         } catch {
             statusText = "地图加载失败：\(error)"
@@ -929,9 +1014,10 @@ final class GameSessionViewModel {
 
         if isLeaderNear(npc.position, radius: 96) {
             openDialog(dialogID(for: npc))
-        } else {
-            explorationController.setLeaderDestination(npc.position)
+        } else if explorationController.setLeaderDestination(npc.position) {
             statusText = "队长正靠近 \(npcDisplayName(for: npc))。"
+        } else {
+            statusText = "无法接近 \(npcDisplayName(for: npc))。"
         }
         return true
     }
@@ -950,9 +1036,10 @@ final class GameSessionViewModel {
             session.collectedMapItemKeys.insert(key)
             audioService.play(.chestOpen)
             statusText = "拾取了 \(itemName(item.itemID))。"
-        } else {
-            explorationController.setLeaderDestination(item.position)
+        } else if explorationController.setLeaderDestination(item.position) {
             statusText = "队长正靠近 \(itemName(item.itemID))。"
+        } else {
+            statusText = "无法接近 \(itemName(item.itemID))。"
         }
         return true
     }
@@ -962,9 +1049,10 @@ final class GameSessionViewModel {
 
         if isLeaderNear(trigger.frame.center, radius: 96) {
             perform(trigger)
-        } else {
-            explorationController.setLeaderDestination(trigger.frame.center)
+        } else if explorationController.setLeaderDestination(trigger.frame.center) {
             statusText = "队长正靠近 \(triggerDisplayName(for: trigger))。"
+        } else {
+            statusText = "无法接近 \(triggerDisplayName(for: trigger))。"
         }
         return true
     }
@@ -1027,10 +1115,6 @@ final class GameSessionViewModel {
         "\(currentAreaID):\(trigger.tiledID)"
     }
 
-    private func resolvedEncounterTiledIDs(in areaID: String) -> Set<Int> {
-        tiledIDs(in: session.resolvedEncounterKeys, areaID: areaID)
-    }
-
     private func tiledIDs(in keys: Set<String>, areaID: String) -> Set<Int> {
         let prefix = "\(areaID):"
         return Set(keys.compactMap { key in
@@ -1049,8 +1133,8 @@ final class GameSessionViewModel {
             guard openDialog(dialogID) else { return }
             session.firedMapTriggerKeys.insert(key)
         } else if trigger.action == "chapterComplete" {
-            completeChapter()
             session.firedMapTriggerKeys.insert(key)
+            completeChapter()
         } else {
             statusText = "未知地图触发。"
         }
@@ -1078,9 +1162,12 @@ extension GameSessionViewModel: GameSceneEventHandling {
             if interactWithNPC(at: point) || collectItem(at: point) || interactWithTrigger(at: point) {
                 return
             }
-            explorationController.setLeaderDestination(point)
-            statusText = "队长移动到：\(Int(point.x)), \(Int(point.y))"
-            checkEncounterTrigger()
+            if explorationController.setLeaderDestination(point) {
+                statusText = "队长移动到：\(Int(point.x)), \(Int(point.y))"
+                checkEncounterTrigger()
+            } else {
+                statusText = "目标位置不可达。"
+            }
         } else if appState == .battle {
             battleViewModel?.handleWorldClick(point)
         } else {
@@ -1102,23 +1189,27 @@ extension GameSessionViewModel: GameSceneEventHandling {
     func gameScene(_ scene: GameScene, didAdvance deltaTime: TimeInterval) {
         guard appState == .exploration else { return }
 
-            explorationController.advance(deltaTime: deltaTime)
-            checkExitTransition()
-            checkEncounterTrigger()
-            checkMapTrigger()
+        explorationController.advance(deltaTime: deltaTime)
+        if checkExitTransition() {
+            return
         }
+        checkEncounterTrigger()
+        checkMapTrigger()
+    }
 
-    private func checkExitTransition() {
+    private func checkExitTransition() -> Bool {
         guard appState == .exploration,
               let leaderPosition = explorationController.members.first(where: { $0.actorID == explorationController.leaderID })?.position,
               let exit = currentMapMetadata?.exits.first(where: { $0.contains(leaderPosition) })
         else {
-            return
+            return false
         }
 
-        if loadArea(exit.targetAreaID, spawnID: exit.targetSpawnID) {
-            statusText = "进入区域：\(areaDisplayName(for: exit.targetAreaID))"
+        guard loadArea(exit.targetAreaID, spawnID: exit.targetSpawnID) else {
+            return false
         }
+        statusText = "进入区域：\(areaDisplayName(for: exit.targetAreaID))"
+        return true
     }
 
     private func checkEncounterTrigger() {
