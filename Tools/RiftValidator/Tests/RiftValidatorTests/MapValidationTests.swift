@@ -22,6 +22,27 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(result.reportMarkdown().contains("npc object 2 missing hitbox size"))
     }
 
+
+    func testKeyGameplayObjectInsideMovementObstacleFails() throws {
+        let source = try String(contentsOf: fixture("valid-map"), encoding: .utf8)
+        let overlapping = source.replacingOccurrences(
+            of: #"<object id="6" x="96" y="96" width="64" height="64">"#,
+            with: #"<object id="6" x="60" y="28" width="48" height="48">"#
+        )
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let url = directory.appending(path: "overlapping-object.tmx")
+        try overlapping.write(to: url, atomically: true, encoding: .utf8)
+
+        let result = try MapValidator.validate(url: url)
+
+        XCTAssertFalse(result.isValid)
+        XCTAssertTrue(result.reportMarkdown().contains("npc object 2 center is inside movement obstacle"))
+    }
+
     func testCrossAreaExitCanTargetSpawnInAnotherMap() throws {
         let results = try MapValidator.validate(urls: [
             fixture("cross-a"),
@@ -29,6 +50,141 @@ final class MapValidationTests: XCTestCase {
         ])
 
         XCTAssertTrue(results.allSatisfy(\.isValid), results.map { $0.reportMarkdown() }.joined(separator: "\n"))
+    }
+
+
+
+    func testDuplicateMapAreaIDsAreReportedWithoutCrashing() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let firstDirectory = root.appending(path: "a")
+        let secondDirectory = root.appending(path: "b")
+        try FileManager.default.createDirectory(at: firstDirectory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: secondDirectory, withIntermediateDirectories: true)
+        let first = firstDirectory.appending(path: "duplicate.tmx")
+        let second = secondDirectory.appending(path: "duplicate.tmx")
+        try FileManager.default.copyItem(at: fixture("valid-map"), to: first)
+        try FileManager.default.copyItem(at: fixture("valid-map"), to: second)
+
+        let results = try MapValidator.validate(urls: [first, second])
+
+        XCTAssertEqual(results.count, 2)
+        XCTAssertTrue(results.allSatisfy { result in
+            result.issues.contains { $0.message == "Duplicate map area id: duplicate" }
+        })
+    }
+
+    func testChapterIsNeverInferredFromOutputPath() throws {
+        let arguments = try parseArguments([
+            "RiftValidator",
+            "/tmp/resources",
+            "--write-report",
+            "/tmp/chapter1-validation.md"
+        ])
+
+        XCTAssertNil(arguments.chapterID)
+    }
+
+    func testUnknownChapterFailsInsteadOfFallingBackToAllMaps() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(
+            at: root.appending(path: "Data/worlds"),
+            withIntermediateDirectories: true
+        )
+
+        XCTAssertThrowsError(
+            try validationMapURLs(resourcesRoot: root, chapterID: "chapter_typo", areaID: nil)
+        ) { error in
+            XCTAssertTrue(String(describing: error).contains("Unknown chapter chapter_typo"))
+        }
+    }
+
+    func testAreaRequiresExplicitChapter() {
+        XCTAssertThrowsError(try parseArguments([
+            "RiftValidator",
+            "/tmp/resources",
+            "--area",
+            "village_square"
+        ])) { error in
+            XCTAssertTrue(String(describing: error).contains("--area requires an explicit --chapter"))
+        }
+    }
+
+    func testUnknownAreaFailsInsteadOfReturningAnEmptySuccessScope() throws {
+        let root = try makeChapterFixture(areaIDs: ["village_square"])
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        XCTAssertThrowsError(
+            try validationMapURLs(resourcesRoot: root, chapterID: "chapter1", areaID: "village_typo")
+        ) { error in
+            XCTAssertTrue(String(describing: error).contains("Unknown area village_typo in chapter chapter1"))
+        }
+    }
+
+    func testChapterScopeResolvesOnlyWorldGraphMapsBeforeParsing() throws {
+        let root = try makeChapterFixture(areaIDs: ["village_square"])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let otherChapterRoot = root.appending(path: "Maps/chapter2")
+        try FileManager.default.createDirectory(at: otherChapterRoot, withIntermediateDirectories: true)
+        try "<not valid tmx>".write(
+            to: otherChapterRoot.appending(path: "broken.tmx"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let urls = try validationMapURLs(resourcesRoot: root, chapterID: "chapter1", areaID: nil)
+
+        XCTAssertEqual(urls.map(\.lastPathComponent), ["village_square.tmx"])
+        XCTAssertEqual(try MapValidator.validate(urls: urls).count, 1)
+    }
+
+    func testChapterScopeFailsWhenWorldGraphMapIsMissing() throws {
+        let root = try makeChapterFixture(areaIDs: ["village_square"])
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.removeItem(at: root.appending(path: "Maps/chapter1/village_square.tmx"))
+
+        XCTAssertThrowsError(
+            try validationMapURLs(resourcesRoot: root, chapterID: "chapter1", areaID: nil)
+        ) { error in
+            XCTAssertTrue(String(describing: error).contains("references missing map"))
+        }
+    }
+
+    func testWorldGraphDuplicateIDsAreReportedWithoutCrashing() {
+        let duplicateMapA = map("duplicate", spawns: ["start"])
+        let duplicateMapB = map("duplicate", spawns: ["entry"])
+        let graph = ChapterWorldGraph(
+            id: "test",
+            title: "Duplicate world",
+            startAreaId: "duplicate",
+            startSpawnId: "start",
+            areas: [
+                ChapterWorldArea(
+                    id: "duplicate",
+                    displayName: "A",
+                    biome: "test",
+                    mapPath: "Maps/a.tmx",
+                    exits: []
+                ),
+                ChapterWorldArea(
+                    id: "duplicate",
+                    displayName: "B",
+                    biome: "test",
+                    mapPath: "Maps/b.tmx",
+                    exits: []
+                )
+            ]
+        )
+
+        let result = WorldGraphValidator.validate(graph, maps: [duplicateMapA, duplicateMapB])
+
+        XCTAssertTrue(result.issues.contains { $0.message == "Duplicate TMX map area id: duplicate" })
+        XCTAssertTrue(result.issues.contains { $0.message == "Duplicate world area id: duplicate" })
     }
 
     func testWorldGraphDetectsDisconnectedArea() {
@@ -100,6 +256,22 @@ final class MapValidationTests: XCTestCase {
         XCTAssertTrue(results.allSatisfy(\.isValid))
     }
 
+
+    func testMalformedNPCDataFailsReferenceValidation() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let dataRoot = root.appending(path: "Data")
+        try FileManager.default.createDirectory(at: dataRoot, withIntermediateDirectories: true)
+        try "[]".write(to: dataRoot.appending(path: "encounters.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "items.json"), atomically: true, encoding: .utf8)
+        try "[]".write(to: dataRoot.appending(path: "dialogs.json"), atomically: true, encoding: .utf8)
+        try "{ malformed".write(to: dataRoot.appending(path: "npcs.json"), atomically: true, encoding: .utf8)
+
+        XCTAssertThrowsError(try MapReferenceValidator.validateIfPresent(resourcesRoot: root, maps: []))
+    }
+
     func testMapReferenceValidationCatchesMissingItem() throws {
         let root = URL.temporaryDirectory
             .appending(path: "RiftValidatorTests")
@@ -133,6 +305,44 @@ final class MapValidationTests: XCTestCase {
 
         XCTAssertFalse(result.isValid)
         XCTAssertTrue(result.reportMarkdown().contains("references missing item: missing_item"))
+    }
+
+    private func makeChapterFixture(areaIDs: [String]) throws -> URL {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        let mapsRoot = root.appending(path: "Maps/chapter1")
+        let worldsRoot = root.appending(path: "Data/worlds")
+        try FileManager.default.createDirectory(at: mapsRoot, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: worldsRoot, withIntermediateDirectories: true)
+
+        for areaID in areaIDs {
+            try FileManager.default.copyItem(
+                at: try fixture("valid-map"),
+                to: mapsRoot.appending(path: "\(areaID).tmx")
+            )
+        }
+
+        let areas: [[String: Any]] = areaIDs.map { areaID in
+            [
+                "id": areaID,
+                "displayName": areaID,
+                "biome": "test",
+                "mapPath": "Maps/chapter1/\(areaID).tmx",
+                "exits": []
+            ]
+        }
+        let graph: [String: Any] = [
+            "id": "chapter1",
+            "title": "Chapter 1",
+            "startAreaId": areaIDs.first ?? "missing",
+            "startSpawnId": "start",
+            "areas": areas
+        ]
+        try JSONSerialization.data(withJSONObject: graph).write(
+            to: worldsRoot.appending(path: "chapter1.json")
+        )
+        return root
     }
 
     private func fixture(_ name: String) throws -> URL {

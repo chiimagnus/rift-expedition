@@ -131,11 +131,42 @@ def replace_obstacles(root: ET.Element, obstacles: list[dict[str, Any]]) -> None
         })
 
 
+def remove_legacy_tile_art(root: ET.Element) -> None:
+    """Canonicalize painted chapter maps to the single image-layer visual path."""
+    for child in list(root):
+        if child.tag in {"tileset", "layer"}:
+            root.remove(child)
+
+    properties = root.find("properties")
+    if properties is not None:
+        for prop in list(properties.findall("property")):
+            if prop.get("name") == "assetId":
+                properties.remove(prop)
+
+
+def expected_image_layer_names(spec: dict[str, Any]) -> list[str]:
+    names = [spec["layerName"]]
+    if spec.get("foregroundOutput"):
+        names.append(spec["foregroundLayerName"])
+    return names
+
+
+def canonicalize_image_layers(root: ET.Element, allowed_names: set[str]) -> None:
+    """Remove image layers that are not part of the active map-art contract."""
+    for layer in list(root.findall("imagelayer")):
+        if layer.get("name") not in allowed_names:
+            root.remove(layer)
+
+
 def ensure_image_layer(root: ET.Element, map_path: Path, output_path: Path, layer_name: str, width: int, height: int) -> None:
-    layer = next((element for element in root.findall("imagelayer") if element.get("name") == layer_name), None)
+    matching_layers = [element for element in root.findall("imagelayer") if element.get("name") == layer_name]
+    layer = matching_layers[0] if matching_layers else None
+    for duplicate in matching_layers[1:]:
+        root.remove(duplicate)
+
     if layer is None:
         next_layer_id = int(root.get("nextlayerid", "1"))
-        layer = ET.Element("imagelayer", {"id": str(next_layer_id), "name": layer_name, "x": "0", "y": "0"})
+        layer = ET.Element("imagelayer", {"id": str(next_layer_id)})
         root.set("nextlayerid", str(next_layer_id + 1))
         children = list(root)
         first_layer_index = next(
@@ -143,29 +174,59 @@ def ensure_image_layer(root: ET.Element, map_path: Path, output_path: Path, laye
             len(children),
         )
         root.insert(first_layer_index, layer)
-    image = layer.find("image")
-    if image is None:
-        image = ET.SubElement(layer, "image")
+
+    layer.set("name", layer_name)
+    layer.set("x", "0")
+    layer.set("y", "0")
+    layer.set("visible", "1")
+    layer.set("opacity", "1")
+    for key in ("offsetx", "offsety"):
+        layer.attrib.pop(key, None)
+
+    images = layer.findall("image")
+    image = images[0] if images else ET.SubElement(layer, "image")
+    for duplicate in images[1:]:
+        layer.remove(duplicate)
     relative = os.path.relpath(output_path, start=map_path.parent).replace(os.sep, "/")
     image.set("source", relative)
     image.set("width", str(width))
     image.set("height", str(height))
 
 
-def update_manifest_entry(project_root: Path, *, asset_id: str, output: str, source_description: str) -> None:
-    manifest_path = project_root / "RiftExpedition/Resources/Assets/assets-manifest.json"
-    entries = json.loads(manifest_path.read_text(encoding="utf-8"))
-    output = Path(output)
-    relative_to_resources = output.relative_to(Path("RiftExpedition/Resources")).as_posix()
-    entry = {
+def _manifest_entry(
+    *, asset_id: str, output: str, source_description: str, license_name: str, author: str
+) -> dict[str, str]:
+    return {
         "id": asset_id,
-        "path": relative_to_resources,
+        "path": Path(output).relative_to(Path("RiftExpedition/Resources")).as_posix(),
         "type": "map-art",
         "source": source_description,
-        "license": "ai-static",
+        "license": license_name,
         "downloadedAt": "2026-07-12",
-        "author": "AI-generated, integrated by Rift Expedition project",
+        "author": author,
     }
+
+
+def update_manifest_entry(
+    project_root: Path,
+    *,
+    asset_id: str,
+    output: str,
+    source_description: str,
+    license_name: str,
+    author: str,
+) -> None:
+    manifest_path = project_root / "RiftExpedition/Resources/Assets/assets-manifest.json"
+    entries = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(entries, list):
+        raise ValueError("Asset manifest top-level value must be an array")
+    entry = _manifest_entry(
+        asset_id=asset_id,
+        output=output,
+        source_description=source_description,
+        license_name=license_name,
+        author=author,
+    )
     entries = [item for item in entries if item.get("id") != entry["id"] and item.get("path") != entry["path"]]
     entries.append(entry)
     manifest_path.write_text(json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -176,16 +237,19 @@ def update_manifest(project_root: Path, spec: dict[str, Any]) -> None:
         project_root,
         asset_id=spec["assetID"],
         output=spec["output"],
-        source_description=spec.get("sourceDescription", "Top-down 2D environment aligned by Tools/MapArtPipeline"),
+        source_description=spec["sourceDescription"],
+        license_name=spec["license"],
+        author=spec["author"],
     )
     if spec.get("foregroundOutput") and spec.get("foregroundAssetID"):
         update_manifest_entry(
             project_root,
             asset_id=spec["foregroundAssetID"],
             output=spec["foregroundOutput"],
-            source_description=spec.get("foregroundSourceDescription", "Transparent foreground occlusion art aligned by Tools/MapArtPipeline"),
+            source_description=spec["foregroundSourceDescription"],
+            license_name=spec["foregroundLicense"],
+            author=spec["foregroundAuthor"],
         )
-
 
 def draw_object_overlay(image: Image.Image, root: ET.Element, *, include_labels: bool) -> Image.Image:
     base = image.convert("RGBA")
@@ -316,11 +380,65 @@ def write_layout_guides(
     print(f"Wrote {len(contracts)} layout guides: {output_directory}")
 
 
-def validate_contracts(
+def _manifest_path_for_output(output: str) -> str:
+    return Path(output).relative_to(Path("RiftExpedition/Resources")).as_posix()
+
+
+def _validate_runtime_image(path: Path, width: int, height: int, *, require_rgba: bool) -> list[str]:
+    if not path.is_file():
+        return [f"missing runtime image {path}"]
+    try:
+        with Image.open(path) as image:
+            errors = []
+            if image.size != (width, height):
+                errors.append(f"runtime image size {image.size} != {(width, height)}")
+            if require_rgba and image.mode != "RGBA":
+                errors.append(f"foreground image mode must be RGBA, got {image.mode}")
+            return errors
+    except OSError as error:
+        return [f"unreadable runtime image {path}: {error}"]
+
+
+def _validate_layer(
+    root: ET.Element,
+    map_path: Path,
+    output_path: Path,
+    layer_name: str,
+    width: int,
+    height: int,
+) -> list[str]:
+    layers = [layer for layer in root.findall("imagelayer") if layer.get("name") == layer_name]
+    if len(layers) != 1:
+        return [f"image layer {layer_name} count is {len(layers)}, expected 1"]
+    layer = layers[0]
+    errors = []
+    if layer.get("x", "0") != "0" or layer.get("y", "0") != "0":
+        errors.append(f"image layer {layer_name} must start at 0,0")
+    if layer.get("visible", "1") == "0":
+        errors.append(f"image layer {layer_name} is hidden")
+    if float(layer.get("opacity", "1")) != 1:
+        errors.append(f"image layer {layer_name} opacity must be 1")
+    if layer.get("offsetx") not in (None, "0") or layer.get("offsety") not in (None, "0"):
+        errors.append(f"image layer {layer_name} must have zero offset")
+    images = layer.findall("image")
+    if len(images) != 1:
+        errors.append(f"image layer {layer_name} image count is {len(images)}, expected 1")
+        return errors
+    image = images[0]
+    expected_source = os.path.relpath(output_path, start=map_path.parent).replace(os.sep, "/")
+    if image.get("source") != expected_source:
+        errors.append(f"image layer {layer_name} source {image.get('source')!r} != {expected_source!r}")
+    if image.get("width") != str(width) or image.get("height") != str(height):
+        errors.append(f"image layer {layer_name} dimensions must be {width}x{height}")
+    return errors
+
+
+def validate_inputs(
     project_root: Path,
     specs: dict[str, dict[str, Any]],
     areas: list[dict[str, Any]],
 ) -> list[str]:
+    """Validate immutable source/spec inputs without requiring generated outputs."""
     errors: list[str] = []
     world_ids = [area["id"] for area in areas]
     spec_ids = list(specs)
@@ -335,17 +453,31 @@ def validate_contracts(
     asset_ids: set[str] = set()
     outputs: set[str] = set()
     area_by_id = {area["id"]: area for area in areas}
+    manifest_path = project_root / "RiftExpedition/Resources/Assets/assets-manifest.json"
+    try:
+        manifest_entries = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest_entries, list):
+            errors.append("Invalid asset manifest: top-level value must be an array")
+    except (OSError, json.JSONDecodeError) as error:
+        errors.append(f"Invalid asset manifest: {error}")
+
     for area_id, spec in specs.items():
         status = spec.get("status")
         if status not in VALID_STATUSES:
             errors.append(f"{area_id}: invalid status {status!r}")
-        required = ["source", "tmx", "output", "assetID", "layerName"]
+        required = [
+            "source", "sourceDescription", "license", "author",
+            "tmx", "output", "assetID", "layerName",
+        ]
         for key in required:
             if not spec.get(key):
                 errors.append(f"{area_id}: missing {key}")
         if spec.get("layerName") != "background_art":
             errors.append(f"{area_id}: layerName must be background_art")
-        foreground_keys = ["foregroundSource", "foregroundOutput", "foregroundAssetID", "foregroundLayerName"]
+        foreground_keys = [
+            "foregroundSource", "foregroundOutput", "foregroundAssetID", "foregroundLayerName",
+            "foregroundSourceDescription", "foregroundLicense", "foregroundAuthor",
+        ]
         present_foreground = [key for key in foreground_keys if spec.get(key)]
         if present_foreground and len(present_foreground) != len(foreground_keys):
             errors.append(f"{area_id}: foreground fields must be provided together")
@@ -360,28 +492,155 @@ def validate_contracts(
         if output in outputs:
             errors.append(f"{area_id}: duplicate output {output}")
         outputs.add(output)
+        foreground_asset_id = spec.get("foregroundAssetID")
+        if foreground_asset_id:
+            if foreground_asset_id in asset_ids:
+                errors.append(f"{area_id}: duplicate foregroundAssetID {foreground_asset_id}")
+            asset_ids.add(foreground_asset_id)
+        foreground_output = spec.get("foregroundOutput")
+        if foreground_output:
+            if foreground_output in outputs:
+                errors.append(f"{area_id}: duplicate foregroundOutput {foreground_output}")
+            outputs.add(foreground_output)
 
         map_path = project_root / spec.get("tmx", "")
         if not map_path.is_file():
             errors.append(f"{area_id}: missing TMX {map_path}")
-            continue
-        try:
-            root = ET.parse(map_path).getroot()
-            width, height = map_pixel_size(root)
-            if width <= 0 or height <= 0:
-                errors.append(f"{area_id}: invalid map dimensions {width}x{height}")
-        except ET.ParseError as error:
-            errors.append(f"{area_id}: invalid TMX XML: {error}")
+        else:
+            try:
+                root = ET.parse(map_path).getroot()
+                width, height = map_pixel_size(root)
+                if width <= 0 or height <= 0:
+                    errors.append(f"{area_id}: invalid map dimensions {width}x{height}")
+            except (ET.ParseError, ValueError) as error:
+                errors.append(f"{area_id}: invalid TMX XML or layer metadata: {error}")
 
         area = area_by_id.get(area_id)
         if area is not None:
             expected_tmx = (Path("RiftExpedition/Resources") / area["mapPath"]).as_posix()
             if Path(spec.get("tmx", "")).as_posix() != expected_tmx:
                 errors.append(f"{area_id}: TMX path differs from world graph ({expected_tmx})")
+
         if status == "ready" and not (project_root / spec.get("source", "")).is_file():
             errors.append(f"{area_id}: ready source is missing")
         if status == "ready" and spec.get("foregroundSource") and not (project_root / spec["foregroundSource"]).is_file():
             errors.append(f"{area_id}: ready foreground source is missing")
+    return errors
+
+
+def validate_contracts(
+    project_root: Path,
+    specs: dict[str, dict[str, Any]],
+    areas: list[dict[str, Any]],
+    *,
+    runtime_area_ids: set[str] | None = None,
+) -> list[str]:
+    """Validate generated runtime images, TMX layers and manifest registrations."""
+    errors = validate_inputs(project_root, specs, areas)
+    if errors:
+        return errors
+
+    manifest_path = project_root / "RiftExpedition/Resources/Assets/assets-manifest.json"
+    manifest_entries = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    for area_id, spec in specs.items():
+        if spec.get("status") != "ready":
+            continue
+        if runtime_area_ids is not None and area_id not in runtime_area_ids:
+            continue
+        map_path = project_root / spec["tmx"]
+        root = ET.parse(map_path).getroot()
+        width, height = map_pixel_size(root)
+        if root.findall("tileset"):
+            errors.append(f"{area_id}: legacy tileset declarations are not allowed")
+        if root.findall("layer"):
+            errors.append(f"{area_id}: legacy tile layers are not allowed")
+        properties = root.find("properties")
+        if properties is not None and any(
+            prop.get("name") == "assetId" for prop in properties.findall("property")
+        ):
+            errors.append(f"{area_id}: legacy assetId property is not allowed")
+        expected_layer_names = expected_image_layer_names(spec)
+        actual_layer_names = [layer.get("name") for layer in root.findall("imagelayer")]
+        if sorted(actual_layer_names, key=lambda value: value or "") != sorted(expected_layer_names):
+            errors.append(
+                f"{area_id}: image layer names {actual_layer_names!r} do not exactly match "
+                f"contract {expected_layer_names!r}"
+            )
+
+        output_path = project_root / spec["output"]
+        errors.extend(
+            f"{area_id}: {message}"
+            for message in _validate_runtime_image(output_path, width, height, require_rgba=False)
+        )
+        errors.extend(
+            f"{area_id}: {message}"
+            for message in _validate_layer(root, map_path, output_path, spec["layerName"], width, height)
+        )
+        if properties is None or not any(
+            prop.get("name") == "artAssetId" and prop.get("value") == spec["assetID"]
+            for prop in properties.findall("property")
+        ):
+            errors.append(f"{area_id}: TMX artAssetId does not match spec")
+
+        if spec.get("foregroundOutput"):
+            foreground_path = project_root / spec["foregroundOutput"]
+            errors.extend(
+                f"{area_id}: {message}"
+                for message in _validate_runtime_image(foreground_path, width, height, require_rgba=True)
+            )
+            errors.extend(
+                f"{area_id}: {message}"
+                for message in _validate_layer(
+                    root,
+                    map_path,
+                    foreground_path,
+                    spec["foregroundLayerName"],
+                    width,
+                    height,
+                )
+            )
+            if properties is None or not any(
+                prop.get("name") == "foregroundArtAssetId"
+                and prop.get("value") == spec["foregroundAssetID"]
+                for prop in properties.findall("property")
+            ):
+                errors.append(f"{area_id}: TMX foregroundArtAssetId does not match spec")
+
+        expected_manifest_entries = [
+            _manifest_entry(
+                asset_id=spec["assetID"],
+                output=spec["output"],
+                source_description=spec["sourceDescription"],
+                license_name=spec["license"],
+                author=spec["author"],
+            )
+        ]
+        if spec.get("foregroundOutput"):
+            expected_manifest_entries.append(
+                _manifest_entry(
+                    asset_id=spec["foregroundAssetID"],
+                    output=spec["foregroundOutput"],
+                    source_description=spec["foregroundSourceDescription"],
+                    license_name=spec["foregroundLicense"],
+                    author=spec["foregroundAuthor"],
+                )
+            )
+        for expected in expected_manifest_entries:
+            matches = [
+                entry for entry in manifest_entries
+                if entry.get("id") == expected["id"] or entry.get("path") == expected["path"]
+            ]
+            if len(matches) != 1:
+                errors.append(
+                    f"{area_id}: manifest entry {expected['id']}/{expected['path']} "
+                    f"count is {len(matches)}, expected 1"
+                )
+            elif any(matches[0].get(key) != value for key, value in expected.items()):
+                errors.append(
+                    f"{area_id}: manifest entry does not exactly match "
+                    f"{expected['id']}/{expected['path']}"
+                )
     return errors
 
 
@@ -415,6 +674,8 @@ def build(project_root: Path, area_id: str, spec: dict[str, Any]) -> None:
     tree = ET.parse(map_path)
     root = tree.getroot()
     map_width, map_height = map_pixel_size(root)
+    remove_legacy_tile_art(root)
+    canonicalize_image_layers(root, set(expected_image_layer_names(spec)))
     if map_width <= 0 or map_height <= 0:
         raise ValueError(f"Invalid map dimensions for {area_id}")
 
@@ -449,9 +710,6 @@ def build(project_root: Path, area_id: str, spec: dict[str, Any]) -> None:
             map_width,
             map_height,
         )
-    terrain = next((layer for layer in root.findall("layer") if layer.get("name") == "terrain"), None)
-    if terrain is not None:
-        terrain.set("visible", "1" if spec.get("terrainVisible", True) else "0")
     update_objects(root, spec.get("objectOverrides", {}))
     if "replaceObstacles" in spec:
         replace_obstacles(root, spec["replaceObstacles"])
@@ -481,19 +739,23 @@ def main() -> None:
     project_root = args.project_root.resolve()
     specs = load_specs(project_root)
     areas = load_world_areas(project_root)
-    errors = validate_contracts(project_root, specs, areas)
-    if errors:
-        raise SystemExit("Map-art contract validation failed:\n- " + "\n- ".join(errors))
-
-    if args.validate_contracts:
-        ready_count = sum(spec.get("status") == "ready" for spec in specs.values())
-        print(f"Map-art contracts valid: {len(specs)} areas, {ready_count} ready, {len(specs) - ready_count} pending-source")
-        return
 
     selected = args.area or list(specs)
     unknown = [area_id for area_id in selected if area_id not in specs]
     if unknown:
         raise SystemExit(f"Unknown area: {', '.join(unknown)}")
+
+    if args.validate_contracts:
+        errors = validate_contracts(project_root, specs, areas)
+        if errors:
+            raise SystemExit("Map-art contract validation failed:\n- " + "\n- ".join(errors))
+        ready_count = sum(spec.get("status") == "ready" for spec in specs.values())
+        print(f"Map-art contracts valid: {len(specs)} areas, {ready_count} ready, {len(specs) - ready_count} pending-source")
+        return
+
+    preflight_errors = validate_inputs(project_root, specs, areas)
+    if preflight_errors:
+        raise SystemExit("Map-art build preflight failed:\n- " + "\n- ".join(preflight_errors))
 
     if args.write_guides is not None:
         output_directory = args.write_guides
@@ -505,6 +767,15 @@ def main() -> None:
     area_ids = args.area or [area_id for area_id, spec in specs.items() if spec.get("status") == "ready"]
     for area_id in area_ids:
         build(project_root, area_id, specs[area_id])
+
+    postflight_errors = validate_contracts(
+        project_root,
+        specs,
+        areas,
+        runtime_area_ids=set(area_ids),
+    )
+    if postflight_errors:
+        raise SystemExit("Map-art post-build validation failed:\n- " + "\n- ".join(postflight_errors))
 
 
 if __name__ == "__main__":

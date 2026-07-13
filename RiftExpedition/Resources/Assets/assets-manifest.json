@@ -1,52 +1,7 @@
 [
   {
-    "id": "tileset.vertical_slice_tileset",
-    "path": "Assets/Tilesets/vertical_slice_tileset.png",
-    "type": "tileset",
-    "source": "local self-made procedural pixel tileset for vertical_slice map",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "tileset.chapter1_village",
-    "path": "Assets/Tilesets/chapter1_village_tileset.png",
-    "type": "tileset",
-    "source": "local self-made procedural pixel tileset for village chapter areas",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "tileset.chapter1_wilds",
-    "path": "Assets/Tilesets/chapter1_wilds_tileset.png",
-    "type": "tileset",
-    "source": "local self-made procedural pixel tileset for wilds chapter areas",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "tileset.chapter1_cave",
-    "path": "Assets/Tilesets/chapter1_cave_tileset.png",
-    "type": "tileset",
-    "source": "local self-made procedural pixel tileset for cave chapter areas",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
     "id": "sprite.prop_chest",
     "path": "Assets/Sprites/prop_chest.png",
-    "type": "sprite",
-    "source": "local self-made procedural pixel sprite",
-    "license": "self-made",
-    "downloadedAt": "2026-07-06",
-    "author": "Rift Expedition project"
-  },
-  {
-    "id": "sprite.prop_woodpile",
-    "path": "Assets/Sprites/prop_woodpile.png",
     "type": "sprite",
     "source": "local self-made procedural pixel sprite",
     "license": "self-made",
@@ -585,165 +540,165 @@
     "author": "Procedural generation for Rift Expedition"
   },
   {
-    "id": "mapart.chapter1_village_riverside",
-    "path": "Assets/MapArt/chapter1/village_riverside.png",
-    "type": "map-art",
-    "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_village_riverside_foreground",
-    "path": "Assets/MapArt/chapter1/village_riverside_foreground.png",
-    "type": "map-art",
-    "source": "Deterministic transparent canopy layer generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_village_outskirts",
-    "path": "Assets/MapArt/chapter1/village_outskirts.png",
-    "type": "map-art",
-    "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_village_outskirts_foreground",
-    "path": "Assets/MapArt/chapter1/village_outskirts_foreground.png",
-    "type": "map-art",
-    "source": "Deterministic transparent canopy layer generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_wilds_road",
-    "path": "Assets/MapArt/chapter1/wilds_road.png",
-    "type": "map-art",
-    "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_wilds_road_foreground",
-    "path": "Assets/MapArt/chapter1/wilds_road_foreground.png",
-    "type": "map-art",
-    "source": "Deterministic transparent canopy layer generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_wilds_ruins",
-    "path": "Assets/MapArt/chapter1/wilds_ruins.png",
-    "type": "map-art",
-    "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_wilds_ruins_foreground",
-    "path": "Assets/MapArt/chapter1/wilds_ruins_foreground.png",
-    "type": "map-art",
-    "source": "Deterministic transparent canopy layer generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_wilds_riverbank",
-    "path": "Assets/MapArt/chapter1/wilds_riverbank.png",
-    "type": "map-art",
-    "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
-    "id": "mapart.chapter1_wilds_riverbank_foreground",
-    "path": "Assets/MapArt/chapter1/wilds_riverbank_foreground.png",
-    "type": "map-art",
-    "source": "Deterministic transparent canopy layer generated from TMX layout data",
-    "license": "ai-static",
-    "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
-  },
-  {
     "id": "mapart.chapter1_village_square",
     "path": "Assets/MapArt/chapter1/village_square.png",
     "type": "map-art",
-    "source": "Top-down 2D environment aligned by Tools/MapArtPipeline",
+    "source": "AI-generated top-down 2D concept art aligned to the chapter-one TMX layout by Tools/MapArtPipeline",
     "license": "ai-static",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "AI-generated with built-in image generation; integrated by Rift Expedition project"
   },
   {
     "id": "mapart.chapter1_village_square_foreground",
     "path": "Assets/MapArt/chapter1/village_square_foreground.png",
     "type": "map-art",
     "source": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
-    "license": "ai-static",
+    "license": "self-made",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "Rift Expedition project"
   },
   {
-    "id": "mapart.chapter1_cave_depths",
-    "path": "Assets/MapArt/chapter1/cave_depths.png",
+    "id": "mapart.chapter1_village_riverside",
+    "path": "Assets/MapArt/chapter1/village_riverside.png",
     "type": "map-art",
-    "source": "Top-down 2D environment aligned by Tools/MapArtPipeline",
-    "license": "ai-static",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "self-made",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "Rift Expedition project"
   },
   {
-    "id": "mapart.chapter1_cave_depths_foreground",
-    "path": "Assets/MapArt/chapter1/cave_depths_foreground.png",
+    "id": "mapart.chapter1_village_riverside_foreground",
+    "path": "Assets/MapArt/chapter1/village_riverside_foreground.png",
     "type": "map-art",
-    "source": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
-    "license": "ai-static",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_outskirts",
+    "path": "Assets/MapArt/chapter1/village_outskirts.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_village_outskirts_foreground",
+    "path": "Assets/MapArt/chapter1/village_outskirts_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_wilds_road",
+    "path": "Assets/MapArt/chapter1/wilds_road.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_wilds_road_foreground",
+    "path": "Assets/MapArt/chapter1/wilds_road_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_wilds_ruins",
+    "path": "Assets/MapArt/chapter1/wilds_ruins.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_wilds_ruins_foreground",
+    "path": "Assets/MapArt/chapter1/wilds_ruins_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_wilds_riverbank",
+    "path": "Assets/MapArt/chapter1/wilds_riverbank.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_wilds_riverbank_foreground",
+    "path": "Assets/MapArt/chapter1/wilds_riverbank_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
   },
   {
     "id": "mapart.chapter1_cave_entrance",
     "path": "Assets/MapArt/chapter1/cave_entrance.png",
     "type": "map-art",
     "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
+    "license": "self-made",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "Rift Expedition project"
   },
   {
     "id": "mapart.chapter1_cave_entrance_foreground",
     "path": "Assets/MapArt/chapter1/cave_entrance_foreground.png",
     "type": "map-art",
     "source": "Deterministic transparent cave overhang layer generated from TMX layout data",
-    "license": "ai-static",
+    "license": "self-made",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "Rift Expedition project"
   },
   {
     "id": "mapart.chapter1_cave_mines",
     "path": "Assets/MapArt/chapter1/cave_mines.png",
     "type": "map-art",
     "source": "Deterministic top-down 2D environment generated from TMX layout data",
-    "license": "ai-static",
+    "license": "self-made",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "Rift Expedition project"
   },
   {
     "id": "mapart.chapter1_cave_mines_foreground",
     "path": "Assets/MapArt/chapter1/cave_mines_foreground.png",
     "type": "map-art",
     "source": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_depths",
+    "path": "Assets/MapArt/chapter1/cave_depths.png",
+    "type": "map-art",
+    "source": "AI-generated top-down 2D concept art aligned to the chapter-one TMX layout by Tools/MapArtPipeline",
     "license": "ai-static",
     "downloadedAt": "2026-07-12",
-    "author": "AI-generated, integrated by Rift Expedition project"
+    "author": "AI-generated with built-in image generation; integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_depths_foreground",
+    "path": "Assets/MapArt/chapter1/cave_depths_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "license": "self-made",
+    "downloadedAt": "2026-07-12",
+    "author": "Rift Expedition project"
   }
 ]

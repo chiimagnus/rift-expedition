@@ -15,6 +15,38 @@ final class DialogViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.questLogEntries.first?.status, .active)
     }
 
+
+    func testCompleteQuestOptionRequestsAtomicSessionCompletionWithoutMutatingState() throws {
+        let session = GameSessionState(
+            questState: QuestState(statuses: ["blood_debt": .active])
+        )
+        let completion = DialogScript(
+            id: "elder_return",
+            speakerName: "村长",
+            lines: ["交出证据。"],
+            options: [
+                DialogOption(
+                    id: "complete",
+                    title: "交付",
+                    action: .completeQuest,
+                    questID: "blood_debt",
+                    encounterID: nil
+                )
+            ]
+        )
+        let viewModel = DialogViewModel(
+            scripts: [completion],
+            questDefinitions: [quest],
+            session: session
+        )
+
+        XCTAssertTrue(viewModel.start(dialogID: "elder_return"))
+        let option = try XCTUnwrap(viewModel.activeDialog?.options.first)
+
+        XCTAssertEqual(viewModel.choose(option), .questCompletionRequested("blood_debt"))
+        XCTAssertEqual(session.questState.statuses["blood_debt"], .active)
+    }
+
     func testBattleOptionReturnsEncounterID() throws {
         let viewModel = DialogViewModel(scripts: [script], questDefinitions: [quest])
 

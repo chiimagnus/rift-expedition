@@ -11,14 +11,21 @@ final class ContentValidatorTests: XCTestCase {
         XCTAssertEqual(catalog.classes.first?.displayName, "战士")
     }
 
-    func testMissingSkillReferenceFailsWithReadableError() throws {
-        let catalog = try ContentLoader.load(from: fixtureDirectory("invalid-missing-skill"))
-
-        XCTAssertThrowsError(try ContentValidator.validate(catalog)) { error in
+    func testMissingSkillReferenceFailsDuringLoadWithReadableError() throws {
+        XCTAssertThrowsError(try ContentLoader.load(from: fixtureDirectory("invalid-missing-skill"))) { error in
             let message = String(describing: error)
             XCTAssertTrue(message.contains("Missing reference"))
             XCTAssertTrue(message.contains("missing_skill"))
         }
+    }
+
+    func testDialogsJSONIsTheCatalogAndRuntimeSource() throws {
+        let catalog = try ContentLoader.load(from: projectDataDirectory())
+        let intro = try XCTUnwrap(catalog.dialogues.first { $0.id == "elder_intro" })
+
+        XCTAssertTrue(intro.options.contains {
+            $0.action == .acceptQuest && $0.questID == "blood_debt"
+        })
     }
 
     func testConsumableMustReferenceExistingSkill() {
@@ -41,6 +48,251 @@ final class ContentValidatorTests: XCTestCase {
             let message = String(describing: error)
             XCTAssertTrue(message.contains("item:minor_healing_draught"))
             XCTAssertTrue(message.contains("missing_heal"))
+        }
+    }
+
+    func testDialogOptionIDsAndPayloadsAreStrictlyValidated() {
+        let quest = QuestDefinition(
+            id: "blood_debt",
+            chapterID: "chapter1",
+            title: "血债",
+            summary: "测试",
+            startDialogID: "broken_dialog",
+            requiredItemIDs: []
+        )
+        let dialogue = DialogDefinition(
+            id: "broken_dialog",
+            speakerName: "测试",
+            lines: ["测试"],
+            options: [
+                DialogOptionDefinition(
+                    id: "duplicate",
+                    title: "接受",
+                    action: .acceptQuest,
+                    questID: nil,
+                    encounterID: "boar_intro"
+                ),
+                DialogOptionDefinition(
+                    id: "duplicate",
+                    title: "",
+                    action: .startBattle,
+                    questID: "blood_debt",
+                    encounterID: nil
+                ),
+                DialogOptionDefinition(
+                    id: "close_with_payload",
+                    title: "关闭",
+                    action: .close,
+                    questID: "blood_debt",
+                    encounterID: nil
+                )
+            ]
+        )
+        let catalog = ContentCatalog(
+            classes: [],
+            skills: [],
+            items: [],
+            quests: [quest],
+            dialogues: [dialogue]
+        )
+
+        XCTAssertThrowsError(try ContentValidator.validate(catalog)) { error in
+            let message = String(describing: error)
+            for required in [
+                "Duplicate dialogue option in broken_dialog id: duplicate",
+                "acceptQuest requires questID",
+                "startBattle forbids questID",
+                "startBattle requires encounterID",
+                "close forbids questID and encounterID",
+                "option title must not be blank"
+            ] {
+                XCTAssertTrue(message.contains(required), required)
+            }
+        }
+    }
+
+    func testQuestDialogOptionMustReferenceExistingQuest() {
+        let dialogue = DialogDefinition(
+            id: "orphan_dialog",
+            speakerName: "测试",
+            lines: ["测试"],
+            options: [
+                DialogOptionDefinition(
+                    id: "accept_missing",
+                    title: "接受",
+                    action: .acceptQuest,
+                    questID: "missing_quest"
+                )
+            ]
+        )
+
+        XCTAssertThrowsError(try ContentValidator.validate(
+            ContentCatalog(classes: [], skills: [], items: [], quests: [], dialogues: [dialogue])
+        )) { error in
+            let message = String(describing: error)
+            XCTAssertTrue(message.contains("option.questID"))
+            XCTAssertTrue(message.contains("missing_quest"))
+        }
+    }
+
+    func testInvalidSkillSemanticsAreRejected() {
+        let invalidSkills = [
+            SkillDefinition(
+                id: "negative_ap",
+                displayName: "负 AP",
+                actionPointCost: -1,
+                range: 1,
+                target: .enemy,
+                affectsAllies: false,
+                canBeDodged: true,
+                effects: [.damage(1)]
+            ),
+            SkillDefinition(
+                id: "negative_range",
+                displayName: "负射程",
+                actionPointCost: 1,
+                range: -1,
+                target: .enemy,
+                affectsAllies: false,
+                canBeDodged: true,
+                effects: [.damage(1)]
+            ),
+            SkillDefinition(
+                id: "empty_effects",
+                displayName: "空效果",
+                actionPointCost: 1,
+                range: 1,
+                target: .enemy,
+                affectsAllies: false,
+                canBeDodged: true,
+                effects: []
+            ),
+            SkillDefinition(
+                id: "unknown_status",
+                displayName: "未知状态",
+                actionPointCost: 1,
+                range: 1,
+                target: .enemy,
+                affectsAllies: false,
+                canBeDodged: false,
+                effects: [.applyStatus(statusID: "frozen", durationTurns: 0)]
+            ),
+            SkillDefinition(
+                id: "unknown_surface",
+                displayName: "未知地表",
+                actionPointCost: 1,
+                range: 1,
+                target: .enemy,
+                affectsAllies: false,
+                canBeDodged: false,
+                effects: [.createSurface(surfaceID: "lava", durationTurns: -1)]
+            )
+        ]
+        let catalog = ContentCatalog(classes: [], skills: invalidSkills, items: [], quests: [], dialogues: [])
+
+        XCTAssertThrowsError(try ContentValidator.validate(catalog)) { error in
+            let message = String(describing: error)
+            for required in [
+                "actionPointCost must be positive",
+                "range must be finite and non-negative",
+                "effects must not be empty",
+                "unknown statusID: frozen",
+                "status duration must be positive",
+                "unknown surfaceID: lava",
+                "surface duration must be positive"
+            ] {
+                XCTAssertTrue(message.contains(required), required)
+            }
+        }
+    }
+
+    func testNonPositiveDamageAndHealingAreRejected() {
+        let skills = [
+            SkillDefinition(
+                id: "zero_damage",
+                displayName: "零伤害",
+                actionPointCost: 1,
+                range: 1,
+                target: .enemy,
+                affectsAllies: false,
+                canBeDodged: false,
+                effects: [.damage(0)]
+            ),
+            SkillDefinition(
+                id: "negative_heal",
+                displayName: "负治疗",
+                actionPointCost: 1,
+                range: 1,
+                target: .ally,
+                affectsAllies: true,
+                canBeDodged: false,
+                effects: [.heal(-1)]
+            )
+        ]
+
+        XCTAssertThrowsError(try ContentValidator.validate(
+            ContentCatalog(classes: [], skills: skills, items: [], quests: [], dialogues: [])
+        )) { error in
+            let message = String(describing: error)
+            XCTAssertTrue(message.contains("damage amount must be positive"))
+            XCTAssertTrue(message.contains("heal amount must be positive"))
+        }
+    }
+
+    func testQuestRequiredItemsMustReferenceExistingItems() {
+        let quest = QuestDefinition(
+            id: "missing_turn_in_item",
+            chapterID: "chapter1",
+            title: "缺失交付物",
+            summary: "测试",
+            startDialogID: "start",
+            turnInDialogID: "turn_in",
+            requiredItemIDs: ["missing_ledger"]
+        )
+        let catalog = ContentCatalog(
+            classes: [],
+            skills: [],
+            items: [],
+            quests: [quest],
+            dialogues: [
+                DialogDefinition(id: "start", speakerName: "测试", lines: ["开始"], options: []),
+                DialogDefinition(id: "turn_in", speakerName: "测试", lines: ["交付"], options: [])
+            ]
+        )
+
+        XCTAssertThrowsError(try ContentValidator.validate(catalog)) { error in
+            let message = String(describing: error)
+            XCTAssertTrue(message.contains("quest:missing_turn_in_item"))
+            XCTAssertTrue(message.contains("requiredItemIDs"))
+            XCTAssertTrue(message.contains("missing_ledger"))
+        }
+    }
+
+    func testQuestRequiredItemsMustBeUnique() {
+        let quest = QuestDefinition(
+            id: "duplicate_turn_in",
+            chapterID: "chapter1",
+            title: "重复交付物",
+            summary: "测试",
+            startDialogID: "start",
+            turnInDialogID: "turn_in",
+            requiredItemIDs: ["ledger", "ledger"]
+        )
+        let catalog = ContentCatalog(
+            classes: [],
+            skills: [],
+            items: [ItemDefinition(id: "ledger", displayName: "账册", kind: .quest)],
+            quests: [quest],
+            dialogues: [
+                DialogDefinition(id: "start", speakerName: "测试", lines: ["开始"], options: []),
+                DialogDefinition(id: "turn_in", speakerName: "测试", lines: ["交付"], options: [])
+            ]
+        )
+
+        XCTAssertThrowsError(try ContentValidator.validate(catalog)) { error in
+            let message = String(describing: error)
+            XCTAssertTrue(message.contains("duplicate_turn_in"))
+            XCTAssertTrue(message.contains("requiredItemIDs must not contain duplicates"))
         }
     }
 

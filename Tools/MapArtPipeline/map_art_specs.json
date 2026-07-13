@@ -6,7 +6,6 @@
     "assetID": "mapart.chapter1_village_square",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "objectOverrides": {
       "spawn": {
         "id:start": {
@@ -222,7 +221,12 @@
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_square_foreground.png",
     "foregroundAssetID": "mapart.chapter1_village_square_foreground",
     "foregroundLayerName": "foreground_roofs",
-    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout"
+    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "sourceDescription": "AI-generated top-down 2D concept art aligned to the chapter-one TMX layout by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "author": "AI-generated with built-in image generation; integrated by Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "village_riverside": {
     "status": "ready",
@@ -232,13 +236,16 @@
     "assetID": "mapart.chapter1_village_riverside",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/village_riverside_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_riverside_foreground.png",
     "foregroundAssetID": "mapart.chapter1_village_riverside_foreground",
     "foregroundLayerName": "foreground_canopy",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "village_outskirts": {
     "status": "ready",
@@ -248,13 +255,16 @@
     "assetID": "mapart.chapter1_village_outskirts",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/village_outskirts_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/village_outskirts_foreground.png",
     "foregroundAssetID": "mapart.chapter1_village_outskirts_foreground",
     "foregroundLayerName": "foreground_canopy",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "wilds_road": {
     "status": "ready",
@@ -264,13 +274,16 @@
     "assetID": "mapart.chapter1_wilds_road",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_road_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_road_foreground.png",
     "foregroundAssetID": "mapart.chapter1_wilds_road_foreground",
     "foregroundLayerName": "foreground_canopy",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "wilds_ruins": {
     "status": "ready",
@@ -280,13 +293,16 @@
     "assetID": "mapart.chapter1_wilds_ruins",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_ruins_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_ruins_foreground.png",
     "foregroundAssetID": "mapart.chapter1_wilds_ruins_foreground",
     "foregroundLayerName": "foreground_canopy",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "wilds_riverbank": {
     "status": "ready",
@@ -296,13 +312,16 @@
     "assetID": "mapart.chapter1_wilds_riverbank",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_riverbank_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_riverbank_foreground.png",
     "foregroundAssetID": "mapart.chapter1_wilds_riverbank_foreground",
     "foregroundLayerName": "foreground_canopy",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "cave_entrance": {
     "status": "ready",
@@ -312,13 +331,16 @@
     "assetID": "mapart.chapter1_cave_entrance",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/cave_entrance_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_entrance_foreground.png",
     "foregroundAssetID": "mapart.chapter1_cave_entrance_foreground",
     "foregroundLayerName": "foreground_overhang",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "cave_mines": {
     "status": "ready",
@@ -328,13 +350,16 @@
     "assetID": "mapart.chapter1_cave_mines",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "foregroundSource": "Tools/MapArtPipeline/Sources/cave_mines_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_mines_foreground.png",
     "foregroundAssetID": "mapart.chapter1_cave_mines_foreground",
     "foregroundLayerName": "foreground_overhang",
     "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
-    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data"
+    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "self-made",
+    "author": "Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   },
   "cave_depths": {
     "source": "Tools/MapArtPipeline/Sources/cave_depths_source.png",
@@ -343,12 +368,16 @@
     "assetID": "mapart.chapter1_cave_depths",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false,
     "status": "ready",
     "foregroundSource": "Tools/MapArtPipeline/Sources/cave_depths_foreground_source.png",
     "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_depths_foreground.png",
     "foregroundAssetID": "mapart.chapter1_cave_depths_foreground",
     "foregroundLayerName": "foreground_overhang",
-    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout"
+    "foregroundSourceDescription": "Deterministic transparent occlusion layer generated from TMX obstacle layout",
+    "sourceDescription": "AI-generated top-down 2D concept art aligned to the chapter-one TMX layout by Tools/MapArtPipeline",
+    "license": "ai-static",
+    "author": "AI-generated with built-in image generation; integrated by Rift Expedition project",
+    "foregroundLicense": "self-made",
+    "foregroundAuthor": "Rift Expedition project"
   }
 }

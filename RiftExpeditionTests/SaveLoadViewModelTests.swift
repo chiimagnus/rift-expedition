@@ -10,23 +10,42 @@ final class SaveLoadViewModelTests: XCTestCase {
         var loadedSave: SaveGame?
         let viewModel = SaveLoadViewModel(
             store: store,
-            makeSave: { self.makeSave(areaID: "vertical_slice") },
-            applySave: { loadedSave = $0 }
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { loadedSave = $0; return .applied }
         )
 
         viewModel.saveManual(slot: .manual(1))
         viewModel.load(slot: .manual(1))
 
-        XCTAssertEqual(loadedSave?.currentAreaID, "vertical_slice")
+        XCTAssertEqual(loadedSave?.currentAreaID, "village_square")
         XCTAssertEqual(loadedSave?.party.first?.id, "hero")
         XCTAssertTrue(viewModel.rows.first { $0.slot == .manual(1) }?.canLoad == true)
+    }
+
+    func testRejectedApplyDoesNotReportLoadSuccess() {
+        let store = makeStore()
+        try? store.write(makeSave(areaID: "village_square"), to: .manual(1), safety: .safe)
+        var applyCount = 0
+        let viewModel = SaveLoadViewModel(
+            store: store,
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { _ in
+                applyCount += 1
+                return .rejected("存档引用了无效地图或出生点。")
+            }
+        )
+
+        viewModel.load(slot: .manual(1))
+
+        XCTAssertEqual(applyCount, 1)
+        XCTAssertEqual(viewModel.message, "读取失败：存档引用了无效地图或出生点。")
     }
 
     func testUnsafeAutosaveRequestIsRejected() {
         let viewModel = SaveLoadViewModel(
             store: makeStore(),
-            makeSave: { self.makeSave(areaID: "vertical_slice") },
-            applySave: { _ in }
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { _ in .applied }
         )
 
         viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
@@ -41,7 +60,7 @@ final class SaveLoadViewModelTests: XCTestCase {
         let viewModel = SaveLoadViewModel(
             store: store,
             makeSave: { self.makeSave(areaID: "new_unsafe_area") },
-            applySave: { _ in }
+            applySave: { _ in .applied }
         )
 
         viewModel.requestAutosave(slot: .auto(1), safety: .unsafe)
@@ -56,7 +75,7 @@ final class SaveLoadViewModelTests: XCTestCase {
         let viewModel = SaveLoadViewModel(
             store: store,
             makeSave: { self.makeSave(areaID: "village_square") },
-            applySave: { _ in },
+            applySave: { _ in .applied },
             areaDisplayName: { areaID in areaID == "village_square" ? "裂隙村广场" : areaID }
         )
 
@@ -71,8 +90,8 @@ final class SaveLoadViewModelTests: XCTestCase {
         try store.writeRawData(Data("{".utf8), to: .manual(2))
         let viewModel = SaveLoadViewModel(
             store: store,
-            makeSave: { self.makeSave(areaID: "vertical_slice") },
-            applySave: { _ in }
+            makeSave: { self.makeSave(areaID: "village_square") },
+            applySave: { _ in .applied }
         )
 
         let row = try XCTUnwrap(viewModel.rows.first { $0.slot == .manual(2) })

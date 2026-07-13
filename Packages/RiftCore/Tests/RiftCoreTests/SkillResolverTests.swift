@@ -88,6 +88,46 @@ final class SkillResolverTests: XCTestCase {
         XCTAssertEqual(state.actor(id: "rogue")?.stats.health, 20)
     }
 
+    func testStatusAndSurfaceDurationsArePreservedAndStatusIsApplied() throws {
+        var state = BattleState(actors: [
+            makeActor(id: "hero", faction: .player),
+            makeActor(id: "wolf", faction: .animal)
+        ])
+        var random = SeededRandomSource(seed: 7)
+        let skill = SkillDefinition(
+            id: "venom_pool",
+            displayName: "毒池",
+            actionPointCost: 2,
+            range: 4,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [
+                .applyStatus(statusID: "poisoned", durationTurns: 3),
+                .createSurface(surfaceID: "poison", durationTurns: 2)
+            ]
+        )
+
+        let resolution = try SkillResolver.resolve(
+            skill: skill,
+            casterID: "hero",
+            targetID: "wolf",
+            context: TargetingContext(distance: 2, hasLineOfSight: true, isAlly: false),
+            in: &state,
+            random: &random
+        )
+
+        XCTAssertEqual(resolution.appliedStatuses, [
+            ResolvedStatusEffect(statusID: "poisoned", durationTurns: 3)
+        ])
+        XCTAssertEqual(resolution.createdSurfaces, [
+            ResolvedSurfaceEffect(surfaceID: "poison", durationTurns: 2)
+        ])
+        XCTAssertEqual(state.actor(id: "wolf")?.statuses, [
+            StatusEffect(type: .poisoned, remainingTurns: 3)
+        ])
+    }
+
     private func damageSkill(canBeDodged: Bool) -> SkillDefinition {
         SkillDefinition(
             id: "slash",

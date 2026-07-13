@@ -2,7 +2,6 @@ public enum SkillTarget: String, Codable, CaseIterable, Sendable {
     case selfOnly
     case ally
     case enemy
-    case point
 }
 
 public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
@@ -60,6 +59,6 @@ public struct SkillDefinition: Codable, Equatable, Identifiable, Sendable {
         self.target = try container.decode(SkillTarget.self, forKey: .target)
         self.affectsAllies = try container.decode(Bool.self, forKey: .affectsAllies)
         self.canBeDodged = try container.decode(Bool.self, forKey: .canBeDodged)
-        self.effects = try container.decodeIfPresent([SkillEffect].self, forKey: .effects) ?? []
+        self.effects = try container.decode([SkillEffect].self, forKey: .effects)
     }
 }

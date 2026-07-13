@@ -178,8 +178,6 @@ final class InventoryViewModel {
             "友军"
         case .enemy:
             "敌人"
-        case .point:
-            "地面"
         }
     }
 

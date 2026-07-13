@@ -25,7 +25,9 @@ struct GameRootView: View {
                 DialogView(
                     viewModel: viewModel.dialogViewModel,
                     onClose: viewModel.closePanel,
-                    onCompleteQuest: viewModel.applyQuestRewards,
+                    onQuestCompletionRequested: { questID in
+                        _ = viewModel.completeQuest(questID: questID)
+                    },
                     onStartBattle: viewModel.beginBattleFromDialog
                 )
             case .questLog:
@@ -136,6 +138,7 @@ struct GameRootView: View {
                         }
                         .buttonStyle(RiftPrimaryButtonStyle())
                         .keyboardShortcut(.defaultAction)
+                        .disabled(viewModel.contentLoadErrorMessage != nil)
 
                         Button {
                             viewModel.openSaveLoad()
@@ -147,6 +150,7 @@ struct GameRootView: View {
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(RiftSecondaryButtonStyle())
+                        .disabled(viewModel.contentLoadErrorMessage != nil)
 
                         Button {
                             viewModel.openSettings()
@@ -166,6 +170,15 @@ struct GameRootView: View {
                         .font(.caption.weight(.medium))
                         .foregroundStyle(RiftPalette.textBrownLight)
                         .padding(.top, 14)
+
+                    if let contentError = viewModel.contentLoadErrorMessage {
+                        Label(contentError, systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(RiftPalette.danger)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 520, alignment: .leading)
+                            .padding(.top, 8)
+                    }
 
                     Spacer(minLength: 24)
 
@@ -494,6 +507,9 @@ private struct GameSceneView: View {
                 scene.loadMap(areaID: areaID)
                 renderSceneState()
             }
+            .onChange(of: viewModel.explorationWorldPresentation) { _, presentation in
+                scene.renderExplorationWorld(presentation)
+            }
             .onChange(of: viewModel.explorationController) { _, controller in
                 guard viewModel.appState == .exploration else { return }
                 scene.renderParty(controller.members, leaderID: controller.leaderID)
@@ -505,6 +521,7 @@ private struct GameSceneView: View {
 
     private func renderSceneState() {
         scene.isWorldInputEnabled = viewModel.appState == .exploration || viewModel.appState == .battle
+        scene.renderExplorationWorld(viewModel.explorationWorldPresentation)
         if viewModel.appState == .exploration {
             scene.renderParty(
                 viewModel.explorationController.members,

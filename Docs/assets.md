@@ -34,15 +34,16 @@ GPL、CC-BY-SA、未知或缺失 license 一律不允许用于正式资源。正
 
 目录：
 
-- `Assets/Tilesets/`：首章村庄、野外、洞穴 tileset。
 - `Assets/Sprites/`：地图物件 sprite。
+- `Assets/MapArt/`：首章俯视背景与透明前景遮挡层。
 - `Assets/Characters/`：正式角色动画 spritesheet（当前已入库玩家、NPC、人类敌人与野兽共 14 张 `*_anim.png`）。
 - `Assets/Icons/`：技能、消耗品、宝箱、元素矿图标。
 - `Assets/Audio/`：UI、战斗、探索、洞穴音效与环境循环（加载路径 `Assets/Audio`）。
 
 | 资源组 | 来源 | License | 作者 |
 | --- | --- | --- | --- |
-| chapter1 village/wilds/cave tilesets | 本地程序化绘制 | self-made | Rift Expedition project |
+| chapter1 village_square / cave_depths backgrounds | 内置图像生成后按 TMX 对齐 | ai-static | AI-generated, integrated by Rift Expedition project |
+| chapter1 remaining backgrounds / all foreground layers | 本地确定性绘制或对象布局合成 | self-made | Rift Expedition project |
 | actor animation spritesheets | AI 生成后本地规范化 | ai-static | AI-generated, post-processed by Rift Expedition project |
 | skill/item icons | 本地程序化绘制 | self-made | Rift Expedition project |
 | WAV cues / ambience loops | 本地程序化合成 | self-made | Rift Expedition project |

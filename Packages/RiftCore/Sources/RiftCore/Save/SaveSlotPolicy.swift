@@ -57,6 +57,21 @@ public enum SaveSlotPolicy {
         }
     }
 
+    public static func nextAutosaveSlot(existingModifiedAt: [SaveSlot: Date]) -> SaveSlot {
+        if let emptySlot = autoSlots.first(where: { existingModifiedAt[$0] == nil }) {
+            return emptySlot
+        }
+
+        return autoSlots.min { lhs, rhs in
+            let lhsDate = existingModifiedAt[lhs] ?? .distantPast
+            let rhsDate = existingModifiedAt[rhs] ?? .distantPast
+            if lhsDate == rhsDate {
+                return lhs.index < rhs.index
+            }
+            return lhsDate < rhsDate
+        } ?? .auto(1)
+    }
+
     public static func readSlots(from payloads: [SaveSlot: Data]) -> [SaveSlotReadResult] {
         let decoder = JSONDecoder()
         return payloads

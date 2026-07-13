@@ -10,6 +10,7 @@ struct SaveGameStore {
 
     func write(_ save: SaveGame, to slot: SaveSlot, safety: SaveSafety) throws {
         try SaveSlotPolicy.prepareWrite(to: slot, safety: safety)
+        try save.validate()
         try createDirectoryIfNeeded()
         let data = try JSONEncoder().encode(save)
         try data.write(to: fileURL(for: slot), options: .atomic)
@@ -40,26 +41,34 @@ struct SaveGameStore {
         })
     }
 
-    func latestReadableAutosave() -> (slot: SaveSlot, save: SaveGame)? {
-        let candidates = SaveSlotPolicy.autoSlots.compactMap { slot -> (slot: SaveSlot, save: SaveGame, modifiedAt: Date)? in
+    func nextAutosaveSlot() -> SaveSlot {
+        let modifiedAt = Dictionary(uniqueKeysWithValues: SaveSlotPolicy.autoSlots.compactMap { slot -> (SaveSlot, Date)? in
             let url = fileURL(for: slot)
-            guard FileManager.default.fileExists(atPath: url.path), let save = try? read(slot) else {
-                return nil
-            }
-
+            guard FileManager.default.fileExists(atPath: url.path) else { return nil }
             let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
-            let modifiedAt = attributes?[.modificationDate] as? Date ?? .distantPast
-            return (slot, save, modifiedAt)
-        }
+            return (slot, attributes?[.modificationDate] as? Date ?? .distantPast)
+        })
+        return SaveSlotPolicy.nextAutosaveSlot(existingModifiedAt: modifiedAt)
+    }
 
-        return candidates
+    func readableAutosavesNewestFirst() -> [(slot: SaveSlot, save: SaveGame)] {
+        SaveSlotPolicy.autoSlots
+            .compactMap { slot -> (slot: SaveSlot, save: SaveGame, modifiedAt: Date)? in
+                let url = fileURL(for: slot)
+                guard FileManager.default.fileExists(atPath: url.path), let save = try? read(slot) else {
+                    return nil
+                }
+
+                let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+                let modifiedAt = attributes?[.modificationDate] as? Date ?? .distantPast
+                return (slot, save, modifiedAt)
+            }
             .sorted { lhs, rhs in
                 if lhs.modifiedAt == rhs.modifiedAt {
                     return lhs.slot.index < rhs.slot.index
                 }
                 return lhs.modifiedAt > rhs.modifiedAt
             }
-            .first
             .map { (slot: $0.slot, save: $0.save) }
     }
 

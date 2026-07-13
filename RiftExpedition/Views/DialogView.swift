@@ -3,7 +3,7 @@ import SwiftUI
 struct DialogView: View {
     let viewModel: DialogViewModel
     let onClose: () -> Void
-    let onCompleteQuest: (String) -> Void
+    let onQuestCompletionRequested: (String) -> Void
     let onStartBattle: (String) -> Void
 
     var body: some View {
@@ -42,8 +42,8 @@ struct DialogView: View {
             break
         case .close:
             onClose()
-        case let .completedQuest(questID):
-            onCompleteQuest(questID)
+        case let .questCompletionRequested(questID):
+            onQuestCompletionRequested(questID)
         case let .startBattle(encounterID):
             onStartBattle(encounterID)
         }

@@ -241,7 +241,7 @@ final class BattleViewModelTests: XCTestCase {
                 actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
             ]),
             skills: [healingDraught],
-            inventory: PartyInventory(itemCounts: ["minor_healing_draught": 1]),
+            inventory: try! PartyInventory(itemCounts: ["minor_healing_draught": 1]),
             itemDefinitions: [potion],
             initialPositions: [
                 "player": CGPoint(x: 100, y: 100),
@@ -458,6 +458,189 @@ final class BattleViewModelTests: XCTestCase {
             viewModel.sceneSnapshot.presentationEvents.first?.feedback,
             .damage(amount: 4, defeated: true)
         )
+    }
+
+    func testEnemySkillDoesNotConsumePlayersSelectedConsumable() {
+        let potion = ItemDefinition(
+            id: "minor_healing_draught",
+            displayName: "止血药剂",
+            kind: .consumable,
+            skillID: "minor_healing_draught"
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: ["heavy_slash"])
+            ]),
+            skills: [heavySlash, healingDraught],
+            inventory: try! PartyInventory(itemCounts: ["minor_healing_draught": 1]),
+            itemDefinitions: [potion],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.selectConsumable(id: "minor_healing_draught")
+        viewModel.endTurn()
+
+        XCTAssertEqual(viewModel.inventory.count(of: "minor_healing_draught"), 1)
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.health, 7)
+        XCTAssertEqual(viewModel.sceneSnapshot.presentationEvents.first?.effectStyle, .strike)
+    }
+
+    func testBlockedMovementDoesNotSpendActionPointsOrMoveActor() {
+        let start = CGPoint(x: 100, y: 100)
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [],
+            initialPositions: ["player": start, "boar": CGPoint(x: 200, y: 100)],
+            isMovementAllowed: { _, _ in false }
+        )
+
+        viewModel.performMove(to: CGPoint(x: 128, y: 100))
+
+        XCTAssertEqual(viewModel.state.actor(id: "player")?.stats.actionPoints, 4)
+        XCTAssertEqual(viewModel.actorPositions["player"], start)
+        XCTAssertEqual(viewModel.statusText, "目标位置不可达。")
+    }
+
+    func testPlayerMovementOntoPoisonSurfaceAppliesStatus() {
+        let poison = BattleSurfaceMarker(
+            id: "map_poison",
+            frame: CGRect(x: 120, y: 80, width: 60, height: 40),
+            surfaceType: .poison
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 240, y: 100)
+            ],
+            surfaces: [poison]
+        )
+
+        viewModel.performMove(to: CGPoint(x: 140, y: 100))
+
+        XCTAssertEqual(
+            viewModel.state.actor(id: "player")?.statuses,
+            [StatusEffect(type: .poisoned, remainingTurns: 3)]
+        )
+        XCTAssertTrue(viewModel.statusText.contains("毒性地表"))
+    }
+
+    func testEnemyMovementOntoFireSurfaceAppliesAndTicksBurning() {
+        let fire = BattleSurfaceMarker(
+            id: "map_fire",
+            frame: CGRect(x: 150, y: 80, width: 50, height: 40),
+            surfaceType: .fire
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: []),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 200, y: 100)
+            ],
+            surfaces: [fire]
+        )
+
+        viewModel.endTurn()
+
+        XCTAssertEqual(viewModel.actorPositions["boar"], CGPoint(x: 172, y: 100))
+        XCTAssertEqual(viewModel.state.actor(id: "boar")?.stats.health, 9)
+        XCTAssertEqual(
+            viewModel.state.actor(id: "boar")?.statuses,
+            [StatusEffect(type: .burning, remainingTurns: 1)]
+        )
+        XCTAssertTrue(viewModel.statusText.contains("火焰地表"))
+    }
+
+    func testDynamicSurfaceIDsRemainUniqueWhenExistingIDsAreSparse() {
+        let poisonPool = SkillDefinition(
+            id: "poison_pool",
+            displayName: "毒池",
+            actionPointCost: 1,
+            range: 4,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.createSurface(surfaceID: "poison", durationTurns: 2)]
+        )
+        let existingSurfaces = [
+            BattleSurfaceMarker(
+                id: "dynamic_surface_1",
+                frame: CGRect(x: 0, y: 0, width: 20, height: 20),
+                surfaceType: .water
+            ),
+            BattleSurfaceMarker(
+                id: "surface_3",
+                frame: CGRect(x: 40, y: 0, width: 20, height: 20),
+                surfaceType: .oil
+            )
+        ]
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["poison_pool"]),
+                actor(id: "boar", faction: .animal, actionPoints: 4, skillIDs: [])
+            ]),
+            skills: [poisonPool],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 180, y: 100)
+            ],
+            surfaces: existingSurfaces
+        )
+
+        viewModel.performSkill(id: "poison_pool")
+        viewModel.performSelectedAction(targetID: "boar")
+
+        let ids = viewModel.surfaces.map(\.id)
+        XCTAssertEqual(Set(ids).count, ids.count)
+        XCTAssertTrue(ids.contains("dynamic_surface_2"))
+    }
+
+    func testTemporarySurfaceExpiresWhenRoundAdvances() {
+        let poisonPool = SkillDefinition(
+            id: "poison_pool",
+            displayName: "毒池",
+            actionPointCost: 1,
+            range: 4,
+            target: .enemy,
+            affectsAllies: false,
+            canBeDodged: false,
+            effects: [.createSurface(surfaceID: "poison", durationTurns: 1)]
+        )
+        let viewModel = BattleViewModel(
+            state: BattleState(actors: [
+                actor(id: "player", faction: .player, actionPoints: 4, skillIDs: ["poison_pool"]),
+                actor(id: "boar", faction: .animal, actionPoints: 0, skillIDs: [])
+            ]),
+            skills: [poisonPool],
+            initialPositions: [
+                "player": CGPoint(x: 100, y: 100),
+                "boar": CGPoint(x: 120, y: 100)
+            ]
+        )
+
+        viewModel.performSkill(id: "poison_pool")
+        viewModel.performSelectedAction(targetID: "boar")
+        XCTAssertEqual(viewModel.surfaces.first?.remainingRounds, 1)
+
+        viewModel.endTurn()
+
+        XCTAssertTrue(viewModel.surfaces.isEmpty)
+        XCTAssertEqual(viewModel.state.round, 2)
     }
 
     private var heavySlash: SkillDefinition {

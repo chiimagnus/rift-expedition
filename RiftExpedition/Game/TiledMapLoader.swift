@@ -1,15 +1,27 @@
 import Foundation
+import RiftCore
 import SKTiled
 
 enum TiledMapLoaderError: Error, Equatable {
     case missingResource(areaID: String)
     case parseFailed(areaID: String)
-    case unreadableMetadata(areaID: String)
-    case invalidMetadata(areaID: String)
+    case invalidMapFrame(areaID: String)
+    case missingObjectGroup(areaID: String, group: String)
+    case duplicateObjectGroup(areaID: String, group: String, count: Int)
+    case invalidObjectID(areaID: String, group: String, tiledID: Int)
+    case duplicateObjectID(areaID: String, tiledID: Int)
+    case missingObjectProperty(areaID: String, group: String, tiledID: Int, property: String)
+    case emptyObjectProperty(areaID: String, group: String, tiledID: Int, property: String)
+    case invalidBooleanProperty(areaID: String, group: String, tiledID: Int, property: String, value: String)
+    case invalidNumberProperty(areaID: String, group: String, tiledID: Int, property: String, value: String)
+    case invalidObjectPosition(areaID: String, group: String, tiledID: Int)
+    case invalidObjectFrame(areaID: String, group: String, tiledID: Int)
+    case invalidSurfaceType(areaID: String, tiledID: Int, value: String)
 }
 
 struct TiledMapMetadata: Equatable {
     var areaID: String
+    var mapFrame: CGRect
     var spawns: [MapSpawn]
     var npcs: [MapNPC]
     var navObstacles: [NavigationObstacle]
@@ -86,7 +98,7 @@ struct MapExit: Equatable {
 
 struct MapSurface: Equatable {
     var tiledID: Int
-    var surfaceType: String
+    var surfaceType: SurfaceType
     var frame: CGRect
 }
 
@@ -113,7 +125,7 @@ enum TiledMapLoader {
         }
 
         tilemap.name = areaID
-        return (tilemap, TiledMapMetadata(areaID: areaID, tilemap: tilemap))
+        return (tilemap, try TiledMapMetadata(areaID: areaID, tilemap: tilemap))
     }
 
     /// 给那些只需要「玩法用的坐标信息」（比如 session 的 view model），
@@ -131,126 +143,246 @@ enum TiledMapLoader {
         try load(url: url, areaID: areaID).metadata
     }
 
+    static let chapterOneMapSubdirectory = "Maps/chapter1"
+
     private static func mapURL(areaID: String, bundle: Bundle) throws -> URL {
-        if let url = bundle.url(forResource: areaID, withExtension: "tmx", subdirectory: "Maps") {
-            return url
+        guard let url = bundle.url(
+            forResource: areaID,
+            withExtension: "tmx",
+            subdirectory: chapterOneMapSubdirectory
+        ) else {
+            throw TiledMapLoaderError.missingResource(areaID: areaID)
         }
-        if let url = bundle.url(forResource: areaID, withExtension: "tmx", subdirectory: "Maps/chapter1") {
-            return url
-        }
-        if let url = bundle.url(forResource: areaID, withExtension: "tmx") {
-            return url
-        }
-        throw TiledMapLoaderError.missingResource(areaID: areaID)
+        return url
     }
 }
 
 private extension TiledMapMetadata {
-    /// 直接基于 SKTiled 自己解析出来的图层/对象来生成元数据，复用 SKTiled 自带的坐标转换，
-    /// 而不是自己再手写一套 Tiled「左上角为原点、Y 轴向下」的换算规则（之前手写的那套换算
-    /// 正是「地图和物体对不上」这个 bug 的根源：它一直没对上 SKTiled 自己的上下翻转
-    /// 和居中对齐布局方式）。
     @MainActor
-    init(areaID: String, tilemap: SKTilemap) {
-        // 这里不是只取第一个（.first），而是把所有同名的对象组都汇总起来，这是为了保持和
-        // 之前手写 XML 解析器一样的行为——把每一个同名 `<objectgroup>` 里的对象都收集进来
-        // （目前每张地图每个名字只有一个对象组，但不能保证以后新做的地图也一定是这样）。
-        func objects(in groupName: String) -> [SKTileObject] {
-            tilemap.objectGroups(named: groupName).flatMap { $0.getObjects() }
-        }
-
-        // 每个对象的 .position 已经是它所在对象组自己的局部坐标了
-        // （SKTiled 在把对象加进对象组的时候，就已经把 Tiled 坐标转换成了 SpriteKit 的
-        // 上下翻转坐标）。这里再用 tilemap.convert(_:from:) 转换一次，是为了把它统一换算成
-        // tilemap 自己的坐标系——也就是渲染出来的瓦片图层实际使用的那个坐标系。
-        func point(for object: SKTileObject) -> CGPoint {
-            guard let group = object.layer else { return object.position }
-            return tilemap.convert(object.position, from: group)
-        }
-
-        func frame(for object: SKTileObject) -> CGRect {
-            guard let group = object.layer else {
-                return CGRect(origin: object.position, size: object.size)
+    init(areaID: String, tilemap: SKTilemap) throws {
+        let requiredGroupNames = [
+            "spawn", "npc", "encounter", "trigger", "exit", "navObstacle", "surface", "item"
+        ]
+        var objectsByGroup: [String: [SKTileObject]] = [:]
+        for groupName in requiredGroupNames {
+            let groups = tilemap.objectGroups(named: groupName)
+            guard !groups.isEmpty else {
+                throw TiledMapLoaderError.missingObjectGroup(areaID: areaID, group: groupName)
             }
-            // SKTileObject 自己的局部包围盒是 (0, 0, 宽, -高)：.position 是这个对象
-            // 经过上下翻转之后的「左上角」坐标，所以按 CGRect 「原点在左下角」的惯例，
-            // 矩形真正的左下角坐标要在 .position 基础上再往下移动 size.height。
-            let bottomLeftInGroup = CGPoint(x: object.position.x, y: object.position.y - object.size.height)
-            let bottomLeftInTilemap = tilemap.convert(bottomLeftInGroup, from: group)
-            return CGRect(origin: bottomLeftInTilemap, size: object.size)
+            guard groups.count == 1 else {
+                throw TiledMapLoaderError.duplicateObjectGroup(
+                    areaID: areaID,
+                    group: groupName,
+                    count: groups.count
+                )
+            }
+            objectsByGroup[groupName] = groups[0].getObjects()
+        }
+
+        var seenObjectIDs: Set<Int> = []
+        for groupName in requiredGroupNames {
+            for object in objectsByGroup[groupName, default: []] {
+                let tiledID = Int(object.id)
+                guard tiledID > 0 else {
+                    throw TiledMapLoaderError.invalidObjectID(
+                        areaID: areaID,
+                        group: groupName,
+                        tiledID: tiledID
+                    )
+                }
+                guard seenObjectIDs.insert(tiledID).inserted else {
+                    throw TiledMapLoaderError.duplicateObjectID(areaID: areaID, tiledID: tiledID)
+                }
+            }
+        }
+
+        func requiredProperty(_ name: String, on object: SKTileObject, group: String) throws -> String {
+            let tiledID = Int(object.id)
+            guard let rawValue = object.properties[name] else {
+                throw TiledMapLoaderError.missingObjectProperty(
+                    areaID: areaID,
+                    group: group,
+                    tiledID: tiledID,
+                    property: name
+                )
+            }
+            let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !value.isEmpty else {
+                throw TiledMapLoaderError.emptyObjectProperty(
+                    areaID: areaID,
+                    group: group,
+                    tiledID: tiledID,
+                    property: name
+                )
+            }
+            return value
+        }
+
+        func booleanProperty(_ name: String, on object: SKTileObject, group: String) throws -> Bool {
+            let value = try requiredProperty(name, on: object, group: group)
+            switch value {
+            case "true":
+                return true
+            case "false":
+                return false
+            default:
+                throw TiledMapLoaderError.invalidBooleanProperty(
+                    areaID: areaID,
+                    group: group,
+                    tiledID: Int(object.id),
+                    property: name,
+                    value: value
+                )
+            }
+        }
+
+        func nonnegativeNumberProperty(_ name: String, on object: SKTileObject, group: String) throws -> CGFloat {
+            let value = try requiredProperty(name, on: object, group: group)
+            guard let number = Double(value), number.isFinite, number >= 0 else {
+                throw TiledMapLoaderError.invalidNumberProperty(
+                    areaID: areaID,
+                    group: group,
+                    tiledID: Int(object.id),
+                    property: name,
+                    value: value
+                )
+            }
+            return CGFloat(number)
+        }
+
+        func point(for object: SKTileObject, group: String) throws -> CGPoint {
+            let position: CGPoint
+            if let layer = object.layer {
+                position = tilemap.convert(object.position, from: layer)
+            } else {
+                position = object.position
+            }
+            guard position.x.isFinite, position.y.isFinite else {
+                throw TiledMapLoaderError.invalidObjectPosition(
+                    areaID: areaID,
+                    group: group,
+                    tiledID: Int(object.id)
+                )
+            }
+            return position
+        }
+
+        func frame(for object: SKTileObject, group: String) throws -> CGRect {
+            let result: CGRect
+            if let layer = object.layer {
+                let bottomLeftInGroup = CGPoint(x: object.position.x, y: object.position.y - object.size.height)
+                let bottomLeftInTilemap = tilemap.convert(bottomLeftInGroup, from: layer)
+                result = CGRect(origin: bottomLeftInTilemap, size: object.size)
+            } else {
+                result = CGRect(origin: object.position, size: object.size)
+            }
+            guard result.origin.x.isFinite,
+                  result.origin.y.isFinite,
+                  result.width.isFinite,
+                  result.height.isFinite,
+                  result.width > 0,
+                  result.height > 0
+            else {
+                throw TiledMapLoaderError.invalidObjectFrame(
+                    areaID: areaID,
+                    group: group,
+                    tiledID: Int(object.id)
+                )
+            }
+            return result
         }
 
         self.areaID = areaID
-
-        spawns = objects(in: "spawn").compactMap { object in
-            guard let id = object.properties["id"] else { return nil }
-            return MapSpawn(tiledID: Int(object.id), id: id, position: point(for: object))
+        mapFrame = tilemap.frame
+        guard mapFrame.origin.x.isFinite,
+              mapFrame.origin.y.isFinite,
+              mapFrame.width.isFinite,
+              mapFrame.height.isFinite,
+              mapFrame.width > 0,
+              mapFrame.height > 0
+        else {
+            throw TiledMapLoaderError.invalidMapFrame(areaID: areaID)
         }
 
-        npcs = objects(in: "npc").compactMap { object in
-            guard let actorID = object.properties["actorId"],
-                  let dialogID = object.properties["dialogId"] else { return nil }
-            return MapNPC(
+        spawns = try objectsByGroup["spawn", default: []].map { object in
+            MapSpawn(
                 tiledID: Int(object.id),
-                actorID: actorID,
-                dialogID: dialogID,
-                position: point(for: object),
-                frame: frame(for: object)
+                id: try requiredProperty("id", on: object, group: "spawn"),
+                position: try point(for: object, group: "spawn")
             )
         }
 
-        navObstacles = objects(in: "navObstacle").map { object in
+        npcs = try objectsByGroup["npc", default: []].map { object in
+            MapNPC(
+                tiledID: Int(object.id),
+                actorID: try requiredProperty("actorId", on: object, group: "npc"),
+                dialogID: try requiredProperty("dialogId", on: object, group: "npc"),
+                position: try point(for: object, group: "npc"),
+                frame: try frame(for: object, group: "npc")
+            )
+        }
+
+        navObstacles = try objectsByGroup["navObstacle", default: []].map { object in
             NavigationObstacle(
                 tiledID: Int(object.id),
                 name: object.name,
-                frame: frame(for: object),
-                blocksMovement: object.properties["blocksMovement"] == "true",
-                blocksSight: object.properties["blocksSight"] == "true"
+                frame: try frame(for: object, group: "navObstacle"),
+                blocksMovement: try booleanProperty("blocksMovement", on: object, group: "navObstacle"),
+                blocksSight: try booleanProperty("blocksSight", on: object, group: "navObstacle")
             )
         }
 
-        encounterTriggers = objects(in: "encounter").compactMap { object in
-            guard let encounterID = object.properties["encounterId"] else { return nil }
-            return MapEncounterTrigger(
+        encounterTriggers = try objectsByGroup["encounter", default: []].map { object in
+            MapEncounterTrigger(
                 tiledID: Int(object.id),
-                encounterID: encounterID,
-                frame: frame(for: object),
-                radius: CGFloat(Double(object.properties["radius"] ?? "") ?? 0)
+                encounterID: try requiredProperty("encounterId", on: object, group: "encounter"),
+                frame: try frame(for: object, group: "encounter"),
+                radius: try nonnegativeNumberProperty("radius", on: object, group: "encounter")
             )
         }
 
-        triggers = objects(in: "trigger").compactMap { object in
-            guard let triggerID = object.properties["triggerId"],
-                  let action = object.properties["action"] else { return nil }
-            return MapTrigger(
+        triggers = try objectsByGroup["trigger", default: []].map { object in
+            MapTrigger(
                 tiledID: Int(object.id),
                 name: object.name,
-                triggerID: triggerID,
-                action: action,
-                frame: frame(for: object)
+                triggerID: try requiredProperty("triggerId", on: object, group: "trigger"),
+                action: try requiredProperty("action", on: object, group: "trigger"),
+                frame: try frame(for: object, group: "trigger")
             )
         }
 
-        exits = objects(in: "exit").compactMap { object in
-            guard let targetAreaID = object.properties["targetAreaId"],
-                  let targetSpawnID = object.properties["targetSpawnId"] else { return nil }
-            return MapExit(
+        exits = try objectsByGroup["exit", default: []].map { object in
+            MapExit(
                 tiledID: Int(object.id),
                 name: object.name,
-                targetAreaID: targetAreaID,
-                targetSpawnID: targetSpawnID,
-                frame: frame(for: object)
+                targetAreaID: try requiredProperty("targetAreaId", on: object, group: "exit"),
+                targetSpawnID: try requiredProperty("targetSpawnId", on: object, group: "exit"),
+                frame: try frame(for: object, group: "exit")
             )
         }
 
-        surfaces = objects(in: "surface").compactMap { object in
-            guard let surfaceType = object.properties["surfaceType"] else { return nil }
-            return MapSurface(tiledID: Int(object.id), surfaceType: surfaceType, frame: frame(for: object))
+        surfaces = try objectsByGroup["surface", default: []].map { object in
+            let value = try requiredProperty("surfaceType", on: object, group: "surface")
+            guard let surfaceType = SurfaceType(rawValue: value) else {
+                throw TiledMapLoaderError.invalidSurfaceType(
+                    areaID: areaID,
+                    tiledID: Int(object.id),
+                    value: value
+                )
+            }
+            return MapSurface(
+                tiledID: Int(object.id),
+                surfaceType: surfaceType,
+                frame: try frame(for: object, group: "surface")
+            )
         }
 
-        items = objects(in: "item").compactMap { object in
-            guard let itemID = object.properties["itemId"] else { return nil }
-            return MapItem(tiledID: Int(object.id), itemID: itemID, position: point(for: object))
+        items = try objectsByGroup["item", default: []].map { object in
+            MapItem(
+                tiledID: Int(object.id),
+                itemID: try requiredProperty("itemId", on: object, group: "item"),
+                position: try point(for: object, group: "item")
+            )
         }
     }
 }

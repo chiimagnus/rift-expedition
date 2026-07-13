@@ -31,7 +31,7 @@ enum ActorVisualIDResolver {
 
     static func npcVisualID(actorID: String) -> String {
         switch actorID {
-        case "elder", "mayor":
+        case "mayor":
             "npc_mayor"
         case "fiance":
             "npc_fiance"

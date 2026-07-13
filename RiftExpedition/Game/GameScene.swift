@@ -22,6 +22,8 @@ final class GameScene: SKScene {
     private let worldLayer = SKNode()
     private var tilemap: SKTilemap?
     private var loadedAreaID: String?
+    private var loadedMapMetadata: TiledMapMetadata?
+    private var worldPresentation: ExplorationWorldPresentation?
     private var lastUpdateTime: TimeInterval?
     private var partyNodes: [String: SKNode] = [:]
     private var staticObjectLayer: SKNode?
@@ -35,7 +37,6 @@ final class GameScene: SKScene {
     private lazy var actorAnimationCatalog: ActorAnimationCatalog? = ActorAnimationCatalog.load(bundle: assetBundle)
     private var didLogAnimationCatalogFallback = false
     private var loggedMissingActorAnimations: Set<String> = []
-    private var usesPaintedMapArt = false
 
     static func makeScene() -> GameScene {
         let scene = GameScene(size: sceneSize)
@@ -186,24 +187,34 @@ final class GameScene: SKScene {
         return layer
     }
 
+    func renderExplorationWorld(_ presentation: ExplorationWorldPresentation) {
+        worldPresentation = presentation
+        guard presentation.areaID == loadedAreaID, let loadedMapMetadata else {
+            return
+        }
+        renderStaticObjects(metadata: loadedMapMetadata, presentation: presentation)
+    }
+
     func loadMap(areaID: String) {
         guard loadedAreaID != areaID else { return }
 
         tilemap?.removeFromParent()
         tilemap = nil
-        usesPaintedMapArt = false
         staticObjectLayer?.removeFromParent()
         staticObjectLayer = nil
+        loadedMapMetadata = nil
 
         do {
-            let (loadedMap, metadata) = try TiledMapLoader.load(areaID: areaID)
+            let (loadedMap, metadata) = try TiledMapLoader.load(areaID: areaID, bundle: assetBundle)
             loadedMap.position = .zero
             loadedMap.zPosition = 1
             configureMapArtLayers(in: loadedMap)
             worldLayer.addChild(loadedMap)
             tilemap = loadedMap
             loadedAreaID = areaID
-            renderStaticObjects(metadata: metadata)
+            loadedMapMetadata = metadata
+            let presentation = worldPresentation?.areaID == areaID ? worldPresentation : nil
+            renderStaticObjects(metadata: metadata, presentation: presentation)
             layoutWorld()
         } catch {
             loadedAreaID = nil
@@ -216,7 +227,6 @@ final class GameScene: SKScene {
         for imageLayer in tilemap.imageLayers() {
             switch imageLayer.layerName {
             case "background_art":
-                usesPaintedMapArt = true
                 imageLayer.zPosition = -10
             case let name where name.hasPrefix("foreground_"):
                 // Foreground art is authored as a transparent image layer and can
@@ -348,7 +358,10 @@ final class GameScene: SKScene {
         }
     }
 
-    private func renderStaticObjects(metadata: TiledMapMetadata) {
+    private func renderStaticObjects(
+        metadata: TiledMapMetadata,
+        presentation: ExplorationWorldPresentation?
+    ) {
         staticObjectLayer?.removeFromParent()
         nodeAnimationKeys = nodeAnimationKeys.filter { !$0.key.hasPrefix("npc:") }
         let layer = SKNode()
@@ -364,33 +377,36 @@ final class GameScene: SKScene {
         staticObjectLayer = layer
 
         for surface in metadata.surfaces {
-            guard let type = SurfaceTypeColor(rawValue: surface.surfaceType) else { continue }
-            layer.addChild(makeStaticSurfaceNode(frame: surface.frame, color: type.color))
-        }
-        if !usesPaintedMapArt {
-            for obstacle in metadata.navObstacles where obstacle.blocksMovement {
-                if let node = makeVisibleObstacleNode(obstacle) {
-                    layer.addChild(node)
-                }
-            }
+            layer.addChild(
+                makeStaticSurfaceNode(
+                    frame: surface.frame,
+                    color: SurfaceTypeColor(surface.surfaceType).color
+                )
+            )
         }
         for exit in metadata.exits {
             layer.addChild(makeExitMarker(exit))
         }
-        for trigger in metadata.triggers {
+        for trigger in metadata.triggers where presentation?.shows(trigger: trigger) != false {
             layer.addChild(makeTriggerMarker(trigger))
         }
         // 遭遇触发区（伏击点）必须始终显示，没有例外。这个项目的设计里没有「隐藏伏击」这种
         // 玩法（所有遭遇战都是地图上固定安排好的，不是随机出现的——见 Docs/chapter1-worldgraph.md），
         // 所以如果触发区完全看不见，那是渲染上的 bug，不是故意藏起来防剧透。
-        for encounter in metadata.encounterTriggers {
+        for encounter in metadata.encounterTriggers where presentation?.shows(encounter: encounter) != false {
             layer.addChild(makeEncounterMarker(encounter))
         }
         for npc in metadata.npcs {
             layer.addChild(makeNPCSprite(npc))
         }
-        for item in metadata.items {
-            layer.addChild(makeMapSprite(name: spriteName(forMapItem: item), position: item.position, size: CGSize(width: 48, height: 48)))
+        for item in metadata.items where presentation?.shows(item: item) != false {
+            let node = makeMapSprite(
+                name: spriteName(forMapItem: item),
+                position: item.position,
+                size: CGSize(width: 48, height: 48)
+            )
+            node.name = "mapItem_\(item.tiledID)"
+            layer.addChild(node)
         }
     }
 
@@ -829,38 +845,6 @@ final class GameScene: SKScene {
         node.lineWidth = 2
         node.zPosition = -5
         return node
-    }
-
-    private func makeVisibleObstacleNode(_ obstacle: NavigationObstacle) -> SKNode? {
-        guard shouldRenderAsProp(obstacle) else { return nil }
-
-        // ponytail（有意为之的技术债）：目前只画好了 prop_chest（箱子）/prop_woodpile（木堆）
-        // 两张图，所以像水井、碎石堆、矿堆、残墙之类的独立障碍物暂时都先借用同一张占位贴图。
-        // 等以后 assets-manifest.json 里给每种障碍物都登记了专属美术资源，再回来换掉。
-        let sprite = SKSpriteNode(texture: texture(named: "prop_woodpile"))
-        sprite.name = "obstacleProp_\(obstacle.tiledID)"
-        sprite.size = CGSize(width: max(obstacle.frame.width, 42), height: max(obstacle.frame.height, 42))
-        sprite.position = CGPoint(x: obstacle.frame.midX, y: obstacle.frame.midY)
-        return sprite
-    }
-
-    // 这是第一章所有 .tmx 地图里出现过的真实障碍物名字（搜索所有 navObstacle 对象组得到），
-    // 不包含每张地图都有的四面边界墙（北/南/西/东边界/村墙/浅河边界/河岸护栏）——
-    // 这些边界墙的尺寸总是比任何装饰性障碍物大得多，不管在不在这个名单里，
-    // 都会被下面的尺寸判断规则排除掉。
-    private static let obstaclePropNameFragments = [
-        "倒木", "木料", "篱笆", "货车", "废木堆",
-        "石井", "旧告示墙", "裂隙核心", "塌陷石带", "坍塌矿架",
-        "毒雾裂缝", "矿车轨道断口", "元素矿堆", "断塔石影", "塌墙", "旧炉台"
-    ]
-
-    private func shouldRenderAsProp(_ obstacle: NavigationObstacle) -> Bool {
-        // 尺寸上限从 192x96 调大了，这样比较高/比较宽的真实障碍物（比如坍塌矿架 128x192、
-        // 裂隙核心 160x160）也能算进来；同时又远小于每张地图边界墙的尺寸（边界墙至少有一边
-        // 大于等于 480），所以边界墙无论如何都还是会被排除掉。
-        guard obstacle.frame.width <= 280, obstacle.frame.height <= 220 else { return false }
-        guard let name = obstacle.name else { return false }
-        return Self.obstaclePropNameFragments.contains { name.localizedStandardContains($0) }
     }
 
     private func makeExitMarker(_ exit: MapExit) -> SKNode {

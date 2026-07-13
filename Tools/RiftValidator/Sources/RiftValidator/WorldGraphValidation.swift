@@ -52,14 +52,18 @@ public enum WorldGraphValidator {
     }
 
     static func validate(_ graph: ChapterWorldGraph, maps: [TiledMap]) -> WorldGraphValidationResult {
-        let mapIndex = Dictionary(uniqueKeysWithValues: maps.map { ($0.areaID, $0) })
+        let mapGroups = Dictionary(grouping: maps, by: \.areaID)
+        let mapIndex = mapGroups.compactMapValues(\.first)
         let graphAreaIDs = graph.areas.map(\.id)
         let graphAreaIDSet = Set(graphAreaIDs)
-        let spawnIndex = Dictionary(uniqueKeysWithValues: maps.map { map in
-            (map.areaID, Set(map.objectGroups["spawn", default: []].compactMap { $0.properties["id"] }))
-        })
+        let spawnIndex = mapGroups.mapValues { maps in
+            Set(maps.flatMap { $0.objectGroups["spawn", default: []].compactMap { $0.properties["id"] } })
+        }
         var issues: [WorldGraphValidationIssue] = []
 
+        for duplicate in mapGroups.filter({ $0.value.count > 1 }).keys.sorted() {
+            issues.append(WorldGraphValidationIssue(message: "Duplicate TMX map area id: \(duplicate)"))
+        }
         for duplicate in duplicates(in: graphAreaIDs) {
             issues.append(WorldGraphValidationIssue(message: "Duplicate world area id: \(duplicate)"))
         }
@@ -102,9 +106,9 @@ public enum WorldGraphValidator {
     }
 
     private static func reachableAreas(from start: String, in graph: ChapterWorldGraph) -> Set<String> {
-        let adjacency = Dictionary(uniqueKeysWithValues: graph.areas.map { area in
-            (area.id, Set(area.exits.map(\.targetAreaId)))
-        })
+        let adjacency = Dictionary(grouping: graph.areas, by: \.id).mapValues { areas in
+            Set(areas.flatMap { $0.exits.map(\.targetAreaId) })
+        }
         var visited: Set<String> = []
         var queue = [start]
 

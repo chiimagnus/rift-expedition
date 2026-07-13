@@ -27,6 +27,18 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertNotNil(sceneWithoutCatalog.childNode(withName: "worldLayer"))
     }
 
+    func testSceneUsesConfiguredAssetBundleForMapLoading() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.assetBundle = Bundle(for: Self.self)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        scene.loadMap(areaID: "village_square")
+
+        let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        XCTAssertNil(worldLayer.childNode(withName: "village_square"))
+        XCTAssertEqual(TiledMapLoader.chapterOneMapSubdirectory, "Maps/chapter1")
+    }
+
     func testSceneCentersLoadedMapInWorldLayer() throws {
         let scene = GameScene(size: CGSize(width: 1600, height: 900))
         scene.scaleMode = .resizeFill
@@ -71,23 +83,13 @@ final class AppSmokeTests: XCTestCase {
         XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_4"))
         XCTAssertNotNil(staticLayer.childNode(withName: "exitMarker_5"))
         XCTAssertNotNil(staticLayer.childNode(withName: "triggerMarker_15"))
-        // village_square 地图里 navObstacle id 6-9 是四面屏幕边界墙（北/南/西/东边界）。
-        // 它们的尺寸总是比任何真实的装饰性障碍物大得多（比如 1024x32 或 32x640），
-        // 所以 shouldRenderAsProp 的尺寸判断规则总会把它们排除掉——不管名单里加了哪些
-        // 障碍物名字，这一点都成立。
-        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_6"))
-        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_7"))
-        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_8"))
-        XCTAssertNil(staticLayer.childNode(withName: "obstacleProp_9"))
-        // id 10（石井）和 11（旧告示墙）是真实存在的独立障碍物，现在已经落在扩充后的
-        // 名字白名单和尺寸判断规则范围内，所以它们必须渲染成看得见的场景物件。
-        XCTAssertNotNil(staticLayer.childNode(withName: "obstacleProp_10"))
-        XCTAssertNotNil(staticLayer.childNode(withName: "obstacleProp_11"))
+        // 正式章节地图只使用 background_art / foreground_* 美术层。
+        // navObstacle 是纯玩法数据，不再生成通用木堆占位物。
+        XCTAssertFalse(staticLayer.children.contains { $0.name?.hasPrefix("obstacleProp_") == true })
     }
 
-    func testEncounterTriggersAlwaysRenderVisibleMarkers() throws {
-        // 所有遭遇战都是地图上固定安排好的，从来不是随机或者隐藏的（见
-        // Docs/chapter1-worldgraph.md）。所以遭遇标记必须始终可见——不做「防剧透」式的隐藏。
+    func testUnresolvedEncounterTriggersRenderVisibleMarkers() throws {
+        // 未解决遭遇是地图上固定安排的内容，必须清晰可见；解决后则由世界表现状态移除。
         let scene = GameScene(size: GameScene.sceneSize)
         scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
 
@@ -96,6 +98,50 @@ final class AppSmokeTests: XCTestCase {
         let worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
         let staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
         XCTAssertNotNil(staticLayer.childNode(withName: "encounterMarker_11"))
+    }
+
+    func testWorldPresentationRemovesResolvedStaticObjects() throws {
+        let scene = GameScene(size: GameScene.sceneSize)
+        scene.didMove(to: SKView(frame: CGRect(origin: .zero, size: scene.size)))
+
+        scene.loadMap(areaID: "village_square")
+        scene.renderExplorationWorld(
+            ExplorationWorldPresentation(
+                areaID: "village_square",
+                hiddenItemTiledIDs: [],
+                hiddenTriggerTiledIDs: [15],
+                hiddenEncounterTiledIDs: []
+            )
+        )
+        var worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        var staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
+        XCTAssertNil(staticLayer.childNode(withName: "triggerMarker_15"))
+
+        scene.loadMap(areaID: "village_outskirts")
+        scene.renderExplorationWorld(
+            ExplorationWorldPresentation(
+                areaID: "village_outskirts",
+                hiddenItemTiledIDs: [],
+                hiddenTriggerTiledIDs: [],
+                hiddenEncounterTiledIDs: [11]
+            )
+        )
+        worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
+        XCTAssertNil(staticLayer.childNode(withName: "encounterMarker_11"))
+
+        scene.loadMap(areaID: "wilds_road")
+        scene.renderExplorationWorld(
+            ExplorationWorldPresentation(
+                areaID: "wilds_road",
+                hiddenItemTiledIDs: [14],
+                hiddenTriggerTiledIDs: [],
+                hiddenEncounterTiledIDs: []
+            )
+        )
+        worldLayer = try XCTUnwrap(scene.childNode(withName: "worldLayer"))
+        staticLayer = try XCTUnwrap(worldLayer.childNode(withName: "staticObjectLayer"))
+        XCTAssertNil(staticLayer.childNode(withName: "mapItem_14"))
     }
 
     func testExplorationPartyMembersRenderWithClassSprites() throws {

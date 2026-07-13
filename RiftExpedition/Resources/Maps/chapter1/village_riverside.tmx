@@ -2,44 +2,16 @@
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="12" nextobjectid="14">
   <properties>
     <property name="areaName" value="裂隙村河岸" />
-    <property name="assetId" value="tileset.chapter1_village" />
     <property name="artAssetId" value="mapart.chapter1_village_riverside" />
     <property name="artPipelineVersion" value="3" />
     <property name="foregroundArtAssetId" value="mapart.chapter1_village_riverside_foreground" />
   </properties>
-  <tileset firstgid="1" name="chapter1_village_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
-    <image source="../../Assets/Tilesets/chapter1_village_tileset.png" width="256" height="32" />
-  </tileset>
   <imagelayer id="11" name="foreground_canopy" x="0" y="0">
     <image source="../../Assets/MapArt/chapter1/village_riverside_foreground.png" width="1024" height="640" />
   </imagelayer>
   <imagelayer id="10" name="background_art" x="0" y="0">
     <image source="../../Assets/MapArt/chapter1/village_riverside.png" width="1024" height="640" />
   </imagelayer>
-  <layer id="1" name="terrain" width="32" height="20" visible="0">
-    <data encoding="csv">
-8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,1,8,
-8,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,4,4,4,4,4,4,4,4,2,2,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,4,4,4,4,4,4,4,4,4,2,2,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,4,4,4,4,4,4,4,2,2,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,1,4,4,4,4,2,2,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
-8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
-    </data>
-  </layer>
   <objectgroup id="2" name="spawn">
     <object id="1" name="from_square" x="896" y="320">
       <properties>

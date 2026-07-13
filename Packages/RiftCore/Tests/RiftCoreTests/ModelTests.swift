@@ -76,4 +76,61 @@ final class ModelTests: XCTestCase {
         XCTAssertThrowsError(try JSONDecoder().decode(QuestDefinition.self, from: Data(json.utf8)))
     }
 
+    func testSkillDecodingRequiresEffectsField() throws {
+        let json = """
+        {
+          "id": "missing_effects",
+          "displayName": "缺少效果",
+          "actionPointCost": 1,
+          "range": 1.0,
+          "target": "enemy",
+          "affectsAllies": false,
+          "canBeDodged": false
+        }
+        """
+
+        XCTAssertThrowsError(try JSONDecoder().decode(SkillDefinition.self, from: Data(json.utf8)))
+    }
+
+    func testUnsupportedPointTargetFailsToDecode() throws {
+        let json = """
+        {
+          "id": "ground_spell",
+          "displayName": "地面法术",
+          "actionPointCost": 1,
+          "range": 3.0,
+          "target": "point",
+          "affectsAllies": false,
+          "canBeDodged": false,
+          "effects": [{"damage":{"_0":1}}]
+        }
+        """
+
+        XCTAssertThrowsError(try JSONDecoder().decode(SkillDefinition.self, from: Data(json.utf8)))
+    }
+
+    func testUnsupportedMoveAndSummonEffectsFailToDecode() throws {
+        let base = """
+        {
+          "id": "unsupported",
+          "displayName": "未支持效果",
+          "actionPointCost": 1,
+          "range": 1.0,
+          "target": "enemy",
+          "affectsAllies": false,
+          "canBeDodged": false,
+          "effects": EFFECTS
+        }
+        """
+        let payloads = [
+            "[{\"move\":{\"distance\":2.0}}]",
+            "[{\"summon\":{\"actorID\":\"wolf\"}}]"
+        ]
+
+        for payload in payloads {
+            let json = base.replacing("EFFECTS", with: payload)
+            XCTAssertThrowsError(try JSONDecoder().decode(SkillDefinition.self, from: Data(json.utf8)))
+        }
+    }
+
 }

@@ -22,7 +22,7 @@ python3 Tools/MapArtPipeline/build_map_art.py --area village_square
 
 - `background_art`：整张俯视背景，必须与地图像素尺寸一致，坐标必须是 `0,0`。
 - `foreground_*`：透明前景遮挡图，可用于屋檐、树冠、洞顶；运行时自动放在角色上方。
-- `terrain`：旧瓦片兼容层。使用正式手绘背景时可设为隐藏，但仍可保留用于回退和定位。
+- 首章正式地图不允许保留 `terrain`、旧 tileset 或其他回退渲染层；空间定位只以 TMX 对象层和正式图片层为准。
 
 ## 必需对象层
 

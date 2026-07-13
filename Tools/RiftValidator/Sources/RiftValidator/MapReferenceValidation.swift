@@ -32,7 +32,10 @@ public enum MapReferenceValidator {
         let encounters = try ids(from: dataRoot.appending(path: "encounters.json"))
         let items = try ids(from: dataRoot.appending(path: "items.json"))
         let dialogs = try ids(from: dataRoot.appending(path: "dialogs.json"))
-        let npcs = (try? ids(from: dataRoot.appending(path: "npcs.json"))) ?? []
+        let npcsURL = dataRoot.appending(path: "npcs.json")
+        let npcs = FileManager.default.fileExists(atPath: npcsURL.path)
+            ? try ids(from: npcsURL)
+            : []
         var issues: [MapReferenceValidationIssue] = []
 
         for map in maps {

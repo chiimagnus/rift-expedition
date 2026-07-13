@@ -42,14 +42,18 @@ public enum SkillResolver {
             _ = state.updateActor(id: targetID) { actor in
                 actor.stats.health = min(actor.stats.maxHealth, actor.stats.health + max(0, amount))
             }
-        case let .applyStatus(statusID, _):
-            resolution.appliedStatuses.append(statusID)
-        case let .createSurface(surfaceID, _):
-            resolution.createdSurfaces.append(surfaceID)
-        case let .move(distance):
-            resolution.movedDistance += distance
-        case let .summon(actorID):
-            resolution.summonedActorIDs.append(actorID)
+        case let .applyStatus(statusID, durationTurns):
+            let resolved = ResolvedStatusEffect(statusID: statusID, durationTurns: durationTurns)
+            resolution.appliedStatuses.append(resolved)
+            if let status = StatusType(rawValue: statusID) {
+                _ = state.updateActor(id: targetID) { actor in
+                    ElementResolver.applyStatus(status, turns: durationTurns, to: &actor)
+                }
+            }
+        case let .createSurface(surfaceID, durationTurns):
+            resolution.createdSurfaces.append(
+                ResolvedSurfaceEffect(surfaceID: surfaceID, durationTurns: durationTurns)
+            )
         }
     }
 }

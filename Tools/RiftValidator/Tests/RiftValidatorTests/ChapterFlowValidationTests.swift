@@ -37,17 +37,21 @@ struct ChapterFlowValidationTests {
         #expect(result.issues.contains { $0.message.contains("element_ore_ledger") && $0.message.contains("unobtainable") })
     }
 
-    @Test func chapterScopeExcludesMapsFromOtherWorldGraphs() {
+    @Test func areaReportFiltersAlreadyValidatedChapterResults() throws {
         let chapterMap = TiledMap(areaID: "chapter_area", width: 32, height: 32, objectGroups: [:])
-        let futureMap = TiledMap(areaID: "future_area", width: 32, height: 32, objectGroups: [:])
-        let allResults = [
+        let siblingMap = TiledMap(areaID: "sibling_area", width: 32, height: 32, objectGroups: [:])
+        let chapterResults = [
             MapValidationResult(map: chapterMap, issues: []),
-            MapValidationResult(map: futureMap, issues: [])
+            MapValidationResult(map: siblingMap, issues: [])
         ]
 
-        let scoped = scopedMapResults(allResults, chapterAreaIDs: ["chapter_area"])
+        let reported = try reportedMapResults(
+            chapterResults,
+            areaID: "chapter_area",
+            chapterID: "chapter1"
+        )
 
-        #expect(scoped.map(\.map.areaID) == ["chapter_area"])
+        #expect(reported.map(\.map.areaID) == ["chapter_area"])
     }
 
     @Test func chapterSelectionIgnoresQuestsFromOtherChapters() throws {
@@ -81,6 +85,71 @@ struct ChapterFlowValidationTests {
         let result = try #require(optionalResult)
 
         #expect(result.issues.contains { $0.message.contains("missing_global_quest") })
+    }
+
+
+    @Test func duplicateContentIDsAreReportedWithoutCrashing() throws {
+        let fixture = try ChapterFixture()
+        defer { fixture.remove() }
+        try fixture.writeValidData()
+        try fixture.appendDuplicateIDs()
+
+        let optionalResult = try ChapterFlowValidator.validateIfPresent(
+            resourcesRoot: fixture.root,
+            maps: fixture.validMaps,
+            chapterID: "chapter1"
+        )
+        let result = try #require(optionalResult)
+
+        #expect(result.issues.contains { $0.message == "Duplicate quest id: blood_debt" })
+        #expect(result.issues.contains { $0.message == "Duplicate dialog id: elder_intro" })
+        #expect(result.issues.contains { $0.message == "Duplicate encounter id: boar_intro" })
+        #expect(result.issues.contains { $0.message == "Duplicate item id: element_ore_ledger" })
+        #expect(result.issues.contains { $0.message == "Duplicate skill id: water_orb" })
+    }
+
+    @Test func detectsDuplicateOptionIDsAndInvalidActionPayloads() throws {
+        let fixture = try ChapterFixture()
+        defer { fixture.remove() }
+        try fixture.writeValidData()
+        try fixture.replaceDialogOptions(
+            dialogID: "elder_intro",
+            options: [
+                [
+                    "id": "duplicate",
+                    "title": "接受",
+                    "action": "acceptQuest",
+                    "questID": "blood_debt",
+                    "encounterID": "boar_intro"
+                ],
+                [
+                    "id": "duplicate",
+                    "title": "",
+                    "action": "startBattle",
+                    "questID": "blood_debt"
+                ],
+                [
+                    "id": "close_payload",
+                    "title": "关闭",
+                    "action": "close",
+                    "questID": "blood_debt"
+                ]
+            ]
+        )
+
+        let optionalResult = try ChapterFlowValidator.validateIfPresent(
+            resourcesRoot: fixture.root,
+            maps: fixture.validMaps,
+            chapterID: "chapter1"
+        )
+        let result = try #require(optionalResult)
+
+        #expect(result.issues.contains { $0.message == "Duplicate dialog elder_intro option id: duplicate" })
+        #expect(result.issues.contains { $0.message.contains("acceptQuest forbids encounterID") })
+        #expect(result.issues.contains { $0.message.contains("startBattle forbids questID") })
+        #expect(result.issues.contains { $0.message.contains("startBattle requires encounterID") })
+        #expect(result.issues.contains { $0.message.contains("close forbids questID and encounterID") })
+        #expect(result.issues.contains { $0.message.contains("has blank title") })
     }
 
     @Test func detectsMissingRewardsAndEncounterReferences() throws {
@@ -192,12 +261,48 @@ private final class ChapterFixture {
         try writeJSON(records, named: "dialogs.json")
     }
 
+    func replaceDialogOptions(dialogID: String, options: [[String: Any]]) throws {
+        let url = dataRoot.appending(path: "dialogs.json")
+        var records = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [[String: Any]]
+        let index = records.firstIndex { $0["id"] as? String == dialogID }!
+        records[index]["options"] = options
+        try writeJSON(records, named: "dialogs.json")
+    }
+
     func replaceQuestRewards(itemID: String, skillID: String) throws {
         let url = dataRoot.appending(path: "quests.json")
         var records = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [[String: Any]]
         records[0]["rewardItemIDs"] = [itemID]
         records[0]["rewardSkillIDs"] = [skillID]
         try writeJSON(records, named: "quests.json")
+    }
+
+
+    func appendDuplicateIDs() throws {
+        let questsURL = dataRoot.appending(path: "quests.json")
+        var quests = try JSONSerialization.jsonObject(with: Data(contentsOf: questsURL)) as! [[String: Any]]
+        quests.append(quests[0])
+        try writeJSON(quests, named: "quests.json")
+
+        let dialogsURL = dataRoot.appending(path: "dialogs.json")
+        var dialogs = try JSONSerialization.jsonObject(with: Data(contentsOf: dialogsURL)) as! [[String: Any]]
+        dialogs.append(dialogs[0])
+        try writeJSON(dialogs, named: "dialogs.json")
+
+        let encountersURL = dataRoot.appending(path: "encounters.json")
+        var encounters = try JSONSerialization.jsonObject(with: Data(contentsOf: encountersURL)) as! [[String: Any]]
+        encounters.append(encounters[0])
+        try writeJSON(encounters, named: "encounters.json")
+
+        let itemsURL = dataRoot.appending(path: "items.json")
+        var items = try JSONSerialization.jsonObject(with: Data(contentsOf: itemsURL)) as! [[String: Any]]
+        items.append(items[0])
+        try writeJSON(items, named: "items.json")
+
+        let skillsURL = dataRoot.appending(path: "skills.json")
+        var skills = try JSONSerialization.jsonObject(with: Data(contentsOf: skillsURL)) as! [[String: Any]]
+        skills.append(skills[0])
+        try writeJSON(skills, named: "skills.json")
     }
 
     func appendDialogReferencingMissingQuest() throws {
@@ -256,7 +361,12 @@ private final class ChapterFixture {
     private func dialog(_ id: String, action: String, questID: String) -> [String: Any] {
         [
             "id": id,
-            "options": [["action": action, "questID": questID]]
+            "options": [[
+                "id": "\(id)_option",
+                "title": "继续",
+                "action": action,
+                "questID": questID
+            ]]
         ]
     }
 

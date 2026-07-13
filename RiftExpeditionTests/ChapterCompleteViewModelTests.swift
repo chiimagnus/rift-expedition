@@ -14,11 +14,15 @@ final class ChapterCompleteViewModelTests: XCTestCase {
         let accept = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "blood_debt" })
         XCTAssertEqual(session.dialogViewModel.choose(accept), .none)
 
+        var inventory = session.inventory
+        inventory.addItem(id: "element_ore_ledger")
+        session.inventory = inventory
+
         XCTAssertTrue(session.dialogViewModel.start(dialogID: "elder_return"))
         let complete = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "blood_debt" })
-        XCTAssertEqual(session.dialogViewModel.choose(complete), .completedQuest("blood_debt"))
+        XCTAssertEqual(session.dialogViewModel.choose(complete), .questCompletionRequested("blood_debt"))
 
-        session.applyQuestRewards(questID: "blood_debt")
+        session.completeQuest(questID: "blood_debt")
 
         XCTAssertEqual(session.appState, .chapterComplete)
         XCTAssertTrue(session.statusText.contains("第一章完成"))

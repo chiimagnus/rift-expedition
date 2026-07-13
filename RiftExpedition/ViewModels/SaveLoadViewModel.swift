@@ -1,6 +1,11 @@
 import Observation
 import RiftCore
 
+enum SaveApplicationResult: Equatable {
+    case applied
+    case rejected(String)
+}
+
 struct SaveSlotRow: Equatable, Identifiable {
     var slot: SaveSlot
     var title: String
@@ -18,7 +23,7 @@ struct SaveSlotRow: Equatable, Identifiable {
 final class SaveLoadViewModel {
     private let store: SaveGameStore
     @ObservationIgnored private let makeSave: @MainActor () -> SaveGame?
-    @ObservationIgnored private let applySave: @MainActor (SaveGame) -> Void
+    @ObservationIgnored private let applySave: @MainActor (SaveGame) -> SaveApplicationResult
     @ObservationIgnored private let areaDisplayName: @MainActor (String) -> String
     var rows: [SaveSlotRow] = []
     var message = "选择存档槽。"
@@ -26,7 +31,7 @@ final class SaveLoadViewModel {
     init(
         store: SaveGameStore,
         makeSave: @escaping @MainActor () -> SaveGame?,
-        applySave: @escaping @MainActor (SaveGame) -> Void,
+        applySave: @escaping @MainActor (SaveGame) -> SaveApplicationResult,
         areaDisplayName: @escaping @MainActor (String) -> String = { $0 }
     ) {
         self.store = store
@@ -85,8 +90,12 @@ final class SaveLoadViewModel {
     func load(slot: SaveSlot) {
         do {
             let save = try store.read(slot)
-            applySave(save)
-            message = "\(slotTitle(slot)) 已读取。"
+            switch applySave(save) {
+            case .applied:
+                message = "\(slotTitle(slot)) 已读取。"
+            case let .rejected(reason):
+                message = "读取失败：\(reason)"
+            }
             refresh()
         } catch {
             message = readableReadError(error)

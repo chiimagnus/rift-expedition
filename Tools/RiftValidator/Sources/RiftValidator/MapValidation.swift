@@ -132,8 +132,15 @@ public enum MapValidator {
             try TiledMapParser.parse(url: url, areaID: url.deletingPathExtension().lastPathComponent)
         }
         let index = spawnIndex(for: maps)
+        let duplicateAreaIDs = Set(Dictionary(grouping: maps, by: \.areaID)
+            .filter { $0.value.count > 1 }
+            .keys)
         return maps.map { map in
-            MapValidationResult(map: map, issues: collectIssues(in: map, spawnIndex: index))
+            var issues = collectIssues(in: map, spawnIndex: index)
+            if duplicateAreaIDs.contains(map.areaID) {
+                issues.append(MapValidationIssue(message: "Duplicate map area id: \(map.areaID)"))
+            }
+            return MapValidationResult(map: map, issues: issues)
         }
     }
 
@@ -176,6 +183,18 @@ public enum MapValidator {
         for spawn in map.objectGroups["spawn", default: []] {
             if movementObstacles.contains(where: { $0.contains(pointX: spawn.x, y: spawn.y) }) {
                 issues.append(MapValidationIssue(message: "spawn object \(spawn.tiledID) is inside movement obstacle"))
+            }
+        }
+
+        for layerName in ["npc", "item", "encounter", "trigger"] {
+            for object in map.objectGroups[layerName, default: []] {
+                let pointX = object.width > 0 ? object.x + object.width / 2 : object.x
+                let pointY = object.height > 0 ? object.y + object.height / 2 : object.y
+                if movementObstacles.contains(where: { $0.contains(pointX: pointX, y: pointY) }) {
+                    issues.append(MapValidationIssue(
+                        message: "\(layerName) object \(object.tiledID) center is inside movement obstacle"
+                    ))
+                }
             }
         }
 
@@ -301,9 +320,9 @@ public enum MapValidator {
     }
 
     private static func spawnIndex(for maps: [TiledMap]) -> [String: Set<String>] {
-        Dictionary(uniqueKeysWithValues: maps.map { map in
-            (map.areaID, Set(map.objectGroups["spawn", default: []].compactMap { $0.properties["id"] }))
-        })
+        Dictionary(grouping: maps, by: \.areaID).mapValues { maps in
+            Set(maps.flatMap { $0.objectGroups["spawn", default: []].compactMap { $0.properties["id"] } })
+        }
     }
 }
 

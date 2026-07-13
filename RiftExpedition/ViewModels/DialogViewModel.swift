@@ -2,32 +2,14 @@ import Foundation
 import Observation
 import RiftCore
 
-struct DialogScript: Codable, Equatable, Identifiable {
-    var id: String
-    var speakerName: String
-    var lines: [String]
-    var options: [DialogOption]
-}
-
-struct DialogOption: Codable, Equatable, Identifiable {
-    var id: String
-    var title: String
-    var action: DialogAction
-    var questID: String?
-    var encounterID: String?
-}
-
-enum DialogAction: String, Codable, Equatable {
-    case acceptQuest
-    case completeQuest
-    case startBattle
-    case close
-}
+typealias DialogScript = DialogDefinition
+typealias DialogOption = DialogOptionDefinition
+typealias DialogAction = DialogActionDefinition
 
 enum DialogOutcome: Equatable {
     case none
     case close
-    case completedQuest(String)
+    case questCompletionRequested(String)
     case startBattle(String)
 }
 
@@ -85,16 +67,11 @@ final class DialogViewModel {
                 }
                 return .none
             case .completeQuest:
-                if let questID = option.questID {
-                    session.questState = try QuestEngine.complete(
-                        questID: questID,
-                        in: session.questState,
-                        definitions: questDefinitions
-                    )
-                    message = "任务已完成。"
-                    return .completedQuest(questID)
+                guard let questID = option.questID else {
+                    message = "任务交付配置无效。"
+                    return .none
                 }
-                return .none
+                return .questCompletionRequested(questID)
             case .startBattle:
                 guard let encounterID = option.encounterID else { return .none }
                 return .startBattle(encounterID)
@@ -107,13 +84,4 @@ final class DialogViewModel {
         }
     }
 
-    static func loadScripts(from bundle: Bundle = .main) -> [DialogScript] {
-        guard let url = bundle.url(forResource: "dialogs", withExtension: "json", subdirectory: "Data"),
-              let data = try? Data(contentsOf: url),
-              let scripts = try? JSONDecoder().decode([DialogScript].self, from: data)
-        else {
-            return []
-        }
-        return scripts
-    }
 }

@@ -5,6 +5,90 @@ import XCTest
 
 @MainActor
 final class GameSessionViewModelTests: XCTestCase {
+    func testMapLoadFailureBlocksStartup() {
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                throw TiledMapLoaderError.parseFailed(areaID: areaID)
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+
+        XCTAssertEqual(session.appState, .mainMenu)
+        XCTAssertTrue(session.contentLoadErrorMessage?.contains("地图加载失败") == true)
+
+        session.startNewGame()
+
+        XCTAssertEqual(session.appState, .mainMenu)
+        XCTAssertEqual(session.statusText, session.contentLoadErrorMessage)
+    }
+
+    func testMissingStartSpawnBlocksStartup() {
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                testMapMetadata(areaID: areaID, spawns: [])
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+
+        XCTAssertEqual(session.appState, .mainMenu)
+        XCTAssertTrue(session.contentLoadErrorMessage?.contains("缺少出生点 start") == true)
+    }
+
+    func testDisplayMetadataFailureBlocksStartupBeforeMapLoad() {
+        var mapLoadCount = 0
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                mapLoadCount += 1
+                return testMapMetadata(
+                    areaID: areaID,
+                    spawns: [MapSpawn(tiledID: 1, id: "start", position: CGPoint(x: 16, y: 16))]
+                )
+            },
+            displayMetadataLoader: { _ in
+                throw SessionMetadataError.duplicateID(kind: "NPC", id: "mayor")
+            }
+        )
+
+        XCTAssertEqual(mapLoadCount, 0)
+        XCTAssertEqual(session.appState, .mainMenu)
+        XCTAssertTrue(session.contentLoadErrorMessage?.contains("重复的NPC ID：mayor") == true)
+    }
+
+    func testFailedExitTransitionKeepsCurrentMapStateAtomic() {
+        let start = MapSpawn(tiledID: 1, id: "start", position: CGPoint(x: 16, y: 16))
+        let brokenExit = MapExit(
+            tiledID: 2,
+            name: "broken_exit",
+            targetAreaID: "broken_area",
+            targetSpawnID: "from_square",
+            frame: CGRect(x: 48, y: 48, width: 24, height: 24)
+        )
+        let session = GameSessionViewModel(
+            audioService: silentAudioService(),
+            mapMetadataLoader: { areaID, _ in
+                guard areaID == "village_square" else {
+                    throw TiledMapLoaderError.parseFailed(areaID: areaID)
+                }
+                return testMapMetadata(areaID: areaID, spawns: [start], exits: [brokenExit])
+            },
+            displayMetadataLoader: { _ in testDisplayMetadata() }
+        )
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+        session.startChapterWithSelectedParty()
+        session.explorationController.configureParty(session.party, at: brokenExit.frame.center)
+
+        session.gameScene(GameScene(size: CGSize(width: 1, height: 1)), didAdvance: 1.0 / 60.0)
+
+        XCTAssertEqual(session.currentAreaID, "village_square")
+        XCTAssertEqual(session.currentSpawnID, "start")
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertTrue(session.statusText.contains("地图加载失败"))
+    }
+
     func testAreaIDsMapToRegionalBGMCues() {
         XCTAssertEqual(AudioService.bgmCue(for: "village_square"), .villageTheme)
         XCTAssertEqual(AudioService.bgmCue(for: "village_riverside"), .villageTheme)
@@ -307,6 +391,138 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(save.party.count, 2)
     }
 
+    func testManualLoadRejectsUnknownContentWithoutMutatingSession() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store, audioService: silentAudioService())
+        startTestParty(in: session)
+
+        var invalidSave = try store.read(.auto(1))
+        invalidSave.inventory.addItem(id: "removed_item")
+        try store.write(invalidSave, to: .manual(1), safety: .safe)
+
+        let originalParty = session.party
+        let originalInventory = session.inventory
+        let originalAreaID = session.currentAreaID
+        session.openSaveLoad()
+        session.saveLoadViewModel?.load(slot: .manual(1))
+
+        XCTAssertEqual(session.party, originalParty)
+        XCTAssertEqual(session.inventory, originalInventory)
+        XCTAssertEqual(session.currentAreaID, originalAreaID)
+        XCTAssertEqual(session.inventory.count(of: "removed_item"), 0)
+        XCTAssertTrue(session.saveLoadViewModel?.message.contains("未知物品") == true)
+    }
+
+    func testManualLoadRejectsUnknownWorldStateObjectWithoutMutatingSession() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store, audioService: silentAudioService())
+        startTestParty(in: session)
+
+        var invalidSave = try store.read(.auto(1))
+        invalidSave.collectedMapItemKeys = ["village_square:99999"]
+        try store.write(invalidSave, to: .manual(1), safety: .safe)
+
+        let originalParty = session.party
+        let originalAreaID = session.currentAreaID
+        session.openSaveLoad()
+        session.saveLoadViewModel?.load(slot: .manual(1))
+
+        XCTAssertEqual(session.party, originalParty)
+        XCTAssertEqual(session.currentAreaID, originalAreaID)
+        XCTAssertTrue(session.saveLoadViewModel?.message.contains("不存在或类型不匹配") == true)
+    }
+
+    func testManualLoadRejectsWorldStateFromAreaOutsideChapter() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store, audioService: silentAudioService())
+        startTestParty(in: session)
+
+        var invalidSave = try store.read(.auto(1))
+        invalidSave.resolvedEncounterKeys = ["future_chapter:1"]
+        try store.write(invalidSave, to: .manual(1), safety: .safe)
+
+        session.openSaveLoad()
+        session.saveLoadViewModel?.load(slot: .manual(1))
+
+        XCTAssertTrue(session.saveLoadViewModel?.message.contains("章节外区域") == true)
+        XCTAssertTrue(session.session.resolvedEncounterKeys.isEmpty)
+    }
+
+    func testPartyWipeSkipsInvalidLatestAutosaveAndUsesOlderValidSlot() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store, audioService: silentAudioService())
+        startTestParty(in: session)
+
+        var olderValidSave = try store.read(.auto(1))
+        olderValidSave.inventory.addItem(id: "minor_healing_draught")
+        try store.write(olderValidSave, to: .auto(2), safety: .safe)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date(timeIntervalSince1970: 100)],
+            ofItemAtPath: store.fileURL(for: .auto(2)).path
+        )
+
+        var latestInvalidSave = olderValidSave
+        latestInvalidSave.inventory.addItem(id: "removed_item")
+        try store.write(latestInvalidSave, to: .auto(1), safety: .safe)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date(timeIntervalSince1970: 200)],
+            ofItemAtPath: store.fileURL(for: .auto(1)).path
+        )
+
+        session.battleViewModel = defeatBattleViewModel(for: session)
+        session.appState = .battle
+        session.finishBattle()
+
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertEqual(session.inventory.count(of: "minor_healing_draught"), 3)
+        XCTAssertEqual(session.inventory.count(of: "removed_item"), 0)
+        XCTAssertTrue(session.statusText.contains("自动槽 2"))
+    }
+
+    func testPartyWipeWithContentInvalidAutosaveReturnsToMenuWithReason() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store, audioService: silentAudioService())
+        startTestParty(in: session)
+
+        var invalidSave = try store.read(.auto(1))
+        invalidSave.inventory.addItem(id: "removed_item")
+        try store.write(invalidSave, to: .auto(1), safety: .safe)
+
+        session.battleViewModel = defeatBattleViewModel(for: session)
+        session.appState = .battle
+        session.finishBattle()
+
+        XCTAssertEqual(session.appState, .mainMenu)
+        XCTAssertTrue(session.party.isEmpty)
+        XCTAssertTrue(session.statusText.contains("未知物品"))
+        XCTAssertTrue(session.statusText.contains("已返回主菜单"))
+    }
+
     func testEncounterVictoryPersistsAcrossAreaReloadAndManualLoad() throws {
         let directory = URL.temporaryDirectory
             .appending(path: "RiftExpeditionTests")
@@ -353,6 +569,35 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertNil(loaded.battleViewModel)
     }
 
+    func testFailedBattleCreationDoesNotConsumeEncounterTrigger() throws {
+        let session = GameSessionViewModel(audioService: silentAudioService())
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        startTestParty(in: session)
+        try move(session, through: scene, from: "village_square", to: "village_outskirts")
+
+        let trigger = try encounterTrigger(in: "village_outskirts")
+        var invalidParty = session.party
+        invalidParty[0].id = "boar_intro_1"
+        session.party = invalidParty
+        session.explorationController.configureParty(invalidParty, at: trigger.center)
+
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertNil(session.battleViewModel)
+        XCTAssertTrue(session.statusText.contains("角色 ID 重复"))
+
+        var repairedParty = invalidParty
+        repairedParty[0].id = "player_1"
+        session.party = repairedParty
+        session.explorationController.configureParty(repairedParty, at: trigger.center)
+
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+
+        XCTAssertEqual(session.appState, .battle)
+        XCTAssertNotNil(session.battleViewModel)
+    }
+
     func testPartyWipeDoesNotResolveEncounterAndAllowsRetry() throws {
         let directory = URL.temporaryDirectory
             .appending(path: "RiftExpeditionTests")
@@ -382,6 +627,24 @@ final class GameSessionViewModelTests: XCTestCase {
         session.gameScene(scene, didAdvance: 1.0 / 60.0)
         XCTAssertEqual(session.appState, .battle)
         XCTAssertNotNil(session.battleViewModel)
+    }
+
+    func testWorldPresentationHidesOnlyCurrentAreaResolvedObjects() {
+        let session = GameSessionViewModel(audioService: silentAudioService())
+        session.currentAreaID = "village_square"
+        session.session.collectedMapItemKeys = ["village_square:11", "wilds_road:91"]
+        session.session.firedMapTriggerKeys = ["village_square:12", "cave_depths:92"]
+        session.session.resolvedEncounterKeys = ["village_square:13", "village_outskirts:93"]
+
+        let presentation = session.explorationWorldPresentation
+
+        XCTAssertEqual(presentation.areaID, "village_square")
+        XCTAssertEqual(presentation.hiddenItemTiledIDs, [11])
+        XCTAssertEqual(presentation.hiddenTriggerTiledIDs, [12])
+        XCTAssertEqual(presentation.hiddenEncounterTiledIDs, [13])
+        XCTAssertFalse(presentation.shows(item: MapItem(tiledID: 11, itemID: "item", position: .zero)))
+        XCTAssertFalse(presentation.shows(trigger: MapTrigger(tiledID: 12, triggerID: "trigger", action: "chapterComplete", frame: .zero)))
+        XCTAssertFalse(presentation.shows(encounter: MapEncounterTrigger(tiledID: 13, encounterID: "encounter", frame: .zero, radius: 0)))
     }
 
     func testManualSavePersistsAcceptedQuestAndWorldProgress() throws {
@@ -437,6 +700,30 @@ final class GameSessionViewModelTests: XCTestCase {
     }
 #endif
 
+
+    func testQuestCompletionWithoutRequiredItemIsAtomic() throws {
+        let session = GameSessionViewModel(audioService: silentAudioService())
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+        session.startChapterWithSelectedParty()
+
+        XCTAssertTrue(session.dialogViewModel.start(dialogID: "healer_request"))
+        let accept = try XCTUnwrap(
+            session.dialogViewModel.activeDialog?.options.first { $0.questID == "bitterroot_medicine" }
+        )
+        XCTAssertEqual(session.dialogViewModel.choose(accept), .none)
+        let inventoryBefore = session.inventory
+        let partyBefore = session.party
+
+        XCTAssertFalse(session.completeQuest(questID: "bitterroot_medicine"))
+
+        XCTAssertEqual(session.session.questState.statuses["bitterroot_medicine"], .active)
+        XCTAssertEqual(session.inventory, inventoryBefore)
+        XCTAssertEqual(session.party, partyBefore)
+        XCTAssertEqual(session.inventory.count(of: "river_charm"), 0)
+        XCTAssertTrue(session.statusText.contains("缺少任务物品"))
+    }
+
     func testBitterrootCanBePickedUpAndTurnedInForRewards() throws {
         let session = GameSessionViewModel()
         let scene = GameScene(size: .init(width: 1, height: 1))
@@ -484,12 +771,51 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.dialogViewModel.activeDialog?.id, "healer_return")
 
         let complete = try XCTUnwrap(session.dialogViewModel.activeDialog?.options.first { $0.questID == "bitterroot_medicine" })
-        XCTAssertEqual(session.dialogViewModel.choose(complete), .completedQuest("bitterroot_medicine"))
-        session.applyQuestRewards(questID: "bitterroot_medicine")
+        XCTAssertEqual(session.dialogViewModel.choose(complete), .questCompletionRequested("bitterroot_medicine"))
+        session.completeQuest(questID: "bitterroot_medicine")
 
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "bitterroot_herb"), 0)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "river_charm"), 1)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "minor_healing_draught"), 3)
+
+        let inventoryAfterFirstCompletion = session.inventory
+        XCTAssertFalse(session.completeQuest(questID: "bitterroot_medicine"))
+        XCTAssertEqual(session.inventory, inventoryAfterFirstCompletion)
+        XCTAssertEqual(session.inventory.count(of: "river_charm"), 1)
+        XCTAssertEqual(session.inventory.count(of: "minor_healing_draught"), 3)
+    }
+
+    private func silentAudioService() -> AudioService {
+        AudioService(
+            makePlayer: { _ in FakeAudioPlayer() },
+            urlForCue: { _ in nil }
+        )
+    }
+
+    private func testDisplayMetadata() -> SessionDisplayMetadata {
+        SessionDisplayMetadata(
+            areaNamesByID: ["village_square": "裂隙村广场", "broken_area": "损坏区域"],
+            npcNamesByID: [:]
+        )
+    }
+
+    private func testMapMetadata(
+        areaID: String,
+        spawns: [MapSpawn],
+        exits: [MapExit] = []
+    ) -> TiledMapMetadata {
+        TiledMapMetadata(
+            areaID: areaID,
+            mapFrame: CGRect(x: 0, y: 0, width: 320, height: 240),
+            spawns: spawns,
+            npcs: [],
+            navObstacles: [],
+            encounterTriggers: [],
+            triggers: [],
+            exits: exits,
+            surfaces: [],
+            items: []
+        )
     }
 
     private func startTestParty(in session: GameSessionViewModel) {
