@@ -44,6 +44,16 @@ PALETTES = {
         "path2": (157, 132, 89), "water": (43, 98, 117), "water2": (58, 127, 139),
         "edge": (36, 57, 39), "wood": (91, 61, 37), "wood2": (132, 90, 51),
     },
+    "cave_entrance": {
+        "ground": (61, 61, 58), "ground2": (75, 73, 67), "path": (105, 92, 72),
+        "path2": (124, 108, 82), "water": (49, 83, 86), "water2": (64, 103, 103),
+        "edge": (31, 31, 32), "wood": (80, 53, 34), "wood2": (118, 79, 45),
+    },
+    "cave_mines": {
+        "ground": (49, 48, 47), "ground2": (63, 60, 57), "path": (95, 82, 65),
+        "path2": (113, 96, 73), "water": (44, 72, 78), "water2": (55, 91, 95),
+        "edge": (25, 25, 27), "wood": (77, 50, 31), "wood2": (115, 77, 43),
+    },
 }
 
 
@@ -138,11 +148,14 @@ def add_environment(area: str, image: Image.Image, root: ET.Element) -> tuple[Im
                      or (area == "village_riverside" and y >= 515)
                      or (area == "wilds_road" and 245 <= y <= 395)
                      or (area == "wilds_ruins" and y >= 440)
-                     or (area == "wilds_riverbank" and (95 <= y <= 220 or y >= 440)))
+                     or (area == "wilds_riverbank" and (95 <= y <= 220 or y >= 440))
+                     or (area == "cave_entrance" and (95 <= y <= 220 or y >= 420))
+                     or (area == "cave_mines" and 245 <= y <= 395))
         right_open = ((area in {"village_riverside", "village_outskirts"} and 245 <= y <= 395)
                       or (area == "wilds_road" and (95 <= y <= 220 or y >= 440))
                       or (area == "wilds_ruins" and 95 <= y <= 220)
-                      or (area == "wilds_riverbank" and 245 <= y <= 395))
+                      or (area == "wilds_riverbank" and 245 <= y <= 395)
+                      or (area in {"cave_entrance", "cave_mines"} and 245 <= y <= 395))
         if not left_open:
             draw_tree(fgd, 18 + rng.randint(-5,8), y, rng.randint(23,31), rng, 235)
         if not right_open:
@@ -217,6 +230,33 @@ def add_environment(area: str, image: Image.Image, root: ET.Element) -> tuple[Im
         draw.rounded_rectangle((0,115,145,205),radius=20,fill=(151,126,84,220))
         draw.rounded_rectangle((0,460,145,555),radius=20,fill=(151,126,84,220))
         draw.rounded_rectangle((875,275,1024,365),radius=20,fill=(151,126,84,220))
+
+    elif area == "cave_entrance":
+        draw.rounded_rectangle((0,110,150,215),radius=28,fill=(108,92,70,220))
+        draw.rounded_rectangle((0,425,150,535),radius=28,fill=(108,92,70,220))
+        draw.rounded_rectangle((865,270,1024,370),radius=28,fill=(108,92,70,220))
+        draw.rectangle((448,224,576,416),fill=(72,54,40,245),outline=(34,29,25,255),width=4)
+        for x in range(460,565,28): draw.line((x,230,x,410),fill=(126,84,46,255),width=7)
+        draw.ellipse((608,384,768,480),fill=(69,96,68,210),outline=(39,62,44,255),width=4)
+        for cx,cy in [(495,310),(525,335),(552,305)]:
+            draw.polygon([(cx,cy+18),(cx-11,cy+3),(cx,cy-18),(cx+11,cy+3)],fill=(222,112,43,230))
+        for _ in range(45):
+            x,y=rng.randint(55,960),rng.randint(55,585); rr=rng.randint(4,11)
+            draw.polygon([(x-rr,y),(x,y-rr//2),(x+rr,y),(x,y+rr//2)],fill=(88,85,77,220))
+    elif area == "cave_mines":
+        draw.rounded_rectangle((0,270,145,370),radius=25,fill=(106,90,67,220))
+        draw.rounded_rectangle((875,270,1024,370),radius=25,fill=(106,90,67,220))
+        draw.rectangle((352,288,512,352),fill=(59,52,45,245),outline=(31,29,27,255),width=3)
+        for x in range(362,505,24): draw.line((x,292,x,348),fill=(127,84,45,255),width=5)
+        draw.line((340,304,525,304),fill=(49,49,48,255),width=5); draw.line((340,337,525,337),fill=(49,49,48,255),width=5)
+        draw.rounded_rectangle((640,192,768,320),radius=20,fill=(62,63,69,245),outline=(33,34,39,255),width=4)
+        for cx,cy,col in [(670,235,(75,194,208,240)),(706,262,(130,84,220,240)),(736,220,(73,174,190,240))]:
+            draw.polygon([(cx,cy-28),(cx-13,cy+15),(cx+13,cy+15)],fill=col,outline=(30,35,45,255))
+        draw.ellipse((512,352,640,448),fill=(56,46,37,190),outline=(90,70,48,200),width=3)
+        draw.ellipse((704,352,832,448),fill=(71,93,68,180),outline=(44,65,47,210),width=3)
+        for _ in range(55):
+            x,y=rng.randint(55,960),rng.randint(55,585); rr=rng.randint(3,9)
+            draw.ellipse((x-rr,y-rr//2,x+rr,y+rr//2),fill=(79,76,70,210))
 
     # Gentle vignette, excluded from center readability.
     vignette = Image.new("RGBA", image.size, (0,0,0,0))

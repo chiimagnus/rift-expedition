@@ -300,24 +300,36 @@
     "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "cave_entrance": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/cave_entrance_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_entrance.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_entrance.png",
     "assetID": "mapart.chapter1_cave_entrance",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/cave_entrance_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_entrance_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_cave_entrance_foreground",
+    "foregroundLayerName": "foreground_overhang",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data"
   },
   "cave_mines": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/cave_mines_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/cave_mines.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_mines.png",
     "assetID": "mapart.chapter1_cave_mines",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/cave_mines_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/cave_mines_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_cave_mines_foreground",
+    "foregroundLayerName": "foreground_overhang",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent cave overhang layer generated from TMX layout data"
   },
   "cave_depths": {
     "source": "Tools/MapArtPipeline/Sources/cave_depths_source.png",

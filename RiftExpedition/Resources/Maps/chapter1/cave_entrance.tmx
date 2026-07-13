@@ -1,13 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="17">
+<?xml version='1.0' encoding='UTF-8'?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="12" nextobjectid="17">
   <properties>
-    <property name="areaName" value="旧矿洞入口"/>
-    <property name="assetId" value="tileset.chapter1_cave"/>
+    <property name="areaName" value="旧矿洞入口" />
+    <property name="assetId" value="tileset.chapter1_cave" />
+    <property name="artAssetId" value="mapart.chapter1_cave_entrance" />
+    <property name="artPipelineVersion" value="3" />
+    <property name="foregroundArtAssetId" value="mapart.chapter1_cave_entrance_foreground" />
   </properties>
   <tileset firstgid="1" name="chapter1_cave_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
-    <image source="../../Assets/Tilesets/chapter1_cave_tileset.png" width="256" height="32"/>
+    <image source="../../Assets/Tilesets/chapter1_cave_tileset.png" width="256" height="32" />
   </tileset>
-  <layer id="1" name="terrain" width="32" height="20">
+  <imagelayer id="11" name="foreground_overhang" x="0" y="0">
+    <image source="../../Assets/MapArt/chapter1/cave_entrance_foreground.png" width="1024" height="640" />
+  </imagelayer>
+  <imagelayer id="10" name="background_art" x="0" y="0">
+    <image source="../../Assets/MapArt/chapter1/cave_entrance.png" width="1024" height="640" />
+  </imagelayer>
+  <layer id="1" name="terrain" width="32" height="20" visible="0">
     <data encoding="csv">
 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
@@ -34,17 +43,17 @@
   <objectgroup id="2" name="spawn">
     <object id="1" name="from_ruins" x="96" y="160">
       <properties>
-        <property name="id" value="from_ruins"/>
+        <property name="id" value="from_ruins" />
       </properties>
     </object>
     <object id="2" name="from_riverbank" x="96" y="480">
       <properties>
-        <property name="id" value="from_riverbank"/>
+        <property name="id" value="from_riverbank" />
       </properties>
     </object>
     <object id="3" name="from_mines" x="896" y="320">
       <properties>
-        <property name="id" value="from_mines"/>
+        <property name="id" value="from_mines" />
       </properties>
     </object>
   </objectgroup>
@@ -53,86 +62,86 @@
   <objectgroup id="4" name="encounter">
     <object id="13" name="污染洞兽" x="576" y="256" width="160" height="128">
       <properties>
-        <property name="encounterId" value="cave_vermin"/>
-        <property name="radius" value="96"/>
+        <property name="encounterId" value="cave_vermin" />
+        <property name="radius" value="96" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="5" name="trigger">
     <object id="14" name="发簪与血迹" x="352" y="352" width="96" height="64">
       <properties>
-        <property name="triggerId" value="cave_entrance_trace"/>
-        <property name="action" value="dialogue:cave_entrance_trace"/>
+        <property name="triggerId" value="cave_entrance_trace" />
+        <property name="action" value="dialogue:cave_entrance_trace" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="6" name="exit">
     <object id="4" name="回废墟" x="32" y="128" width="32" height="64">
       <properties>
-        <property name="targetAreaId" value="wilds_ruins"/>
-        <property name="targetSpawnId" value="from_cave_entrance"/>
+        <property name="targetAreaId" value="wilds_ruins" />
+        <property name="targetSpawnId" value="from_cave_entrance" />
       </properties>
     </object>
     <object id="5" name="回河湾" x="32" y="448" width="32" height="64">
       <properties>
-        <property name="targetAreaId" value="wilds_riverbank"/>
-        <property name="targetSpawnId" value="from_cave_entrance"/>
+        <property name="targetAreaId" value="wilds_riverbank" />
+        <property name="targetSpawnId" value="from_cave_entrance" />
       </properties>
     </object>
     <object id="6" name="进矿道" x="960" y="288" width="32" height="64">
       <properties>
-        <property name="targetAreaId" value="cave_mines"/>
-        <property name="targetSpawnId" value="from_entrance"/>
+        <property name="targetAreaId" value="cave_mines" />
+        <property name="targetSpawnId" value="from_entrance" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="7" name="navObstacle">
     <object id="7" name="北边界" x="0" y="0" width="1024" height="32">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="8" name="南边界" x="0" y="608" width="1024" height="32">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="9" name="西边界" x="0" y="0" width="32" height="640">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="10" name="东边界" x="992" y="0" width="32" height="640">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="11" name="坍塌矿架" x="448" y="224" width="128" height="192">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
     <object id="12" name="毒雾裂缝" x="640" y="416" width="128" height="64">
       <properties>
-        <property name="blocksMovement" value="true"/>
-        <property name="blocksSight" value="true"/>
+        <property name="blocksMovement" value="true" />
+        <property name="blocksSight" value="true" />
       </properties>
     </object>
   </objectgroup>
   <objectgroup id="8" name="surface">
     <object id="15" name="毒水" x="608" y="384" width="160" height="96">
       <properties>
-        <property name="surfaceType" value="poison"/>
+        <property name="surfaceType" value="poison" />
       </properties>
     </object>
     <object id="16" name="余火" x="480" y="288" width="96" height="96">
       <properties>
-        <property name="surfaceType" value="fire"/>
+        <property name="surfaceType" value="fire" />
       </properties>
     </object>
   </objectgroup>

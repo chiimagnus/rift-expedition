@@ -1,13 +1,22 @@
-<?xml version='1.0' encoding='utf-8'?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="10" nextobjectid="16">
+<?xml version='1.0' encoding='UTF-8'?>
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="32" height="20" tilewidth="32" tileheight="32" infinite="0" nextlayerid="12" nextobjectid="9002">
   <properties>
     <property name="areaName" value="元素矿道" />
     <property name="assetId" value="tileset.chapter1_cave" />
+    <property name="artAssetId" value="mapart.chapter1_cave_mines" />
+    <property name="artPipelineVersion" value="3" />
+    <property name="foregroundArtAssetId" value="mapart.chapter1_cave_mines_foreground" />
   </properties>
   <tileset firstgid="1" name="chapter1_cave_tileset" tilewidth="32" tileheight="32" tilecount="8" columns="8">
     <image source="../../Assets/Tilesets/chapter1_cave_tileset.png" width="256" height="32" />
   </tileset>
-  <layer id="1" name="terrain" width="32" height="20">
+  <imagelayer id="11" name="foreground_overhang" x="0" y="0">
+    <image source="../../Assets/MapArt/chapter1/cave_mines_foreground.png" width="1024" height="640" />
+  </imagelayer>
+  <imagelayer id="10" name="background_art" x="0" y="0">
+    <image source="../../Assets/MapArt/chapter1/cave_mines.png" width="1024" height="640" />
+  </imagelayer>
+  <layer id="1" name="terrain" width="32" height="20" visible="0">
     <data encoding="csv">
 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,8,
@@ -131,5 +140,12 @@
         <property name="itemId" value="element_ore_ledger" />
       </properties>
     </object>
-  <object id="9001" name="遗落护臂" type="item" x="324" y="244" width="24" height="24"><properties><property name="itemId" value="miner_gauntlets" /><property name="quantity" type="int" value="1" /><property name="pickupMessage" value="你拾起了守矿人的护臂，皮带上还留着旧矿粉。" /></properties></object></objectgroup>
+    <object id="9001" name="遗落护臂" type="item" x="324" y="244" width="24" height="24">
+      <properties>
+        <property name="itemId" value="miner_gauntlets" />
+        <property name="quantity" type="int" value="1" />
+        <property name="pickupMessage" value="你拾起了守矿人的护臂，皮带上还留着旧矿粉。" />
+      </properties>
+    </object>
+  </objectgroup>
 </map>

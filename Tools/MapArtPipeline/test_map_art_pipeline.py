@@ -25,12 +25,14 @@ class MapArtPipelineTests(unittest.TestCase):
     def test_specs_cover_world_graph_and_validate(self) -> None:
         self.assertEqual(set(self.specs), {area["id"] for area in self.areas})
         self.assertEqual(pipeline.validate_contracts(self.project_root, self.specs, self.areas), [])
-        self.assertEqual(sum(spec["status"] == "ready" for spec in self.specs.values()), 7)
-        self.assertEqual(sum(spec["status"] == "pending-source" for spec in self.specs.values()), 2)
+        self.assertEqual(sum(spec["status"] == "ready" for spec in self.specs.values()), 9)
+        self.assertEqual(sum(spec["status"] == "pending-source" for spec in self.specs.values()), 0)
 
     def test_pending_source_can_export_guide_without_source_image(self) -> None:
         area = next(area for area in self.areas if area["id"] == "cave_entrance")
-        spec = self.specs[area["id"]]
+        spec = dict(self.specs[area["id"]])
+        spec["status"] = "pending-source"
+        spec["source"] = "Tools/MapArtPipeline/Sources/not-created.png"
         self.assertFalse((self.project_root / spec["source"]).exists())
 
         with tempfile.TemporaryDirectory() as directory:
@@ -98,8 +100,10 @@ class MapArtPipelineTests(unittest.TestCase):
             self.assertIn(spec["foregroundLayerName"], layer_names)
 
     def test_pending_source_cannot_be_built_as_runtime_art(self) -> None:
+        spec = dict(self.specs["cave_entrance"])
+        spec["status"] = "pending-source"
         with self.assertRaisesRegex(ValueError, "not approved yet"):
-            pipeline.build(self.project_root, "cave_entrance", self.specs["cave_entrance"])
+            pipeline.build(self.project_root, "cave_entrance", spec)
 
     def test_contract_export_contains_every_area(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

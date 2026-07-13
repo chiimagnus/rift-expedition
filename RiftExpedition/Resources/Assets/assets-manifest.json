@@ -700,5 +700,41 @@
     "license": "ai-static",
     "downloadedAt": "2026-07-12",
     "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_entrance",
+    "path": "Assets/MapArt/chapter1/cave_entrance.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_entrance_foreground",
+    "path": "Assets/MapArt/chapter1/cave_entrance_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_mines",
+    "path": "Assets/MapArt/chapter1/cave_mines.png",
+    "type": "map-art",
+    "source": "Deterministic top-down 2D environment generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
+  },
+  {
+    "id": "mapart.chapter1_cave_mines_foreground",
+    "path": "Assets/MapArt/chapter1/cave_mines_foreground.png",
+    "type": "map-art",
+    "source": "Deterministic transparent cave overhang layer generated from TMX layout data",
+    "license": "ai-static",
+    "downloadedAt": "2026-07-12",
+    "author": "AI-generated, integrated by Rift Expedition project"
   }
 ]
