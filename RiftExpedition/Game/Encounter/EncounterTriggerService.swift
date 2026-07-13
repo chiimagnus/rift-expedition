@@ -18,7 +18,11 @@ struct EncounterTriggerService: Equatable {
         triggeredTiledIDs: Set<Int> = []
     ) {
         self.triggers = triggers
-        encountersByID = Dictionary(uniqueKeysWithValues: encounters.map { ($0.id, $0) })
+        encountersByID = encounters.reduce(into: [:]) { index, encounter in
+            if index[encounter.id] == nil {
+                index[encounter.id] = encounter
+            }
+        }
         self.triggeredTiledIDs = triggeredTiledIDs
     }
 

@@ -142,7 +142,6 @@ final class GameSessionViewModel {
     var isDebugOverlayVisible = false
     private var encounterTriggerService: EncounterTriggerService?
     private var activeEncounterKey: String?
-    private let encounterDefinitions: [EncounterDefinition]
     private let contentCatalog: ContentCatalog
     private let skillDefinitions: [SkillDefinition]
     private let itemDefinitions: [ItemDefinition]
@@ -201,7 +200,6 @@ final class GameSessionViewModel {
             startMetadata = nil
         }
 
-        encounterDefinitions = catalog.encounters
         contentCatalog = catalog
         skillDefinitions = catalog.skills
         itemDefinitions = catalog.items
@@ -375,7 +373,7 @@ final class GameSessionViewModel {
     }
 
     func beginBattleFromDialog(encounterID: String) {
-        guard let encounter = encounterDefinitions.first(where: { $0.id == encounterID }) else {
+        guard let encounter = contentCatalog.encounters.first(where: { $0.id == encounterID }) else {
             statusText = "没有找到遭遇。"
             return
         }
@@ -821,7 +819,7 @@ final class GameSessionViewModel {
         }
         let triggerService = EncounterTriggerService(
             triggers: metadata.encounterTriggers,
-            encounters: encounterDefinitions,
+            encounters: contentCatalog.encounters,
             triggeredTiledIDs: resolvedEncounterTiledIDs(in: areaID)
         )
         return PreparedSessionMap(
