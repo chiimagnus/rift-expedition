@@ -17,6 +17,31 @@ final class SaveSlotPolicyTests: XCTestCase {
         }
     }
 
+
+    func testSchemaTwoSaveDecodesWithNoResolvedEncounters() throws {
+        let encoded = try JSONEncoder().encode(makeSave())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        object["schemaVersion"] = 2
+        object.removeValue(forKey: "resolvedEncounterKeys")
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+
+        let decoded = try JSONDecoder().decode(SaveGame.self, from: legacyData)
+
+        XCTAssertEqual(decoded.schemaVersion, 2)
+        XCTAssertEqual(decoded.resolvedEncounterKeys, [])
+    }
+
+    func testResolvedEncounterKeysRoundTripInCurrentSchema() throws {
+        var save = makeSave()
+        save.resolvedEncounterKeys = ["wilds_road:41", "cave_depths:77"]
+
+        let encoded = try JSONEncoder().encode(save)
+        let decoded = try JSONDecoder().decode(SaveGame.self, from: encoded)
+
+        XCTAssertEqual(decoded.schemaVersion, SaveGame.currentSchemaVersion)
+        XCTAssertEqual(decoded.resolvedEncounterKeys, save.resolvedEncounterKeys)
+    }
+
     func testCorruptSlotDoesNotAffectOtherSlots() throws {
         let validData = try JSONEncoder().encode(makeSave())
         let corruptData = Data("{".utf8)

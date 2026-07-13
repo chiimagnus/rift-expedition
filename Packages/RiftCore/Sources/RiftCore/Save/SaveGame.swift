@@ -1,5 +1,5 @@
 public struct SaveGame: Codable, Equatable, Sendable {
-    public static let currentSchemaVersion = 2
+    public static let currentSchemaVersion = 3
 
     public var schemaVersion: Int
     public var currentAreaID: String
@@ -9,6 +9,7 @@ public struct SaveGame: Codable, Equatable, Sendable {
     public var questState: QuestState
     public var collectedMapItemKeys: [String]
     public var firedMapTriggerKeys: [String]
+    public var resolvedEncounterKeys: [String]
 
     public init(
         schemaVersion: Int = SaveGame.currentSchemaVersion,
@@ -18,7 +19,8 @@ public struct SaveGame: Codable, Equatable, Sendable {
         inventory: PartyInventory,
         questState: QuestState = QuestState(),
         collectedMapItemKeys: [String] = [],
-        firedMapTriggerKeys: [String] = []
+        firedMapTriggerKeys: [String] = [],
+        resolvedEncounterKeys: [String] = []
     ) {
         self.schemaVersion = schemaVersion
         self.currentAreaID = currentAreaID
@@ -28,11 +30,12 @@ public struct SaveGame: Codable, Equatable, Sendable {
         self.questState = questState
         self.collectedMapItemKeys = collectedMapItemKeys
         self.firedMapTriggerKeys = firedMapTriggerKeys
+        self.resolvedEncounterKeys = resolvedEncounterKeys
     }
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, currentAreaID, currentSpawnID, party, inventory
-        case questState, collectedMapItemKeys, firedMapTriggerKeys
+        case questState, collectedMapItemKeys, firedMapTriggerKeys, resolvedEncounterKeys
     }
 
     public init(from decoder: any Decoder) throws {
@@ -45,5 +48,6 @@ public struct SaveGame: Codable, Equatable, Sendable {
         questState = try container.decodeIfPresent(QuestState.self, forKey: .questState) ?? QuestState()
         collectedMapItemKeys = try container.decodeIfPresent([String].self, forKey: .collectedMapItemKeys) ?? []
         firedMapTriggerKeys = try container.decodeIfPresent([String].self, forKey: .firedMapTriggerKeys) ?? []
+        resolvedEncounterKeys = try container.decodeIfPresent([String].self, forKey: .resolvedEncounterKeys) ?? []
     }
 }
