@@ -30,6 +30,25 @@ final class EncounterTriggerServiceTests: XCTestCase {
         XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
     }
 
+    func testMissingEncounterDefinitionDoesNotConsumeTrigger() {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 99,
+                    encounterID: "missing_encounter",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: []
+        )
+
+        XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+        XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
+        XCTAssertTrue(service.triggeredTiledIDs.isEmpty)
+    }
+
     func testSameEncounterDefinitionCanBeUsedByTwoMapObjects() {
         var service = EncounterTriggerService(
             triggers: [

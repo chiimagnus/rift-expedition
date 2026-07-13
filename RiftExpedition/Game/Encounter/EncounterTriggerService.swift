@@ -43,8 +43,8 @@ struct EncounterTriggerService: Equatable {
             return nil
         }
 
-        triggeredTiledIDs.insert(trigger.tiledID)
         guard let encounter = encountersByID[trigger.encounterID] else { return nil }
+        triggeredTiledIDs.insert(trigger.tiledID)
         return TriggeredEncounter(definition: encounter, trigger: trigger)
     }
 
