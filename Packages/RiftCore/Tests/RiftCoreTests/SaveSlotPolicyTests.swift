@@ -43,11 +43,35 @@ final class SaveSlotPolicyTests: XCTestCase {
         }
     }
 
+    func testCurrentSchemaRejectsNonTwoPersonParty() throws {
+        var save = makeSave()
+        save.party.removeLast()
+        XCTAssertThrowsError(try save.validate()) { error in
+            XCTAssertEqual(
+                error as? SaveGameDecodingError,
+                .invalidPartySize(found: 1, expected: 2)
+            )
+        }
+
+        let encoded = try JSONEncoder().encode(makeSave())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        let party = try XCTUnwrap(object["party"] as? [[String: Any]])
+        object["party"] = party + [party[0]]
+        let data = try JSONSerialization.data(withJSONObject: object)
+
+        XCTAssertThrowsError(try JSONDecoder().decode(SaveGame.self, from: data)) { error in
+            XCTAssertEqual(
+                error as? SaveGameDecodingError,
+                .invalidPartySize(found: 3, expected: 2)
+            )
+        }
+    }
+
     func testCurrentSchemaRejectsDuplicateActorIDs() throws {
         let encoded = try JSONEncoder().encode(makeSave())
         var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         let party = try XCTUnwrap(object["party"] as? [[String: Any]])
-        object["party"] = party + party
+        object["party"] = [party[0], party[0]]
         let data = try JSONSerialization.data(withJSONObject: object)
 
         XCTAssertThrowsError(try JSONDecoder().decode(SaveGame.self, from: data)) { error in
@@ -268,6 +292,24 @@ final class SaveSlotPolicyTests: XCTestCase {
                         actionPoints: 4
                     ),
                     skillIDs: []
+                ),
+                Actor(
+                    id: "partner",
+                    displayName: "同伴",
+                    kind: .player,
+                    faction: .player,
+                    level: 1,
+                    stats: Stats(
+                        maxHealth: 18,
+                        health: 18,
+                        attack: 4,
+                        defense: 2,
+                        evasion: 4,
+                        magic: 2,
+                        maxActionPoints: 4,
+                        actionPoints: 4
+                    ),
+                    skillIDs: []
                 )
             ],
             inventory: PartyInventory()
@@ -382,6 +424,25 @@ final class SaveContentValidatorTests: XCTestCase {
                     classID: "warrior",
                     skillIDs: ["slash"],
                     equipment: EquipmentLoadout(weaponID: "training_sword", armorID: "cloth_armor")
+                ),
+                Actor(
+                    id: "partner",
+                    displayName: "同伴",
+                    kind: .player,
+                    faction: .player,
+                    level: 1,
+                    stats: Stats(
+                        maxHealth: 18,
+                        health: 18,
+                        attack: 4,
+                        defense: 2,
+                        evasion: 4,
+                        magic: 2,
+                        maxActionPoints: 4,
+                        actionPoints: 4
+                    ),
+                    classID: "warrior",
+                    skillIDs: ["slash"]
                 )
             ],
             inventory: try! PartyInventory(itemCounts: ["training_sword": 1, "cloth_armor": 1]),

@@ -3,6 +3,7 @@ public enum SaveGameDecodingError: Error, Equatable, Sendable {
     case emptyAreaID
     case emptySpawnID
     case emptyParty
+    case invalidPartySize(found: Int, expected: Int)
     case emptyActorID
     case duplicateActorID(String)
     case invalidActorProgression(actorID: String, field: String, value: Int)
@@ -83,6 +84,9 @@ public struct SaveGame: Codable, Equatable, Sendable {
         }
         guard !party.isEmpty else {
             throw SaveGameDecodingError.emptyParty
+        }
+        guard party.count == 2 else {
+            throw SaveGameDecodingError.invalidPartySize(found: party.count, expected: 2)
         }
 
         var actorIDs: Set<String> = []

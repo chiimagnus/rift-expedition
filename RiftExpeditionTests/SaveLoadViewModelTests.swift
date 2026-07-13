@@ -126,6 +126,24 @@ final class SaveLoadViewModelTests: XCTestCase {
                         actionPoints: 4
                     ),
                     skillIDs: []
+                ),
+                Actor(
+                    id: "partner",
+                    displayName: "同伴",
+                    kind: .player,
+                    faction: .player,
+                    level: 1,
+                    stats: Stats(
+                        maxHealth: 18,
+                        health: 18,
+                        attack: 4,
+                        defense: 2,
+                        evasion: 4,
+                        magic: 2,
+                        maxActionPoints: 4,
+                        actionPoints: 4
+                    ),
+                    skillIDs: []
                 )
             ],
             inventory: PartyInventory()
