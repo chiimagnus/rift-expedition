@@ -290,8 +290,29 @@ final class AudioService {
     }
 
     private func updateVolumes() {
+        let activeLoopCues = Set([currentBGMCue, currentMusicLayerCue, currentAmbienceCue].compactMap { $0 })
         for (cue, player) in players {
+            if isMuted {
+                player.volume = 0
+                continue
+            }
+            if Self.isLoopCue(cue), player.isPlaying, !activeLoopCues.contains(cue) {
+                continue
+            }
             player.volume = outputVolume(for: cue)
+        }
+    }
+
+    private static func isLoopCue(_ cue: AudioCue) -> Bool {
+        switch cue {
+        case .villageTheme, .wildsTheme, .caveTheme,
+             .villageLayer, .wildsLayer, .caveLayer,
+             .battleTheme, .battleLayer,
+             .villageAmbience, .riverAmbience, .wildsAmbience,
+             .caveDripLoop, .caveRumble:
+            true
+        default:
+            false
         }
     }
 

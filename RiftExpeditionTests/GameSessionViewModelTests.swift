@@ -160,6 +160,30 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(battleFade.duration, 0.2, accuracy: 0.001)
     }
 
+    func testMixerUpdateDoesNotRaiseLoopThatIsFadingOut() throws {
+        var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
+        let service = AudioService(
+            crossfadeDuration: 0.2,
+            makePlayer: { url in
+                let cue = try XCTUnwrap(AudioCue(rawValue: url.deletingPathExtension().lastPathComponent))
+                let player = FakeAudioPlayer()
+                playersByCue[cue] = player
+                return player
+            },
+            urlForCue: { cue in URL(fileURLWithPath: "/tmp/\(cue.rawValue).wav") }
+        )
+
+        service.playExplorationSoundscape(for: "village_square")
+        service.playBattleSoundscape(for: "village_square")
+        let fadingVillageTheme = try XCTUnwrap(playersByCue[.villageTheme])
+        XCTAssertEqual(fadingVillageTheme.volume, 0, accuracy: 0.001)
+
+        service.masterVolume = 0.5
+
+        XCTAssertEqual(fadingVillageTheme.volume, 0, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(playersByCue[.battleTheme]).volume, 0.5, accuracy: 0.001)
+    }
+
     func testAudioCrossfadeGenerationDoesNotStopRestartedLoop() async throws {
         var playersByCue: [AudioCue: FakeAudioPlayer] = [:]
         let service = AudioService(
