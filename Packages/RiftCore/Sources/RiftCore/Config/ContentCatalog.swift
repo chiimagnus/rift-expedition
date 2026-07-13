@@ -2,6 +2,7 @@ public struct ContentCatalog: Sendable {
     public var classes: [ClassDefinition]
     public var skills: [SkillDefinition]
     public var items: [ItemDefinition]
+    public var encounters: [EncounterDefinition]
     public var quests: [QuestDefinition]
     public var dialogues: [DialogDefinition]
 
@@ -9,12 +10,14 @@ public struct ContentCatalog: Sendable {
         classes: [ClassDefinition],
         skills: [SkillDefinition],
         items: [ItemDefinition],
+        encounters: [EncounterDefinition],
         quests: [QuestDefinition],
         dialogues: [DialogDefinition]
     ) {
         self.classes = classes
         self.skills = skills
         self.items = items
+        self.encounters = encounters
         self.quests = quests
         self.dialogues = dialogues
     }
@@ -23,6 +26,7 @@ public struct ContentCatalog: Sendable {
         classes: [],
         skills: [],
         items: [],
+        encounters: [],
         quests: [],
         dialogues: []
     )

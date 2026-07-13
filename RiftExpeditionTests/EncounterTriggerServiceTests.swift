@@ -5,57 +5,8 @@ import XCTest
 
 @MainActor
 final class EncounterTriggerServiceTests: XCTestCase {
-    func testBundledEncounterDefinitionsDecode() throws {
-        let encounters = try EncounterTriggerService.loadDefinitions()
-
-        XCTAssertEqual(encounters.first?.id, "boar_intro")
-        XCTAssertEqual(encounters.first?.enemies.first?.displayName, "受惊野猪")
-    }
-
-    func testDuplicateEncounterIDsAreRejected() {
-        XCTAssertThrowsError(try EncounterTriggerService.validateDefinitions([encounter, encounter])) { error in
-            XCTAssertEqual(error as? EncounterDefinitionLoadingError, .duplicateEncounterID("boar_intro"))
-        }
-    }
-
-    func testDuplicateEnemyIDsAreRejected() {
-        let invalid = EncounterDefinition(
-            id: "duplicate_enemy",
-            displayName: "重复敌人",
-            enemies: [enemy, enemy]
-        )
-
-        XCTAssertThrowsError(try EncounterTriggerService.validateDefinitions([invalid])) { error in
-            XCTAssertEqual(
-                error as? EncounterDefinitionLoadingError,
-                .duplicateEnemyID(encounterID: "duplicate_enemy", actorID: "boar")
-            )
-        }
-    }
-
-    func testEmptyEnemyRosterIsRejected() {
-        let invalid = EncounterDefinition(id: "empty", displayName: "空遭遇", enemies: [])
-
-        XCTAssertThrowsError(try EncounterTriggerService.validateDefinitions([invalid])) { error in
-            XCTAssertEqual(error as? EncounterDefinitionLoadingError, .emptyEnemyRoster(encounterID: "empty"))
-        }
-    }
-
-    func testNonHostileEnemyIsRejected() {
-        var invalidEnemy = enemy
-        invalidEnemy.faction = .player
-        let invalid = EncounterDefinition(id: "friendly", displayName: "友军", enemies: [invalidEnemy])
-
-        XCTAssertThrowsError(try EncounterTriggerService.validateDefinitions([invalid])) { error in
-            XCTAssertEqual(
-                error as? EncounterDefinitionLoadingError,
-                .invalidEnemyFaction(encounterID: "friendly", actorID: "boar")
-            )
-        }
-    }
-
     func testEnteringTriggerStartsBattleOnce() throws {
-        var service = try EncounterTriggerService(
+        var service = EncounterTriggerService(
             triggers: [
                 MapEncounterTrigger(
                     tiledID: 1,
@@ -77,7 +28,7 @@ final class EncounterTriggerServiceTests: XCTestCase {
     }
 
     func testMissingEncounterDefinitionDoesNotConsumeTrigger() throws {
-        var service = try EncounterTriggerService(
+        var service = EncounterTriggerService(
             triggers: [
                 MapEncounterTrigger(
                     tiledID: 99,
@@ -96,7 +47,7 @@ final class EncounterTriggerServiceTests: XCTestCase {
     }
 
     func testMissingDefinitionDoesNotShadowOverlappingValidTrigger() throws {
-        var service = try EncounterTriggerService(
+        var service = EncounterTriggerService(
             triggers: [
                 MapEncounterTrigger(
                     tiledID: 98,
@@ -122,7 +73,7 @@ final class EncounterTriggerServiceTests: XCTestCase {
     }
 
     func testSameEncounterDefinitionCanBeUsedByTwoMapObjects() throws {
-        var service = try EncounterTriggerService(
+        var service = EncounterTriggerService(
             triggers: [
                 MapEncounterTrigger(
                     tiledID: 41,
@@ -148,7 +99,7 @@ final class EncounterTriggerServiceTests: XCTestCase {
     }
 
     func testPendingEncounterIsNotConsumedUntilExplicitlyMarked() throws {
-        var service = try EncounterTriggerService(
+        var service = EncounterTriggerService(
             triggers: [
                 MapEncounterTrigger(
                     tiledID: 41,
@@ -169,7 +120,7 @@ final class EncounterTriggerServiceTests: XCTestCase {
     }
 
     func testPretriggeredTiledObjectDoesNotStartAgain() throws {
-        var service = try EncounterTriggerService(
+        var service = EncounterTriggerService(
             triggers: [
                 MapEncounterTrigger(
                     tiledID: 41,

@@ -8,6 +8,7 @@ public enum ContentValidationError: Error, Equatable, CustomStringConvertible, S
     case invalidQuest(owner: String, id: String, reason: String)
     case invalidSkill(owner: String, id: String, reason: String)
     case invalidDialogue(owner: String, id: String, reason: String)
+    case invalidEncounter(owner: String, id: String, reason: String)
 
     public var description: String {
         switch self {
@@ -25,6 +26,8 @@ public enum ContentValidationError: Error, Equatable, CustomStringConvertible, S
             "Invalid skill in \(owner): \(id) (\(reason))"
         case let .invalidDialogue(owner, id, reason):
             "Invalid dialogue in \(owner): \(id) (\(reason))"
+        case let .invalidEncounter(owner, id, reason):
+            "Invalid encounter in \(owner): \(id) (\(reason))"
         }
     }
 }
@@ -55,11 +58,14 @@ public enum ContentValidator {
         errors.append(contentsOf: duplicateErrors(catalog.classes.map(\.id), kind: "class"))
         errors.append(contentsOf: duplicateErrors(catalog.skills.map(\.id), kind: "skill"))
         errors.append(contentsOf: duplicateErrors(catalog.items.map(\.id), kind: "item"))
+        errors.append(contentsOf: duplicateErrors(catalog.encounters.map(\.id), kind: "encounter"))
         errors.append(contentsOf: duplicateErrors(catalog.quests.map(\.id), kind: "quest"))
         errors.append(contentsOf: duplicateErrors(catalog.dialogues.map(\.id), kind: "dialogue"))
 
+        let classIDs = Set(catalog.classes.map(\.id))
         let skillIDs = Set(catalog.skills.map(\.id))
         let itemIDs = Set(catalog.items.map(\.id))
+        let encounterIDs = Set(catalog.encounters.map(\.id))
         let dialogueIDs = Set(catalog.dialogues.map(\.id))
 
         for skill in catalog.skills {
@@ -205,6 +211,99 @@ public enum ContentValidator {
             }
         }
 
+        for encounter in catalog.encounters {
+            let owner = "encounter:\(encounter.id)"
+            if isBlank(encounter.id) {
+                errors.append(.invalidEncounter(owner: owner, id: encounter.id, reason: "id must not be blank"))
+            }
+            if isBlank(encounter.displayName) {
+                errors.append(.invalidEncounter(owner: owner, id: encounter.id, reason: "displayName must not be blank"))
+            }
+            if encounter.enemies.isEmpty {
+                errors.append(.invalidEncounter(owner: owner, id: encounter.id, reason: "enemies must not be empty"))
+            }
+            if hasDuplicates(encounter.enemies.map(\.id)) {
+                errors.append(.invalidEncounter(owner: owner, id: encounter.id, reason: "enemy ids must not contain duplicates"))
+            }
+
+            for enemy in encounter.enemies {
+                let actorOwner = "\(owner).enemy:\(enemy.id)"
+                if isBlank(enemy.id) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "enemy id must not be blank"))
+                }
+                if isBlank(enemy.displayName) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "enemy displayName must not be blank"))
+                }
+                if ![Faction.hostile, .animal, .monster].contains(enemy.faction) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "enemy faction must be hostile, animal, or monster"))
+                }
+                if ![ActorKind.humanEnemy, .animal, .monster].contains(enemy.kind) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "enemy kind must be humanEnemy, animal, or monster"))
+                }
+                if enemy.level <= 0 {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "level must be positive"))
+                }
+                if enemy.experience < 0 || enemy.unspentAttributePoints < 0 {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "progression values must be non-negative"))
+                }
+                let stats = enemy.stats
+                if stats.maxHealth <= 0 || stats.health <= 0 || stats.health > stats.maxHealth {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "health must be within 1...maxHealth"))
+                }
+                if stats.maxActionPoints <= 0 || stats.actionPoints < 0 || stats.actionPoints > stats.maxActionPoints {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "actionPoints must be within 0...maxActionPoints"))
+                }
+                if [stats.attack, stats.defense, stats.evasion, stats.magic].contains(where: { $0 < 0 }) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "combat stats must be non-negative"))
+                }
+                if let classID = enemy.classID {
+                    if isBlank(classID) {
+                        errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "classID must not be blank"))
+                    } else if !classIDs.contains(classID) {
+                        errors.append(.missingReference(owner: actorOwner, field: "classID", id: classID))
+                    }
+                }
+                if enemy.skillIDs.isEmpty {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "skillIDs must not be empty"))
+                }
+                if hasDuplicates(enemy.skillIDs) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "skillIDs must not contain duplicates"))
+                }
+                for skillID in enemy.skillIDs {
+                    if isBlank(skillID) {
+                        errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "skillIDs must not contain blank ids"))
+                    } else if !skillIDs.contains(skillID) {
+                        errors.append(.missingReference(owner: actorOwner, field: "skillIDs", id: skillID))
+                    }
+                }
+                let equipmentReferences: [(String, String?, EquipmentSlot)] = [
+                    ("weaponID", enemy.equipment.weaponID, .weapon),
+                    ("armorID", enemy.equipment.armorID, .armor),
+                    ("accessoryID", enemy.equipment.accessoryID, .accessory)
+                ]
+                for (field, itemID, expectedSlot) in equipmentReferences {
+                    guard let itemID else { continue }
+                    guard let item = itemsByID[itemID] else {
+                        errors.append(.missingReference(owner: actorOwner, field: "equipment.\(field)", id: itemID))
+                        continue
+                    }
+                    guard item.kind == .equipment, let equipment = item.equipment else {
+                        errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "equipment.\(field) must reference equipment"))
+                        continue
+                    }
+                    if equipment.slot != expectedSlot {
+                        errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "equipment.\(field) expected \(expectedSlot.rawValue), got \(equipment.slot.rawValue)"))
+                    }
+                }
+                if Set(enemy.statuses.map(\.type)).count != enemy.statuses.count {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "statuses must not contain duplicates"))
+                }
+                if enemy.statuses.contains(where: { $0.remainingTurns <= 0 }) {
+                    errors.append(.invalidEncounter(owner: actorOwner, id: enemy.id, reason: "status durations must be positive"))
+                }
+            }
+        }
+
         let questIDs = Set(catalog.quests.map(\.id))
         for dialogue in catalog.dialogues {
             let owner = "dialogue:\(dialogue.id)"
@@ -254,6 +353,9 @@ public enum ContentValidator {
                     guard let encounterID = option.encounterID?.trimmingCharacters(in: .whitespacesAndNewlines), !encounterID.isEmpty else {
                         errors.append(.invalidDialogue(owner: owner, id: optionID, reason: "startBattle requires encounterID"))
                         continue
+                    }
+                    if !encounterIDs.contains(encounterID) {
+                        errors.append(.missingReference(owner: owner, field: "option.encounterID", id: encounterID))
                     }
                 case .close:
                     if option.questID != nil || option.encounterID != nil {

@@ -40,6 +40,7 @@ final class ContentValidatorTests: XCTestCase {
                     skillID: "missing_heal"
                 )
             ],
+            encounters: [],
             quests: [],
             dialogues: []
         )
@@ -98,6 +99,7 @@ final class ContentValidatorTests: XCTestCase {
             classes: [],
             skills: [],
             items: [],
+            encounters: [],
             quests: [quest],
             dialogues: [dialogue]
         )
@@ -133,7 +135,7 @@ final class ContentValidatorTests: XCTestCase {
         )
 
         XCTAssertThrowsError(try ContentValidator.validate(
-            ContentCatalog(classes: [], skills: [], items: [], quests: [], dialogues: [dialogue])
+            ContentCatalog(classes: [], skills: [], items: [], encounters: [], quests: [], dialogues: [dialogue])
         )) { error in
             let message = String(describing: error)
             XCTAssertTrue(message.contains("option.questID"))
@@ -194,7 +196,7 @@ final class ContentValidatorTests: XCTestCase {
                 effects: [.createSurface(surfaceID: "lava", durationTurns: -1)]
             )
         ]
-        let catalog = ContentCatalog(classes: [], skills: invalidSkills, items: [], quests: [], dialogues: [])
+        let catalog = ContentCatalog(classes: [], skills: invalidSkills, items: [], encounters: [], quests: [], dialogues: [])
 
         XCTAssertThrowsError(try ContentValidator.validate(catalog)) { error in
             let message = String(describing: error)
@@ -237,7 +239,7 @@ final class ContentValidatorTests: XCTestCase {
         ]
 
         XCTAssertThrowsError(try ContentValidator.validate(
-            ContentCatalog(classes: [], skills: skills, items: [], quests: [], dialogues: [])
+            ContentCatalog(classes: [], skills: skills, items: [], encounters: [], quests: [], dialogues: [])
         )) { error in
             let message = String(describing: error)
             XCTAssertTrue(message.contains("damage amount must be positive"))
@@ -264,6 +266,7 @@ final class ContentValidatorTests: XCTestCase {
             classes: [],
             skills: [],
             items: [],
+            encounters: [],
             quests: [quest],
             dialogues: [
                 DialogDefinition(id: "start", speakerName: "测试", lines: ["开始"], options: []),
@@ -298,6 +301,7 @@ final class ContentValidatorTests: XCTestCase {
             classes: [],
             skills: [],
             items: [ItemDefinition(id: "ledger", displayName: "账册", kind: .quest)],
+            encounters: [],
             quests: [quest],
             dialogues: [
                 DialogDefinition(id: "start", speakerName: "测试", lines: ["开始"], options: []),
@@ -359,6 +363,7 @@ final class ContentValidatorTests: XCTestCase {
             ],
             skills: [skill],
             items: [ItemDefinition(id: " ", displayName: " ", kind: .quest)],
+            encounters: [],
             quests: [quest],
             dialogues: [DialogDefinition(id: " ", speakerName: " ", lines: [" "], options: [])]
         )
@@ -419,6 +424,7 @@ final class ContentValidatorTests: XCTestCase {
             ],
             skills: [skill],
             items: [item],
+            encounters: [],
             quests: [],
             dialogues: []
         )
@@ -476,6 +482,7 @@ final class ContentValidatorTests: XCTestCase {
             ],
             skills: [skill],
             items: [ItemDefinition(id: "reward", displayName: "奖励", kind: .quest)],
+            encounters: [],
             quests: [quest],
             dialogues: [
                 DialogDefinition(id: "start", speakerName: "NPC", lines: ["开始"], options: [close]),
@@ -510,6 +517,7 @@ final class ContentValidatorTests: XCTestCase {
                 ItemDefinition(id: "bad_consumable", displayName: "错误消耗品", kind: .consumable, equipment: equipmentPayload, skillID: "heal"),
                 ItemDefinition(id: "bad_quest", displayName: "错误任务物", kind: .quest, equipment: equipmentPayload, skillID: "heal")
             ],
+            encounters: [],
             quests: [],
             dialogues: []
         )
@@ -547,6 +555,79 @@ final class ContentValidatorTests: XCTestCase {
             try assertEquipment(classDefinition.defaultEquipment.armorID, slot: .armor, itemsByID: itemsByID)
             try assertEquipment(classDefinition.defaultEquipment.accessoryID, slot: .accessory, itemsByID: itemsByID)
         }
+    }
+
+    func testEncounterJSONIsLoadedIntoTheCatalog() throws {
+        let catalog = try ContentLoader.load(from: projectDataDirectory())
+
+        XCTAssertEqual(catalog.encounters.first?.id, "boar_intro")
+        XCTAssertEqual(catalog.encounters.first?.enemies.first?.displayName, "受惊野猪")
+    }
+
+    func testEncounterSemanticsAndReferencesAreStrictlyValidated() throws {
+        var catalog = try ContentLoader.load(from: projectDataDirectory())
+        var invalid = try XCTUnwrap(catalog.encounters.first)
+        invalid.id = "invalid_encounter"
+        invalid.displayName = ""
+        var enemy = try XCTUnwrap(invalid.enemies.first)
+        enemy.id = ""
+        enemy.displayName = ""
+        enemy.kind = .player
+        enemy.faction = .player
+        enemy.level = 0
+        enemy.experience = -1
+        enemy.stats.health = 0
+        enemy.stats.actionPoints = enemy.stats.maxActionPoints + 1
+        enemy.classID = "missing_class"
+        enemy.skillIDs = ["missing_skill", "missing_skill"]
+        enemy.statuses = [
+            StatusEffect(type: .burning, remainingTurns: 0),
+            StatusEffect(type: .burning, remainingTurns: 1)
+        ]
+        invalid.enemies = [enemy, enemy]
+        catalog.encounters = [invalid]
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+        for required in [
+            "displayName must not be blank",
+            "enemy ids must not contain duplicates",
+            "enemy faction must be hostile, animal, or monster",
+            "enemy kind must be humanEnemy, animal, or monster",
+            "level must be positive",
+            "progression values must be non-negative",
+            "health must be within 1...maxHealth",
+            "actionPoints must be within 0...maxActionPoints",
+            "missing_class",
+            "missing_skill",
+            "skillIDs must not contain duplicates",
+            "statuses must not contain duplicates",
+            "status durations must be positive"
+        ] {
+            XCTAssertTrue(message.contains(required), required)
+        }
+    }
+
+    func testStartBattleDialogMustReferenceExistingEncounter() throws {
+        var catalog = try ContentLoader.load(from: projectDataDirectory())
+        catalog.dialogues.append(
+            DialogDefinition(
+                id: "missing_encounter_dialog",
+                speakerName: "测试",
+                lines: ["开战"],
+                options: [
+                    DialogOptionDefinition(
+                        id: "fight",
+                        title: "战斗",
+                        action: .startBattle,
+                        encounterID: "missing_encounter"
+                    )
+                ]
+            )
+        )
+
+        let message = ContentValidator.collectErrors(in: catalog).map(\.description).joined(separator: "\n")
+        XCTAssertTrue(message.contains("option.encounterID"))
+        XCTAssertTrue(message.contains("missing_encounter"))
     }
 
     func testStartingBalanceDocumentCoversClassAndAPValues() throws {

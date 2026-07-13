@@ -173,16 +173,13 @@ final class GameSessionViewModel {
         self.mapMetadataLoader = mapMetadataLoader
 
         let catalog: ContentCatalog
-        let loadedEncounters: [EncounterDefinition]
         let displayMetadata: SessionDisplayMetadata
         var startupErrorMessage: String?
         do {
             catalog = try Self.loadCatalog(from: contentBundle)
-            loadedEncounters = try EncounterTriggerService.loadDefinitions(from: contentBundle)
             displayMetadata = try displayMetadataLoader(contentBundle)
         } catch {
             catalog = .empty
-            loadedEncounters = []
             displayMetadata = SessionDisplayMetadata(areaNamesByID: [:], npcNamesByID: [:])
             startupErrorMessage = "内容加载失败：\(error)"
         }
@@ -204,7 +201,7 @@ final class GameSessionViewModel {
             startMetadata = nil
         }
 
-        encounterDefinitions = loadedEncounters
+        encounterDefinitions = catalog.encounters
         contentCatalog = catalog
         skillDefinitions = catalog.skills
         itemDefinitions = catalog.items
@@ -822,7 +819,7 @@ final class GameSessionViewModel {
         guard let spawn = metadata.spawns.first(where: { $0.id == spawnID }) else {
             throw SessionMetadataError.missingSpawn(areaID: areaID, spawnID: spawnID)
         }
-        let triggerService = try EncounterTriggerService(
+        let triggerService = EncounterTriggerService(
             triggers: metadata.encounterTriggers,
             encounters: encounterDefinitions,
             triggeredTiledIDs: resolvedEncounterTiledIDs(in: areaID)

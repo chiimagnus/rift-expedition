@@ -8,6 +8,7 @@ public enum ContentLoader {
             classes: load("classes.json", from: directory, using: decoder),
             skills: load("skills.json", from: directory, using: decoder),
             items: load("items.json", from: directory, using: decoder),
+            encounters: load("encounters.json", from: directory, using: decoder),
             quests: load("quests.json", from: directory, using: decoder),
             dialogues: load("dialogs.json", from: directory, using: decoder)
         )

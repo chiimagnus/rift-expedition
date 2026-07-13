@@ -6,7 +6,7 @@ final class EncounterBalanceSmokeTests: XCTestCase {
     func testChapterOneFixedEncounterSetAndOpeningActionsAreValid() throws {
         let catalog = try ContentLoader.load(from: projectDataDirectory())
         let skillsByID = Dictionary(uniqueKeysWithValues: catalog.skills.map { ($0.id, $0) })
-        let encounters = try loadEncounters()
+        let encounters = catalog.encounters
         let expectedEncounterIDs: Set<String> = [
             "boar_intro",
             "road_bandit_ambush",
@@ -36,7 +36,7 @@ final class EncounterBalanceSmokeTests: XCTestCase {
     }
 
     private func smokeOpeningAction(
-        _ encounter: EncounterFixture,
+        _ encounter: EncounterDefinition,
         skillsByID: [String: SkillDefinition],
         file: StaticString = #filePath,
         line: UInt = #line
@@ -84,12 +84,6 @@ final class EncounterBalanceSmokeTests: XCTestCase {
         }
     }
 
-    private func loadEncounters() throws -> [EncounterFixture] {
-        let url = projectDataDirectory().appending(path: "encounters.json")
-        let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode([EncounterFixture].self, from: data)
-    }
-
     private func chapterMapEncounterIDs() throws -> Set<String> {
         let mapsURL = projectRoot().appending(path: "RiftExpedition/Resources/Maps/chapter1")
         let urls = FileManager.default.enumerator(at: mapsURL, includingPropertiesForKeys: nil)?
@@ -122,10 +116,4 @@ final class EncounterBalanceSmokeTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
     }
-}
-
-private struct EncounterFixture: Decodable {
-    var id: String
-    var displayName: String
-    var enemies: [Actor]
 }

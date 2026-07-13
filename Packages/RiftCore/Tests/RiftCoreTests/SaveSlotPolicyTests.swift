@@ -497,6 +497,7 @@ final class SaveContentValidatorTests: XCTestCase {
                     equipment: EquipmentDefinition(id: "cloth_armor", displayName: "布甲", slot: .armor)
                 )
             ],
+            encounters: [],
             quests: [
                 QuestDefinition(
                     id: "quest",
