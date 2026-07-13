@@ -49,6 +49,14 @@ public enum WorldGraphValidator {
                 ChapterWorldGraph.self,
                 from: Data(contentsOf: selectedURL)
             )
+            guard graph.id == worldID else {
+                return [WorldGraphValidationResult(
+                    worldID: worldID,
+                    issues: [WorldGraphValidationIssue(
+                        message: "World graph id mismatch: expected \(worldID), found \(graph.id)"
+                    )]
+                )]
+            }
             return [validate(graph, maps: maps)]
         }
 

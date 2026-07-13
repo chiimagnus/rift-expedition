@@ -257,6 +257,32 @@ final class MapValidationTests: XCTestCase {
     }
 
 
+    func testScopedWorldGraphValidationRejectsMismatchedInternalID() throws {
+        let root = URL.temporaryDirectory
+            .appending(path: "RiftValidatorTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let worldsRoot = root.appending(path: "Data/worlds")
+        try FileManager.default.createDirectory(at: worldsRoot, withIntermediateDirectories: true)
+        let mismatched: [String: Any] = [
+            "id": "chapter2",
+            "title": "Wrong Chapter",
+            "startAreaId": "a",
+            "startSpawnId": "start",
+            "areas": []
+        ]
+        try JSONSerialization.data(withJSONObject: mismatched).write(to: worldsRoot.appending(path: "chapter1.json"))
+
+        let results = try WorldGraphValidator.validateIfPresent(
+            resourcesRoot: root,
+            maps: [],
+            worldID: "chapter1"
+        )
+
+        XCTAssertEqual(results.first?.worldID, "chapter1")
+        XCTAssertTrue(results.first?.issues.contains { $0.message.contains("expected chapter1, found chapter2") } == true)
+    }
+
     func testScopedWorldGraphValidationIgnoresMalformedSiblingChapter() throws {
         let root = URL.temporaryDirectory
             .appending(path: "RiftValidatorTests")
