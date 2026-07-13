@@ -57,6 +57,7 @@ public enum ChapterFlowValidator {
         let skills = try decode([IDRecord].self, from: dataRoot.appending(path: "skills.json"))
 
         let dialogsByID = Dictionary(uniqueKeysWithValues: dialogs.map { ($0.id, $0) })
+        let allQuestIDs = Set(allQuests.map(\.id))
         let encounterIDs = Set(encounters.map(\.id))
         let itemIDs = Set(items.map(\.id))
         let skillIDs = Set(skills.map(\.id))
@@ -71,8 +72,6 @@ public enum ChapterFlowValidator {
         }
 
         var issues: [ChapterFlowValidationIssue] = []
-        let questIDs = Set(quests.map(\.id))
-
         for quest in quests {
             validateDialog(
                 id: quest.startDialogID,
@@ -121,7 +120,7 @@ public enum ChapterFlowValidator {
             for option in dialog.options {
                 if let questID = option.questID,
                    option.action == "acceptQuest" || option.action == "completeQuest",
-                   !questIDs.contains(questID) {
+                   !allQuestIDs.contains(questID) {
                     issues.append(.init(message: "Dialog \(dialog.id) action \(option.action) references missing quest: \(questID)"))
                 }
                 if let encounterID = option.encounterID, !encounterIDs.contains(encounterID) {

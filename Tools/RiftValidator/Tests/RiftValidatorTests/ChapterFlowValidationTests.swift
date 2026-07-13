@@ -67,6 +67,22 @@ struct ChapterFlowValidationTests {
         #expect(result.questCount == 4)
     }
 
+    @Test func detectsDialogReferenceToUndefinedQuestAcrossAllChapters() throws {
+        let fixture = try ChapterFixture()
+        defer { fixture.remove() }
+        try fixture.writeValidData()
+        try fixture.appendDialogReferencingMissingQuest()
+
+        let optionalResult = try ChapterFlowValidator.validateIfPresent(
+            resourcesRoot: fixture.root,
+            maps: fixture.validMaps,
+            chapterID: "chapter1"
+        )
+        let result = try #require(optionalResult)
+
+        #expect(result.issues.contains { $0.message.contains("missing_global_quest") })
+    }
+
     @Test func detectsMissingRewardsAndEncounterReferences() throws {
         let fixture = try ChapterFixture()
         defer { fixture.remove() }
@@ -184,6 +200,13 @@ private final class ChapterFixture {
         try writeJSON(records, named: "quests.json")
     }
 
+    func appendDialogReferencingMissingQuest() throws {
+        let dialogsURL = dataRoot.appending(path: "dialogs.json")
+        var dialogs = try JSONSerialization.jsonObject(with: Data(contentsOf: dialogsURL)) as! [[String: Any]]
+        dialogs.append(dialog("broken_dialog", action: "acceptQuest", questID: "missing_global_quest"))
+        try writeJSON(dialogs, named: "dialogs.json")
+    }
+
     func appendFutureChapterQuest() throws {
         let questsURL = dataRoot.appending(path: "quests.json")
         var quests = try JSONSerialization.jsonObject(with: Data(contentsOf: questsURL)) as! [[String: Any]]
@@ -191,13 +214,19 @@ private final class ChapterFixture {
             "id": "future_quest",
             "chapterID": "chapter2",
             "isMainQuest": true,
-            "startDialogID": "missing_future_start",
-            "turnInDialogID": "missing_future_turnin",
+            "startDialogID": "future_start",
+            "turnInDialogID": "future_turnin",
             "requiredItemIDs": ["future_item"],
             "rewardItemIDs": [],
             "rewardSkillIDs": []
         ])
         try writeJSON(quests, named: "quests.json")
+
+        let dialogsURL = dataRoot.appending(path: "dialogs.json")
+        var dialogs = try JSONSerialization.jsonObject(with: Data(contentsOf: dialogsURL)) as! [[String: Any]]
+        dialogs.append(dialog("future_start", action: "acceptQuest", questID: "future_quest"))
+        dialogs.append(dialog("future_turnin", action: "completeQuest", questID: "future_quest"))
+        try writeJSON(dialogs, named: "dialogs.json")
     }
 
     func remove() {
