@@ -54,6 +54,23 @@ struct ChapterFlowValidationTests {
         #expect(reported.map(\.map.areaID) == ["chapter_area"])
     }
 
+    @Test func areaReportIncludesSiblingIssuesAndCountsWholeChapter() throws {
+        let selectedMap = TiledMap(areaID: "selected", width: 32, height: 32, objectGroups: [:])
+        let siblingMap = TiledMap(areaID: "sibling", width: 32, height: 32, objectGroups: [:])
+        let cleanMap = TiledMap(areaID: "clean", width: 32, height: 32, objectGroups: [:])
+        let siblingIssue = MapValidationIssue(message: "broken sibling")
+        let results = [
+            MapValidationResult(map: selectedMap, issues: []),
+            MapValidationResult(map: siblingMap, issues: [siblingIssue]),
+            MapValidationResult(map: cleanMap, issues: [])
+        ]
+
+        let reportResults = try reportMapResults(results, areaID: "selected", chapterID: "chapter1")
+
+        #expect(reportResults.map(\.map.areaID) == ["selected", "sibling"])
+        #expect(mapIssueCount(in: results) == 1)
+    }
+
     @Test func chapterSelectionIgnoresQuestsFromOtherChapters() throws {
         let fixture = try ChapterFixture()
         defer { fixture.remove() }

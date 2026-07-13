@@ -172,6 +172,22 @@ func reportedMapResults(_ allResults: [MapValidationResult], areaID: String?, ch
     return results
 }
 
+func reportMapResults(_ allResults: [MapValidationResult], areaID: String?, chapterID: String?) throws -> [MapValidationResult] {
+    let selectedResults = try reportedMapResults(allResults, areaID: areaID, chapterID: chapterID)
+    guard let areaID else { return selectedResults }
+
+    let siblingIssues = allResults.filter { result in
+        result.map.areaID != areaID && !result.issues.isEmpty
+    }
+    return selectedResults + siblingIssues
+}
+
+func mapIssueCount(in results: [MapValidationResult]) -> Int {
+    results.reduce(0) { partial, result in
+        partial + result.issues.count
+    }
+}
+
 func scopeTitle(arguments: Arguments) -> String {
     if let areaID = arguments.areaID {
         return "区域 \(areaID)"
@@ -194,6 +210,11 @@ do {
     )
     let scopedResults = try MapValidator.validate(urls: urls)
     let results = try reportedMapResults(
+        scopedResults,
+        areaID: arguments.areaID,
+        chapterID: arguments.chapterID
+    )
+    let reportResults = try reportMapResults(
         scopedResults,
         areaID: arguments.areaID,
         chapterID: arguments.chapterID
@@ -223,9 +244,7 @@ do {
         }
     }
 
-    let mapIssueCount = results.reduce(0) { partial, result in
-        partial + result.issues.count
-    }
+    let mapIssueCount = mapIssueCount(in: scopedResults)
     let worldIssueCount = worldResults.reduce(0) { partial, result in
         partial + result.issues.count
     }
@@ -237,7 +256,8 @@ do {
     let summary = [
         "# \(scopeTitle)校验总览",
         "",
-        "- 地图数量：\(results.count)",
+        "- 显示地图数量：\(results.count)",
+        "- 校验地图数量：\(scopedResults.count)",
         "- 世界图谱检查：\(worldResults.isEmpty ? "未配置" : "已执行")",
         "- 地图数据引用检查：\(mapReferenceResult == nil ? "未配置" : "已执行")",
         "- 章节任务流程检查：\(chapterFlowResult == nil ? "未配置" : "已执行")",
@@ -248,7 +268,7 @@ do {
     ].joined(separator: "\n")
 
     var reportSections = [summary]
-    reportSections.append(contentsOf: results.map { $0.reportMarkdown() })
+    reportSections.append(contentsOf: reportResults.map { $0.reportMarkdown() })
     reportSections.append(contentsOf: worldResults.map { $0.reportMarkdown() })
     if let mapReferenceResult {
         reportSections.append(mapReferenceResult.reportMarkdown())
