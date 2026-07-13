@@ -30,6 +30,30 @@ final class EncounterTriggerServiceTests: XCTestCase {
         XCTAssertNil(service.encounter(at: CGPoint(x: 110, y: 110)))
     }
 
+    func testSameEncounterDefinitionCanBeUsedByTwoMapObjects() {
+        var service = EncounterTriggerService(
+            triggers: [
+                MapEncounterTrigger(
+                    tiledID: 41,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 100, y: 100, width: 40, height: 40),
+                    radius: 10
+                ),
+                MapEncounterTrigger(
+                    tiledID: 42,
+                    encounterID: "boar_intro",
+                    frame: CGRect(x: 200, y: 100, width: 40, height: 40),
+                    radius: 10
+                )
+            ],
+            encounters: [encounter]
+        )
+
+        XCTAssertEqual(service.encounter(at: CGPoint(x: 110, y: 110))?.id, "boar_intro")
+        XCTAssertEqual(service.encounter(at: CGPoint(x: 210, y: 110))?.id, "boar_intro")
+        XCTAssertEqual(service.triggeredTiledIDs, [41, 42])
+    }
+
     func testPretriggeredTiledObjectDoesNotStartAgain() {
         var service = EncounterTriggerService(
             triggers: [

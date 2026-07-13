@@ -171,6 +171,83 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(save.party.count, 2)
     }
 
+    func testEncounterVictoryPersistsAcrossAreaReloadAndManualLoad() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store)
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        startTestParty(in: session)
+        try move(session, through: scene, from: "village_square", to: "village_outskirts")
+
+        let trigger = try encounterTrigger(in: "village_outskirts")
+        session.explorationController.configureParty(session.party, at: trigger.center)
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(session.appState, .battle)
+
+        session.battleViewModel = victoryBattleViewModel(for: session)
+        session.finishBattle()
+
+        let resolvedKey = "village_outskirts:\(trigger.tiledID)"
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertTrue(session.session.resolvedEncounterKeys.contains(resolvedKey))
+        XCTAssertTrue(try store.read(.auto(1)).resolvedEncounterKeys.contains(resolvedKey))
+
+        try move(session, through: scene, from: "village_outskirts", to: "village_square")
+        try move(session, through: scene, from: "village_square", to: "village_outskirts")
+        session.explorationController.configureParty(session.party, at: trigger.center)
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(session.appState, .exploration)
+        XCTAssertNil(session.battleViewModel)
+
+        session.openSaveLoad()
+        session.saveLoadViewModel?.saveManual(slot: .manual(1))
+
+        let loaded = GameSessionViewModel(saveGameStore: store)
+        loaded.openSaveLoad()
+        loaded.saveLoadViewModel?.load(slot: .manual(1))
+        XCTAssertTrue(loaded.session.resolvedEncounterKeys.contains(resolvedKey))
+
+        loaded.explorationController.configureParty(loaded.party, at: trigger.center)
+        loaded.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(loaded.appState, .exploration)
+        XCTAssertNil(loaded.battleViewModel)
+    }
+
+    func testPartyWipeDoesNotResolveEncounterAndAllowsRetry() throws {
+        let directory = URL.temporaryDirectory
+            .appending(path: "RiftExpeditionTests")
+            .appending(path: UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = SaveGameStore(directory: directory)
+        let session = GameSessionViewModel(saveGameStore: store)
+        let scene = GameScene(size: .init(width: 1, height: 1))
+        startTestParty(in: session)
+        try move(session, through: scene, from: "village_square", to: "village_outskirts")
+
+        let trigger = try encounterTrigger(in: "village_outskirts")
+        session.explorationController.configureParty(session.party, at: trigger.center)
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(session.appState, .battle)
+
+        session.battleViewModel = defeatBattleViewModel(for: session)
+        session.finishBattle()
+
+        let unresolvedKey = "village_outskirts:\(trigger.tiledID)"
+        XCTAssertEqual(session.currentAreaID, "village_square")
+        XCTAssertFalse(session.session.resolvedEncounterKeys.contains(unresolvedKey))
+
+        try move(session, through: scene, from: "village_square", to: "village_outskirts")
+        session.explorationController.configureParty(session.party, at: trigger.center)
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+        XCTAssertEqual(session.appState, .battle)
+        XCTAssertNotNil(session.battleViewModel)
+    }
+
     func testManualSavePersistsAcceptedQuestAndWorldProgress() throws {
         let directory = URL.temporaryDirectory
             .appending(path: "RiftExpeditionTests")
@@ -277,6 +354,70 @@ final class GameSessionViewModelTests: XCTestCase {
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "bitterroot_herb"), 0)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "river_charm"), 1)
         XCTAssertEqual(session.inventoryViewModel?.inventory.count(of: "minor_healing_draught"), 3)
+    }
+
+    private func startTestParty(in session: GameSessionViewModel) {
+        session.partyCreationViewModel.toggleSelection("warrior")
+        session.partyCreationViewModel.toggleSelection("mage")
+        session.startChapterWithSelectedParty()
+    }
+
+    private func move(
+        _ session: GameSessionViewModel,
+        through scene: GameScene,
+        from areaID: String,
+        to targetAreaID: String
+    ) throws {
+        let destination = try exitCenter(in: areaID, to: targetAreaID)
+        session.explorationController.configureParty(session.party, at: destination)
+        session.gameScene(scene, didAdvance: 1.0 / 60.0)
+    }
+
+    private func encounterTrigger(in areaID: String) throws -> MapEncounterTrigger {
+        let metadata = try TiledMapLoader.loadMetadata(areaID: areaID)
+        return try XCTUnwrap(metadata.encounterTriggers.first)
+    }
+
+    private func victoryBattleViewModel(for session: GameSessionViewModel) -> BattleViewModel {
+        BattleViewModel(
+            state: BattleState(actors: session.party + [testEnemy(health: 0)]),
+            skills: [],
+            inventory: session.inventory
+        )
+    }
+
+    private func defeatBattleViewModel(for session: GameSessionViewModel) -> BattleViewModel {
+        let defeatedParty = session.party.map { actor in
+            var defeated = actor
+            defeated.stats.health = 0
+            return defeated
+        }
+        return BattleViewModel(
+            state: BattleState(actors: defeatedParty + [testEnemy(health: 12)]),
+            skills: [],
+            inventory: session.inventory
+        )
+    }
+
+    private func testEnemy(health: Int) -> Actor {
+        Actor(
+            id: "encounter_test_enemy",
+            displayName: "测试敌人",
+            kind: .humanEnemy,
+            faction: .hostile,
+            level: 1,
+            stats: Stats(
+                maxHealth: 12,
+                health: health,
+                attack: 4,
+                defense: 1,
+                evasion: 0,
+                magic: 0,
+                maxActionPoints: 4,
+                actionPoints: 4
+            ),
+            skillIDs: []
+        )
     }
 
     private func exitCenter(in areaID: String, to targetAreaID: String) throws -> CGPoint {
