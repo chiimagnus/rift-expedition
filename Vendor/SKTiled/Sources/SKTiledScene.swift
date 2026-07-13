@@ -191,11 +191,12 @@ open class SKTiledScene: SKScene, SKPhysicsContactDelegate, TiledSceneDelegate, 
         let relativeURL = URL(fileURLWithPath: filename, relativeTo: dirname)
 
         self.setup(tmxFile: relativeURL.relativePath,
-                        inDirectory: (relativeURL.baseURL == nil) ? nil : relativeURL.baseURL!.path,
-                        withTilesets: withTilesets,
-                        ignoreProperties: ignoreProperties,
-                        loggingLevel: loggingLevel,
-                        completion)
+                   delegate: delegate,
+                   inDirectory: relativeURL.baseURL?.path,
+                   withTilesets: withTilesets,
+                   ignoreProperties: ignoreProperties,
+                   loggingLevel: loggingLevel,
+                   completion)
     }
 
     /// Load and setup a named TMX file, with optional tilesets. Allows for an optional completion handler.

@@ -218,7 +218,7 @@ struct GameRootView: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.82))
                         .fixedSize(horizontal: false, vertical: true)
-                    RiftMetricBadge(label: "建议时长", value: "20~30 分钟", tint: RiftPalette.riftBlue)
+                    RiftStatusPill(text: "建议时长 · 20~30 分钟", tint: RiftPalette.riftBlue, icon: "clock.fill")
                 }
                 .padding(18)
             }
