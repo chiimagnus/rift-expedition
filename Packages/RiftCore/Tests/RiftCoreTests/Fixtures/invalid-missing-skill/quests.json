@@ -5,7 +5,12 @@
     "summary": "村长说你的失踪与旧矿洞有关。",
     "startDialogID": "elder_intro",
     "turnInDialogID": "elder_return",
-    "rewardItemIDs": ["rusted_sword"],
-    "rewardSkillIDs": ["slash"]
+    "rewardItemIDs": [
+      "rusted_sword"
+    ],
+    "rewardSkillIDs": [
+      "slash"
+    ],
+    "requiredItemIDs": []
   }
 ]
