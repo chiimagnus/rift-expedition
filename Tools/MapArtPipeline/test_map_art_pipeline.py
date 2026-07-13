@@ -25,19 +25,19 @@ class MapArtPipelineTests(unittest.TestCase):
     def test_specs_cover_world_graph_and_validate(self) -> None:
         self.assertEqual(set(self.specs), {area["id"] for area in self.areas})
         self.assertEqual(pipeline.validate_contracts(self.project_root, self.specs, self.areas), [])
-        self.assertEqual(sum(spec["status"] == "ready" for spec in self.specs.values()), 4)
-        self.assertEqual(sum(spec["status"] == "pending-source" for spec in self.specs.values()), 5)
+        self.assertEqual(sum(spec["status"] == "ready" for spec in self.specs.values()), 7)
+        self.assertEqual(sum(spec["status"] == "pending-source" for spec in self.specs.values()), 2)
 
     def test_pending_source_can_export_guide_without_source_image(self) -> None:
-        area = next(area for area in self.areas if area["id"] == "wilds_road")
+        area = next(area for area in self.areas if area["id"] == "cave_entrance")
         spec = self.specs[area["id"]]
         self.assertFalse((self.project_root / spec["source"]).exists())
 
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             contract = pipeline.write_layout_guide(self.project_root, area, spec, output)
-            image_path = output / "wilds_road_layout_guide.png"
-            markdown_path = output / "wilds_road_layout_contract.md"
+            image_path = output / "cave_entrance_layout_guide.png"
+            markdown_path = output / "cave_entrance_layout_contract.md"
 
             self.assertTrue(image_path.is_file())
             self.assertTrue(markdown_path.is_file())
@@ -99,7 +99,7 @@ class MapArtPipelineTests(unittest.TestCase):
 
     def test_pending_source_cannot_be_built_as_runtime_art(self) -> None:
         with self.assertRaisesRegex(ValueError, "not approved yet"):
-            pipeline.build(self.project_root, "wilds_road", self.specs["wilds_road"])
+            pipeline.build(self.project_root, "cave_entrance", self.specs["cave_entrance"])
 
     def test_contract_export_contains_every_area(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

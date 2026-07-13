@@ -252,34 +252,52 @@
     "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "wilds_road": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/wilds_road_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_road.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_road.png",
     "assetID": "mapart.chapter1_wilds_road",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_road_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_road_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_wilds_road_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "wilds_ruins": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/wilds_ruins_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_ruins.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_ruins.png",
     "assetID": "mapart.chapter1_wilds_ruins",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_ruins_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_ruins_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_wilds_ruins_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "wilds_riverbank": {
-    "status": "pending-source",
+    "status": "ready",
     "source": "Tools/MapArtPipeline/Sources/wilds_riverbank_source.png",
     "tmx": "RiftExpedition/Resources/Maps/chapter1/wilds_riverbank.tmx",
     "output": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_riverbank.png",
     "assetID": "mapart.chapter1_wilds_riverbank",
     "layerName": "background_art",
     "crop": "center",
-    "terrainVisible": false
+    "terrainVisible": false,
+    "foregroundSource": "Tools/MapArtPipeline/Sources/wilds_riverbank_foreground_source.png",
+    "foregroundOutput": "RiftExpedition/Resources/Assets/MapArt/chapter1/wilds_riverbank_foreground.png",
+    "foregroundAssetID": "mapart.chapter1_wilds_riverbank_foreground",
+    "foregroundLayerName": "foreground_canopy",
+    "sourceDescription": "Deterministic top-down 2D environment generated from TMX layout data",
+    "foregroundSourceDescription": "Deterministic transparent canopy layer generated from TMX layout data"
   },
   "cave_entrance": {
     "status": "pending-source",

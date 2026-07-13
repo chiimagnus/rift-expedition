@@ -29,6 +29,21 @@ PALETTES = {
         "path2": (170, 143, 95), "water": (54, 99, 112), "water2": (71, 121, 132),
         "edge": (45, 63, 38), "wood": (104, 68, 39), "wood2": (145, 96, 53),
     },
+    "wilds_road": {
+        "ground": (72, 96, 53), "ground2": (88, 110, 61), "path": (137, 112, 75),
+        "path2": (158, 132, 87), "water": (48, 93, 108), "water2": (65, 118, 129),
+        "edge": (39, 56, 35), "wood": (91, 59, 35), "wood2": (132, 88, 48),
+    },
+    "wilds_ruins": {
+        "ground": (66, 79, 55), "ground2": (80, 91, 61), "path": (117, 105, 80),
+        "path2": (136, 121, 91), "water": (48, 82, 91), "water2": (62, 102, 108),
+        "edge": (36, 43, 34), "wood": (83, 55, 35), "wood2": (119, 79, 45),
+    },
+    "wilds_riverbank": {
+        "ground": (70, 96, 55), "ground2": (86, 111, 63), "path": (136, 112, 76),
+        "path2": (157, 132, 89), "water": (43, 98, 117), "water2": (58, 127, 139),
+        "edge": (36, 57, 39), "wood": (91, 61, 37), "wood2": (132, 90, 51),
+    },
 }
 
 
@@ -119,8 +134,15 @@ def add_environment(area: str, image: Image.Image, root: ET.Element) -> tuple[Im
         draw_tree(fgd, x + rng.randint(-8,8), 22 + rng.randint(-5,8), rng.randint(22,30), rng, 235)
         draw_tree(fgd, x + rng.randint(-8,8), height-18 + rng.randint(-8,5), rng.randint(22,31), rng, 235)
     for y in range(70, height-50, 62):
-        left_open = (area == "village_outskirts" and 245 <= y <= 395) or (area == "village_riverside" and y >= 515)
-        right_open = 245 <= y <= 395
+        left_open = ((area == "village_outskirts" and 245 <= y <= 395)
+                     or (area == "village_riverside" and y >= 515)
+                     or (area == "wilds_road" and 245 <= y <= 395)
+                     or (area == "wilds_ruins" and y >= 440)
+                     or (area == "wilds_riverbank" and (95 <= y <= 220 or y >= 440)))
+        right_open = ((area in {"village_riverside", "village_outskirts"} and 245 <= y <= 395)
+                      or (area == "wilds_road" and (95 <= y <= 220 or y >= 440))
+                      or (area == "wilds_ruins" and 95 <= y <= 220)
+                      or (area == "wilds_riverbank" and 245 <= y <= 395))
         if not left_open:
             draw_tree(fgd, 18 + rng.randint(-5,8), y, rng.randint(23,31), rng, 235)
         if not right_open:
@@ -145,19 +167,56 @@ def add_environment(area: str, image: Image.Image, root: ET.Element) -> tuple[Im
         # Clear visual corridors around both exits.
         draw.rounded_rectangle((875, 275, 1024, 365), radius=18, fill=(157,132,88,210))
         draw.rounded_rectangle((75, 545, 155, 640), radius=18, fill=(150,126,84,210))
-    else:
+    elif area == "village_outskirts":
         # Main east-west approach, village palisade fragments, encounter clearing.
         draw.rounded_rectangle((32, 270, 992, 370), radius=40, fill=(153,127,85,205))
         draw_fence(draw, 448, 224, 160, 48, p)
         draw_wagon(draw, 512, 384, 128, 64, p)
         draw.ellipse((555, 255, 745, 430), outline=(104,79,54,110), width=4)
-        # Scattered stones and stumps outside the corridor.
         for _ in range(35):
             x, y = rng.randint(70,950), rng.choice([rng.randint(80,210), rng.randint(455,570)])
             rr = rng.randint(5,12)
             draw.ellipse((x-rr,y-rr//2,x+rr,y+rr//2), fill=(91,92,72,220), outline=(58,61,49,230))
         draw.rounded_rectangle((0, 274, 145, 366), radius=18, fill=(157,132,88,210))
         draw.rounded_rectangle((875, 274, 1024, 366), radius=18, fill=(157,132,88,210))
+    elif area == "wilds_road":
+        draw.line((35,320,420,320,560,260,760,330,990,160), fill=(151,126,84,230), width=88, joint="curve")
+        draw.line((720,350,990,510), fill=(151,126,84,225), width=78)
+        # fallen log obstacle and broken tower footprint
+        draw.rounded_rectangle((416,300,576,340), radius=18, fill=(90,58,34,255), outline=(48,34,24,255), width=4)
+        for x in range(430,565,26):
+            draw.line((x,294,x-8,278), fill=(62,43,28,255), width=5)
+        draw.rectangle((704,96,800,192), fill=(83,83,70,245), outline=(45,47,42,255), width=4)
+        draw.rectangle((724,116,780,192), fill=(41,48,42,255))
+        for _ in range(55):
+            x,y=rng.randint(70,950),rng.randint(60,575)
+            if 250 < y < 390: continue
+            rr=rng.randint(4,10); draw.ellipse((x-rr,y-rr//2,x+rr,y+rr//2),fill=(79,83,64,220))
+    elif area == "wilds_ruins":
+        # ruined masonry, oil slick and surviving embers
+        draw.rounded_rectangle((45,470,210,570), radius=28, fill=(130,116,86,215))
+        draw.rounded_rectangle((850,105,1024,205), radius=28, fill=(130,116,86,215))
+        draw.rectangle((320,160,448,256), fill=(91,91,79,245), outline=(50,52,47,255), width=4)
+        for gx in range(326,445,28): draw.line((gx,165,gx,251), fill=(119,116,99,180), width=3)
+        draw.rectangle((608,352,736,448), fill=(75,72,61,245), outline=(43,42,38,255), width=4)
+        draw.ellipse((625,366,720,430), fill=(34,31,28,255), outline=(121,88,48,255), width=4)
+        draw.ellipse((496,320,624,416), fill=(55,45,36,180), outline=(92,71,47,180), width=3)
+        for cx,cy in [(680,325),(706,345),(666,360)]:
+            draw.polygon([(cx,cy+18),(cx-12,cy+2),(cx,cy-20),(cx+12,cy+2)], fill=(229,113,39,230))
+        for _ in range(70):
+            x,y=rng.randint(55,960),rng.randint(55,585); rr=rng.randint(3,9)
+            draw.rectangle((x-rr,y-rr//2,x+rr,y+rr//2),fill=(83,82,70,200))
+    elif area == "wilds_riverbank":
+        draw.rounded_rectangle((235,370,790,560), radius=65, fill=(44,103,121,235), outline=(31,75,88,255), width=5)
+        draw.rounded_rectangle((352,384,672,480), radius=42, fill=(30,73,91,245), outline=(24,61,76,255), width=4)
+        for yy in range(400,545,22):
+            for xx in range(260,760,52): draw.arc((xx,yy,xx+34,yy+12),190,345,fill=(135,189,191,155),width=2)
+        for _ in range(95):
+            x,y=rng.randint(220,810),rng.randint(345,585)
+            draw.line((x,y,x+rng.randint(-5,5),y-rng.randint(10,25)),fill=(79,116,54,220),width=2)
+        draw.rounded_rectangle((0,115,145,205),radius=20,fill=(151,126,84,220))
+        draw.rounded_rectangle((0,460,145,555),radius=20,fill=(151,126,84,220))
+        draw.rounded_rectangle((875,275,1024,365),radius=20,fill=(151,126,84,220))
 
     # Gentle vignette, excluded from center readability.
     vignette = Image.new("RGBA", image.size, (0,0,0,0))
