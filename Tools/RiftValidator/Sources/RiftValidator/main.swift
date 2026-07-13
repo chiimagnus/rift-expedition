@@ -157,6 +157,7 @@ do {
         : nil
     let worldResults = try WorldGraphValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
     let mapReferenceResult = try MapReferenceValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
+    let chapterFlowResult = try ChapterFlowValidator.validateIfPresent(resourcesRoot: arguments.resourcesRoot, maps: allResults.map(\.map))
 
     if let previewDirectory = arguments.previewDirectory {
         for result in results {
@@ -172,7 +173,8 @@ do {
     }
     let referenceIssueCount = mapReferenceResult?.issues.count ?? 0
     let assetIssueCount = assetResult?.issues.count ?? 0
-    let issueCount = mapIssueCount + worldIssueCount + referenceIssueCount + assetIssueCount
+    let chapterFlowIssueCount = chapterFlowResult?.issues.count ?? 0
+    let issueCount = mapIssueCount + worldIssueCount + referenceIssueCount + assetIssueCount + chapterFlowIssueCount
     let scopeTitle = scopeTitle(arguments: arguments)
     let summary = [
         "# \(scopeTitle)校验总览",
@@ -180,6 +182,7 @@ do {
         "- 地图数量：\(results.count)",
         "- 世界图谱检查：\(worldResults.isEmpty ? "未配置" : "已执行")",
         "- 地图数据引用检查：\(mapReferenceResult == nil ? "未配置" : "已执行")",
+        "- 首章任务流程检查：\(chapterFlowResult == nil ? "未配置" : "已执行")",
         "- 资源授权检查：\(assetResult == nil ? "未配置" : "已执行")",
         "- 问题数量：\(issueCount)",
         "- 结论：\(issueCount == 0 ? "全部通过" : "存在问题，详见下方分项")",
@@ -191,6 +194,9 @@ do {
     reportSections.append(contentsOf: worldResults.map { $0.reportMarkdown() })
     if let mapReferenceResult {
         reportSections.append(mapReferenceResult.reportMarkdown())
+    }
+    if let chapterFlowResult {
+        reportSections.append(chapterFlowResult.reportMarkdown())
     }
     if let assetResult {
         reportSections.append(assetResult.reportMarkdown())
