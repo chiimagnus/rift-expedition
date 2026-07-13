@@ -131,19 +131,6 @@ def replace_obstacles(root: ET.Element, obstacles: list[dict[str, Any]]) -> None
         })
 
 
-def remove_legacy_tile_art(root: ET.Element) -> None:
-    """Canonicalize painted chapter maps to the single image-layer visual path."""
-    for child in list(root):
-        if child.tag in {"tileset", "layer"}:
-            root.remove(child)
-
-    properties = root.find("properties")
-    if properties is not None:
-        for prop in list(properties.findall("property")):
-            if prop.get("name") == "assetId":
-                properties.remove(prop)
-
-
 def expected_image_layer_names(spec: dict[str, Any]) -> list[str]:
     names = [spec["layerName"]]
     if spec.get("foregroundOutput"):
@@ -151,18 +138,33 @@ def expected_image_layer_names(spec: dict[str, Any]) -> list[str]:
     return names
 
 
-def canonicalize_image_layers(root: ET.Element, allowed_names: set[str]) -> None:
-    """Remove image layers that are not part of the active map-art contract."""
-    for layer in list(root.findall("imagelayer")):
-        if layer.get("name") not in allowed_names:
-            root.remove(layer)
+def assert_current_map_contract(root: ET.Element, spec: dict[str, Any]) -> None:
+    """Reject retired or ambiguous TMX visual paths before mutating the map."""
+    if root.findall("tileset"):
+        raise ValueError("legacy tileset declarations are not supported")
+    if root.findall("layer"):
+        raise ValueError("legacy tile layers are not supported")
+    properties = root.find("properties")
+    if properties is not None and any(
+        prop.get("name") == "assetId" for prop in properties.findall("property")
+    ):
+        raise ValueError("legacy assetId property is not supported")
+
+    expected_names = set(expected_image_layer_names(spec))
+    names = [layer.get("name") for layer in root.findall("imagelayer")]
+    unexpected = sorted(name or "<unnamed>" for name in names if name not in expected_names)
+    if unexpected:
+        raise ValueError(f"unexpected image layers: {', '.join(unexpected)}")
+    duplicates = sorted(name for name in expected_names if names.count(name) > 1)
+    if duplicates:
+        raise ValueError(f"duplicate image layers: {', '.join(duplicates)}")
 
 
 def ensure_image_layer(root: ET.Element, map_path: Path, output_path: Path, layer_name: str, width: int, height: int) -> None:
     matching_layers = [element for element in root.findall("imagelayer") if element.get("name") == layer_name]
+    if len(matching_layers) > 1:
+        raise ValueError(f"duplicate image layer: {layer_name}")
     layer = matching_layers[0] if matching_layers else None
-    for duplicate in matching_layers[1:]:
-        root.remove(duplicate)
 
     if layer is None:
         next_layer_id = int(root.get("nextlayerid", "1"))
@@ -674,8 +676,7 @@ def build(project_root: Path, area_id: str, spec: dict[str, Any]) -> None:
     tree = ET.parse(map_path)
     root = tree.getroot()
     map_width, map_height = map_pixel_size(root)
-    remove_legacy_tile_art(root)
-    canonicalize_image_layers(root, set(expected_image_layer_names(spec)))
+    assert_current_map_contract(root, spec)
     if map_width <= 0 or map_height <= 0:
         raise ValueError(f"Invalid map dimensions for {area_id}")
 

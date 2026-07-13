@@ -140,7 +140,7 @@ class MapArtPipelineTests(unittest.TestCase):
             self.assertIn(spec["foregroundLayerName"], layer_names)
 
 
-    def test_build_canonicalizes_duplicate_image_layers_idempotently(self) -> None:
+    def test_build_rejects_duplicate_and_unexpected_image_layers(self) -> None:
         area = next(area for area in self.areas if area["id"] == "village_square")
         spec = self.specs[area["id"]]
         with tempfile.TemporaryDirectory() as directory:
@@ -161,35 +161,19 @@ class MapArtPipelineTests(unittest.TestCase):
             tree = ET.parse(map_path)
             root = tree.getroot()
             layer = next(layer for layer in root.findall("imagelayer") if layer.get("name") == spec["layerName"])
-            layer.set("visible", "0")
-            layer.set("opacity", "0.25")
-            layer.set("offsetx", "17")
-            layer.find("image").set("source", "wrong.png")
             duplicate = ET.fromstring(ET.tostring(layer, encoding="unicode"))
             duplicate.set("id", root.get("nextlayerid", "99"))
             root.append(duplicate)
-            stale = ET.Element("imagelayer", {"id": "998", "name": "legacy_background", "visible": "0"})
+            stale = ET.Element("imagelayer", {"id": "998", "name": "legacy_background"})
             ET.SubElement(stale, "image", {"source": "legacy.png", "width": "1024", "height": "640"})
             root.append(stale)
             tree.write(map_path, encoding="utf-8", xml_declaration=True)
+            before = map_path.read_bytes()
 
-            pipeline.build(project, area["id"], spec)
-            first_build = map_path.read_bytes()
-            pipeline.build(project, area["id"], spec)
-            self.assertEqual(first_build, map_path.read_bytes())
+            with self.assertRaisesRegex(ValueError, "unexpected image layers"):
+                pipeline.build(project, area["id"], spec)
 
-            root = ET.parse(map_path).getroot()
-            expected_names = {spec["layerName"], spec["foregroundLayerName"]}
-            self.assertEqual({layer.get("name") for layer in root.findall("imagelayer")}, expected_names)
-            layers = [layer for layer in root.findall("imagelayer") if layer.get("name") == spec["layerName"]]
-            self.assertEqual(len(layers), 1)
-            canonical = layers[0]
-            self.assertEqual(canonical.get("visible"), "1")
-            self.assertEqual(canonical.get("opacity"), "1")
-            self.assertEqual(canonical.get("x"), "0")
-            self.assertEqual(canonical.get("y"), "0")
-            self.assertIsNone(canonical.get("offsetx"))
-            self.assertEqual(pipeline.validate_contracts(project, {area["id"]: spec}, [area]), [])
+            self.assertEqual(before, map_path.read_bytes())
 
 
     def test_contract_rejects_unexpected_image_layer(self) -> None:
