@@ -20,7 +20,7 @@ public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
         objectives: [String]? = nil,
         startDialogID: String,
         turnInDialogID: String? = nil,
-        requiredItemIDs: [String] = [],
+        requiredItemIDs: [String],
         rewardItemIDs: [String] = [],
         rewardSkillIDs: [String] = []
     ) {
@@ -61,7 +61,7 @@ public struct QuestDefinition: Codable, Equatable, Identifiable, Sendable {
         objectives = try container.decodeIfPresent([String].self, forKey: .objectives)
         startDialogID = try container.decode(String.self, forKey: .startDialogID)
         turnInDialogID = try container.decodeIfPresent(String.self, forKey: .turnInDialogID)
-        requiredItemIDs = try container.decodeIfPresent([String].self, forKey: .requiredItemIDs) ?? []
+        requiredItemIDs = try container.decode([String].self, forKey: .requiredItemIDs)
         rewardItemIDs = try container.decodeIfPresent([String].self, forKey: .rewardItemIDs) ?? []
         rewardSkillIDs = try container.decodeIfPresent([String].self, forKey: .rewardSkillIDs) ?? []
     }

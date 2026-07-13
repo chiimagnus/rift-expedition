@@ -70,11 +70,10 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(skill.id, "firebolt")
         XCTAssertEqual(weapon.slot, .weapon)
     }
-    func testLegacyQuestWithoutRequiredItemsDecodesWithEmptyRequirement() throws {
-        let json = #"{"id":"legacy","title":"Legacy","summary":"Old save data","startDialogID":"start","rewardItemIDs":[],"rewardSkillIDs":[]}"#
-        let quest = try JSONDecoder().decode(QuestDefinition.self, from: Data(json.utf8))
+    func testQuestWithoutRequiredItemsIsRejected() {
+        let json = #"{"id":"invalid","title":"Invalid","summary":"Missing requirements","startDialogID":"start","rewardItemIDs":[],"rewardSkillIDs":[]}"#
 
-        XCTAssertEqual(quest.requiredItemIDs, [])
+        XCTAssertThrowsError(try JSONDecoder().decode(QuestDefinition.self, from: Data(json.utf8)))
     }
 
 }

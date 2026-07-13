@@ -8,7 +8,8 @@ final class QuestEngineTests: XCTestCase {
             title: "血债",
             summary: "和村长确认旧矿洞线索。",
             startDialogID: "elder_intro",
-            turnInDialogID: "elder_return"
+            turnInDialogID: "elder_return",
+            requiredItemIDs: []
         )
 
         let accepted = try QuestEngine.accept(questID: "blood_debt", in: QuestState(), definitions: [quest])
@@ -24,7 +25,8 @@ final class QuestEngineTests: XCTestCase {
             id: "blood_debt",
             title: "血债",
             summary: "和村长确认旧矿洞线索。",
-            startDialogID: "elder_intro"
+            startDialogID: "elder_intro",
+            requiredItemIDs: []
         )
 
         XCTAssertThrowsError(try QuestEngine.complete(questID: "blood_debt", in: QuestState(), definitions: [quest])) { error in

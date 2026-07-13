@@ -42,7 +42,8 @@ final class DialogViewModelTests: XCTestCase {
             title: "血债",
             summary: "查清旧矿洞。",
             startDialogID: "elder_intro",
-            turnInDialogID: "elder_return"
+            turnInDialogID: "elder_return",
+            requiredItemIDs: []
         )
     }
 }
