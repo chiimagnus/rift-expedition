@@ -40,15 +40,25 @@ public enum WorldGraphValidator {
         }
 
         let decoder = JSONDecoder()
+        if let worldID {
+            let selectedURL = worldsRoot.appending(path: "\(worldID).json")
+            guard FileManager.default.fileExists(atPath: selectedURL.path) else {
+                return []
+            }
+            let graph = try decoder.decode(
+                ChapterWorldGraph.self,
+                from: Data(contentsOf: selectedURL)
+            )
+            return [validate(graph, maps: maps)]
+        }
+
         let graphs = try contents
             .filter { $0.pathExtension == "json" }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
             .map { url in
                 try decoder.decode(ChapterWorldGraph.self, from: Data(contentsOf: url))
             }
-        return graphs
-            .filter { worldID == nil || $0.id == worldID }
-            .map { validate($0, maps: maps) }
+        return graphs.map { validate($0, maps: maps) }
     }
 
     static func validate(_ graph: ChapterWorldGraph, maps: [TiledMap]) -> WorldGraphValidationResult {
