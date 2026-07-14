@@ -51,6 +51,6 @@ ContentView 仅在 #if DEBUG 中读取 -uiState 启动参数。GameSessionViewMo
 
 | 测试目标 | 位置 | 运行方式 |
 | --- | --- | --- |
-| 纯规则逻辑（战斗 / 元素 / AI / 存档 / 任务 / 成长） | `Packages/RiftCore/Tests` | `rtk swift test --package-path Packages/RiftCore` |
-| App 层（ViewModel / 场景 / 服务） | `RiftExpeditionTests` | `rtk xcodebuild test -scheme RiftExpedition -destination 'platform=macOS'` |
-| 地图 / 资源校验工具 | `Tools/RiftValidator/Tests` | `rtk swift test --package-path Tools/RiftValidator` |
+| 纯规则逻辑（战斗 / 元素 / AI / 存档 / 任务 / 成长） | `Packages/RiftCore/Tests` | `swift test --package-path Packages/RiftCore` |
+| App 层（ViewModel / 场景 / 服务） | `RiftExpeditionTests` | `xcodebuild test -scheme RiftExpedition -destination 'platform=macOS'` |
+| 地图 / 资源校验工具 | `Tools/RiftValidator/Tests` | `swift test --package-path Tools/RiftValidator` |

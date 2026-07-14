@@ -95,7 +95,7 @@ P5 背景音乐核对：`village_theme_loop.wav`、`wilds_theme_loop.wav`、`cav
 - 替换时必须同步更新：
   1. `RiftExpedition/Resources/Assets/assets-manifest.json`
   2. 本文档第 2 节的来源、作者、下载日期、license
-  3. 重新跑校验：`rtk swift run --package-path Tools/RiftValidator RiftValidator RiftExpedition/Resources`
+  3. 重新跑校验：`swift run --package-path Tools/RiftValidator RiftValidator RiftExpedition/Resources`
 - 若使用 AI：只用于静态头像、图标或单张补充图；角色行走 / 攻击动画优先使用成套 spritesheet，避免帧间不一致。
 - 文件名与内部 id 用英文；玩家可见文本用中文。
 
